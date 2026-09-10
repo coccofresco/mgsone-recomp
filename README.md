@@ -17,6 +17,7 @@ un modello di budget CPU nativo equivalente esattamente al 165%.
 - [Stato, verifiche e limiti del runtime](docs/mgs-runtime-progress.md)
 - [Aggiornamenti PSXRecomp](docs/psxrecomp-upstream-2026-09-10.md)
 - [Valutazione RecompOne](docs/recompone-review-2026-09-10.md)
+- [Valutazione OpenGTPS1: input e memory card](docs/opengtps1-review-2026-09-10.md)
 
 ## Asset originali e presentazione Vulkan
 
