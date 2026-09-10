@@ -131,6 +131,8 @@ foreach(shader_source IN LISTS PS1RECOMP_VULKAN_SHADER_SOURCES)
     # contract. Header-only iterations must rebuild every consuming module.
     list(APPEND shader_dependencies
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_original_mesh.glsl"
+        "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_asset_storage.glsl"
+        "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_original_texture.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_depth_vertex.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_depth_fragment.glsl")
     if(shader_name STREQUAL "replay_precise.vert" OR

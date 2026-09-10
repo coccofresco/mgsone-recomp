@@ -1,4 +1,6 @@
 #include "runtime/games/crash3_profile.h"
+#include "runtime/games/mgs_asset_cache.h"
+#include "runtime/games/mgs_profile.h"
 #include "runtime/gpu/modern_replay_preflight.h"
 #include "runtime/gpu/modern_replay_visibility_stack.h"
 #include "runtime/gpu/modern_replay_vulkan_abi.h"
@@ -272,7 +274,8 @@ void submitProjectedQuad(GPU &gpu, uint32_t command, int left, int top,
 void submitProjectedTexturedQuad(GPU &gpu, int left, int top, int right,
                                  int bottom, uint8_t u, uint8_t v,
                                  uint16_t texturePage, double depth,
-                                 uint64_t firstProjectionId) {
+                                 uint64_t firstProjectionId,
+                                 uint16_t clut = 0) {
   const std::array<uint32_t, 4> packed{
       packedVertex(left, top), packedVertex(right, top),
       packedVertex(left, bottom), packedVertex(right, bottom)};
@@ -286,6 +289,8 @@ void submitProjectedTexturedQuad(GPU &gpu, int left, int top, int right,
     gpu.writeGP0(packed[index], UINT32_MAX, &precision);
     uint32_t textureWord =
         static_cast<uint32_t>(u) | (static_cast<uint32_t>(v) << 8u);
+    if (index == 0)
+      textureWord |= uint32_t(clut) << 16;
     if (index == 1)
       textureWord |= static_cast<uint32_t>(texturePage) << 16u;
     gpu.writeGP0(textureWord);
@@ -1366,6 +1371,130 @@ TEST(GpuModernReplayVulkanDepthTest,
   EXPECT_EQ(metrics::getState(
                 "host.renderer.vulkan_replay_readback.last.actual_depth_hash"),
             metricHash(blended.actual.depthD32));
+  renderer.destroy();
+  metrics::reset();
+  metrics::setEnabledForTesting(false);
+}
+
+TEST(GpuModernReplayVulkanDepthTest,
+     OptInMgsOriginalPcxMatchesGpuAndTracksRuntimePalette) {
+  const char *path = std::getenv("PS1_TEST_MGS_ASSET_CACHE");
+  if (!std::getenv("PS1_RUN_VULKAN_INTEGRATION") || !path)
+    GTEST_SKIP();
+  const auto cache = games::mgs::AssetCache::load(path);
+  using Cache = games::mgs::AssetCache;
+  uint32_t chosen = ~0u, chosenPixel = 0;
+  const auto word16 = [](const uint8_t *p) {
+    return uint32_t(p[0]) | uint32_t(p[1]) << 8;
+  };
+  for (uint32_t t = 0;
+       t < cache.section(Cache::Textures).count && chosen == ~0u; ++t) {
+    const uint32_t a = cache.word(Cache::Textures, t, 7);
+    const auto *pcx = cache.bytes().data() +
+                      cache.section(Cache::Source).offset +
+                      cache.word(Cache::Assets, a, 12);
+    if ((cache.word(Cache::Textures, t, 6) & 1) || word16(pcx + 78) < 512 ||
+        cache.word(Cache::Textures, t, 0) > 128 ||
+        cache.word(Cache::Textures, t, 1) > 128)
+      continue;
+    for (uint32_t i = 0; i < cache.word(Cache::Textures, t, 3); ++i) {
+      const uint32_t index =
+          cache.bytes()[cache.section(Cache::Indices).offset +
+                        cache.word(Cache::Textures, t, 2) + i];
+      const auto color = cache.word(
+          Cache::Palettes, cache.word(Cache::Textures, t, 4) + index, 0);
+      if (color && !(color & 0x8000)) {
+        chosen = t;
+        chosenPixel = i;
+        break;
+      }
+    }
+  }
+  ASSERT_NE(chosen, ~0u);
+  const uint32_t t = chosen, a = cache.word(Cache::Textures, t, 7);
+  const auto *pcx = cache.bytes().data() + cache.section(Cache::Source).offset +
+                    cache.word(Cache::Assets, a, 12);
+  const uint32_t px = word16(pcx + 78), py = word16(pcx + 80),
+                 cx = word16(pcx + 82), cy = word16(pcx + 84);
+  const uint32_t width = cache.word(Cache::Textures, t, 0),
+                 height = cache.word(Cache::Textures, t, 1);
+  const uint32_t depth = cache.word(Cache::Textures, t, 6) & 1,
+                 ppw = depth ? 2 : 4;
+  const auto *indices = cache.bytes().data() +
+                        cache.section(Cache::Indices).offset +
+                        cache.word(Cache::Textures, t, 2);
+  std::vector<uint16_t> pixels(width * height / ppw), palette;
+  for (uint32_t i = 0; i < width * height; ++i)
+    pixels[i / ppw] |= uint16_t(indices[i]) << ((i % ppw) * (depth ? 8 : 4));
+  for (uint32_t i = 0; i < cache.word(Cache::Textures, t, 5); ++i)
+    palette.push_back(
+        cache.word(Cache::Palettes, cache.word(Cache::Textures, t, 4) + i, 0));
+  const uint16_t source = palette[indices[chosenPixel]];
+  const auto expand = [](uint32_t x) { return uint8_t((x << 3) | (x >> 2)); };
+  const Color32 color{expand(source & 31), expand((source >> 5) & 31),
+                      expand((source >> 10) & 31), 255};
+  ScopedEnvironment mode("PS1_MGS_MESH_REPLAY", "1"),
+      assets("PS1_MGS_ASSET_CACHE", path);
+  ScopedEnvironment readback("PS1_VULKAN_REPLAY_READBACK", "all");
+  ScopedEnvironment from("PS1_VULKAN_REPLAY_READBACK_FRAME_FROM", "2");
+  ScopedEnvironment to("PS1_VULKAN_REPLAY_READBACK_FRAME_TO", "3");
+  ScopedEnvironment region("PS1_VULKAN_REPLAY_READBACK_REGION", "32,0,16,16");
+  struct Profile {
+    Profile() { games::mgs::configure(true, false); }
+    ~Profile() { games::mgs::configure(false, false); }
+  } profile;
+  metrics::reset();
+  metrics::setEnabledForTesting(true);
+  GPU gpu;
+  configureVulkanNativeOracle(gpu, true);
+  RendererOptions options;
+  options.internalScale = 4;
+  options.pgxp = true;
+  options.trueDepth = true;
+  options.trueDepthMode = "hybrid";
+  options.trueColor = true;
+  RendererVulkan renderer(gpu, options);
+  ASSERT_TRUE(
+      renderer.init("MGS original PCX GPU oracle", 320, 240, false, false));
+  gpu.writeGP1(0x03000000);
+  gpu.writeGP1(0x05000000);
+  gpu.writeGP0(0xe3000000);
+  gpu.writeGP0(0xe4000000 | 1023 | (511 << 10));
+  submitCpuUpload(gpu, px, py, width / ppw, height, pixels);
+  submitCpuUpload(gpu, cx, cy, palette.size(), 1, palette);
+  gpu.snapshotDisplayBuffer(1);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  const uint16_t page = (px / 64) | ((py / 256) << 4) | (depth << 7),
+                 clut = (cy * 64 + cx / 16);
+  const uint8_t u = (px % 64) * ppw + chosenPixel % width,
+                v = (py % 256) + chosenPixel / width;
+  submitProjectedTexturedQuad(gpu, 32, 0, 48, 16, u, v, page, 4096, 100, clut);
+  gpu.snapshotDisplayBuffer(2);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  std::array<Color32, 16> colors;
+  colors.fill(color);
+  const std::array<uint8_t, 16> masks{};
+  auto expected = diagnosticReportForNativeSamples(colors, masks);
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_rgba8_hash"),
+            metricHash(expected.actual.rgba8));
+  EXPECT_EQ(metrics::get("mgs.texture.gpu_submitted_packets"), 1u);
+  // A runtime palette edit must be snapshotted, never frozen at its cached
+  // color.
+  submitCpuUpload(gpu, cx + indices[chosenPixel], cy, 1, 1, {0x7c1f});
+  submitProjectedTexturedQuad(gpu, 32, 0, 48, 16, u, v, page, 4096, 200, clut);
+  gpu.snapshotDisplayBuffer(3);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  colors.fill({255, 0, 255, 255});
+  expected = diagnosticReportForNativeSamples(colors, masks);
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_rgba8_hash"),
+            metricHash(expected.actual.rgba8));
+  EXPECT_EQ(metrics::get("mgs.texture.gpu_submitted_packets"), 2u);
+  EXPECT_EQ(metrics::get("mgs.texture.dynamic_palette_packets"), 1u);
   renderer.destroy();
   metrics::reset();
   metrics::setEnabledForTesting(false);

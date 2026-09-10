@@ -1,0 +1,75 @@
+{
+  "schema": "mgs-cache-scene-evidence/v1",
+  "date": "2026-09-10",
+  "game": "Metal Gear Solid USA v1.0 disc 1",
+  "scene": "s00a dock, local user checkpoint",
+  "exe_sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32",
+  "user_state_sha256": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+  "cache": {
+    "schema": "MGSAC002",
+    "bytes": 94074416,
+    "gpu_readback_equal": true,
+    "uploads_per_process": 1,
+    "instances_matched": 27,
+    "instances_total": 27
+  },
+  "checks": {
+    "cpp_passed": 299,
+    "cpp_suites": 22,
+    "python_passed": 25,
+    "git_diff_check": true
+  },
+  "stationary_after_three_v7_loads": {
+    "vblanks": 600,
+    "scene_packets_seen": 174976,
+    "geometry_replaced": 174976,
+    "geometry_gpu_submitted": 174976,
+    "texture_cached": 174976,
+    "texture_gpu_submitted": 174976,
+    "pose_rejected": 0,
+    "procedural_packets": 19353,
+    "codec_old_state_recovered": 11651,
+    "elapsed_us": 17009064,
+    "nominal_us": 10000000,
+    "timing_note": "4x normal clock; test suite ran concurrently for part of this diagnostic, so this is not an isolated benchmark"
+  },
+  "movement_codec_return": {
+    "vblanks": 1400,
+    "scene_packets_mapped": 176866,
+    "geometry_replaced": 176866,
+    "texture_cached": 176866,
+    "geometry_gpu_submitted": 175944,
+    "texture_gpu_submitted": 175944,
+    "pose_rejected": 0,
+    "codec_ui_ft4_packets": 3663,
+    "procedural_packets": 17778,
+    "store_image_calls": 2,
+    "store_image_pixels": 7168,
+    "note": "Submission excludes batches requiring replay surface reanchor; do not equate replacement counters with GPU submission"
+  },
+  "commands": {
+    "tests": "PS1_RUN_VULKAN_INTEGRATION=1 PS1_TEST_MGS_ASSET_CACHE=data/presentation/usa/assets.mgsc build/ps1Test/ps1Runtime_tests --gtest_filter=\"MgsAssetCacheTest.*:*Mgs*:*SaveState*:*ModernReplay*:PsyqGpuTest.*\"",
+    "python": "python3 -m unittest discover -s scripts/tests",
+    "movement": "PS1_MGS_MESH_REPLAY=1 SDL_AUDIODRIVER=dummy PS1_VBLANK_PERIOD_US=1000 PS1_AUTOLOAD_VBLANK=300 PS1_EXIT_AFTER_LOAD_VBLANKS=1400 PS1_INPUT_SCRIPT=scripts/fixtures/mgs-dock-cache.input PS1_METRICS=data/native/mesh-replay/audit-metrics.json PS1_TRACE_JSONL=data/native/mesh-replay/audit.jsonl PS1_TRACE_EVENTS=mgs.mesh.reject,mgs.mesh.unmapped,mgs.texture.miss scripts/run_native.sh",
+    "reload": "PS1_MGS_MESH_REPLAY=1 PS1_MGS_ASSET_VERIFY=1 SDL_AUDIODRIVER=dummy PS1_DIAGNOSTIC_SAVESTATE_DIR=data/native/mesh-replay/verified-states PS1_AUTOLOAD_VBLANK=300 PS1_AUTOLOAD_COUNT=3 PS1_EXIT_AFTER_LOAD_VBLANKS=600 PS1_METRICS=data/native/mesh-replay/verified-reload-metrics.json scripts/run_native.sh"
+  },
+  "prerequisites": "Locally extracted USA cache, prepared native build and specified private checkpoint; input frames are specific to the recorded checkpoint. Disc images, cache and states are not distributed.",
+  "limits": [
+    "Only this dock sequence has full scene binding evidence",
+    "Native face selection, ordering and subdivision remain",
+    "HUD and Codec portraits use runtime 2D replay",
+    "World matrices remain native fixed-point inputs",
+    "No certified highest-LOD family selection or 2x interpolation",
+    "4x real-time performance not achieved or certified",
+    "Visual inspection plus synthetic GPU oracles, not a full native/modern framebuffer equivalence proof"
+  ],
+  "isolated_normal_clock": {
+    "vblanks": 240,
+    "elapsed_us": 6462706,
+    "nominal_us": 4000000,
+    "geometry_gpu_submitted": 70968,
+    "texture_gpu_submitted": 70968,
+    "pose_rejected": 0,
+    "gpu_readbacks": false
+  }
+}

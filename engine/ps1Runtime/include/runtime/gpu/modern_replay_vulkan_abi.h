@@ -49,6 +49,10 @@ struct alignas(16) DrawUniforms {
   std::array<std::array<float, 4>, 12> mgsViewRows{};
   std::array<uint32_t, 4> mgsPointBytes{};
   std::array<float, 4> mgsProjection{};
+  std::array<uint32_t, 4> mgsTextureData{};
+  std::array<int32_t, 4> mgsTextureOrigin{};
+  std::array<uint32_t, 8> mgsPalette{};
+  std::array<std::array<float, 4>, 4> mgsWeights{};
 };
 
 // Binding offsets for replay_precise.vert:
@@ -338,7 +342,7 @@ struct alignas(16) VisibilityStackRecord {
 static_assert(std::is_standard_layout_v<DrawUniforms>);
 static_assert(std::is_trivially_copyable_v<DrawUniforms>);
 static_assert(alignof(DrawUniforms) == 16);
-static_assert(sizeof(DrawUniforms) == 320);
+static_assert(sizeof(DrawUniforms) == 448);
 static_assert(offsetof(DrawUniforms, mgsViewRows) == 96);
 static_assert(offsetof(DrawUniforms, mgsPointBytes) == 288);
 static_assert(offsetof(DrawUniforms, mgsProjection) == 304);

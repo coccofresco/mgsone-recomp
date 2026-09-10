@@ -14,7 +14,18 @@ struct AssetSection {
 };
 class AssetCache {
 public:
-  enum Section : size_t { Assets, Models, Vertices, Textures, Indices, Palettes, Source, Count };
+  enum Section : size_t {
+    Assets,
+    Models,
+    Vertices,
+    Textures,
+    Indices,
+    Palettes,
+    Source,
+    Names,
+    Templates,
+    Count
+  };
   static AssetCache load(const std::filesystem::path &path);
   static AssetCache decode(std::vector<uint8_t> bytes);
   const AssetSection &section(Section s) const { return sections_[s]; }

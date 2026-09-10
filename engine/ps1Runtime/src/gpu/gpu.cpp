@@ -3376,6 +3376,7 @@ bool GPU::capturePolygonPacket(const Vertex *vertices,
   packet.state.drawToDisplayArea = (gpuStat_ & (1u << 10)) != 0;
 
   games::mgs::adaptMeshReplayPacket(packet);
+  games::mgs::bindOriginalTexture(packet, replayNativeVram());
   replayRecorder_.recordDraw(std::move(packet), replayNativeVram());
   return true;
 }

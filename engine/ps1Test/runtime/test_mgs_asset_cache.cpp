@@ -40,8 +40,28 @@ std::vector<uint8_t> sourceModel() {
   b[160] = 0; b[161] = 16; // normal Z = 4096
   return b;
 }
-std::vector<uint8_t> fixture() {
-  std::array<std::vector<uint8_t>, 7> sections;
+std::vector<uint8_t>
+packFixture(const std::array<std::vector<uint8_t>, 9> &sections, bool names) {
+  constexpr const char *tags[] = {"ASST", "MODL", "VRTX", "TEXR", "TEXI",
+                                  "PLTE", "SRCE", "NAME", "TMPL"};
+  constexpr uint32_t strides[] = {64, 32, 48, 32, 1, 4, 1, 8, 16};
+  const size_t count = names ? 9 : 7;
+  std::vector<uint8_t> b(16 + count * 16);
+  std::memcpy(b.data(), names ? "MGSAC002" : "MGSAC001", 8);
+  for (size_t s = 0; s < count; ++s) {
+    b.resize((b.size() + 15) & ~size_t(15));
+    std::memcpy(b.data() + 16 + s * 16, tags[s], 4);
+    put(b, 20 + s * 16, b.size());
+    put(b, 24 + s * 16, sections[s].size() / strides[s]);
+    put(b, 28 + s * 16, strides[s]);
+    b.insert(b.end(), sections[s].begin(), sections[s].end());
+  }
+  put(b, 8, b.size());
+  checksum(b);
+  return b;
+}
+std::vector<uint8_t> fixture(bool names = false) {
+  std::array<std::vector<uint8_t>, 9> sections;
   sections[0].resize(64);
   put(sections[0],32,'k'); put(sections[0],40,1); put(sections[0],44,~0u);
   put(sections[0],52,178); put(sections[0],56,1);
@@ -54,17 +74,17 @@ std::vector<uint8_t> fixture() {
     put(sections[2], v * 48 + 12, std::bit_cast<uint32_t>(-1.0f));
   }
   sections[6] = sourceModel();
-  constexpr const char *tags[] = {"ASST","MODL","VRTX","TEXR","TEXI","PLTE","SRCE"};
-  constexpr uint32_t strides[] = {64,32,48,32,1,4,1};
-  std::vector<uint8_t> b(128);
-  std::memcpy(b.data(),"MGSAC001",8);
-  for (size_t s = 0; s < 7; ++s) {
-    b.resize((b.size()+15)&~size_t(15));
-    std::memcpy(b.data()+16+s*16,tags[s],4);
-    put(b,20+s*16,b.size()); put(b,24+s*16,sections[s].size()/strides[s]); put(b,28+s*16,strides[s]);
-    b.insert(b.end(),sections[s].begin(),sections[s].end());
+  if (names) {
+    sections[7].resize(8);
+    put(sections[7], 0, 0x1234);
+    sections[8].resize(64);
+    for (unsigned k = 0; k < 4; ++k) {
+      put(sections[8], k * 16, std::bit_cast<uint32_t>(float(k & 1)));
+      put(sections[8], k * 16 + 4, std::bit_cast<uint32_t>(float(k >> 1)));
+      put(sections[8], k * 16 + 12, 0x3f800000);
+    }
   }
-  put(b,8,b.size()); checksum(b); return b;
+  return packFixture(sections, names);
 }
 void loadModel(Memory &memory, uint32_t address) {
   auto b=sourceModel();
@@ -234,6 +254,287 @@ TEST(MgsAssetCacheTest,
             cache.section(AssetCache::Vertices).offset + 3 * 48);
   EXPECT_FLOAT_EQ(packet.originalMesh->viewRows[2][3], 1000.0f);
   EXPECT_EQ(std::memcmp(before.data(), memory.ramPtr(), before.size()), 0);
+  // Trace one subdivision cell back to the four immutable parent corners.
+  beginMeshDivide(&ctx);
+  memory.write32(0x1f800034, 0x1f800038);
+  meshDivideGrid(&ctx);
+  memory.write32(0x1f80001c, packs);
+  memory.write32(0x1f800034, 0x1f800038 + 9 * 20);
+  ctx.r4 = 0x1f800038;
+  meshDivideCopy(&ctx);
+  constexpr uint32_t child = 0x80014000;
+  ctx.r7 = child;
+  ctx.r16 = 0x1f800038;
+  meshDividePacket(&ctx);
+  auto childPacket = packet;
+  childPacket.originalMesh.reset();
+  constexpr int childX[] = {0, 1, 4, 4};
+  for (unsigned k = 0; k < 4; ++k) {
+    memory.write32(child + 4 + k * 12, 0x3c808080);
+    memory.write32(child + 8 + k * 12, childX[k] | (29u << 16));
+    auto &v = childPacket.vertices[k];
+    v.nativeX = 160 + childX[k];
+    v.provenance.dmaNodeSource = (child & 0x1fffff) + 1;
+    v.provenance.gp0WordSource = (child & 0x1fffff) + 9 + k * 12;
+  }
+  ctx.r4 = channel;
+  prepareMeshReplay(&ctx);
+  ASSERT_TRUE(replaceMeshReplayPacket(childPacket));
+  ASSERT_TRUE(childPacket.originalMesh);
+  EXPECT_EQ(childPacket.originalMesh->pointBytes,
+            packet.originalMesh->pointBytes);
+  EXPECT_EQ(childPacket.originalMesh->weights[3],
+            (std::array<float, 4>{.25f, .25f, .25f, .25f}));
+  EXPECT_NEAR(childPacket.vertices[1].x, 161.6, 1e-5);
+  // A source behind the eye remains a cache draw: the GPU clips its true
+  // signed eye coordinates. Native GTE saturation is only the oracle.
+  memory.write32(object + 72 + 28, uint32_t(-1000));
+  for (unsigned k = 0; k < 4; ++k) {
+    const int x = int(order[k] * 10 * (131071.0 / 65536.0));
+    memory.write32(packs + 8 + k * 12, x | (181u << 16));
+    packet.vertices[k].nativeX = 160 + x;
+    packet.vertices[k].nativeY = 112 + 181;
+  }
+  captureSceneBeforeBounds(&ctx);
+  prepareMeshReplay(&ctx);
+  ASSERT_TRUE(replaceMeshReplayPacket(packet));
+  EXPECT_DOUBLE_EQ(packet.vertices[0].rawDepth, -1000);
+  EXPECT_DOUBLE_EQ(packet.vertices[0].w, 1);
+  EXPECT_TRUE(packet.vertices[0].nearSaturated);
+  EXPECT_FALSE(packet.vertices[0].inventedW);
+  EXPECT_FLOAT_EQ(packet.originalMesh->viewRows[2][3], -1000);
   resetSceneCapture();
   EXPECT_FALSE(replaceMeshReplayPacket(packet));
+  EXPECT_FALSE(replaceMeshReplayPacket(childPacket));
+}
+
+TEST(MgsAssetCacheTest,
+     GeometryBindingSeparatesMaterialChangesAndRejectsTopologyChanges) {
+  auto cache = AssetCache::decode(fixture());
+  Memory memory;
+  constexpr uint32_t definition = 0x80011000;
+  loadModel(memory, definition);
+  memory.write32(definition + 32, 2);       // shading flag
+  memory.write16(definition + 176, 0x9876); // runtime texture ID override
+  bool deformed = false;
+  EXPECT_EQ(matchOriginalDefinition(cache, memory, definition), ~0u);
+  EXPECT_EQ(matchSceneDefinition(cache, memory, definition, deformed), 0u);
+  EXPECT_FALSE(deformed);
+  memory.write8(definition + 120, 99);
+  EXPECT_EQ(matchSceneDefinition(cache, memory, definition, deformed), ~0u);
+  memory.write8(definition + 120, 0);
+  memory.write8(definition + 152, 1); // same counts, different face
+  EXPECT_EQ(matchSceneDefinition(cache, memory, definition, deformed), ~0u);
+}
+TEST(MgsAssetCacheTest, DeformationRequiresLiveActorAndExactSavedOriginals) {
+  auto cache = AssetCache::decode(fixture(true));
+  EXPECT_EQ(cache.section(AssetCache::Names).count, 1u);
+  Memory memory;
+  constexpr uint32_t definition = 0x80011000, actor = 0x80012000,
+                     name = 0x80012100, points = 0x80012200, head = 0x800AF4E4;
+  loadModel(memory, definition);
+  memory.write32(0x800AF668 + 0x34 * 8, 0xa1234);
+  memory.write32(0x800AF668 + 0x34 * 8 + 4, definition);
+  memory.write32(head + 4, actor);
+  memory.write32(actor, head);
+  memory.write32(actor + 20, name);
+  memory.write32(actor + 44, 1);
+  memory.write32(actor + 56, definition);
+  memory.write32(actor + 124, points);
+  const char filename[] = "shakemdl.c";
+  for (uint32_t i = 0; i < sizeof(filename); ++i)
+    memory.write8(name + i, filename[i]);
+  memory.write16(definition + 122, 15);
+  bool deformed = false;
+  EXPECT_EQ(matchOriginalDefinition(cache, memory, definition), ~0u);
+  EXPECT_EQ(matchSceneDefinition(cache, memory, definition, deformed), 0u);
+  EXPECT_TRUE(deformed);
+  memory.write16(points, 17); // actor baseline no longer matches original
+  EXPECT_EQ(matchSceneDefinition(cache, memory, definition, deformed), ~0u);
+  memory.write16(points, 0);
+  memory.write32(head + 4,
+                 0); // matching file ID alone cannot permit deformations
+  EXPECT_EQ(matchSceneDefinition(cache, memory, definition, deformed), ~0u);
+}
+
+TEST(MgsAssetCacheTest, ProceduralBillboardUsesResidentTemplateAndWorldDepth) {
+  setenv("PS1_MGS_MESH_REPLAY", "1", 1);
+  struct Cleanup {
+    ~Cleanup() {
+      setSceneAssetCache(nullptr);
+      configure(false, false);
+      unsetenv("PS1_MGS_MESH_REPLAY");
+    }
+  } cleanup;
+  const auto cache = AssetCache::decode(fixture(true));
+  Memory memory;
+  constexpr uint32_t channel = 0x80010000, queue = 0x80010100,
+                     prim = 0x80010200, positions = 0x80010300,
+                     rect = 0x80010400, packs = 0x80010500;
+  memory.write16(channel + 80, 320);
+  memory.write16(channel + 82, 1);
+  memory.write32(channel + 88, queue);
+  memory.write32(queue, prim);
+  memory.write32(prim + 36, 0x612); // camera-space rectangular FT4
+  memory.write16(prim + 42, 1);
+  memory.write16(prim + 48, 40);
+  memory.write16(prim + 50, 4);
+  memory.write16(prim + 52, 8);
+  memory.write16(prim + 54, 8);
+  memory.write32(prim + 56, positions);
+  memory.write32(prim + 60, rect);
+  memory.write32(prim + 64, packs);
+  memory.write16(positions, 100);
+  memory.write16(positions + 2, 50);
+  memory.write16(positions + 4, 1000);
+  memory.write16(rect, 20);
+  memory.write16(rect + 2, 10);
+  memory.write16(rect + 4, 40);
+  memory.write16(rect + 6, 20);
+  memory.write32(packs + 4, 0x2c808080);
+  gpu::replay::DrawPacket packet;
+  packet.opcode = 0x2c;
+  packet.textured = true;
+  packet.vertexCount = 4;
+  packet.indexCount = 6;
+  packet.triangleIndices = {0, 1, 2, 1, 2, 3};
+  packet.state.drawOffset = {160, 112};
+  for (uint32_t k = 0; k < 4; ++k) {
+    const uint32_t x = (k & 1) ? 38 : 25, y = (k >> 1) ? 19 : 12;
+    memory.write32(packs + 8 + k * 8, x | (y << 16));
+    auto &v = packet.vertices[k];
+    v.nativeX = 160 + x;
+    v.nativeY = 112 + y;
+    v.color = {128, 128, 128};
+    v.provenance.dmaNodeSource = (packs & 0x1fffff) + 1;
+    v.provenance.gp0WordSource = (packs & 0x1fffff) + 9 + k * 8;
+    v.provenance.evidence = gpu::replay::ReplayVertexDmaTraversalExact |
+                            gpu::replay::ReplayVertexGp0WordSourceExact;
+  }
+  recomp_context ctx{};
+  ctx.mem = &memory;
+  ctx.r4 = channel;
+  configure(true, false);
+  setSceneAssetCache(&cache);
+  captureSceneBeforeBounds(&ctx);
+  prepareMeshReplay(&ctx);
+  ASSERT_TRUE(replaceMeshReplayPacket(packet));
+  ASSERT_TRUE(packet.originalMesh);
+  EXPECT_EQ(packet.originalMesh->pointBytes[3],
+            cache.section(AssetCache::Templates).offset + 48);
+  EXPECT_DOUBLE_EQ(packet.vertices[0].x, 185.6);
+  EXPECT_DOUBLE_EQ(packet.vertices[0].y, 124.8);
+  EXPECT_DOUBLE_EQ(packet.vertices[3].w, 1000);
+  EXPECT_FLOAT_EQ(packet.originalMesh->viewRows[0][0], 40);
+  EXPECT_FLOAT_EQ(packet.originalMesh->viewRows[1][1], 20);
+  // World-space effects share the model's modern 16:9 projection, even
+  // though the reference primitive routine bypasses native DG_AdjustOverscan.
+  memory.write32(prim + 36, 0x412);
+  for (uint32_t offset : {0u, 8u, 16u}) {
+    memory.write16(prim + offset, 4096);
+    memory.write16(channel + 16 + offset, 4096);
+  }
+  configure(true, true);
+  captureSceneBeforeBounds(&ctx);
+  prepareMeshReplay(&ctx);
+  ASSERT_TRUE(replaceMeshReplayPacket(packet));
+  EXPECT_NEAR(packet.vertices[0].x, 179.2, 1e-5);
+  EXPECT_FLOAT_EQ(packet.originalMesh->viewRows[0][0], 30);
+  // DG billboards clamp the anchor first, then add/project the rectangle and
+  // clamp again. The modern position must not inherit either saturation.
+  memory.write32(prim + 36, 0x612);
+  configure(true, false);
+  memory.write16(positions, 10000);
+  memory.write16(positions + 2, 10000);
+  for (uint32_t k = 0; k < 4; ++k) {
+    const uint32_t x = (k & 1) ? 1023 : 1016, y = (k >> 1) ? 1023 : 1019;
+    memory.write32(packs + 8 + k * 8, x | (y << 16));
+    packet.vertices[k].nativeX = 160 + x;
+    packet.vertices[k].nativeY = 112 + y;
+  }
+  captureSceneBeforeBounds(&ctx);
+  prepareMeshReplay(&ctx);
+  ASSERT_TRUE(replaceMeshReplayPacket(packet));
+  EXPECT_DOUBLE_EQ(packet.vertices[0].x, 3353.6);
+  EXPECT_DOUBLE_EQ(packet.vertices[0].y, 3308.8);
+}
+
+TEST(MgsAssetCacheTest,
+     CodecRecoveryRequiresNamedMaterialAndIntactPixelsOutsideBorrowedArea) {
+  const char *oldMode = std::getenv("PS1_MGS_MESH_REPLAY");
+  const std::string previous = oldMode ? oldMode : "";
+  const bool existed = oldMode != nullptr;
+  struct Cleanup {
+    std::string previous;
+    bool existed;
+    ~Cleanup() {
+      setSceneAssetCache(nullptr);
+      configure(false, false);
+      if (existed)
+        setenv("PS1_MGS_MESH_REPLAY", previous.c_str(), 1);
+      else
+        unsetenv("PS1_MGS_MESH_REPLAY");
+    }
+  } cleanup{previous, existed};
+  setenv("PS1_MGS_MESH_REPLAY", "1", 1);
+  std::array<std::vector<uint8_t>, 9> sections;
+  sections[0].resize(64);
+  put(sections[0], 32, 'p');
+  put(sections[0], 52, 88);
+  sections[3].resize(32);
+  put(sections[3], 0, 8);
+  put(sections[3], 4, 8);
+  put(sections[3], 12, 64);
+  put(sections[3], 20, 16);
+  sections[4].resize(64);
+  for (uint32_t i = 0; i < 64; ++i)
+    sections[4][i] = (i * 3) % 16;
+  sections[5].resize(64);
+  for (uint32_t i = 0; i < 16; ++i)
+    put(sections[5], i * 4, 0x1000 + i);
+  sections[6].resize(88);
+  put(sections[6], 78, 768 | (256u << 16));
+  put(sections[6], 82, 960 | (249u << 16));
+  sections[7].resize(8);
+  put(sections[7], 0, 0x4567);
+  sections[8].resize(64);
+  for (unsigned k = 0; k < 4; ++k) {
+    put(sections[8], k * 16, std::bit_cast<uint32_t>(float(k & 1)));
+    put(sections[8], k * 16 + 4, std::bit_cast<uint32_t>(float(k >> 1)));
+    put(sections[8], k * 16 + 12, 0x3f800000);
+  }
+  const auto cache = AssetCache::decode(packFixture(sections, true));
+  configure(true, false);
+  setSceneAssetCache(&cache);
+  std::vector<gpu::Color16> vram(1024 * 512);
+  for (uint32_t i = 0; i < 16; ++i)
+    vram[249 * 1024 + 960 + i].raw = 0x1000 + i;
+  for (uint32_t i = 0; i < 64; ++i)
+    vram[(256 + i / 8) * 1024 + 768 + (i % 8) / 4].raw |=
+        uint16_t(sections[4][i]) << ((i % 4) * 4);
+  gpu::replay::DrawPacket packet;
+  packet.textured = true;
+  packet.vertexCount = 4;
+  packet.state.texturePage.raw = 0x1c;
+  packet.state.clut.raw = 249 * 64 + 60;
+  for (uint32_t k = 0; k < 4; ++k) {
+    packet.vertices[k].u = (k & 1) * 7;
+    packet.vertices[k].v = (k >> 1) * 7;
+  }
+  bindOriginalTexture(packet, vram);
+  ASSERT_TRUE(packet.originalTexture);
+  vram[256 * 1024 + 768].raw = 0xbeef;
+  bindOriginalTexture(packet, vram);
+  EXPECT_FALSE(packet.originalTexture);
+  packet.originalMesh.emplace();
+  packet.originalMesh->textureId = 0x4567;
+  bindOriginalTexture(packet, vram);
+  ASSERT_TRUE(packet.originalTexture);
+  packet.originalMesh->textureId = 0x9999;
+  bindOriginalTexture(packet, vram);
+  EXPECT_FALSE(packet.originalTexture);
+  packet.originalMesh->textureId = 0x4567;
+  vram[260 * 1024 + 768].raw = 0xbeef;
+  bindOriginalTexture(packet, vram);
+  EXPECT_FALSE(packet.originalTexture);
 }

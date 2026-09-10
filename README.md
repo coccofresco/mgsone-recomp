@@ -35,14 +35,15 @@ un modello di budget CPU nativo equivalente esattamente al 165%.
 
 Gli strumenti di audit sono in `scripts/mgs_assets.py`; gli asset estratti e
 l'esempio di geometria originale sono in `data/`, esclusi da Git.
-La [cache Vulkan USA](docs/mgs-vulkan-cache.md) è implementata: circa 90 MiB
-residenti con geometrie KMD/ZMD e texture PCX originali dei due CD. La cattura
-acquisisce camera e istanze prima del culling. La [prima sostituzione delle
-mesh](docs/mgs-original-mesh-replay.md) è disponibile in modalità sperimentale:
-`PS1_MGS_MESH_REPLAY=1 scripts/run_native.sh`. Vulkan legge i vertici dalla cache
-e li proietta in float, mantenendo materiali, HUD ed effetti del gioco. Il
-percorso predefinito resta quello originale; prestazioni, geometrie dinamiche,
-materiali indipendenti dalla VRAM e LOD richiedono ulteriore lavoro.
+La [cache Vulkan USA](docs/mgs-vulkan-cache.md) contiene circa 90 MiB residenti
+con geometrie KMD/ZMD e texture PCX originali dei due CD. La
+[presentazione dalla cache](docs/mgs-original-mesh-replay.md) è disponibile con
+`PS1_MGS_MESH_REPLAY=1 scripts/run_native.sh`: tutte le 27 istanze del molo,
+deformazioni, suddivisioni, texture e quad degli effetti sono supportati.
+Vulkan legge gli originali e proietta in float; simulazione e framebuffer PS1
+continuano sotto al cofano. HUD e Codec sono composti come grafica 2D runtime.
+Il percorso resta sperimentale: altre scene, culling indipendente, famiglie LOD,
+interpolazione e prestazioni richiedono ulteriori verifiche e sviluppo.
 
 ## Base riutilizzata
 

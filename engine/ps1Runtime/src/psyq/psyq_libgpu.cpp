@@ -229,23 +229,32 @@ void hle_libgpu_LoadImage(recomp_context *ctx) {
     writeGP0(ctx->mem->read32(src + i * 4));
 }
 
-// StoreImage(rect*, dst*) -- GP0(0xC0); drains GPUREAD into PS1 RAM.
-// The runtime GPU implements VRAM->CPU via GPUREAD register polling. We can't
-// reach `gpuRead_` directly from here, but the GPU's CPU->VRAM/VRAM->CPU state
-// machine processes the rect on GP0(0xC0) submission. Until a `readGPUREAD`
-// drain hook is exposed, this stub just pumps the command and leaves the
-// destination buffer untouched. Logged so misuse is visible.
+// StoreImage(rect*, dst*) -- synchronous GP0(0xC0), including the GPUREAD
+// drain into guest RAM. Codec palette/texture backups depend on these bytes.
 void hle_libgpu_StoreImage(recomp_context *ctx) {
+  ctx->r[V0] = 0;
   PsyqRect r = readRect(ctx, ctx->r[A0]);
   if (r.w <= 0 || r.h <= 0)
     return;
   GpuBatchGuard batch;
+  writeGP0(0x01000000u);
   writeGP0(0xC0000000u);
   writeGP0(static_cast<uint32_t>(r.y & 0xFFFF) << 16 |
            static_cast<uint32_t>(r.x & 0xFFFF));
   writeGP0(static_cast<uint32_t>(r.h & 0xFFFF) << 16 |
            static_cast<uint32_t>(r.w & 0xFFFF));
-  warnOnceFor("libgpu_StoreImage");
+  const auto &cfg = getConfig();
+  const uint32_t count = uint32_t(r.w) * uint32_t(r.h);
+  for (uint32_t pixel = 0; pixel < count; pixel += 2) {
+    const uint32_t value =
+        cfg.readGPUREAD ? cfg.readGPUREAD() : ctx->mem->read32(0x1f801810);
+    const uint32_t destination = ctx->r[A1] + pixel * 2;
+    if (pixel + 1 < count)
+      ctx->mem->write32(destination, value);
+    else
+      ctx->mem->write16(destination, uint16_t(value));
+  }
+  ps1::metrics::count("libgpu.store_image.pixels", count);
 }
 
 // MoveImage(rect*, x, y) -- GP0(0x80) VRAM->VRAM blit.
@@ -470,13 +479,7 @@ void hle_libgpu__dws(recomp_context *ctx) {
   ctx->r[V0] = 0;
 }
 
-// _drs(rect*, data*) -- device read: the executor behind StoreImage.
-// NOTE (2026-07-28 audit): sys.c's _drs (sys.c:787-831) issues the same
-// leading GP0(0x01) Clear Cache word _dws does before its VRAM->CPU header.
-// StoreImage/_drs is out of scope for this audit pass (not in the phase-1
-// mandatory list -- its VRAM->CPU drain is separately stubbed, see
-// hle_libgpu_StoreImage's own comment); flagging here so a future
-// StoreImage audit does not have to rediscover it.
+// _drs(rect*, data*) -- synchronous device read behind StoreImage.
 void hle_libgpu__drs(recomp_context *ctx) {
   hle_libgpu_StoreImage(ctx);
   ctx->r[V0] = 0;

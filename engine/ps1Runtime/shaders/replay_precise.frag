@@ -47,7 +47,15 @@ layout(set = 1, binding = 0, std140) uniform CrashReplayDrawState {
   uvec4 texture_window;
   // xy=scratch snapshot origin in scaled target pixels, zw=snapshot extent.
   uvec4 destination_state;
+  vec4 mgs_view_rows[12];
+  uvec4 mgs_point_bytes;
+  vec4 mgs_projection;
+  uvec4 mgs_texture_data;
+  ivec4 mgs_texture_origin;
+  uvec4 mgs_palette[2];
+  vec4 mgs_weights[4];
 } u_draw;
+#include "games/mgs_original_texture.glsl"
 
 layout(location = 0) in vec2 v_uv;
 layout(location = 1) noperspective in vec3 v_color_255;
@@ -92,6 +100,8 @@ uint samplePs1Texel(vec2 interpolated_uv) {
   const ivec2 truncated = ivec2(interpolated_uv);
   uvec2 uv = uvec2(truncated) & uvec2(255u);
   uv = applyTextureWindow(uv);
+  uint cachedTexel;
+  if (mgs_original_texel(uv, cachedTexel)) return cachedTexel;
 
   const uint tpage = u_draw.texture_state.x;
   const uint clut = u_draw.texture_state.y;

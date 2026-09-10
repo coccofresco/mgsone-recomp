@@ -8,6 +8,7 @@
 // command sequence written by the HLE.
 
 #include "runtime/cpu_context.h"
+#include "runtime/gpu/gpu.h"
 #include "runtime/memory.h"
 #include "runtime/psyq/psyq_hle.h"
 #include "runtime/psyq/psyq_libgpu.h"
@@ -375,10 +376,11 @@ TEST_F(PsyqGpuTest, StoreImageEmitsVramToCpuHeader) {
   ctx.r[A0] = rectP;
   ctx.r[A1] = 0x80100200u;
   hle_libgpu_StoreImage(&ctx);
-  ASSERT_EQ(gp0.size(), 3u);
-  EXPECT_EQ(gp0[0], 0xC0000000u);
-  EXPECT_EQ(gp0[1], (240u << 16) | 64u);
-  EXPECT_EQ(gp0[2], (8u   << 16) | 16u);
+  ASSERT_EQ(gp0.size(), 4u);
+  EXPECT_EQ(gp0[0], 0x01000000u);
+  EXPECT_EQ(gp0[1], 0xC0000000u);
+  EXPECT_EQ(gp0[2], (240u << 16) | 64u);
+  EXPECT_EQ(gp0[3], (8u << 16) | 16u);
   expectSingleBatchAroundEntireGp0Sequence();
 }
 
@@ -811,4 +813,39 @@ TEST_F(PsyqGpuTest, RegistryDispatchesAllNewNames) {
     EXPECT_NO_FATAL_FAILURE(psyq_dispatch(n, &ctx))
         << "dispatch failed for: " << n;
   }
+}
+
+TEST_F(PsyqGpuTest, StoreImageRoundTripPreservesCodecBackupAndOddTail) {
+  gpu::GPU gpu;
+  auto cfg = getConfig();
+  cfg.writeGP0 = [&](uint32_t value) { gpu.writeGP0(value); };
+  cfg.readGPUREAD = [&]() { return gpu.readGPUREAD(); };
+  configure(cfg);
+  constexpr uint32_t rect = 0x80100000, src = 0x80101000, dst = 0x80102000;
+  writeRect(rect, 768, 256, 3, 1);
+  mem.write32(src, 0x80000000);
+  mem.write32(src + 4, 0xabcd7fff);
+  ctx.r[A0] = rect;
+  ctx.r[A1] = src;
+  hle_libgpu_LoadImage(&ctx);
+  mem.write32(dst, 0xdeadbeef);
+  mem.write32(dst + 4, 0xcafef00d);
+  ctx.r[A1] = dst;
+  ctx.r[V0] = 123;
+  hle_libgpu_StoreImage(&ctx);
+  EXPECT_EQ(mem.read32(dst), 0x80000000u);
+  EXPECT_EQ(mem.read32(dst + 4), 0xcafe7fffu);
+  EXPECT_EQ(ctx.r[V0], 0u);
+  // Overwrite the codec scratch region, then restore its saved words.
+  mem.write32(src, 0x11112222);
+  mem.write32(src + 4, 0x33334444);
+  ctx.r[A1] = src;
+  hle_libgpu_LoadImage(&ctx);
+  ctx.r[A1] = dst;
+  hle_libgpu_LoadImage(&ctx);
+  ctx.r[A1] = src;
+  hle_libgpu_StoreImage(&ctx);
+  EXPECT_EQ(mem.read32(src), 0x80000000u);
+  EXPECT_EQ(mem.read16(src + 4), 0x7fffu);
+  configure({});
 }

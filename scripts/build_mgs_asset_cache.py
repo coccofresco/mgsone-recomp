@@ -8,13 +8,13 @@ import struct
 import zlib
 from mgs_assets import Disc, stages, stage_members, dar_members, kmd, zmd, pcx, sha, require
 
-MAGIC = b'MGSAC001'
+MAGIC = b'MGSAC002'
 SECTIONS = [('ASST', 64), ('MODL', 32), ('VRTX', 48), ('TEXR', 32),
-            ('TEXI', 1), ('PLTE', 4), ('SRCE', 1)]
+            ('TEXI', 1), ('PLTE', 4), ('SRCE', 1), ('NAME', 8), ('TMPL', 16)]
 
 
 def pack_sections(sections):
-    """16-byte header, 7x16-byte directory, 16-byte-aligned sections, CRC32."""
+    """16-byte header, 9x16-byte directory, 16-byte-aligned sections, CRC32."""
     cursor = 16 + len(SECTIONS) * 16
     directory = bytearray()
     body = bytearray()
@@ -136,15 +136,28 @@ def build(discs, output):
         disc_rows.append(dict(disc=number, image=str(Path(path).resolve()), stages=stage_count,
                               stage_dir_sha256=sha(archive)))
     require(not errors, f'asset validation failed: {errors[:5]}')
+    # Original file IDs are provenance hints, always checked against geometry.
+    names = set()
+    for row in occurrences:
+        name = row['embedded_id']
+        if name is None:
+            name = int(row['id'], 16)
+        names.add((name, row['asset']))
+    for name, asset in sorted(names):
+        sections['NAME'].extend(struct.pack('<2I', name, asset))
+    # DG_PRIM quads have no disk model. Keep their canonical topology resident;
+    # the native actor supplies the current anchor/shape, not projected pixels.
+    for x, y in ((0, 0), (1, 0), (0, 1), (1, 1)):
+        sections['TMPL'].extend(struct.pack('<4f', x, y, 0, 1))
     binary = pack_sections(sections)
-    manifest = dict(schema='mgs-asset-cache/v1', discs=disc_rows, assets=assets,
+    manifest = dict(schema='mgs-asset-cache/v2', discs=disc_rows, assets=assets,
         occurrences=occurrences, sections={name: dict(count=len(sections[name]) // stride, stride=stride)
                                          for name, stride in SECTIONS},
         binary_sha256=sha(binary), binary_size=len(binary), errors=errors,
         other_resource_occurrences=dict(ignored),
         lod_policy='retain every distinct source variant; no unverified cross-asset replacement',
         lod_families=[],
-        runtime_status='Immutable GPU storage; optional native-scene bridge replaces certified geometry, retaining runtime materials')
+        runtime_status='Immutable GPU geometry/PCX storage; certified scene bridge supports deformations, subdivision and procedural templates')
     output.mkdir(parents=True, exist_ok=True)
     temp = output / 'assets.mgsc.tmp'
     temp.write_bytes(binary)

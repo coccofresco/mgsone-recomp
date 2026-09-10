@@ -28,6 +28,9 @@ def main():
     assert struct.unpack_from('<I', data, 0x17b38 - 0x10000 + 2048)[0] == 0x84830006
     assert struct.unpack_from('<I', data, 0x1919c - 0x10000 + 2048)[0] == 0x27bdffd8
     assert struct.unpack_from('<I', data, 0x1e0ac - 0x10000 + 2048)[0] == 0x00804821
+    for pc, instruction in ((0x8001A618, 0x27bdffd0), (0x80019F60, 0x27bdffc8),
+                            (0x80019CDC, 0x27bdffe8), (0x80019F48, 0xac860000)):
+        assert struct.unpack_from('<I', data, (pc & 0x1fffff) - 0x10000 + 2048)[0] == instruction
     analysis = ROOT / 'data/mgs.usa.analysis.toml'
     with (ROOT / '.local/analyze-usa.log').open('w') as log:
         subprocess.run([str(ROOT / 'build/ps1Analyzer/ps1Analyzer'), str(exe), str(analysis)],
@@ -101,6 +104,14 @@ def main():
     s += '\n"0x8001919C" = "extern void mgsCaptureSceneBeforeBounds(recomp_context*); mgsCaptureSceneBeforeBounds(ctx); pgxp_addiu(ctx, 29, 29, -40);"\n'
     # DG_ChanlUnits[6], after transform/shade/divide, before OT sorting.
     s += '\n"0x8001E0AC" = "extern void mgsPrepareMeshReplay(recomp_context*); mgsPrepareMeshReplay(ctx); pgxp_move_gpr(ctx, 9, 4, ctx->r4);"\n'
+    # Observe subdivision lineage without modifying original subdivision or RAM.
+    for pc, name, original in (
+        (0x8001A618, 'mgsBeginMeshDivide', 'pgxp_addiu(ctx, 29, 29, -48);'),
+        (0x80019F60, 'mgsMeshDivideGrid', 'pgxp_addiu(ctx, 29, 29, -56);'),
+        (0x80019CDC, 'mgsMeshDivideCopy', 'pgxp_addiu(ctx, 29, 29, -24);'),
+        (0x80019F48, 'mgsMeshDividePacket', 'pgxp_store_word(ctx, 6, ctx->r4, ctx->r6);')):
+        code = f'extern void {name}(recomp_context*); {name}(ctx); {original}'
+        s += f'\n"0x{pc:08X}" = {json.dumps(code)}\n'
     image = next(cue.parent.glob('*.bin'))
     disc = Disc(image)
     record = disc.files()['/MGS/STAGE.DIR']

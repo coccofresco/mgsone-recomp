@@ -37,7 +37,7 @@ class GpuAssetCacheTests(unittest.TestCase):
         sections = {name: bytes(stride) for name, stride in SECTIONS}
         result = pack_sections(sections)
         magic, size, checksum = struct.unpack_from('<8sII', result)
-        self.assertEqual(magic, b'MGSAC001')
+        self.assertEqual(magic, b'MGSAC002')
         self.assertEqual(size, len(result))
         self.assertEqual(checksum, zlib.crc32(result[16:]))
         for i, (name, stride) in enumerate(SECTIONS):

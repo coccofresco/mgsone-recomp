@@ -116,7 +116,7 @@ static_assert(std::is_const_v<CrashReplayFramePtr::element_type>,
 static_assert(!std::is_copy_constructible_v<CrashReplayFrame>);
 static_assert(std::is_trivially_copyable_v<PaintRect>,
               "the coalesced GP0(68h) path must not own a heap payload");
-static_assert(sizeof(ps1::gpu::replay::vulkan_abi::DrawUniforms) == 320);
+static_assert(sizeof(ps1::gpu::replay::vulkan_abi::DrawUniforms) == 448);
 static_assert(sizeof(ps1::gpu::replay::vulkan_abi::Vertex) == 32);
 
 TEST(GpuModernReplayTest, SealedFrameContainsEveryMutationAndTerminalLatch) {

@@ -469,7 +469,18 @@ constexpr uint32_t replayDrawFlagBit(ReplayDrawFlag flag) {
 // Original-asset geometry consumed by the MGS Vulkan bridge. Offsets address
 // the immutable storage buffer in bytes; bit 31 selects signed packed i16 XYZ.
 // Per-corner transforms also represent rigid parent seams without skin weights.
+struct OriginalTexture {
+  std::array<uint32_t, 4>
+      data{}; // index byte offset, palette byte offset, width, height
+  std::array<int32_t, 4> origin{};   // page-relative UV origin, mode (1=static,
+                                     // 2=dynamic palette), reserved
+  std::array<uint32_t, 8> palette{}; // 16 live palette words, two per uint
+  bool operator==(const OriginalTexture &) const = default;
+};
 struct OriginalMeshGeometry {
+  uint32_t textureId = ~0u; // live logical KMD material ID, for PCX provenance
+  std::array<std::array<float, 4>, 4> weights{
+      {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}};
   std::array<uint32_t, 4> pointBytes{};
   std::array<std::array<float, 4>, 12> viewRows{};
   std::array<float, 4> projection{};
@@ -503,6 +514,7 @@ struct DrawPacket {
   bool gouraud = false;
   bool rawTexture = false;
   std::optional<OriginalMeshGeometry> originalMesh;
+  std::optional<OriginalTexture> originalTexture;
 
   bool operator==(const DrawPacket &) const = default;
 };

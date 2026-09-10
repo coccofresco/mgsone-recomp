@@ -23,7 +23,15 @@ layout(set = 1, binding = 0, std140) uniform CrashReplayDrawState {
   uvec4 texture_state;
   uvec4 texture_window;
   uvec4 destination_state;
+  vec4 mgs_view_rows[12];
+  uvec4 mgs_point_bytes;
+  vec4 mgs_projection;
+  uvec4 mgs_texture_data;
+  ivec4 mgs_texture_origin;
+  uvec4 mgs_palette[2];
+  vec4 mgs_weights[4];
 } u_draw;
+#include "games/mgs_original_texture.glsl"
 
 layout(push_constant) uniform ReplayVisibilityOwnerState {
   // x=one-based owner, y=pass-local evidence (bit 31 requests diagnostic raw
@@ -63,6 +71,8 @@ uint samplePs1Texel(vec2 interpolatedUv) {
   }
   uvec2 uv = uvec2(ivec2(interpolatedUv)) & uvec2(255u);
   uv = applyTextureWindow(uv);
+  uint cachedTexel;
+  if (mgs_original_texel(uv, cachedTexel)) return cachedTexel;
 
   const uint tpage = u_draw.texture_state.x;
   const uint clut = u_draw.texture_state.y;

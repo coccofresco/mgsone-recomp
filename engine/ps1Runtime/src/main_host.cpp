@@ -785,6 +785,7 @@ int main(int argc, char *argv[]) {
       gpu.writeGP0(w, UINT32_MAX, nullptr,
                    ps1::PGXPSubmissionPath::HleGenerated);
     };
+    hleCfg.readGPUREAD = [&gpu]() { return gpu.readGPUREAD(); };
     hleCfg.writeGP0Tracked =
         [&gpu](uint32_t w, uint32_t source, const ps1::PGXPValue *precision,
                uint32_t listStart, uint32_t nodeAddress,

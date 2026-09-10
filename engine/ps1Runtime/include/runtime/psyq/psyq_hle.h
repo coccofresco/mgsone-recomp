@@ -37,6 +37,9 @@ struct HleConfig {
   /// GPU command port (GP0) write -- used by DrawOTag and PutDrawEnv.
   std::function<void(uint32_t)> writeGP0;
 
+  /// GPUREAD drain for StoreImage; memory-mapped reads remain the fallback.
+  std::function<uint32_t()> readGPUREAD;
+
   /// Ordering-table GP0 write with guest source/provenance. DrawOTag prefers
   /// this path so PGXP metadata attached to packet words is not discarded by
   /// the HLE traversal. The final three arguments are normalized physical DMA

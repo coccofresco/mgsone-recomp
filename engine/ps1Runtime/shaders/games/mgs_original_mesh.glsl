@@ -1,17 +1,5 @@
-// MGS immutable original-asset storage, shared with the device-local cache.
-// Other profiles keep mgs_projection.w == 0 and never read this binding.
-layout(set=1, binding=2, std430) readonly buffer MgsOriginalAssets {
-  uint words[];
-} u_mgs;
-uint mgs_word_at_byte(uint offset) {
-  uint shift=(offset & 3u)*8u;
-  uint value=u_mgs.words[offset/4u];
-  if (shift==0u) return value;
-  return (value>>shift) | (u_mgs.words[offset/4u+1u]<<(32u-shift));
-}
-vec3 mgs_original_position(vec2 fallback_xy, float fallback_w) {
-  if (u_draw.mgs_projection.w == 0.0) return vec3(fallback_xy,fallback_w);
-  uint lane=uint(fallback_xy.x);
+#include "mgs_asset_storage.glsl"
+vec3 mgs_corner_eye(uint lane) {
   uint reference=u_draw.mgs_point_bytes[lane];
   uint offset=reference & 0x7fffffffu;
   vec3 point;
@@ -29,5 +17,26 @@ vec3 mgs_original_position(vec2 fallback_xy, float fallback_w) {
   vec3 eye=vec3(dot(u_draw.mgs_view_rows[lane*3],p),
                 dot(u_draw.mgs_view_rows[lane*3+1],p),
                 dot(u_draw.mgs_view_rows[lane*3+2],p));
-  return vec3(eye.xy*(u_draw.mgs_projection.x/eye.z)+u_draw.mgs_projection.yz,eye.z);
+  return eye;
+}
+
+vec3 mgs_eye(uint lane) {
+  vec4 weights = u_draw.mgs_weights[lane];
+  vec3 eye = vec3(0.0);
+  for (uint k=0u; k<4u; ++k)
+    if (weights[k] != 0.0) eye += weights[k] * mgs_corner_eye(k);
+  return eye;
+}
+vec3 mgs_original_position(vec2 fallback_xy, float fallback_w) {
+  if (u_draw.mgs_projection.w == 0.0) return vec3(fallback_xy,fallback_w);
+  vec3 eye = mgs_eye(uint(fallback_xy.x));
+  return vec3(eye.xy*(u_draw.mgs_projection.x/max(1.0,eye.z))+u_draw.mgs_projection.yz,eye.z);
+}
+vec4 mgs_original_clip(uint lane) {
+  vec3 eye = mgs_eye(lane);
+  vec2 clip_xy = eye.xy * u_draw.mgs_projection.x * u_draw.position_scale_bias.xy +
+      eye.z * (u_draw.mgs_projection.yz * u_draw.position_scale_bias.xy + u_draw.position_scale_bias.zw);
+  // Vulkan clips against 0 <= Z <= W. This linear homogeneous plane preserves
+  // signed eye depth, including crossing triangles and vertices exactly at Z=0.
+  return vec4(clip_xy, eye.z - 1.0, eye.z);
 }

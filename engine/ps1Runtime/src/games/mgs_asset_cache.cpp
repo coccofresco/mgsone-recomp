@@ -43,14 +43,19 @@ AssetCache AssetCache::load(const std::filesystem::path &path) {
 }
 AssetCache AssetCache::decode(std::vector<uint8_t> bytes) {
   check(bytes.size() >= 128, "short header");
-  check(std::memcmp(bytes.data(), "MGSAC001", 8) == 0, "unsupported schema");
+  const bool v2 = std::memcmp(bytes.data(), "MGSAC002", 8) == 0;
+  check(v2 || std::memcmp(bytes.data(), "MGSAC001", 8) == 0,
+        "unsupported schema");
+  const size_t sectionCount = v2 ? Count : 7;
+  check(bytes.size() >= 16 + sectionCount * 16, "short directory");
   check(u32(bytes.data() + 8) == bytes.size(), "length mismatch");
   check(u32(bytes.data() + 12) == crc32(std::span(bytes).subspan(16)), "checksum mismatch");
   AssetCache result;
-  static constexpr const char *tags[] = {"ASST", "MODL", "VRTX", "TEXR", "TEXI", "PLTE", "SRCE"};
-  static constexpr uint32_t strides[] = {64, 32, 48, 32, 1, 4, 1};
-  uint64_t end = 128;
-  for (size_t s = 0; s < Count; ++s) {
+  static constexpr const char *tags[] = {"ASST", "MODL", "VRTX", "TEXR", "TEXI",
+                                         "PLTE", "SRCE", "NAME", "TMPL"};
+  static constexpr uint32_t strides[] = {64, 32, 48, 32, 1, 4, 1, 8, 16};
+  uint64_t end = 16 + sectionCount * 16;
+  for (size_t s = 0; s < sectionCount; ++s) {
     const auto *entry = bytes.data() + 16 + s * 16;
     check(std::memcmp(entry, tags[s], 4) == 0, "wrong section order");
     auto &section = result.sections_[s];
@@ -90,6 +95,21 @@ AssetCache AssetCache::decode(std::vector<uint8_t> bytes) {
     check(range(word(Textures, t, 4), word(Textures, t, 5), result.section(Palettes).count) &&
           word(Textures, t, 5) > 0 && word(Textures, t, 5) <= 256, "texture palette");
     check(word(Textures, t, 7) < result.section(Assets).count, "texture asset index");
+  }
+  check(!v2 || result.section(Templates).count == 4,
+        "missing primitive template");
+  if (v2)
+    for (uint32_t k = 0; k < 4; ++k)
+      for (uint32_t axis = 0; axis < 4; ++axis) {
+        const bool one =
+            axis == 3 || (axis == 0 && (k & 1)) || (axis == 1 && (k & 2));
+        check(word(Templates, k, axis) == (one ? 0x3f800000u : 0u),
+              "invalid primitive template");
+      }
+  for (uint32_t n = 0; n < result.section(Names).count; ++n) {
+    check(word(Names, n, 0) <= 0xffff &&
+              word(Names, n, 1) < result.section(Assets).count,
+          "invalid asset name");
   }
   return result;
 }

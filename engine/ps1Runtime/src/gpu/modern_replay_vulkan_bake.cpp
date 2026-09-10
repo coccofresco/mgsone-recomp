@@ -1116,6 +1116,12 @@ vulkan_abi::DrawUniforms drawUniforms(const DrawPacket &packet) noexcept {
     uniforms.mgsViewRows = packet.originalMesh->viewRows;
     uniforms.mgsPointBytes = packet.originalMesh->pointBytes;
     uniforms.mgsProjection = packet.originalMesh->projection;
+    uniforms.mgsWeights = packet.originalMesh->weights;
+  }
+  if (packet.originalTexture) {
+    uniforms.mgsTextureData = packet.originalTexture->data;
+    uniforms.mgsTextureOrigin = packet.originalTexture->origin;
+    uniforms.mgsPalette = packet.originalTexture->palette;
   }
   return uniforms;
 }
@@ -1148,6 +1154,15 @@ VulkanReplayBakedRect destinationSnapshotBounds(
     const VulkanReplayBakedRect &scissor, uint32_t internalScale) noexcept {
   if (scissor.width == 0 || scissor.height == 0)
     return {};
+
+  // A cached triangle crossing the eye plane can cover any part of the draw
+  // area after homogeneous clipping; projected endpoint bounds are
+  // insufficient.
+  if (packet.originalMesh)
+    for (std::size_t index = 0; index < 3; ++index)
+      if (packet.vertices[packet.triangleIndices[firstTriangleIndex + index]]
+              .rawDepth < 1.0)
+        return scissor;
 
   double minimumX = std::numeric_limits<double>::infinity();
   double minimumY = std::numeric_limits<double>::infinity();

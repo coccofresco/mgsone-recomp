@@ -15,6 +15,7 @@ struct SceneInstance {
   uint32_t guestAddress = 0, definition = 0, flags = 0, group = 0;
   uint32_t asset = ~0u;
   bool visible = false;
+  bool deformed = false;
   std::vector<SceneModel> models;
 };
 struct SceneSnapshot {
@@ -32,6 +33,8 @@ void setSceneAssetCache(const AssetCache *cache);
 void resetSceneCapture();
 std::shared_ptr<const SceneSnapshot> latestSceneSnapshot();
 uint32_t matchOriginalDefinition(const AssetCache &cache, const Memory &memory, uint32_t definition);
+uint32_t matchSceneDefinition(const AssetCache &cache, const Memory &memory,
+                              uint32_t definition, bool &deformed);
 void captureSceneBeforeBounds(recomp_context *ctx);
 }
 // USA recipe instruction override, executed before any PSX bounding/culling.

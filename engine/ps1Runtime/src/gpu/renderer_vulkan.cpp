@@ -6267,7 +6267,8 @@ struct RendererVulkan::Impl {
     uniformBindings[2].binding = 2;
     uniformBindings[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     uniformBindings[2].descriptorCount = 1;
-    uniformBindings[2].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    uniformBindings[2].stageFlags =
+        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     VkDescriptorSetLayoutCreateInfo uniformLayoutInfo{
         VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
     uniformLayoutInfo.bindingCount =
@@ -21653,6 +21654,10 @@ struct RendererVulkan::Impl {
           games::mgs::setSceneAssetCache(&mgsAssetCache->assets());
       }
     }
+    if (games::mgs::active() &&
+        environmentSwitchEnabled("PS1_MGS_MESH_REPLAY") && !mgsAssetCache)
+      throw std::runtime_error("MGS mesh replay requires PS1_MGS_ASSET_CACHE; "
+                               "rebuild the USA asset cache first");
     createDescriptors();
     createNativeSnapshotResources();
     scanoutSampler = createSampler(VK_FILTER_LINEAR);
@@ -27946,15 +27951,20 @@ struct RendererVulkan::Impl {
     }
     if (preparedReplayGeometry.has_value() && replayBatch.has_value()) {
       if (games::mgs::active()) {
-        uint64_t originals = 0;
+        uint64_t originals = 0, cachedTextures = 0;
         for (const auto &command : replayBatch->commands) {
           const auto *draw =
               std::get_if<replay::VulkanReplayBakedDraw>(&command.payload);
           if (draw && draw->segmentCount &&
               draw->segments[0].uniforms.mgsProjection[3] != 0.0f)
             ++originals;
+          if (draw && draw->segmentCount &&
+              draw->segments[0].uniforms.mgsTextureOrigin[2] != 0)
+            ++cachedTextures;
         }
         ps1::metrics::count("mgs.mesh.gpu_submitted_packets", originals);
+        ps1::metrics::count("mgs.texture.gpu_submitted_packets",
+                            cachedTextures);
       }
       commitCrash3RawSceneUpload(*preparedReplayGeometry, currentFrame);
     }

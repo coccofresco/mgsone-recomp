@@ -148,6 +148,7 @@ escluso. Il formato del modello da solo non decide la visibilità narrativa.
    codec, filmati, camera e transizioni; near-plane e widescreen come prove
    specifiche, non dedotte dall'esito di un visualizzatore offline.
 
-La cattura iniziale del molo è ripetibile anche caricando un savestate. Restano
-materiali e deformazioni, provenienza dei draw e composizione sincronizzata con
-il framebuffer, prima di poter sostituire il contributo delle mesh originali.
+La scena del molo è ora sostituita mediante il [bridge dalla cache](mgs-original-mesh-replay.md),
+con materiali, deformazioni, suddivisione e quad procedurali. Il ripristino da
+savestate ricostruisce le associazioni. Restano da verificare altre scene e da
+implementare culling indipendente, famiglie LOD e interpolazione.

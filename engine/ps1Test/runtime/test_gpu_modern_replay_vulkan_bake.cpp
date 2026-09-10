@@ -1841,6 +1841,25 @@ TEST(GpuModernReplayVulkanBakeTest,
   EXPECT_EQ(sizeof(vulkan_abi::Vertex), 32u);
 }
 
+TEST(GpuModernReplayVulkanBakeTest,
+     CachedEyePlaneCrossingKeepsFullFeedbackScissor) {
+  auto packet = precisePacket(1, true, true);
+  packet.originalMesh.emplace();
+  packet.originalMesh->projection = {320, 160, 112, 1};
+  makeSemiTransparent(packet);
+  auto &vertex = packet.vertices[0];
+  vertex.w = vertex.nearDepth = 1;
+  vertex.rawDepth = -100;
+  vertex.nearSaturated = true;
+  const auto result =
+      bakeModernReplayVulkan(makePlan(packet), 4, feedbackFeatures());
+  ASSERT_TRUE(result.accepted()) << int(result.reason);
+  const auto &draw =
+      std::get<VulkanReplayBakedDraw>(result.batch.commands[0].payload);
+  EXPECT_EQ(draw.segments[0].destinationSnapshot, draw.scissor);
+  EXPECT_EQ(draw.segments[1].destinationSnapshot, draw.scissor);
+}
+
 TEST(GpuModernReplayVulkanBakeTest, PaintRunsKeepHolesRowsAndNativeWords) {
   auto paint = paintPixels();
   paint.blend.enabled = false;

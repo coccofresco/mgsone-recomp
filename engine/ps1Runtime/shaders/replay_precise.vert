@@ -45,6 +45,10 @@ layout(set = 1, binding = 0, std140) uniform CrashReplayDrawState {
   vec4 mgs_view_rows[12];
   uvec4 mgs_point_bytes;
   vec4 mgs_projection;
+  uvec4 mgs_texture_data;
+  ivec4 mgs_texture_origin;
+  uvec4 mgs_palette[2];
+  vec4 mgs_weights[4];
 } u_draw;
 #include "games/mgs_original_mesh.glsl"
 
@@ -107,6 +111,9 @@ void main() {
                      crash3_clip_depth(normalized_depth, w,
                          uintBitsToFloat(u_presentation.occlusion_multiplier_bits),
                          uintBitsToFloat(u_presentation.occlusion_bias_bits)), w);
+
+  if (u_draw.mgs_projection.w != 0.0)
+    gl_Position = mgs_original_clip(uint(a_position_native.x));
 
   v_uv = a_uv;
   v_color_255 = a_color_255;

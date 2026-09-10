@@ -36,7 +36,7 @@ richiede il renderer Vulkan e la cache caricata, non la modalità headless.
 | Parti di modello | 6.695 |
 | Corner di quad espansi | 631.944 |
 | Varianti PCX | 18.481 |
-| Cache binaria | 93.918.664 byte, circa 89,57 MiB |
+| Cache binaria | 94.074.416 byte, circa 89,72 MiB |
 | Errori di parsing | 0 |
 
 L'identità comprende SHA-256 dei byte originali e ID interno per gli elementi
@@ -53,7 +53,7 @@ sostituire un oggetto con uno differente.
 
 ## Formato e risorse Vulkan
 
-`MGSAC001` ha intestazione con lunghezza e CRC32, directory di sette sezioni
+`MGSAC002` ha intestazione con lunghezza e CRC32, directory di nove sezioni
 allineate a 16 byte e record di dimensione fissa:
 
 - `ASST`: identità e intervalli delle risorse, 64 byte.
@@ -64,6 +64,11 @@ allineate a 16 byte e record di dimensione fissa:
 - `TEXI`: indici palette a un byte, senza conversione in RGBA.
 - `PLTE`: parole RGB555/STP conservate in elementi uint32.
 - `SRCE`: byte originali per controlli e stream indicizzati.
+- `NAME`: ID logici originali e asset corrispondenti, 8 byte (19.455 record).
+- `TMPL`: quattro corner float4 del quad procedurale unitario, validati dal lettore.
+
+Il lettore accetta ancora v1 per i vecchi strumenti; la presentazione completa
+richiede v2 e la rigenerazione della cache.
 
 Il seam indica un vertice sorgente del parent, non un peso di skinning.
 Il lettore host controlla CRC, sezioni, intervalli e relazioni. L'upload usa
@@ -83,17 +88,15 @@ Il recipe controlla l'eseguibile USA e l'istruzione sovrascritta, poi esegue anc
 l'operazione originale. Lo snapshot possiede i dati e non espone RAM guest al
 renderer. Un caricamento savestate o una cattura non valida invalida lo snapshot.
 
-Il collegamento alla cache richiede l'intera definizione geometrica originale,
-ricostruendo rilocazione dei puntatori e riscrittura dei seam. Non bastano ID a
-16 bit, indirizzi RAM o conteggi. Corrispondenze multiple sono rifiutate.
-La ricerca è ripetuta a ogni cattura: copre il ripristino senza osservare di nuovo
-il loader, ma è ancora diagnostica e non ottimizzata per l'uso finale.
+Il collegamento verifica la definizione geometrica, rilocazione e seam.
+Gli ID a 16 bit restringono la ricerca ma non provano l'identità. Il bridge
+riconosce materiali runtime, alias geometricamente equivalenti e deformazioni
+con baseline originale certificata nell'attore `shakemdl.c`.
 
-Sul checkpoint locale del molo sono stati osservati 27 oggetti, 22 semanticamente
-visibili, 295 parti e 19 oggetti associati con certezza. Gli otto restanti sono
-**non certificati**, senza dedurre se la causa sia deformazione, variante o
-modifica runtime. La modalità di sola cattura non sopprime pacchetti. La nuova modalità mesh
-verifica anche posa e provenienza dei pacchetti prima di sostituirli.
+Nel molo sono associate tutte le 27 istanze (295 parti, 22 istanze semanticamente
+visibili al checkpoint). La cattura da sola non sopprime pacchetti. La modalità
+mesh verifica posa e provenienza prima di sostituire geometria e texture;
+[i dettagli e i limiti](mgs-original-mesh-replay.md) sono documentati separatamente.
 
 ## Verifiche riproducibili
 
@@ -104,16 +107,12 @@ PS1_TEST_MGS_ASSET_CACHE=data/presentation/usa/assets.mgsc \
   --gtest_filter='MgsAssetCacheTest.*:*Mgs*:*SaveState*'
 ```
 
-Risultato: 25 test Python e 20 test C++ passati, inclusi parsing, CRC/range,
-matching geometrico, cattura prima del culling, invarianza RAM/registri e
-invalidazione degli snapshot. La verifica locale Vulkan ha caricato slot 0
-senza salvarlo e proseguito per 600 VBlank: un solo upload di 93.918.664 byte,
-readback interamente identico, 398 catture di scena. Log e metriche locali sono
-in `.local/` e `data/native/asset-cache/`; non includiamo gli asset originali in Git.
-Il test di invarianza è sintetico; non costituisce ancora un confronto completo
-di gameplay con una presentazione sostitutiva.
+La verifica include parsing, CRC/range, matching geometrico, deformazioni,
+subdivisione, cattura, invarianza RAM/registri, reset e ripristino. I test GPU
+confrontano anche il campionamento PCX e le palette animate con colori attesi.
+Risultati aggiornati: [evidenza della scena](mgs-cache-scene-evidence.json).
+La prima verifica di upload v1 aveva restituito 93.918.664 byte interamente
+identici; v2 aggiunge nomi e template. Asset e log restano locali.
 
-Il passo successivo ha implementato trasformazioni extend/seam, cattura per
-buffer e disegno Vulkan dei pacchetti certificati. Restano materiali autonomi,
-deformazioni, ampliamento della geometria oltre i pacchetti originali e LOD. Il [contratto di presentazione](mgs-vulkan-presentation.md) descrive
-questi passaggi e i criteri di verifica.
+Il [contratto di presentazione](mgs-vulkan-presentation.md) descrive gli obiettivi
+ulteriori, compreso l'invio della scena indipendentemente dai pacchetti PS1 e LOD.

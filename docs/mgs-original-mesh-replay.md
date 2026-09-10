@@ -1,90 +1,127 @@
-# Mesh originali nella presentazione Vulkan
+# Scena originale dalla cache Vulkan
 
 Verifica locale del 10 settembre 2026, USA v1.0, molo iniziale. Il percorso
-sperimentale legge i vertici dalla cache immutabile Vulkan e li trasforma e
-proietta in float. Il codice ricompilato continua a produrre la scena, i
-pacchetti e il framebuffer PS1 di riferimento. Non è ancora una presentazione
-indipendente dal culling originale né una selezione automatica del LOD massimo.
+sperimentale disegna geometria KMD/ZMD e texture PCX dalla cache immutabile
+Vulkan. Sono associate tutte le 27 istanze del checkpoint, comprese le tre
+con deformazione runtime. Il codice ricompilato continua a produrre scena,
+pacchetti e framebuffer PS1 di riferimento.
 
 ## Avvio
-
-Con build e [cache USA](mgs-vulkan-cache.md) presenti:
 
 ```sh
 PS1_MGS_MESH_REPLAY=1 scripts/run_native.sh
 ```
 
-La modalità imposta la presentazione a 4×, PGXP, true color e profondità ibrida.
-F9 carica lo slot selezionato; F5 lo salva. Il comando ordinario
-`scripts/run_native.sh` conserva la presentazione predefinita. La cache deve
-essere disponibile: la variabile da sola non crea gli asset.
+Servono build e [cache USA v2](mgs-vulkan-cache.md). La modalità imposta la
+presentazione a 4×, PGXP, true color e profondità ibrida. F9 carica lo slot
+selezionato; F5 lo salva. Il comando ordinario conserva la presentazione
+predefinita. Una cache assente impedisce di attivare il percorso sostitutivo.
 
-## Associazione e rendering
+## Geometria e posa
 
 La cattura prima del culling conserva camera, istanze e matrici native. Un
-secondo hook USA, all'ingresso di `DG_SortChanl` (`0x8001E0AC`), associa i
-pacchetti GT4 alle definizioni originali dopo trasformazione, illuminazione e
-suddivisione. La ricetta verifica l'istruzione sostituita e ne riproduce l'effetto
-con propagazione PGXP. I due buffer nativi mantengono mappe distinte.
+hook all'ingresso USA di `DG_SortChanl` (`0x8001E0AC`) associa i pacchetti alle
+definizioni originali dopo trasformazione, illuminazione e suddivisione.
+Ogni osservatore riproduce l'istruzione originale verificata dalla ricetta.
 
-L'associazione richiede identità della definizione, proprietà della catena
-`extend`, indirizzo DMA e sorgente GP0 esatti, coordinate native, colori, UV,
-CLUT e texture page coerenti. Ambiguità, deformazioni non riconosciute e
-suddivisioni non associabili conservano il percorso di riferimento. Una verifica
-indipendente della proiezione impone uno scarto massimo di quattro pixel nativi;
-non viene usata per indovinare l'identità della mesh.
+L'identità richiede la definizione completa: topologia, normali, UV, relazioni
+parent/extend e posizioni. Il cache ID nativo restringe i candidati, senza
+costituire da solo una prova. Sono ammesse modifiche del materiale e del solo
+flag di shading. Alias sono equivalenti esclusivamente quando i dati di
+geometria effettivamente renderizzati coincidono.
 
-Il vertex shader recupera gli originali da un buffer device-local condiviso.
-I corner ordinari usano la sezione float VRTX; i vertici di giunzione seguono
-la catena parent e leggono le coordinate indicizzate originali, anche quando
-non allineate a quattro byte. Gli extend usano la posa del proprietario primario.
-Le matrici provengono ancora dalla simulazione nativa: la loro composizione e
-la proiezione nel nuovo percorso sono float. Sono mantenuti la correzione
-orizzontale 16:9 e l'overscan verticale USA 58/64.
+Per `shakemdl.c` vengono verificati l'attore vivo nella lista nativa, il suo
+riferimento alla definizione e tutti i punti originali conservati dall'attore.
+La deformazione diventa uno spostamento per corner rispetto all'originale
+immutabile; nessuna coordinata dello schermo PS1 viene usata come geometria.
 
-Il pacchetto sostituito viene disegnato una sola volta nella presentazione con
-la geometria originale. UV, colori, materiali, ordinamento, effetti e interfaccia
-rimangono quelli prodotti dal gioco; le texture usano ancora la VRAM nativa.
-Il calcolo grafico di riferimento continua sotto al cofano. La provenienza GTE
-non più valida viene rimossa, conservando la provenienza esatta del trasporto.
+Quattro hook nel percorso `DG_SubDivide` (`0x8001A618`, `0x80019F60`,
+`0x80019CDC`, `0x80019F48`) conservano la discendenza dei corner: ogni vertice
+suddiviso è una combinazione dei quattro corner della faccia originale.
+I pesi derivano dalle operazioni native, non da un adattamento ai pixel PS1.
 
-La cache non viene ricaricata con F9. Il ripristino invalida le associazioni
-transitorie, ricostruite dalla scena successiva. L'ABI dei vertici resta a
-32 byte; gli uniform per draw crescono a 320 byte. L'arena di upload può crescere
-a fence completata. I PaintPixels consecutivi con uguale sorgente vengono
-raggruppati per riga, mantenendo separati i risultati nativi di colore e maschera.
+I quad procedurali FT4/GT4 usano un template unitario residente nella sezione
+TMPL, con forma e posa dell'attore. Non sono spacciati per modelli su disco.
+Questo copre spruzzi, particelle e altri effetti del molo. Gli effetti world
+space seguono la correzione 16:9, anche dove il percorso DG_PRIM nativo bypassa
+l'hook widescreen dei KMD; gli elementi camera space mantengono il loro framing.
 
-## Evidenza riproducibile locale
+L'associazione richiede inoltre sorgente DMA/GP0, coordinate native, colori,
+UV, CLUT e texture page esatti. Una verifica separata della proiezione ammette
+al massimo quattro pixel di errore dovuti all'aritmetica nativa. L'oracolo
+riproduce saturazione GTE e doppia proiezione dei billboard; Vulkan usa la
+proiezione float e clipping omogeneo a Z=1, anche per facce che attraversano
+la camera. Il limite GTE H/2 non esclude più queste facce dalla cache.
 
-- Build `ps1Runtime` e `ps1Runtime_tests`; 263 test C++ passati con integrazione
-  Vulkan abilitata, inclusi bake, confronto GPU di colore/maschera/profondità,
-  cache MGS, associazioni e savestate. Altri 25 test Python passati.
-- Ultima prova dal savestate del molo: 120 VBlank dopo il caricamento,
-  23.303 pacchetti sostituiti e altrettanti effettivamente sottoposti alla GPU,
-  un solo upload della cache, nessun rifiuto della verifica di posa.
-- 27 istanze native, 19 associate: le otto rimanenti comprendono tre definizioni
-  deformate, quattro istanze con modifiche a materiali/flag e un'identità ambigua.
-- Readback della GPU nei frame 97150, 97170 e 97190: Snake, ambiente, radar,
-  acqua ed effetti visibili. È un'ispezione visiva, non una certificazione di
-  equivalenza completa del framebuffer.
-- Caricato lo stato v6, salvata una copia diagnostica v7 e ricaricata tre volte
-  in un nuovo processo, poi eseguiti 600 VBlank. Hash del salvataggio utente
-  invariato. Nessuna modifica al formato savestate introdotta da questo percorso.
-- Prova con movimento e clock normale: 240 VBlank in 6,640235 secondi contro
-  4 secondi nominali, con 48.516 pacchetti originali sottoposti alla GPU.
-  Il percorso a 4× non mantiene ancora il tempo reale sulla macchina di prova.
+Il vertex shader legge VRTX o le posizioni indicizzate originali, segue seam
+parent e proprietari extend, compone la posa e applica la proiezione float.
+Restano overscan USA 58/64 e correzione orizzontale 16:9. Colori e ordinamento
+sono quelli della simulazione; il contributo originale non viene disegnato una
+seconda volta nella presentazione.
 
-I risultati sono esclusi da Git: `.local/test-mgs-mesh-final.log`,
-`.local/test-mgs-mesh-python.log`, `data/native/mesh-replay/final-metrics.json`,
-`final-gpu/`, `save-metrics.json`, `reload-metrics.json` e `play-metrics.json`
-(nella stessa directory diagnostica). Dischi, cache e savestate restano locali.
+## Texture e Codec
 
-## Lavoro restante
+I fragment shader leggono direttamente TEXI e PLTE. La scelta della PCX
+verifica pagina, CLUT, dominio UV, finestra texture e contenuto nativo. Le
+palette animate a 16 colori sono catturate per draw; gli indici restano nella
+cache. Palette statiche a 16/256 colori mantengono RGB555 e bit STP originali.
 
-La copertura è limitata alle facce inviate dal gioco e alle identità certificate.
-Occorre gestire le definizioni dinamiche, separare identità geometrica e varianti
-materiali, risolvere le ambiguità e verificare altre scene. La cache contiene le
-varianti originali, ma manca la certificazione delle famiglie LOD e la selezione
-di quella più dettagliata. Mancano inoltre l'invio della scena completa prima
-del culling PS1, materiali letti direttamente dalle PCX, interpolazione 2× e
-ottimizzazione sufficiente per la velocità reale. Il percorso resta opt-in.
+`StoreImage` era uno stub che inviava il comando senza copiare la risposta GPU
+nella RAM guest. Ora drena GPUREAD correttamente, incluso l'ultimo pixel dispari.
+Questo ripristina il backup usato da `menu/radiotex.c` per le aree temporanee
+del Codec. La prova di chiamata esegue due StoreImage, per 7.168 pixel.
+
+Il vecchio stato utente contiene già texel corrotti in quelle aree. Per la sola
+presentazione è ammesso recuperare la PCX originale quando il materiale KMD
+nomina esattamente l'asset, tutti i texel fuori dalle due aree Codec coincidono,
+esiste almeno un texel verificabile esterno e non esistono varianti ambigue.
+Le aree sono [768,1024)×[256,260) e [896,960)×[336,432). Il recupero non modifica
+né lo stato utente né la VRAM della simulazione.
+
+HUD, testo e ritratti Codec sono grafica 2D runtime: continuano a essere
+composti dal replay Vulkan con i dati nativi. Non vengono contati come modelli
+KMD/PCX della scena né sostituiti con un quad 3D arbitrario.
+
+## Risorse e ripristino
+
+La cache v2 occupa 94.074.416 byte, caricati una sola volta. F9 invalida solo
+le associazioni transitorie, comprese quelle delle suddivisioni. I vertici
+restano di 32 byte; gli uniform per draw sono 448 byte. Il formato savestate
+non cambia. La memoria guest non è accessibile dagli shader.
+
+## Verifica
+
+299 test C++ (22 suite, integrazione Vulkan abilitata) e 25 test Python passati.
+La cache v2 è stata riletta dalla GPU: tutti i 94.074.416 byte coincidono.
+Tre caricamenti consecutivi dello stato v7, seguiti da 600 VBlank, hanno prodotto
+174.976 pacchetti: tutti sostituiti per geometria e texture e sottoposti alla GPU,
+con un solo upload e nessun rifiuto. Hash del salvataggio utente invariato.
+
+Comandi e misure sintetiche sono conservati in
+[mgs-cache-scene-evidence.json](mgs-cache-scene-evidence.json). Gli asset,
+i readback e i savestate diagnostici restano esclusi da Git.
+
+La prova stazionaria ha sostituito 34.628/34.628 pacchetti della scena, sia per
+geometria sia per texture, tutti sottoposti alla GPU. La prova estesa comprende
+movimento nelle quattro direzioni, chiamata Codec, ritorno al gameplay e
+geometria che attraversa la camera: 176.866/176.866 pacchetti associati,
+senza rifiuti di posa o materiali. I 3.663 FT4 aggiuntivi sono ritratti/interfaccia
+Codec e rimangono sul percorso 2D. La misura di submission GPU è 175.944:
+l'inizializzazione/ripristino del framebuffer richiede il reanchor del replay,
+che non viene conteggiato come disegno dalla cache.
+
+Le immagini sono state ispezionate, ma non costituiscono una prova di uguaglianza
+pixel per pixel: float, prospettiva corretta e recupero delle vecchie texture
+corrotte producono intenzionalmente differenze rispetto al framebuffer PS1.
+
+## Limiti di questa verifica
+
+È coperta la scena del molo, non l'intero gioco. La selezione delle facce,
+l'ordinamento e la suddivisione continuano a dipendere dal codice nativo.
+La posa world proviene ancora dalle matrici native quantizzate. Non sono
+implementati invio indipendente dal culling PS1, famiglie LOD certificate,
+selezione del massimo dettaglio o interpolazione 2×. La modalità resta opt-in;
+il costo della presentazione a 4× richiede ulteriore ottimizzazione.
+
+Prova isolata a clock normale, senza readback GPU: 240 VBlank in 6,462706 secondi
+contro 4 nominali. La correttezza della scena non implica ancora velocità reale a 4×.

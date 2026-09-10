@@ -13,6 +13,7 @@
 namespace ps1::games::mgs {
 namespace {
 const AssetCache *assets = nullptr;
+std::unordered_map<uint32_t, std::vector<uint32_t>> assetNames;
 std::mutex snapshotMutex;
 std::shared_ptr<const SceneSnapshot> latest;
 uint64_t sequence = 0;
@@ -38,7 +39,34 @@ std::array<float, 16> matrix(const Memory &m, uint32_t address) {
   result[15] = 1;
   return result;
 }
-bool match(const AssetCache &cache, uint32_t asset, const Memory &m, uint32_t definition) {
+struct DeformationProof {
+  uint32_t points = 0, axis = 0;
+};
+DeformationProof deformationProof(const Memory &m, uint32_t definition) {
+  // USA GV_ACTOR_USER list. Follow live actors, never scan unowned heap data.
+  uint32_t previous = 0x800AF4E4u;
+  uint32_t actor = u32(ram(m, previous + 4));
+  for (uint32_t n = 0; n < 1024 && actor; ++n) {
+    if (!ramRange(actor, 32) || u32(ram(m, actor)) != previous)
+      return {};
+    const uint32_t name = u32(ram(m, actor + 20));
+    if (ramRange(name, 11) &&
+        std::memcmp(ram(m, name), "shakemdl.c", 11) == 0 &&
+        ramRange(actor, 128) && u32(ram(m, actor + 56)) == definition) {
+      const uint32_t axis = u32(ram(m, actor + 44));
+      const uint32_t points = u32(ram(m, actor + 124));
+      if (axis <= 2 && points)
+        return {points, axis};
+      return {};
+    }
+    previous = actor;
+    actor = u32(ram(m, actor + 4));
+  }
+  return {};
+}
+bool match(const AssetCache &cache, uint32_t asset, const Memory &m,
+           uint32_t definition, bool geometry = false,
+           const DeformationProof *deform = nullptr, bool *changed = nullptr) {
   if (cache.word(AssetCache::Assets, asset, 8) != 'k') return false;
   const uint32_t sourceOffset = cache.word(AssetCache::Assets, asset, 12);
   const uint32_t sourceSize = cache.word(AssetCache::Assets, asset, 13);
@@ -62,12 +90,17 @@ bool match(const AssetCache &cache, uint32_t asset, const Memory &m, uint32_t de
   if (!ramRange(definition, 32ull + uint64_t(total) * 88) ||
       uint64_t(header) + 32 + uint64_t(total) * 88 > bytes.size()) return false;
   if (std::memcmp(ram(m, definition), bytes.data() + header, 32) != 0) return false;
+  uint32_t vertexBase = 0;
   for (uint32_t model = 0; model < total; ++model) {
     const auto *src = bytes.data() + header + 32 + model * 88;
     const auto *live = ram(m, definition + 32 + model * 88);
     // All semantic header fields and exact original streams must agree;
     // only the loader's pointer relocation and documented seam rewrite differ.
-    if (std::memcmp(src, live, 56) || u32(src + 64) != u32(live + 64)) return false;
+    if (std::memcmp(src + 4, live + 4, 52) || u32(src + 64) != u32(live + 64))
+      return false;
+    // Runtime shading can toggle bit 1 without changing topology.
+    if (((u32(src) ^ u32(live)) & (geometry ? ~2u : ~0u)) != 0)
+      return false;
     const uint32_t faces = u32(src + 4), vertices = u32(src + 52), normals = u32(src + 64);
     const uint32_t fields[] = {56, 60, 68, 72, 76, 80};
     const uint64_t sizes[] = {uint64_t(vertices)*8, uint64_t(faces)*4, uint64_t(normals)*8,
@@ -81,7 +114,19 @@ bool match(const AssetCache &cache, uint32_t asset, const Memory &m, uint32_t de
       const uint8_t *a = bytes.data() + offset, *b = ram(m, target);
       if (stream == 0) {
         for (uint32_t v = 0; v < vertices; ++v) {
-          if (std::memcmp(a + v*8, b + v*8, 6)) return false;
+          for (uint32_t axis = 0; axis < 3; ++axis) {
+            uint16_t original = u16(b + v * 8 + axis * 2);
+            if (deform && axis == deform->axis) {
+              const uint64_t offset = uint64_t(vertexBase + v) * 2;
+              if (!ramRange(deform->points, offset + 2))
+                return false;
+              original = u16(ram(m, deform->points) + offset);
+            }
+            if (u16(a + v * 8 + axis * 2) != original)
+              return false;
+          }
+          if (changed && std::memcmp(a + v * 8, b + v * 8, 6))
+            *changed = true;
           const uint16_t seam = u16(a + v*8 + 6);
           if (seam == 0xffff) { if (u16(b + v*8 + 6) != seam) return false; continue; }
           const int32_t parent = int32_t(u32(src + 44));
@@ -104,8 +149,10 @@ bool match(const AssetCache &cache, uint32_t asset, const Memory &m, uint32_t de
           const uint8_t expected = a[corner] | (u16(bytes.data() + positions + a[corner]*8 + 6) != 0xffff ? 128u : 0u);
           if (b[corner] != expected) return false;
         }
-      } else if (std::memcmp(a, b, sizes[stream])) return false;
+      } else if (!(geometry && stream == 5) && std::memcmp(a, b, sizes[stream]))
+        return false;
     }
+    vertexBase += vertices;
   }
   return true;
 }
@@ -125,8 +172,91 @@ uint32_t matchOriginalDefinition(const AssetCache &cache, const Memory &memory, 
   }
   return found;
 }
+// USA GV cache: 128 (file ID, guest buffer) pairs. The file ID is only a
+// candidate filter; the complete topology, normals, UVs and seam links must
+// still match. This table is part of guest RAM and therefore survives F9.
+uint32_t matchSceneDefinition(const AssetCache &cache, const Memory &memory,
+                              uint32_t definition, bool &deformed) {
+  deformed = false;
+  if (!ramRange(definition, 32))
+    return ~0u;
+  const auto deformation = deformationProof(memory, definition);
+  uint32_t fileId = ~0u;
+  for (uint32_t i = 0; i < 128; ++i) {
+    const auto *entry = ram(memory, 0x800AF668u + i * 8);
+    if ((u32(entry) & 0xff0000u) == 0x0a0000u && u32(entry + 4) == definition) {
+      if (fileId != ~0u && fileId != (u32(entry) & 0xffffu))
+        return ~0u;
+      fileId = u32(entry) & 0xffffu;
+    }
+  }
+  std::vector<uint32_t> named;
+  if (fileId != ~0u) {
+    if (&cache == assets) {
+      const auto it = assetNames.find(fileId);
+      if (it != assetNames.end())
+        named = it->second;
+    } else {
+      for (uint32_t i = 0; i < cache.section(AssetCache::Names).count; ++i)
+        if (cache.word(AssetCache::Names, i, 0) == fileId)
+          named.push_back(cache.word(AssetCache::Names, i, 1));
+    }
+  }
+  std::vector<uint32_t> candidates = named;
+  if (candidates.empty()) {
+    for (uint32_t a = 0; a < cache.section(AssetCache::Assets).count; ++a)
+      if (cache.word(AssetCache::Assets, a, 8) == 'k')
+        candidates.push_back(a);
+  }
+  uint32_t found = ~0u;
+  for (uint32_t a : candidates) {
+    if (cache.word(AssetCache::Assets, a, 8) != 'k' ||
+        cache.word(AssetCache::Assets, a, 10) !=
+            u32(ram(memory, definition) + 4))
+      continue;
+    const bool provenance =
+        std::find(named.begin(), named.end(), a) != named.end();
+    if (!named.empty() && !provenance)
+      continue;
+    bool changed = false;
+    if (!match(cache, a, memory, definition, true,
+               provenance && deformation.points ? &deformation : nullptr,
+               &changed))
+      continue;
+    if (found != ~0u) {
+      // Aliases are interchangeable only when all rendered source geometry is
+      // identical. File padding/unused streams do not create another mesh.
+      const auto first = cache.word(AssetCache::Assets, found, 9);
+      const auto other = cache.word(AssetCache::Assets, a, 9);
+      const auto total = cache.word(AssetCache::Assets, a, 10);
+      for (uint32_t m = 0; m < total; ++m) {
+        const uint32_t count = cache.word(AssetCache::Models, first + m, 4);
+        if (count != cache.word(AssetCache::Models, other + m, 4))
+          return ~0u;
+        for (uint32_t v = 0; v < count; ++v) {
+          const uint32_t x = cache.word(AssetCache::Models, first + m, 3) + v;
+          const uint32_t y = cache.word(AssetCache::Models, other + m, 3) + v;
+          for (uint32_t w = 0; w <= 8; ++w)
+            if (cache.word(AssetCache::Vertices, x, w) !=
+                cache.word(AssetCache::Vertices, y, w))
+              return ~0u;
+        }
+      }
+    } else {
+      found = a;
+      deformed = changed;
+    }
+  }
+  return found;
+}
 void setSceneAssetCache(const AssetCache *cache) {
   assets = cache;
+  assetNames.clear();
+  if (cache) {
+    for (uint32_t i = 0; i < cache->section(AssetCache::Names).count; ++i)
+      assetNames[cache->word(AssetCache::Names, i, 0)].push_back(
+          cache->word(AssetCache::Names, i, 1));
+  }
   setMeshReplayCache(cache);
   resetSceneCapture();
 }
@@ -155,7 +285,7 @@ void captureSceneBeforeBounds(recomp_context *ctx) {
   snap->widescreen = widescreen16x9();
   snap->currentGroup = u32(ram(m, 0x800AE0E0));
   for (size_t i = 0; i < 4; ++i) snap->clip[i] = int16_t(u16(c + 92 + i*2));
-  std::unordered_map<uint32_t, uint32_t> definitions;
+  std::unordered_map<uint32_t, std::pair<uint32_t, bool>> definitions;
   uint32_t matched = 0, visible = 0, modelCount = 0;
   for (uint32_t i = 0; i < count; ++i) {
     const uint32_t address = u32(ram(m, queue) + i*4);
@@ -169,9 +299,13 @@ void captureSceneBeforeBounds(recomp_context *ctx) {
     if (n > 4096 || !ramRange(instance.definition, 32)) { resetSceneCapture(); return; }
     const uint32_t total = u32(ram(m, instance.definition) + 4);
     if (total > 4096 || n > total || !ramRange(address + 72, uint64_t(total)*92)) { resetSceneCapture(); return; }
-    auto [it, inserted] = definitions.emplace(instance.definition, ~0u);
-    if (inserted) it->second = matchOriginalDefinition(*assets, m, instance.definition);
-    instance.asset = it->second;
+    auto [it, inserted] =
+        definitions.emplace(instance.definition, std::pair{~0u, false});
+    if (inserted)
+      it->second.first = matchSceneDefinition(*assets, m, instance.definition,
+                                              it->second.second);
+    instance.asset = it->second.first;
+    instance.deformed = it->second.second;
     if (instance.asset != ~0u) ++matched;
     if (instance.visible) ++visible;
     for (uint32_t j = 0; j < total; ++j) {
