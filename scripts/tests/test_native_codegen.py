@@ -108,3 +108,32 @@ identity_size = 8
                         [str(RECOMP), str(path / 'test.toml'), str(path / 'bad.cpp')],
                         cwd=path, capture_output=True, text=True)
                     self.assertNotEqual(rejected.returncode, 0)
+
+    def test_polling_resume_is_before_delay_slot_and_register_temporaries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            exe = bytearray(4096)
+            exe[:8] = b'PS-X EXE'
+            struct.pack_into('<I', exe, 0x10, 0x80010000)
+            struct.pack_into('<II', exe, 0x18, 0x80010000, 2048)
+            struct.pack_into('<5I', exe, 2048,
+                             0x8c820000, 0x1440fffe, 0x2442ffff,
+                             0x03e00008, 0)
+            (path / 'main.exe').write_bytes(exe)
+            (path / 'test.toml').write_text('''[binary]
+path = "main.exe"
+entry_point = "0x80010000"
+[[functions]]
+name = "main"
+address = "0x80010000"
+size = 20
+''')
+            run = subprocess.run([str(RECOMP), str(path / 'test.toml'), str(path / 'out.cpp')],
+                                 cwd=path, capture_output=True, text=True)
+            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            code = (path / 'out.cpp').read_text()
+            boundary = code.index('runtimeBiosDrainPendingCallbacks(ctx->bios, 0x80010004u)')
+            self.assertLess(boundary, code.index('uint32_t _ds_r2'))
+            self.assertLess(boundary, code.index('pgxp_addiu(ctx, 2, 2, -1)'))
+            self.assertIn('case 0x80010004u: goto L_80010004;', code)
+            self.assertIn('recomp_resume_table[0x80010004]', code)

@@ -71,10 +71,10 @@ file enumeration and deletion, full-card allocation, malformed-size protection,
 cycle rejection and directory checksums. A BIOS test verifies four hardware
 completion events followed by software completion for a 512-byte write.
 
-F5/F9 savestates remain unsupported for active native MGS threads: suspended
-C++ stacks are not serializable. The window now explains that no savestate
-was saved/loaded. Use the game's memory-card save flow. Unit-test persistence
-does not establish that an actual MGS gameplay save/load has succeeded.
+F5/F9 now save and restore native thread continuations using portable guest
+resume PCs. They are independent of the in-game memory-card save flow and work
+across process restarts. See [native savestates](mgs-savestates.md).
+Memory-card persistence tests do not establish a successful in-game save/load.
 A real Codec call to 140.96 from the initial dock produced "NO RESPONSE";
 no MGS save was written by that test. In-game save/load remains unverified.
 

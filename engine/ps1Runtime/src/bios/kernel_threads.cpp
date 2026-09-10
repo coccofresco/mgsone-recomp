@@ -9,6 +9,7 @@
 #include <ucontext.h>
 #endif
 extern void recomp_dispatch(uint8_t *, recomp_context *, uint32_t);
+extern void recomp_resume_dispatch(uint8_t *, recomp_context *, uint32_t);
 
 namespace ps1::bios {
 struct KernelThreads::Impl {
@@ -20,6 +21,7 @@ struct KernelThreads::Impl {
     std::vector<uint8_t> stack;
     Impl *owner = nullptr;
     uint32_t tcb = 0;
+    uint32_t resumePc = 0;
     bool initialized = false;
   };
   std::array<Fiber, 64> fibers;
@@ -37,11 +39,12 @@ struct KernelThreads::Impl {
         (tcb & 0x1fffffff) > Memory::RAM_SIZE - 0xc0)
       throw std::runtime_error("invalid BIOS TCB address");
   }
-  void save(Fiber &fiber) {
+  void save(Fiber &fiber, uint32_t resumePc) {
+    fiber.resumePc = resumePc;
     auto &m = *ctx.mem;
     for (unsigned i = 1; i < 32; i++)
       m.write32(fiber.tcb + 8 + i * 4, ctx.r[i]);
-    m.write32(fiber.tcb + 0x88, ctx.r31);
+    m.write32(fiber.tcb + 0x88, resumePc ? resumePc : ctx.r31);
     m.write32(fiber.tcb + 0x8c, ctx.hi);
     m.write32(fiber.tcb + 0x90, ctx.lo);
     const uint32_t sr = ctx.cop0[ps1::COP0_SR];
@@ -65,7 +68,10 @@ struct KernelThreads::Impl {
     auto *fiber = reinterpret_cast<Fiber *>((uintptr_t(high) << 32) | low);
     auto &self = *fiber->owner;
     try {
-      recomp_dispatch(self.ctx.mem->ramPtr(), &self.ctx, self.ctx.pc);
+      if (fiber->resumePc)
+        recomp_resume_dispatch(self.ctx.mem->ramPtr(), &self.ctx, fiber->resumePc);
+      else
+        recomp_dispatch(self.ctx.mem->ramPtr(), &self.ctx, self.ctx.pc);
       throw std::runtime_error("BIOS thread entry unexpectedly returned");
     } catch (...) {
       self.failure = std::current_exception();
@@ -76,7 +82,7 @@ struct KernelThreads::Impl {
       std::terminate();
     }
   }
-  void select(uint32_t address) {
+  void select(uint32_t address, uint32_t resumePc) {
     validate(address);
     if (!current) {
       const uint32_t old = ctx.mem->read32(pcb());
@@ -107,7 +113,7 @@ struct KernelThreads::Impl {
       target.initialized = true;
     }
     Fiber *previous = current;
-    save(*previous);
+    save(*previous, resumePc);
     load(target);
     current = &target;
     ctx.mem->write32(pcb(), address);
@@ -158,14 +164,50 @@ uint32_t KernelThreads::close(uint32_t handle) {
 void KernelThreads::change(uint32_t handle) {
   auto &s = *impl_;
   s.ctx.r2 = 1;
-  s.select(s.base() + (handle & 0xffff) * 0xc0);
+  s.select(s.base() + (handle & 0xffff) * 0xc0, s.ctx.r31);
 }
-void KernelThreads::captureCurrent() {
+void KernelThreads::captureCurrent(uint32_t resumePc) {
   if (impl_->current)
-    impl_->save(*impl_->current);
+    impl_->save(*impl_->current, resumePc);
 }
-void KernelThreads::scheduleSelected() {
+void KernelThreads::scheduleSelected(uint32_t resumePc) {
   if (impl_->current)
-    impl_->select(impl_->ctx.mem->read32(impl_->pcb()));
+    impl_->select(impl_->ctx.mem->read32(impl_->pcb()), resumePc);
+}
+bool KernelThreads::canSnapshot() const {
+  if (!impl_->current) return true;
+  for (const auto &fiber : impl_->fibers)
+    if (fiber.initialized && impl_->ctx.mem->read32(fiber.tcb) == 0x4000 && !fiber.resumePc)
+      return false;
+  return true;
+}
+KernelThreads::Snapshot KernelThreads::snapshot() const {
+  Snapshot result;
+  if (!impl_->current) return result;
+  if (!canSnapshot()) throw std::runtime_error("native thread outside resumable boundary");
+  result.currentTcb = impl_->current->tcb;
+  for (unsigned i = 0; i < impl_->fibers.size(); ++i) {
+    const auto &fiber = impl_->fibers[i];
+    if (fiber.initialized && impl_->ctx.mem->read32(fiber.tcb) == 0x4000)
+      result.resumePcs[i] = fiber.resumePc;
+  }
+  return result;
+}
+void KernelThreads::restart(const Snapshot &state) {
+  // Called only after unwinding onto the host game-thread stack. No old
+  // continuation can reference these allocations after this replacement.
+  auto fresh = std::make_unique<Impl>(impl_->ctx);
+  if (state.currentTcb) {
+    fresh->validate(state.currentTcb);
+    for (unsigned i = 0; i < fresh->fibers.size(); ++i) {
+      auto &fiber = fresh->fibers[i];
+      fiber.resumePc = state.resumePcs[i];
+      fiber.tcb = fresh->base() + i * 0xc0;
+      fiber.owner = fresh.get();
+    }
+    fresh->root = fresh->current = &fresh->fibers[(state.currentTcb - fresh->base()) / 0xc0];
+    fresh->current->initialized = true;
+  }
+  impl_ = std::move(fresh);
 }
 } // namespace ps1::bios

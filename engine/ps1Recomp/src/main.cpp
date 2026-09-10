@@ -1054,6 +1054,11 @@ int main(int argc, char *argv[]) {
                 MipsDecoder::decode(rfunc.instructions[i]);
             const uint32_t pc =
                 rfunc.address + static_cast<uint32_t>(i * 4);
+            if (pc >= ownerStart && pc < ownerEnd &&
+                (labels[i] || (inst.isBranch() && inst.branchTarget(pc) <= pc))) {
+              rfunc.resumeTargets.push_back(pc);
+              resume_to_name.emplace(pc, ownerName);
+            }
             if (inst.id == InstrId::JAL || inst.id == InstrId::JALR ||
                 inst.id == InstrId::BLTZAL || inst.id == InstrId::BGEZAL) {
               const uint32_t resumePc = pc + 8;

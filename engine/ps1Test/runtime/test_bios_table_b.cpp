@@ -199,3 +199,46 @@ TEST_F(BiosTableBTest, FileWriteDeliversOneHardwareEventPerSectorThenSoftwareCom
   bios->drainPendingCallbacks();
   EXPECT_EQ(cardSoftwareCompletions, 1u);
 }
+
+#if defined(__unix__) || defined(__APPLE__)
+namespace {
+void runPortableThreadProbe(recomp_context *ctx, uint32_t address) {
+  if (address == 0x80012340u) {
+    ctx->r[S0] = 0x1234abcd;
+    ctx->r31 = 0x80012348;
+    threadProbe->change(0xff000000);
+    ADD_FAILURE() << "Old native stack was resumed instead of reconstructed";
+  } else {
+    EXPECT_EQ(address, 0x80012348u);
+    EXPECT_EQ(ctx->r[S0], 0x1234abcdu);
+    threadProbePhase = 2;
+    threadProbe->change(0xff000000);
+  }
+}
+}
+TEST_F(BiosTableBTest, PortableThreadSnapshotRebuildsWithoutOldHostStacks) {
+  mem.write32(0x108, 0x80001000);
+  mem.write32(0x110, 0x80001100);
+  mem.write32(0x114, 2 * 0xc0);
+  mem.write32(0x1000, 0x80001100);
+  mem.write32(0x1100, 0x4000);
+  mem.write32(0x11c0, 0x1000);
+  ctx.r[SP] = 0x801f0000;
+  ctx.r31 = 0x80010010;
+  KernelThreads threads(ctx);
+  threadProbe = &threads;
+  threadProbePhase = 0;
+  struct Reset { ~Reset() { g_testRecompDispatchHook = nullptr; threadProbe = nullptr; } } reset;
+  g_testRecompDispatchHook = runPortableThreadProbe;
+  const auto handle = threads.open(0x80012340, 0x801e0000, 0x800abc00);
+  threads.change(handle);
+  threads.captureCurrent(0x80010010);
+  ASSERT_TRUE(threads.canSnapshot());
+  const auto snapshot = threads.snapshot();
+  EXPECT_EQ(snapshot.currentTcb, 0x80001100u);
+  EXPECT_EQ(snapshot.resumePcs[1], 0x80012348u);
+  threads.restart(snapshot);
+  threads.change(handle);
+  EXPECT_EQ(threadProbePhase, 2);
+}
+#endif

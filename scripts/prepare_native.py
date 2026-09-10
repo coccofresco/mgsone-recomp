@@ -93,7 +93,7 @@ def main():
     s += f'\n[disc]\nexe_path = {json.dumps(str(exe))}\ncue_path = {json.dumps(str(cue))}\n'
     s += '\n[video]\nbackend = "vulkan"\nvsync = false\npgxp = false\ntrue_depth = false\ntrue_color = false\n'
     s += '\n[game]\nprofile = "mgs_usa_v1_0"\nwidescreen_16_9 = true\n\n[timing]\nvideo_standard = "ntsc"\n'
-    s += '\n[instruction_overrides]\n"0x8008FF54" = "if (ctx->bios) ps1::runtimeBiosDrainPendingCallbacks(ctx->bios); pgxp_addiu(ctx, 4, 0, -1);"\n'
+    s += '\n[instruction_overrides]\n"0x8008FF54" = "if (ctx->bios) ps1::runtimeBiosDrainPendingCallbacks(ctx->bios, 0x8008FF50u); pgxp_addiu(ctx, 4, 0, -1);"\n'
     s += '\n"0x80017B38" = "extern void mgsAdjustProjection(recomp_context*); mgsAdjustProjection(ctx); pgxp_invalidate_gpr(ctx, 3); ctx->r3 = (int16_t)MEM_READ16(ctx, ctx->r4 + 6);"\n'
     image = next(cue.parent.glob('*.bin'))
     disc = Disc(image)

@@ -59,6 +59,8 @@ class Bios {
 public:
   struct Snapshot {
     EventSystem::Snapshot eventSystem;
+    KernelThreads::Snapshot kernelThreads;
+    std::vector<std::array<uint32_t, 2>> cardEvents;
     uint32_t padBuf1Addr = 0;
     uint32_t padBuf1Size = 0;
     uint32_t padBuf2Addr = 0;
@@ -75,6 +77,10 @@ public:
   Bios(recomp_context &ctx, cdrom::VirtualFs &fs, Memory &mem);
   ~Bios();
   bool hasNativeThreadContinuations() const { return kernelThreads_.active(); }
+
+  bool canSaveNativeThreads() const { return kernelThreads_.canSnapshot(); }
+  void restartNativeThreads() { kernelThreads_.restart(pendingKernelThreads_); }
+  void setStateCheckpoint(std::function<void(uint32_t)> checkpoint) { stateCheckpoint_ = std::move(checkpoint); }
 
   // Hardware attachment (call after construction)
   void setGPU(gpu::GPU *gpu) { gpu_ = gpu; }
@@ -146,7 +152,7 @@ public:
   // Drain pending event callbacks -- called from game thread at yield points
   // (testEvent, waitEvent, VSync, etc.) to safely dispatch mode-0x1000
   // handlers.
-  void drainPendingCallbacks();
+  void drainPendingCallbacks(uint32_t resumePc = 0);
 
   // Capture/restore the host-side half of the BIOS HLE timeline. RAM alone
   // does not contain callback queues or the delivery epochs used to bridge
@@ -259,6 +265,8 @@ private:
   uint32_t customExceptionBuffer_ = 0;
 
   std::queue<std::pair<uint32_t, uint32_t>> cardEvents_;
+  std::function<void(uint32_t)> stateCheckpoint_;
+  KernelThreads::Snapshot pendingKernelThreads_;
   KernelThreads kernelThreads_{ctx_};
   uint32_t kernelHeapNext_ = 0;
   uint32_t kernelHeapEnd_ = 0;

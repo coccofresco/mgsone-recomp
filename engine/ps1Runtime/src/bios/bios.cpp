@@ -69,6 +69,9 @@ Bios::~Bios() = default;
 Bios::Snapshot Bios::snapshot() const {
   Snapshot state;
   state.eventSystem = eventSystem_.snapshot();
+  state.kernelThreads = kernelThreads_.snapshot();
+  auto cardEvents = cardEvents_;
+  while (!cardEvents.empty()) { state.cardEvents.push_back({cardEvents.front().first, cardEvents.front().second}); cardEvents.pop(); }
   state.padBuf1Addr = padBuf1Addr_;
   state.padBuf1Size = padBuf1Size_;
   state.padBuf2Addr = padBuf2Addr_;
@@ -109,6 +112,9 @@ bool Bios::restore(const Snapshot &state) {
       !eventSystem_.restore(state.eventSystem))
     return false;
 
+  pendingKernelThreads_ = state.kernelThreads;
+  cardEvents_ = {};
+  for (auto event : state.cardEvents) cardEvents_.push({event[0], event[1]});
   padBuf1Addr_ = state.padBuf1Addr;
   padBuf1Size_ = state.padBuf1Size;
   padBuf2Addr_ = state.padBuf2Addr;
@@ -581,7 +587,7 @@ void Bios::triggerRootCounterEvents(uint32_t timerIndex, uint32_t count) {
   ps1::metrics::count(fmt::format("timer.irq{}", timerIndex), count);
 }
 
-void Bios::drainPendingCallbacks() {
+void Bios::drainPendingCallbacks(uint32_t resumePc) {
   // Some assembly renderers temporarily use $sp as a list/data cursor. The
   // recompiler marks that whole native call subtree with a depth guard. Keep
   // queued work pending until execution returns to a genuine guest stack;
@@ -683,9 +689,9 @@ void Bios::drainPendingCallbacks() {
     const auto event = cardEvents_.front(); cardEvents_.pop();
     eventSystem_.triggerEvent(event.first, event.second);
   }
-  kernelThreads_.captureCurrent();
+  kernelThreads_.captureCurrent(resumePc);
   eventSystem_.drainPendingCallbacks();
-  kernelThreads_.scheduleSelected();
+  kernelThreads_.scheduleSelected(resumePc);
 
   // Deferred CD customExceptionExit dispatch
   //
@@ -803,6 +809,11 @@ void Bios::drainPendingCallbacks() {
       fmt::print(stderr, "[DRAIN] exit#{}\n", n);
     }
   }
+  if (resumePc && kernelThreads_.active() && stateCheckpoint_) {
+    kernelThreads_.captureCurrent(resumePc);
+    if (kernelThreads_.canSnapshot()) stateCheckpoint_(resumePc);
+  }
+
 }
 
 void Bios::stub_printf() {

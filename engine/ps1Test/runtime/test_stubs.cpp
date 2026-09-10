@@ -15,3 +15,8 @@ void recomp_dispatch(uint8_t * /*rdram*/, recomp_context *ctx, uint32_t addr) {
   if (g_testRecompDispatchHook)
     g_testRecompDispatchHook(ctx, addr);
 }
+
+void recomp_resume_dispatch(uint8_t *rdram, recomp_context *ctx, uint32_t addr) {
+  ctx->nativeResumePc = 0;
+  recomp_dispatch(rdram, ctx, addr);
+}

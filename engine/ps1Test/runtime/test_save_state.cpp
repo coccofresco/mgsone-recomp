@@ -442,3 +442,34 @@ TEST(SaveStateCoordinatorTest, SuccessfulLoadUnwindsOldTimeline) {
   EXPECT_TRUE(reloaded.load(std::memory_order_acquire));
   EXPECT_EQ(ctx.pc, 0x80045678u);
 }
+
+TEST_F(SaveStateTest, CorruptPayloadIsRejectedBeforeChangingLiveState) {
+  Memory mem;
+  gpu::GPU gpu;
+  spu::SPU spu;
+  DMA dma;
+  cdrom::CdromController cdrom;
+  Timers timers;
+  InterruptController irq;
+  input::InputController input;
+  recomp_context ctx;
+  ctx.reset();
+  ctx.r[1] = 12;
+  mem.write32(0x1000, 34);
+  ASSERT_TRUE(SaveState::save(tmpPath, ctx, mem, gpu, spu, dma, cdrom, timers, irq, input));
+  { // A damaged final byte used to go unnoticed by the RAM-only checksum.
+    std::fstream file(tmpPath, std::ios::in | std::ios::out | std::ios::binary);
+    file.seekg(-1, std::ios::end);
+    char byte; file.get(byte); byte ^= 1;
+    file.seekp(-1, std::ios::end); file.put(byte);
+  }
+  ctx.r[1] = 56;
+  mem.write32(0x1000, 78);
+  EXPECT_FALSE(SaveState::load(tmpPath, ctx, mem, gpu, spu, dma, cdrom, timers, irq, input));
+  EXPECT_EQ(ctx.r[1], 56u);
+  EXPECT_EQ(mem.read32(0x1000), 78u);
+  std::filesystem::resize_file(tmpPath, 100);
+  EXPECT_FALSE(SaveState::load(tmpPath, ctx, mem, gpu, spu, dma, cdrom, timers, irq, input));
+  EXPECT_EQ(ctx.r[1], 56u);
+  EXPECT_EQ(mem.read32(0x1000), 78u);
+}

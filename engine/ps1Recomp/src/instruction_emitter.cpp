@@ -1532,12 +1532,13 @@ std::string InstructionEmitter::emitFunction(const RecompFunction &func) const {
           loopTraceCode =
               fmt::format("    PS1_LOOP_TRACE_HOOK(ctx, 0x{:08X}u);\n", addr);
           if (!spUsedAsGeneralPurpose && isReadOnlyPollingLoop(i, inst)) {
-            yieldCode = "    if (ctx->bios) "
-                        "ps1::runtimeBiosDrainPendingCallbacks(ctx->bios);\n";
+            yieldCode = fmt::format("    if (ctx->bios) "
+                        "ps1::runtimeBiosDrainPendingCallbacks(ctx->bios, 0x{:08X}u);\n", addr);
           }
         }
       }
 
+      result += yieldCode;
       if (!conflictRegs.empty()) {
         // Save conflicting registers, run delay slot, then branch/jump
         // using the saved values.  Wrap in a block scope so that the
@@ -1555,14 +1556,12 @@ std::string InstructionEmitter::emitFunction(const RecompFunction &func) const {
                         fmt::format("_ds_r{}", r));
         }
         result += loopTraceCode;
-        result += yieldCode;
         result += fmt::format("      {}\n", branchCode);
         result += "    }\n";
       } else {
         // No conflict -- emit delay slot then branch/jump (original order)
         result += fmt::format("    {} // delay slot\n", delayCode);
         result += loopTraceCode;
-        result += yieldCode;
         result += fmt::format("    {}\n", code);
       }
       // A delay slot can also be somebody else's branch target. It is emitted

@@ -13,3 +13,5 @@ __pycache__/
 /engine/ps1Runtime/src/recompiled_out.cpp
 /engine/ps1Runtime/src/recompiled_out.generated.h
 /engine/ps1Runtime/src/recompiled_out.part*.cpp
+
+/savestates/

@@ -37,8 +37,10 @@ Machine-readable results are in [mgs-native-boot-evidence.json](mgs-native-boot-
 - Native POSIX `ucontext` continuations preserve translated C++ stacks through
   BIOS OpenTh/ChangeTh and MGS's MTS scheduling. Guest TCBs remain in guest RAM.
   A test switches twice between guest tasks and checks both native locals and
-  guest registers. Native thread savestates are explicitly rejected because
-  host stacks are not serializable by the existing snapshot format.
+  guest registers. Savestate version 6 reconstructs these continuations from
+  guest TCBs and native resume PCs, rather than serializing host stacks.
+  Same-process repeated loads and a fresh-process gameplay load passed; see
+  [native savestates](mgs-savestates.md).
 - The CD FIFO retains a shared cursor across CPU reads and DMA. MGS reads a
   12-byte sector header and its payload in separate transfers; discarding the
   sector after the first DMA prevented boot. Snapshot version 5 includes this

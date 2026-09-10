@@ -9,6 +9,7 @@ sequenza subacquea, con presentazione Vulkan e temporizzazione NTSC.
 È verificato anche il **gameplay nel molo iniziale**, con movimento di Snake
 e apertura del Codec. Sono ricompilati `title`, `opening`, `d00a`, `s00a` e
 `s01a`; il passaggio all’eliporto e i salvataggi dal gioco restano da validare.
+**F5/F9 ora salvano e ripristinano anche dopo il riavvio del runtime.**
 Non è ancora un port completo.
 
 Il profilo USA abilita di base la proiezione 16:9. SwanStation strumentato è
@@ -18,6 +19,7 @@ un modello di budget CPU nativo equivalente esattamente al 165%.
 
 - [Stato, verifiche e limiti del runtime](docs/mgs-runtime-progress.md)
 - [Controlli e memory card persistenti](docs/mgs-input-memory-card.md)
+- [Savestate nativi: tasti, formato e verifiche](docs/mgs-savestates.md)
 - [Aggiornamenti PSXRecomp](docs/psxrecomp-upstream-2026-09-10.md)
 - [Valutazione RecompOne](docs/recompone-review-2026-09-10.md)
 - [Valutazione OpenGTPS1: input e memory card](docs/opengtps1-review-2026-09-10.md)

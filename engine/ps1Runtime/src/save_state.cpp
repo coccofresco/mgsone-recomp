@@ -13,9 +13,18 @@ namespace ps1 {
 
 namespace {
 
+constexpr uint32_t kVersionSixFlags = 0x3656534eu; // NSV6
 constexpr uint32_t kExtendedStateMarker = 0x32545845u; // "EXT2"
 constexpr uint32_t kBiosStateMarker = 0x34534F49u;     // "IOS4"
 constexpr uint32_t kMaxSerializedVectorElements = 1u << 20;
+uint32_t payloadChecksum(std::istream &f) {
+  uint32_t hash = 2166136261u;
+  std::array<char, 65536> buffer;
+  while (f.read(buffer.data(), buffer.size()) || f.gcount())
+    for (std::streamsize i = 0; i < f.gcount(); ++i)
+      hash = (hash ^ static_cast<uint8_t>(buffer[i])) * 16777619u;
+  return hash;
+}
 
 template <typename T> void writePod(std::ofstream &f, const T &value) {
   static_assert(std::is_trivially_copyable_v<T>);
@@ -215,8 +224,8 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
                      const InterruptController &irq,
                      const input::InputController &input,
                      const mdec::MDEC *mdec, const bios::Bios *biosHle) {
-  if (biosHle && biosHle->hasNativeThreadContinuations()) {
-    fmt::print(stderr, "[SaveState] Native BIOS thread stacks are not serializable\n");
+  if (biosHle && !biosHle->canSaveNativeThreads()) {
+    fmt::print(stderr, "[SaveState] Native threads have not reached resumable boundaries\n");
     return false;
   }
   const std::string temporaryPath = path + ".tmp";
@@ -228,6 +237,7 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
 
   // Write header placeholder (we'll update checksum at the end)
   SaveStateHeader header;
+  header.flags = kVersionSixFlags;
   auto headerPos = f.tellp();
   writeBytes(f, &header, sizeof(header));
 
@@ -418,6 +428,8 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
     writePod(f, biosState.lastIntrTickFrame);
     writePod(f, biosState.lastDmaCompletion);
     writePod(f, biosState.customExceptionBuffer);
+    writePod(f, biosState.kernelThreads);
+    writeVector(f, biosState.cardEvents);
   }
 
   if (!f.good()) {
@@ -427,11 +439,17 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
 
   // Update header with checksum
   // Compute checksum of RAM only (for speed)
-  header.checksum = computeChecksum(mem.ramPtr(), Memory::RAM_SIZE);
+  f.flush();
+  if (!f) return false;
+  std::ifstream payload(temporaryPath, std::ios::binary);
+  if (!payload) return false;
+  payload.seekg(sizeof(SaveStateHeader));
+  header.checksum = payloadChecksum(payload);
   f.seekp(headerPos);
   writeBytes(f, &header, sizeof(header));
 
   f.close();
+  if (!f) return false;
   std::error_code renameError;
   std::filesystem::rename(temporaryPath, path, renameError);
   if (renameError) {
@@ -442,6 +460,7 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
     return false;
   }
   fmt::print("[SaveState] Saved to '{}'\n", path);
+  std::fflush(stdout);
   return true;
 }
 
@@ -450,8 +469,8 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
                      cdrom::CdromController &cdrom, Timers &timers,
                      InterruptController &irq, input::InputController &input,
                      mdec::MDEC *mdec, bios::Bios *biosHle) {
-  if (biosHle && biosHle->hasNativeThreadContinuations()) {
-    fmt::print(stderr, "[SaveState] Native BIOS thread stacks are not serializable\n");
+  if (biosHle && !biosHle->canSaveNativeThreads()) {
+    fmt::print(stderr, "[SaveState] Native threads have not reached resumable boundaries\n");
     return false;
   }
   std::ifstream f(path, std::ios::binary);
@@ -462,7 +481,9 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
 
   // Read header
   SaveStateHeader header;
-  readBytes(f, &header, sizeof(header));
+  if (!readBytes(f, &header, sizeof(header))) return false;
+  if ((header.version == 6 || header.flags == kVersionSixFlags) &&
+      (header.version != 6 || header.flags != kVersionSixFlags)) return false;
 
   if (header.magic[0] != 'P' || header.magic[1] != 'S' ||
       header.magic[2] != '1' || header.magic[3] != 'S') {
@@ -470,10 +491,20 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
     return false;
   }
   if (header.version != 1 && header.version != 2 && header.version != 3 &&
-      header.version != 4 && header.version != 5) {
+      header.version != 4 && header.version != 5 && header.version != 6) {
     fmt::print(stderr, "[SaveState] Unsupported version {} in '{}'\n",
                header.version, path);
     return false;
+  }
+
+  if (header.version >= 6) {
+    const uint32_t actual = payloadChecksum(f);
+    if (actual != header.checksum) {
+      fmt::print(stderr, "[SaveState] Corrupt or truncated state '{}'\n", path);
+      return false;
+    }
+    f.clear();
+    f.seekg(sizeof(SaveStateHeader));
   }
 
   // CPU Context
@@ -683,7 +714,9 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
             readPod(f, biosState.cdExceptionPending) &&
             readPod(f, biosState.lastIntrTickFrame) &&
             readPod(f, biosState.lastDmaCompletion) &&
-            readPod(f, biosState.customExceptionBuffer)));
+            readPod(f, biosState.customExceptionBuffer) &&
+            (header.version < 6 || (readPod(f, biosState.kernelThreads) &&
+                                   readVector(f, biosState.cardEvents)))));
       if (!biosValid) {
         fmt::print(stderr, "[SaveState] Invalid BIOS state in '{}'\n", path);
         return false;
@@ -725,7 +758,7 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
 
   // Verify checksum
   uint32_t checksum = computeChecksum(mem.ramPtr(), Memory::RAM_SIZE);
-  if (checksum != header.checksum) {
+  if (header.version < 6 && checksum != header.checksum) {
     fmt::print(stderr,
                "[SaveState] WARNING: Checksum mismatch (got 0x{:08X}, "
                "expected 0x{:08X})\n",
@@ -734,6 +767,7 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
 
   f.close();
   fmt::print("[SaveState] Loaded from '{}'\n", path);
+  std::fflush(stdout);
   return true;
 }
 
@@ -747,10 +781,13 @@ bool SaveState::isValid(const std::string &path) {
   if (!f.good())
     return false;
 
-  return header.magic[0] == 'P' && header.magic[1] == 'S' &&
+  const bool headerValid = header.magic[0] == 'P' && header.magic[1] == 'S' &&
          header.magic[2] == '1' && header.magic[3] == 'S' &&
          (header.version == 1 || header.version == 2 || header.version == 3 ||
-          header.version == 4 || header.version == 5);
+          header.version == 4 || header.version == 5 || header.version == 6);
+  return headerValid && (header.version < 6
+      ? header.flags != kVersionSixFlags
+      : header.flags == kVersionSixFlags && payloadChecksum(f) == header.checksum);
 }
 
 } // namespace ps1

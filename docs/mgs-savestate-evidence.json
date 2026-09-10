@@ -1,0 +1,35 @@
+{
+  "target": "MGS USA v1.0 CD1 SLUS-00594",
+  "savestate_version": 6,
+  "state_size_bytes": 3940286,
+  "state_sha256": "4e944d7be2a2ce97e480eaf709a5bfefc9dab9d7aec0581e6822520c6a14dabe",
+  "payload_checksum_verified": true,
+  "same_process": {
+    "saves": 1,
+    "loads": 3,
+    "final_guest_vblank": 15503,
+    "interpreter_fallbacks": {},
+    "metrics": "data/native/states-repeat/metrics.json"
+  },
+  "fresh_process": {
+    "loads_observed": 1,
+    "guest_vblank_at_observation": 20700,
+    "interpreter_fallbacks": {},
+    "presentation": "Vulkan, RTX 4060, normal NTSC pacing",
+    "metrics": "data/native/states-user/metrics.json",
+    "interactive_process_left_running": true
+  },
+  "additional_headless_restart": {
+    "metrics": "data/native/states-restart/metrics.json",
+    "observed": [
+      "Snake movement",
+      "manual Codec opening"
+    ]
+  },
+  "tests": {
+    "runtime_passed": 64,
+    "recompiler_passed": 129,
+    "recompiler_optional_fixture_skipped": 1,
+    "python_passed": 22
+  }
+}

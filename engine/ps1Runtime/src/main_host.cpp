@@ -805,10 +805,12 @@ int main(int argc, char *argv[]) {
       // makes titles alternate between one and two waits per simulation step.
       bios.deliverVBlankBoundary();
     };
-    hleCfg.stateCheckpoint = [&stateCoordinator](recomp_context *checkpointCtx,
+    hleCfg.stateCheckpoint = [&stateCoordinator, &bios](recomp_context *checkpointCtx,
                                                  uint32_t resumePc) {
-      stateCoordinator.checkpoint(*checkpointCtx, resumePc);
+      if (!bios.hasNativeThreadContinuations())
+        stateCoordinator.checkpoint(*checkpointCtx, resumePc);
     };
+    bios.setStateCheckpoint([&](uint32_t pc) { stateCoordinator.checkpoint(ctx, pc); });
     ps1::psyq::configure(hleCfg);
     psyq_registry_init_defaults();
     psyq_register_rayman_boot();
@@ -1104,13 +1106,14 @@ int main(int argc, char *argv[]) {
                saveStateDirectory.string(), saveDirectoryError.message());
   }
   unsigned saveStateSlot = 0;
+  uint32_t stateWindowId = 0;
   const auto saveStatePath = [&]() {
     return (saveStateDirectory /
             fmt::format("quick_slot_{}.ps1s", saveStateSlot))
         .string();
   };
   if (mgsProfile)
-    fmt::print("[Input] keyboard + SDL GameController enabled; use in-game memory-card saves; F5/F9 unavailable\n");
+    fmt::print("[Input] keyboard + SDL GameController enabled; F5 save, F9 load, F6/F7 slot\n");
   else
     fmt::print("[Input] keyboard + SDL GameController enabled; F5 save, F9 "
                "load, F6/F7 slot, F8 depth\n");
@@ -1234,6 +1237,7 @@ int main(int argc, char *argv[]) {
           recomp_dispatch(memory.ramPtr(), &ctx, ctx.pc);
         break;
       } catch (const ps1::SaveStateTimelineReload &) {
+        bios.restartNativeThreads();
         fmt::print("[SaveState] guest dispatcher resumed at 0x{:08X}\n",
                    ctx.pc);
         ctx.nativeResumePc = ctx.pc;
@@ -1280,6 +1284,8 @@ int main(int argc, char *argv[]) {
   };
   const uint64_t autoSaveVblank = diagnosticVblank("PS1_AUTOSAVE_VBLANK");
   const uint64_t autoLoadVblank = diagnosticVblank("PS1_AUTOLOAD_VBLANK");
+  const uint64_t autoLoadCount = std::max<uint64_t>(1, diagnosticVblank("PS1_AUTOLOAD_COUNT"));
+  uint64_t completedAutoLoads = 0;
   bool autoSaveRequested = false;
   bool autoLoadRequested = false;
   bool autoSaveCompleted = false;
@@ -1358,17 +1364,14 @@ int main(int argc, char *argv[]) {
           break;
         } else if (event.key.keysym.sym == SDLK_ESCAPE) {
           running = false;
-        } else if (mgsProfile && event.key.repeat == 0 &&
-                   (event.key.keysym.sym == SDLK_F5 || event.key.keysym.sym == SDLK_F9)) {
-          SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "MGS - Savestate non disponibile",
-              "F5/F9 non sono ancora supportati per MGS. Nessuno stato e' stato salvato o caricato.\n"
-              "I salvataggi su memory card si effettuano dal gioco.", nullptr);
         } else if (event.key.keysym.sym == SDLK_F5 && event.key.repeat == 0) {
+          stateWindowId = event.key.windowID;
           const std::string path = saveStatePath();
           if (stateCoordinator.request(ps1::SaveStateCoordinator::Action::Save,
                                        path))
             fmt::print("[SaveState] save requested: slot {}\n", saveStateSlot);
         } else if (event.key.keysym.sym == SDLK_F9 && event.key.repeat == 0) {
+          stateWindowId = event.key.windowID;
           const std::string path = saveStatePath();
           if (stateCoordinator.request(ps1::SaveStateCoordinator::Action::Load,
                                        path))
@@ -1463,6 +1466,16 @@ int main(int argc, char *argv[]) {
                                          &mdec, &bios);
           if (audioDevice > 0)
             SDL_UnlockAudioDevice(audioDevice);
+          if (stateWindowId) {
+            if (auto *window = SDL_GetWindowFromID(stateWindowId)) {
+              const auto message = fmt::format("Metal Gear Solid - {}: {}",
+                  succeeded ? (req.action == ps1::SaveStateCoordinator::Action::Save
+                                   ? "Stato salvato" : "Stato caricato")
+                            : "Operazione savestate fallita",
+                  std::filesystem::path(req.path).filename().string());
+              SDL_SetWindowTitle(window, message.c_str());
+            }
+          }
           if (succeeded &&
               req.action == ps1::SaveStateCoordinator::Action::Load) {
             ps1::metrics::armGuestTraceAfterLoad();
@@ -1485,6 +1498,7 @@ int main(int argc, char *argv[]) {
               renderer.rebaseGuestTimeline();
             gpu.snapshotDisplayBuffer(restoredVblank);
             autoLoadCompleted = true;
+            if (++completedAutoLoads < autoLoadCount) autoLoadRequested = false;
             diagnosticRestoredVblank = restoredVblank;
             diagnosticLoadEpoch = std::chrono::steady_clock::now();
           }

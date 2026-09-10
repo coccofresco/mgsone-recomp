@@ -4,8 +4,8 @@
 
 namespace ps1 {
 
-void runtimeBiosDrainPendingCallbacks(bios::Bios *bios) {
-  bios->drainPendingCallbacks();
+void runtimeBiosDrainPendingCallbacks(bios::Bios *bios, uint32_t resumePc) {
+  bios->drainPendingCallbacks(resumePc);
 }
 
 void runtimeBiosExecuteA0(bios::Bios *bios) { bios->executeA0(); }
