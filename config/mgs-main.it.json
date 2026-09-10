@@ -1,0 +1,19 @@
+{
+  "main_executables": [
+    {
+      "path": "/MGS/MGS1.EXE",
+      "size": 645120,
+      "sha256": "43cecb21d128b93c882e5eede031bc9d2a4c95a50167198f2b9f8f5fd0514ce6",
+      "magic": "PS-X EXE",
+      "entry_pc": "0x8009a35c"
+    },
+    {
+      "path": "/MGS/MGS2.EXE",
+      "size": 645120,
+      "sha256": "43cecb21d128b93c882e5eede031bc9d2a4c95a50167198f2b9f8f5fd0514ce6",
+      "magic": "PS-X EXE",
+      "entry_pc": "0x8009a35c"
+    }
+  ],
+  "analysis": "2262 heuristic functions, 116 PsyQ matches; addresses not yet certified"
+}

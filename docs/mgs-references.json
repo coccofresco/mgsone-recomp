@@ -1,0 +1,29 @@
+{
+  "consulted": "2026-09-10",
+  "references": [
+    {
+      "repository": "https://github.com/FoxdieTeam/mgs_reversing",
+      "commit": "217509eae471629b1a53633b816c61adfef9ed5c",
+      "local_checkout": ".local/mgs_reversing",
+      "role": "reference only; no upstream source imported"
+    },
+    {
+      "repository": "https://github.com/Jayveer/Rex",
+      "commit": "42097c20562867f855ee3dbc7264b8f0e41eb9d5",
+      "local_checkout": ".local/Rex",
+      "role": "reference only; no upstream source imported"
+    },
+    {
+      "repository": "https://github.com/virusek20/mint",
+      "commit": "ed1be7935acfc3d67018c15c9a0aff0eb861529f",
+      "local_checkout": ".local/mint",
+      "role": "reference only; no upstream source imported"
+    },
+    {
+      "repository": "https://github.com/Jayveer/MGS-KMD-Noesis",
+      "commit": "42bc9ed21bdd2e064ca1b433c9d728d6f7431b98",
+      "local_checkout": ".local/MGS-KMD-Noesis",
+      "role": "reference only; no upstream source imported"
+    }
+  ]
+}

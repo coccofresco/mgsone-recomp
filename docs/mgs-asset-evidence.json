@@ -1,0 +1,394 @@
+{
+  "schema": "mgs-original-assets-evidence-v1",
+  "date": "2026-09-10",
+  "scope": "Offline original Italian disc assets; no native gameplay or Vulkan integration validated.",
+  "discs": [
+    {
+      "disc": 1,
+      "stage_dir_sha256": "ae47a97fbaa017881da0a26494ac2fe19b27108d8b597a69b5d89b7648c7a558",
+      "main_executable": {
+        "path": "/MGS/MGS1.EXE",
+        "size": 645120,
+        "sha256": "43cecb21d128b93c882e5eede031bc9d2a4c95a50167198f2b9f8f5fd0514ce6",
+        "magic": "PS-X EXE",
+        "entry_pc": "0x8009a35c"
+      },
+      "summary": {
+        "stage_count": 94,
+        "resource_count": 21629,
+        "counts": {
+          "b": 92,
+          "c": 13,
+          "e": 74,
+          "g": 135,
+          "h": 223,
+          "i": 10,
+          "k": 1829,
+          "l": 323,
+          "m": 71,
+          "o": 166,
+          "p": 18486,
+          "r": 13,
+          "s": 47,
+          "w": 143,
+          "z": 4
+        },
+        "unique_by_type": {
+          "b": 88,
+          "c": 13,
+          "e": 35,
+          "g": 121,
+          "h": 110,
+          "i": 5,
+          "k": 825,
+          "l": 117,
+          "m": 32,
+          "o": 89,
+          "p": 17962,
+          "r": 8,
+          "s": 18,
+          "w": 50,
+          "z": 4
+        },
+        "parse_errors": [
+          {
+            "stage": "s03b",
+            "id": "de71",
+            "extension": "l",
+            "error": "range 0x4+0x130 exceeds 0x44"
+          },
+          {
+            "stage": "s03b",
+            "id": "0ef0",
+            "extension": "l",
+            "error": "range 0x4+0x120 exceeds 0x1c"
+          },
+          {
+            "stage": "s03b",
+            "id": "de72",
+            "extension": "l",
+            "error": "range 0x4+0x40 exceeds 0x8"
+          },
+          {
+            "stage": "s03b",
+            "id": "0ef1",
+            "extension": "l",
+            "error": "range 0x4+0x140 exceeds 0xc"
+          },
+          {
+            "stage": "s03b",
+            "id": "de73",
+            "extension": "l",
+            "error": "range 0x4+0x120 exceeds 0x2c"
+          },
+          {
+            "stage": "s03b",
+            "id": "de74",
+            "extension": "l",
+            "error": "range 0x4+0xb0 exceeds 0x1c"
+          },
+          {
+            "stage": "s03b",
+            "id": "de58",
+            "extension": "l",
+            "error": "range 0x4+0x30 exceeds 0xc"
+          },
+          {
+            "stage": "s03b",
+            "id": "de59",
+            "extension": "l",
+            "error": "range 0x4+0xd0 exceeds 0x20"
+          }
+        ]
+      },
+      "kmd_geometry_occurrences": {
+        "models": 10575,
+        "faces": 228643,
+        "seam_vertices": 10927,
+        "models_with_extend": 865,
+        "note": "Counts include repeated resources across stages, not unique geometry or runtime draws."
+      },
+      "zmd_models": [
+        {
+          "stage": "s11a",
+          "id": "ca81",
+          "models": 7
+        },
+        {
+          "stage": "s11c",
+          "id": "ca83",
+          "models": 11
+        },
+        {
+          "stage": "s14e",
+          "id": "cae5",
+          "models": 6
+        },
+        {
+          "stage": "s15a",
+          "id": "d9e2",
+          "models": 3
+        }
+      ],
+      "pcx_formats": {
+        "1bpp_x_4planes": 17784,
+        "8bpp_x_1planes": 702
+      },
+      "texture_ids_not_in_same_stage": [
+        {
+          "stage": "init",
+          "texture_id": "6173"
+        },
+        {
+          "stage": "s04c",
+          "texture_id": "f501"
+        },
+        {
+          "stage": "s07a",
+          "texture_id": "7141"
+        },
+        {
+          "stage": "s07a",
+          "texture_id": "92dd"
+        },
+        {
+          "stage": "s07c",
+          "texture_id": "7141"
+        },
+        {
+          "stage": "s07c",
+          "texture_id": "92dd"
+        },
+        {
+          "stage": "s15a",
+          "texture_id": "fe8e"
+        },
+        {
+          "stage": "vr10",
+          "texture_id": "ca94"
+        },
+        {
+          "stage": "vr10",
+          "texture_id": "d517"
+        },
+        {
+          "stage": "init_tux",
+          "texture_id": "6173"
+        }
+      ],
+      "texture_binding_note": "Missing in this stage alone; resident/other-stage/runtime material resolution still required.",
+      "pcx_with_indices_outside_declared_palette": 0
+    },
+    {
+      "disc": 2,
+      "stage_dir_sha256": "cc6bcad82c18de8e9104ebed7864288f14dd3240c45a0aa6942fc36bda7dafa4",
+      "main_executable": {
+        "path": "/MGS/MGS2.EXE",
+        "size": 645120,
+        "sha256": "43cecb21d128b93c882e5eede031bc9d2a4c95a50167198f2b9f8f5fd0514ce6",
+        "magic": "PS-X EXE",
+        "entry_pc": "0x8009a35c"
+      },
+      "summary": {
+        "stage_count": 94,
+        "resource_count": 21629,
+        "counts": {
+          "b": 92,
+          "c": 13,
+          "e": 74,
+          "g": 135,
+          "h": 223,
+          "i": 10,
+          "k": 1829,
+          "l": 323,
+          "m": 71,
+          "o": 166,
+          "p": 18486,
+          "r": 13,
+          "s": 47,
+          "w": 143,
+          "z": 4
+        },
+        "unique_by_type": {
+          "b": 88,
+          "c": 13,
+          "e": 35,
+          "g": 121,
+          "h": 110,
+          "i": 5,
+          "k": 825,
+          "l": 117,
+          "m": 32,
+          "o": 89,
+          "p": 17962,
+          "r": 8,
+          "s": 18,
+          "w": 50,
+          "z": 4
+        },
+        "parse_errors": [
+          {
+            "stage": "s03b",
+            "id": "de71",
+            "extension": "l",
+            "error": "range 0x4+0x130 exceeds 0x44"
+          },
+          {
+            "stage": "s03b",
+            "id": "0ef0",
+            "extension": "l",
+            "error": "range 0x4+0x120 exceeds 0x1c"
+          },
+          {
+            "stage": "s03b",
+            "id": "de72",
+            "extension": "l",
+            "error": "range 0x4+0x40 exceeds 0x8"
+          },
+          {
+            "stage": "s03b",
+            "id": "0ef1",
+            "extension": "l",
+            "error": "range 0x4+0x140 exceeds 0xc"
+          },
+          {
+            "stage": "s03b",
+            "id": "de73",
+            "extension": "l",
+            "error": "range 0x4+0x120 exceeds 0x2c"
+          },
+          {
+            "stage": "s03b",
+            "id": "de74",
+            "extension": "l",
+            "error": "range 0x4+0xb0 exceeds 0x1c"
+          },
+          {
+            "stage": "s03b",
+            "id": "de58",
+            "extension": "l",
+            "error": "range 0x4+0x30 exceeds 0xc"
+          },
+          {
+            "stage": "s03b",
+            "id": "de59",
+            "extension": "l",
+            "error": "range 0x4+0xd0 exceeds 0x20"
+          }
+        ]
+      },
+      "kmd_geometry_occurrences": {
+        "models": 10575,
+        "faces": 228643,
+        "seam_vertices": 10927,
+        "models_with_extend": 865,
+        "note": "Counts include repeated resources across stages, not unique geometry or runtime draws."
+      },
+      "zmd_models": [
+        {
+          "stage": "s11a",
+          "id": "ca81",
+          "models": 7
+        },
+        {
+          "stage": "s11c",
+          "id": "ca83",
+          "models": 11
+        },
+        {
+          "stage": "s14e",
+          "id": "cae5",
+          "models": 6
+        },
+        {
+          "stage": "s15a",
+          "id": "d9e2",
+          "models": 3
+        }
+      ],
+      "pcx_formats": {
+        "1bpp_x_4planes": 17784,
+        "8bpp_x_1planes": 702
+      },
+      "texture_ids_not_in_same_stage": [
+        {
+          "stage": "init",
+          "texture_id": "6173"
+        },
+        {
+          "stage": "s04c",
+          "texture_id": "f501"
+        },
+        {
+          "stage": "s07a",
+          "texture_id": "7141"
+        },
+        {
+          "stage": "s07a",
+          "texture_id": "92dd"
+        },
+        {
+          "stage": "s07c",
+          "texture_id": "7141"
+        },
+        {
+          "stage": "s07c",
+          "texture_id": "92dd"
+        },
+        {
+          "stage": "s15a",
+          "texture_id": "fe8e"
+        },
+        {
+          "stage": "vr10",
+          "texture_id": "ca94"
+        },
+        {
+          "stage": "vr10",
+          "texture_id": "d517"
+        },
+        {
+          "stage": "init_tux",
+          "texture_id": "6173"
+        }
+      ],
+      "texture_binding_note": "Missing in this stage alone; resident/other-stage/runtime material resolution still required.",
+      "pcx_with_indices_outside_declared_palette": 0
+    }
+  ],
+  "verification": {
+    "unit_tests_passed": 19,
+    "rex": {
+      "expected_files": 3204,
+      "rex_files": 3189,
+      "matching_files": 3189,
+      "missing_by_stage": {
+        "init_tux": 5,
+        "selectvr": 10
+      },
+      "extra_files": 0,
+      "note": "Byte-level top-level comparison, not visual or gameplay validation."
+    }
+  },
+  "disc_comparison": {
+    "main_executables_byte_identical": true,
+    "resource_occurrences_same_identity_and_content": 21516,
+    "disc1_unmatched_occurrences": 113,
+    "disc2_unmatched_occurrences": 113,
+    "stage_dir_byte_identical": false,
+    "unmatched_by_type": {
+      "g": 113
+    }
+  },
+  "local_example": {
+    "source": "disc1/s00a/config6/7693.kmd",
+    "raw": "data/examples/s00a-7693.kmd",
+    "geometry": "data/examples/s00a-7693.geometry.json",
+    "sha256": "4e868df8cda034acd9d9b902694fb1cae06c6731c96aaf728ae26f83a253c252"
+  },
+  "tool_files_sha256": {
+    "scripts/mgs_assets.py": "5874b723862d915a59baf5271347c81dea8469866500fde63c89491457c1bb03",
+    "scripts/compare_rex.py": "e397fb7179e7b76c1b32bde5362236d4610b118012477d776623d141cc22bd23",
+    "scripts/tests/test_mgs_assets.py": "42efa5f794be6b9a4a9768ffd9ad75ef72e2c87db9ff0cb1206f20c989c92104"
+  }
+}

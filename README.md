@@ -3,9 +3,23 @@
 Repository locale per sviluppare la ricompilazione nativa di Metal Gear Solid
 PSX PAL italiano, CD1 **SLES-01508** e CD2 **SLES-11508**.
 
-Stato: base di sviluppo, strumenti compilati e analisi iniziale dei due CD.
+Stato: base di sviluppo, strumenti compilati, inventario degli asset 3D dei due CD
+e analisi iniziale del boot e dell’eseguibile principale interno.
 Non è ancora un port giocabile. Il profilo MGS e la gestione degli overlay
 specifici del gioco devono essere sviluppati e verificati.
+
+## Asset originali e presentazione Vulkan
+
+- [Formati 3D verificati e fonti](docs/mgs-3d-formats.md): KMD/ZMD, PCX, OAR,
+  archivi di scenario, luci e confini ancora da verificare.
+- [Contratto di presentazione](docs/mgs-vulkan-presentation.md): mesh originali,
+  istanze e posa dal codice ricompilato, proiezione float e isolamento della simulazione.
+- [Evidenza sui CD italiani](docs/mgs-asset-evidence.json): 94 scenari per CD,
+  parser, confronto con Rex e risorse ancora opache.
+
+Gli strumenti di audit sono in `scripts/mgs_assets.py`; gli asset estratti e
+l'esempio di geometria originale sono in `data/`, esclusi da Git.
+L'integrazione Vulkan di MGS è progettata ma non ancora implementata.
 
 ## Base riutilizzata
 
@@ -55,8 +69,8 @@ riferimenti locali sotto `.local/` sono esclusi da Git.
 
 ## Prossimi passi
 
-1. Inventariare file, overlay e caricamenti dinamici di entrambi i CD.
-2. Verificare funzioni, indirizzi indiretti e HLE sul codice italiano.
+1. Completare l’inventario con la semantica delle risorse opache e dei caricamenti dinamici.
+2. Identificare e verificare le funzioni nel main interno MGS1.EXE/MGS2.EXE e negli overlay italiani.
 3. Collegare la traduzione a un profilo MGS isolato e ottenere un boot ripetibile.
 4. Verificare intro, menu, gameplay, codec, filmati, audio, salvataggi e cambio CD.
 5. Adattare le migliorie grafiche di Crash solo dopo aver misurato la fedeltà base.

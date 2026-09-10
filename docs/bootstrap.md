@@ -40,3 +40,12 @@ Sono esclusi traduzioni retail generate, build, prove grafiche e dati del gioco.
 Il codice specifico Crash resta presente dove il runtime e i test lo richiedono;
 le sue assunzioni non costituiscono un profilo MGS. Il primo obiettivo tecnico è
 una baseline fedele e misurabile sul titolo italiano.
+
+## Aggiornamento: eseguibile interno e asset
+
+La prima analisi riportata sopra riguarda i file di boot `SLES_*`, non l’intero
+programma del gioco. La successiva ricognizione ha estratto `MGS/MGS1.EXE` e
+`MGS/MGS2.EXE`, identici per contenuto, e inventariato `STAGE.DIR` su entrambi i CD.
+Vedi [formati 3D](mgs-3d-formats.md), [evidenza](mgs-asset-evidence.json) e
+[contratto Vulkan](mgs-vulkan-presentation.md). La traduzione iniziale del boot
+non deve essere trattata come copertura delle funzioni grafiche di MGS.
