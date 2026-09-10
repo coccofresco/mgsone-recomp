@@ -14,12 +14,6 @@ namespace {
 // our memory_init / runtime model exposes it as a normal read/write target.
 constexpr uint32_t kIMaskAddr = 0x1F801074;
 
-// PSY-Q caps `n` for InterruptCallback/DMACallback at 8 slots.  Matches our
-// PsyqState arrays (kIntrSlots).
-inline std::size_t clampSlot(uint32_t n) {
-  return (n < PsyqState::kIntrSlots) ? static_cast<std::size_t>(n) : 0;
-}
-
 } // namespace
 
 // ResetCallback starts the interrupt subsystem. Repeated calls must preserve
@@ -55,11 +49,11 @@ void hle_libetc_CheckCallback(recomp_context *ctx) {
 }
 
 // InterruptCallback(n, fn): store the per-IRQ-line callback, return prev.
-// Slot 0..7 follow the PSY-Q convention (VBlank, GPU, CDROM, DMA, RTC0/1/2,
-// reserved).  Bios::drainPendingCallbacks cooperatively dispatches VBlank
-// and root-counter slots once per host VBlank.
+// Hardware IRQ indices are distinct from DMA channels; SPU is slot 9.
+// Invalid indices must not overwrite the VBlank handler.
 void hle_libetc_InterruptCallback(recomp_context *ctx) {
-  std::size_t n = clampSlot(ctx->r[A0]);
+  const std::size_t n = ctx->r[A0];
+  if (n >= PsyqState::kIntrSlots) { ctx->r[V0] = 0; return; }
   auto &s = psyq_state();
   uint32_t prev = s.intrCallback[n];
   s.intrCallback[n] = ctx->r[A1];
@@ -67,17 +61,20 @@ void hle_libetc_InterruptCallback(recomp_context *ctx) {
       "libetc.intr_callback_0", "libetc.intr_callback_1",
       "libetc.intr_callback_2", "libetc.intr_callback_3",
       "libetc.intr_callback_4", "libetc.intr_callback_5",
-      "libetc.intr_callback_6", "libetc.intr_callback_7"};
+      "libetc.intr_callback_6", "libetc.intr_callback_7",
+      "libetc.intr_callback_8", "libetc.intr_callback_9",
+      "libetc.intr_callback_10"};
   ps1::metrics::setState(kMetricNames[n], ctx->r[A1]);
   ctx->r[V0] = prev;
 }
 
 void hle_libetc_DMACallback(recomp_context *ctx) {
-  std::size_t n = clampSlot(ctx->r[A0]);
+  const std::size_t n = ctx->r[A0];
+  if (n >= PsyqState::kDmaSlots) { ctx->r[V0] = 0; return; }
   auto &s = psyq_state();
   uint32_t prev = s.dmaCallback[n];
   s.dmaCallback[n] = ctx->r[A1];
-  static constexpr const char *kMetricNames[PsyqState::kIntrSlots] = {
+  static constexpr const char *kMetricNames[PsyqState::kDmaSlots] = {
       "libetc.dma_callback_0", "libetc.dma_callback_1",
       "libetc.dma_callback_2", "libetc.dma_callback_3",
       "libetc.dma_callback_4", "libetc.dma_callback_5",

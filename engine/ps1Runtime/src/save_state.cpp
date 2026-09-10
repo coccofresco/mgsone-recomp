@@ -13,6 +13,7 @@ namespace ps1 {
 
 namespace {
 
+constexpr uint32_t kVersionSevenFlags = 0x3756534eu; // NSV7
 constexpr uint32_t kVersionSixFlags = 0x3656534eu; // NSV6
 constexpr uint32_t kExtendedStateMarker = 0x32545845u; // "EXT2"
 constexpr uint32_t kBiosStateMarker = 0x34534F49u;     // "IOS4"
@@ -70,8 +71,8 @@ struct PsyqDiskState {
   uint32_t cdNotifyCb = 0;
   uint32_t gpuSwapCb = 0;
   uint16_t intrMask = 0;
-  uint32_t intrCallback[psyq::PsyqState::kIntrSlots]{};
-  uint32_t dmaCallback[psyq::PsyqState::kIntrSlots]{};
+  uint32_t intrCallback[8]{}; // Frozen v2-v6 disk prefix
+  uint32_t dmaCallback[8]{};
   bool callbacksEnabled = true;
   psyq::GpuDrawSync drawSync{};
 };
@@ -91,7 +92,7 @@ PsyqDiskState capturePsyqState() {
   state.cdNotifyCb = source.cdNotifyCb;
   state.gpuSwapCb = source.gpuSwapCb;
   state.intrMask = source.intrMask;
-  std::copy(std::begin(source.intrCallback), std::end(source.intrCallback),
+  std::copy_n(std::begin(source.intrCallback), 8,
             std::begin(state.intrCallback));
   std::copy(std::begin(source.dmaCallback), std::end(source.dmaCallback),
             std::begin(state.dmaCallback));
@@ -237,7 +238,7 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
 
   // Write header placeholder (we'll update checksum at the end)
   SaveStateHeader header;
-  header.flags = kVersionSixFlags;
+  header.flags = kVersionSevenFlags;
   auto headerPos = f.tellp();
   writeBytes(f, &header, sizeof(header));
 
@@ -432,13 +433,18 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
     writeVector(f, biosState.cardEvents);
   }
 
+  // v7: keep the original PsyQ disk layout and append IRQ slots 8-10
+  // and the unconsumed guest SPU clock credit. PCM is presentation-only.
+  for (size_t slot = 8; slot < psyq::PsyqState::kIntrSlots; ++slot)
+    writePod(f, psyq::psyq_state().intrCallback[slot]);
+  writePod(f, spuState.clockSamplesPending);
+
   if (!f.good()) {
     fmt::print(stderr, "[SaveState] Short write to '{}'\n", path);
     return false;
   }
 
-  // Update header with checksum
-  // Compute checksum of RAM only (for speed)
+  // Update the header with the checksum of the complete payload.
   f.flush();
   if (!f) return false;
   std::ifstream payload(temporaryPath, std::ios::binary);
@@ -484,6 +490,8 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
   if (!readBytes(f, &header, sizeof(header))) return false;
   if ((header.version == 6 || header.flags == kVersionSixFlags) &&
       (header.version != 6 || header.flags != kVersionSixFlags)) return false;
+  if ((header.version == 7 || header.flags == kVersionSevenFlags) &&
+      (header.version != 7 || header.flags != kVersionSevenFlags)) return false;
 
   if (header.magic[0] != 'P' || header.magic[1] != 'S' ||
       header.magic[2] != '1' || header.magic[3] != 'S') {
@@ -491,7 +499,7 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
     return false;
   }
   if (header.version != 1 && header.version != 2 && header.version != 3 &&
-      header.version != 4 && header.version != 5 && header.version != 6) {
+      header.version != 4 && header.version != 5 && header.version != 6 && header.version != 7) {
     fmt::print(stderr, "[SaveState] Unsupported version {} in '{}'\n",
                header.version, path);
     return false;
@@ -723,6 +731,18 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
       }
     }
 
+    uint32_t extraIntrCallbacks[3]{};
+    if (header.version >= 7) {
+      if (!readPod(f, extraIntrCallbacks) || !readPod(f, spuState.clockSamplesPending))
+        return false;
+    } else if (spu.guestClockEnabled() && psyqState.intrCallback[0] == 0x80085150u) {
+      // USA v1.0 states from the old eight-slot runtime stored UserSpuIRQProc
+      // in slot 0. MGS installs its scheduler separately via gpuSwapCb.
+      // Migrate only that known callback in the verified MGS profile.
+      extraIntrCallbacks[1] = psyqState.intrCallback[0];
+      psyqState.intrCallback[0] = 0;
+    }
+
     gpu.loadGuestState(gpuState);
     dma.restore(dmaState);
     for (uint32_t timer = 0; timer < 3; ++timer) {
@@ -742,6 +762,8 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
     input.getMemoryCard(0).restore(cards[0]);
     input.getMemoryCard(1).restore(cards[1]);
     restorePsyqState(psyqState);
+    std::copy(std::begin(extraIntrCallbacks), std::end(extraIntrCallbacks),
+              psyq::psyq_state().intrCallback + 8);
     if (header.version >= 3)
       psyq::psyq_pad_restore(padState);
     if (hasBiosState && biosHle != nullptr) {
@@ -784,10 +806,11 @@ bool SaveState::isValid(const std::string &path) {
   const bool headerValid = header.magic[0] == 'P' && header.magic[1] == 'S' &&
          header.magic[2] == '1' && header.magic[3] == 'S' &&
          (header.version == 1 || header.version == 2 || header.version == 3 ||
-          header.version == 4 || header.version == 5 || header.version == 6);
+          header.version == 4 || header.version == 5 || header.version == 6 || header.version == 7);
   return headerValid && (header.version < 6
-      ? header.flags != kVersionSixFlags
-      : header.flags == kVersionSixFlags && payloadChecksum(f) == header.checksum);
+      ? header.flags != kVersionSixFlags && header.flags != kVersionSevenFlags
+      : header.flags == (header.version == 6 ? kVersionSixFlags : kVersionSevenFlags)
+          && payloadChecksum(f) == header.checksum);
 }
 
 } // namespace ps1

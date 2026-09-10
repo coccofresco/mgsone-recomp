@@ -1,5 +1,6 @@
 #include "bios_internal.h"
 #include "runtime/bios/bios.h"
+#include "runtime/spu/spu.h"
 #include "runtime/cdrom/cdrom_controller.h"
 #include "runtime/dma/dma.h"
 #include "runtime/games/crash3_profile.h"
@@ -625,6 +626,11 @@ void Bios::drainPendingCallbacks(uint32_t resumePc) {
   // stops the pump after one sector.
   if (cdrom_)
     cdrom_->serviceClock();
+
+  if (spu_ && spu_->serviceClock()) {
+    if (const uint32_t cb = psyq::psyq_state().intrCallback[9])
+      eventSystem_.queueCallback(cb);
+  }
 
   // Drain controller IRQs before consuming the remaining callback surfaces.
   drainCdromEventQueue();

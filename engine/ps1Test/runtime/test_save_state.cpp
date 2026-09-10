@@ -268,6 +268,8 @@ TEST_F(SaveStateTest, ExtendedStateRestoresStreamAndTimingState) {
   psyqState.cdRemaining = 19;
   psyqState.cdDestPtr = 0x80123400;
   psyqState.gpuSwapCb = 0x80022200;
+  psyqState.intrCallback[9] = 0x80085150;
+  spu.accrueSamples(735);
 
   ASSERT_TRUE(SaveState::save(tmpPath, ctx, mem, gpu, spu, dma, cdrom, timers,
                               irq, input, &mdec));
@@ -308,6 +310,8 @@ TEST_F(SaveStateTest, ExtendedStateRestoresStreamAndTimingState) {
   EXPECT_TRUE(psyqState.cdClockDemand.load(std::memory_order_acquire));
   EXPECT_EQ(psyqState.cdDestPtr, 0x80123400u);
   EXPECT_EQ(psyqState.gpuSwapCb, 0x80022200u);
+  EXPECT_EQ(psyqState.intrCallback[9], 0x80085150u);
+  EXPECT_EQ(spu.snapshot().clockSamplesPending, 735u);
   psyqState.reset();
 }
 
@@ -472,4 +476,48 @@ TEST_F(SaveStateTest, CorruptPayloadIsRejectedBeforeChangingLiveState) {
   EXPECT_FALSE(SaveState::load(tmpPath, ctx, mem, gpu, spu, dma, cdrom, timers, irq, input));
   EXPECT_EQ(ctx.r[1], 56u);
   EXPECT_EQ(mem.read32(0x1000), 78u);
+}
+
+TEST_F(SaveStateTest, VersionSixMgsSpuSlotMigratesWithoutChangingDiskPrefix) {
+  Memory mem;
+  gpu::GPU gpu;
+  spu::SPU spu;
+  DMA dma;
+  cdrom::CdromController cdrom;
+  Timers timers;
+  InterruptController irq;
+  input::InputController input;
+  recomp_context ctx{};
+  auto &state = psyq::psyq_state();
+  state.reset();
+  state.intrCallback[0] = 0x80085150; // old runtime misregistration
+  state.gpuSwapCb = 0x8008BEC8; // separately registered scheduler survives
+  ASSERT_TRUE(SaveState::save(tmpPath, ctx, mem, gpu, spu, dma, cdrom, timers,
+                             irq, input));
+  // v7 appends only slots 8-10 and sample credit to the frozen v6 layout.
+  std::ifstream source(tmpPath, std::ios::binary);
+  std::vector<char> bytes((std::istreambuf_iterator<char>(source)), {});
+  source.close();
+  ASSERT_GT(bytes.size(), sizeof(SaveStateHeader) + 20u);
+  bytes.resize(bytes.size() - 20);
+  SaveStateHeader header;
+  std::memcpy(&header, bytes.data(), sizeof(header));
+  header.version = 6;
+  header.flags = 0x3656534e;
+  header.checksum = 2166136261u;
+  for (size_t i = sizeof(header); i < bytes.size(); ++i)
+    header.checksum = (header.checksum ^ static_cast<uint8_t>(bytes[i])) * 16777619u;
+  std::memcpy(bytes.data(), &header, sizeof(header));
+  std::ofstream legacy(tmpPath, std::ios::binary | std::ios::trunc);
+  legacy.write(bytes.data(), bytes.size());
+  legacy.close();
+  ASSERT_TRUE(SaveState::isValid(tmpPath));
+  spu.enableGuestClock();
+  state.reset();
+  ASSERT_TRUE(SaveState::load(tmpPath, ctx, mem, gpu, spu, dma, cdrom, timers,
+                             irq, input));
+  EXPECT_EQ(state.intrCallback[0], 0u);
+  EXPECT_EQ(state.intrCallback[9], 0x80085150u);
+  EXPECT_EQ(state.gpuSwapCb, 0x8008BEC8u);
+  state.reset();
 }

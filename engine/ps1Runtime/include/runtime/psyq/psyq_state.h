@@ -138,14 +138,13 @@ public:
   /// callbacks are drained at cooperative yield points regardless.
   uint16_t intrMask = 0;
   /// Per-IRQ-line user callback registered via `InterruptCallback(n, fn)`.
-  /// Slot 0..6 follow the PSY-Q convention (VBlank, GPU, CDROM, DMA, RTC0,
-  /// RTC1, RTC2); slot 7 reserved.  The cooperative dispatcher currently
-  /// fires VBlank (0) and root-counter (4-6) callbacks once per host VBlank.
-  static constexpr std::size_t kIntrSlots = 8;
+  /// Hardware slots 0..10: VBlank, GPU, CDROM, DMA, timers 0/1/2,
+  /// controller, SIO, SPU, PIO. DMA channels have a separate table.
+  static constexpr std::size_t kIntrSlots = 11;
+  static constexpr std::size_t kDmaSlots = 8;
   uint32_t intrCallback[kIntrSlots] = {};
-  /// Per-channel DMA callback registered via `DMACallback(n, fn)`.  Same
-  /// shape and reasoning as `intrCallback`.
-  uint32_t dmaCallback[kIntrSlots] = {};
+  /// Per-channel DMA callback registered via `DMACallback(n, fn)`.
+  uint32_t dmaCallback[kDmaSlots] = {};
   /// Master enable toggled by `StopCallback` / `RestartCallback`.  Read by
   /// `CheckCallback` only; does not gate dispatch.
   bool callbacksEnabled = true;

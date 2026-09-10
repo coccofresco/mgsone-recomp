@@ -765,6 +765,10 @@ int main(int argc, char *argv[]) {
   bios.setInputController(&input);
   bios.setCdromController(&cdromCtrl);
   bios.setDma(&dma);
+  if (mgsProfile) {
+    spu.enableGuestClock();
+    bios.setSpu(&spu);
+  }
 
   // Enable display (GP1 0x03, val=0): mirrors what the real BIOS does during
   // boot. reset() leaves bit 23 = 1 (display off) per hardware spec.
@@ -1665,6 +1669,8 @@ int main(int argc, char *argv[]) {
       // sector buffer; concurrent tick/poll publication can overwrite it and
       // skip an LBA. The game thread consumes this credit at safe yields.
       cdromCtrl.accrueClockCycles(guestCyclesPerVblank);
+      if (spu.guestClockEnabled())
+        spu.accrueSamples(ps1::spu::SAMPLE_RATE / guestRefreshHz);
 
       uint32_t timerIrqs = 0;
       uint32_t timerIrqCounts[3] = {};
@@ -1797,7 +1803,7 @@ int main(int argc, char *argv[]) {
       irqCtrl.raiseInterrupt(ps1::IRQ_PAD_MC);
       input.clearInterrupt();
     }
-    if (spu.hasIrq()) {
+    if (!spu.guestClockEnabled() && spu.hasIrq()) {
       irqCtrl.raiseInterrupt(ps1::IRQ_SPU);
       spu.clearIrq();
     }

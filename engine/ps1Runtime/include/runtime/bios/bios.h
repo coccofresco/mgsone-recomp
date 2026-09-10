@@ -32,6 +32,7 @@
 #include <thread>
 #include <vector>
 
+namespace ps1::spu { class SPU; }
 namespace ps1::gpu {
 class GPU;
 }
@@ -87,6 +88,7 @@ public:
   void setInputController(input::InputController *input) { input_ = input; fileIo_.setInputController(input); }
   void setCdromController(cdrom::CdromController *cdrom) { cdrom_ = cdrom; }
   void setDma(::ps1::DMA *dma) { dma_ = dma; }
+  void setSpu(spu::SPU *spu) { spu_ = spu; }
 
   // Read-only accessor used by libcd HLE (psyq_libcd.cpp) to drive the
   // backend controller directly. Returns nullptr when not attached (typical
@@ -196,6 +198,7 @@ private:
   input::InputController *input_ = nullptr;
   cdrom::CdromController *cdrom_ = nullptr;
   ::ps1::DMA *dma_ = nullptr;
+  spu::SPU *spu_ = nullptr;
 
   // Pad buffer state (InitPAD / StartPAD)
   uint32_t padBuf1Addr_ = 0;

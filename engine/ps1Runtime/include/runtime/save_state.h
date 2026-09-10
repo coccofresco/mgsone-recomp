@@ -44,9 +44,9 @@ class Bios;
 
 struct SaveStateHeader {
   char magic[4] = {'P', 'S', '1', 'S'}; // "PS1S"
-  uint32_t version = 6;
+  uint32_t version = 7;
   uint32_t flags = 0;
-  uint32_t checksum = 0; // v6: FNV-1a of full payload; v1-v5: RAM-only XOR
+  uint32_t checksum = 0; // v6+: FNV-1a of full payload; v1-v5: RAM-only XOR
 };
 
 // Loading replaces the guest timeline. Unwinding to main_host before

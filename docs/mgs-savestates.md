@@ -22,10 +22,12 @@ metadata and pending memory-card completion events. Loading unwinds onto the
 host thread, discards the old fibers, and builds fresh fibers from the saved
 TCBs/PCs. Restored guest returns follow the compiled continuation table.
 
-The v6 payload has an FNV-1a checksum validated before live state changes.
+The v6/v7 payload has an FNV-1a checksum validated before live state changes.
 Short headers, damaged payloads and truncated files are rejected. Writes use a
 temporary file and rename; an unsuccessful write does not replace an existing
-state. The header distinguishes v6 from legacy versions; versions 1–5 remain
+state. Version 7 adds the separate SPU IRQ callback and pending audio sample credit.
+The loader migrates the known MGS v6 callback misregistration automatically;
+see [stream clock](mgs-stream-clock.md). Versions 1–5 remain
 readable by the generic loader. Earlier MGS builds could not produce native
 thread savestates. Do not assume states are compatible with a different game
 revision or with future incompatible runtime formats.

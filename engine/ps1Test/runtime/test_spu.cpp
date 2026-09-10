@@ -477,3 +477,50 @@ TEST(SpuControl, EndxFlagsClearedOnWrite) {
   // Initially 0
   EXPECT_EQ(spu.readRegister(0x1F801D9C), 0);
 }
+
+TEST_F(SpuAdpcmTest, GuestClockStopsAtEachAlternatingSilentVoiceIrq) {
+  // MGS clocks its stream with a silent 512-byte loop at pitch 0x1000.
+  // IRQ alternates between the two 256-byte halves: 16 * 28 = 448 samples.
+  auto *ram = spu.soundRamPtr();
+  ram[1] = 4;
+  ram[497] = 3;
+  spu.writeRegister(0x1F801C04, 0x1000);
+  spu.writeRegister(0x1F801C08, 0x000F);
+  spu.writeRegister(0x1F801DA4, 0);
+  spu.writeRegister(0x1F801DAA, 0xC040);
+  spu.writeRegister(0x1F801D88, 1);
+  spu.enableGuestClock();
+  spu.accrueSamples(4480);
+  std::vector<uint64_t> edges;
+  for (unsigned iteration = 0; iteration < 32; ++iteration) {
+    if (spu.serviceClock()) {
+      edges.push_back(spu.snapshot().generatedSampleCount);
+      spu.writeRegister(0x1F801DA4, edges.size() % 2 ? 32 : 0);
+      spu.writeRegister(0x1F801DAA, 0xC000);
+      spu.writeRegister(0x1F801DAA, 0xC040);
+    }
+    if (spu.snapshot().clockSamplesPending == 0) break;
+  }
+  ASSERT_GE(edges.size(), 10u);
+  for (size_t i = 1; i < edges.size(); ++i)
+    EXPECT_EQ(edges[i] - edges[i - 1], 448u);
+  const auto before = spu.snapshot();
+  int16_t audio[8192]{};
+  spu.generateSamples(audio, 4096);
+  spu.generateSamples(audio, 4096); // underflow must not advance guest audio
+  EXPECT_EQ(spu.snapshot().generatedSampleCount, before.generatedSampleCount);
+  EXPECT_EQ(spu.snapshot().clockSamplesPending, 0u);
+}
+
+TEST_F(SpuAdpcmTest, GuestClockRestoreRetainsUnconsumedSampleCredit) {
+  spu.enableGuestClock();
+  spu.accrueSamples(1470);
+  spu.serviceClock();
+  const auto checkpoint = spu.snapshot();
+  EXPECT_EQ(checkpoint.clockSamplesPending, 446u);
+  spu.serviceClock();
+  spu.restore(checkpoint);
+  spu.serviceClock();
+  EXPECT_EQ(spu.snapshot().generatedSampleCount, 1470u);
+  EXPECT_EQ(spu.snapshot().clockSamplesPending, 0u);
+}

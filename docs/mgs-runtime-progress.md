@@ -66,6 +66,13 @@ Machine-readable results are in [mgs-native-boot-evidence.json](mgs-native-boot-
 - SDK entry `0x80093174` is a configured native alias, eliminating the observed
   private-label interpreter fallback from the measured opening.
 
+## Cutscene timing
+
+SPU IRQ registration and the audio-driven stream clock are corrected. Audio
+IRQ slot 9 no longer aliases VBlank, and guest audio progresses independently
+of SDL buffer size. Version 7 states retain this clock and migrate existing
+v6 MGS states. See [stream clock validation](mgs-stream-clock.md).
+
 ## Donor and overlay evidence
 
 SwanStation is rebuilt from the revision in `donor/source.json`, with the

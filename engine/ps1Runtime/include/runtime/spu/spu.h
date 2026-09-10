@@ -4,6 +4,7 @@
 // 24 voice channels, ADPCM decoding, ADSR envelopes, reverb, 512KB Sound RAM
 
 #include <array>
+#include <deque>
 #include <cstdint>
 #include <cstring>
 #include <mutex>
@@ -98,6 +99,7 @@ public:
     uint32_t xaReadPos = 0;
     uint32_t cdDaReadPos = 0;
     uint64_t generatedSampleCount = 0;
+    uint64_t clockSamplesPending = 0;
     bool firstNonzeroOutputSeen = false;
   };
 
@@ -115,6 +117,13 @@ public:
   // Tick: generate samples for the audio callback
   // outputBuffer is interleaved stereo S16 (left, right, left, right...)
   void generateSamples(int16_t *outputBuffer, uint32_t numSamples);
+
+  // Guest-clock mode: SDL consumes PCM only; the game thread advances the
+  // SPU up to each IRQ boundary before dispatching/rearming its callback.
+  void enableGuestClock() { guestClock_ = true; }
+  bool guestClockEnabled() const { return guestClock_; }
+  void accrueSamples(uint32_t count);
+  bool serviceClock();
 
   // Sound RAM access (for DMA ch4)
   uint8_t *soundRamPtr() { return soundRam_; }
@@ -166,6 +175,10 @@ public:
   VoiceDebugState debugVoiceState(uint32_t voiceIdx) const;
 
 private:
+  uint32_t generateSamplesLocked(int16_t *output, uint32_t count, bool stopAtIrq);
+  bool guestClock_ = false;
+  uint64_t clockSamplesPending_ = 0;
+  std::deque<int16_t> playbackQueue_;
   // Voices
   Voice voices_[NUM_VOICES];
 

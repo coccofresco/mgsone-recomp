@@ -47,6 +47,8 @@ void SPU::reset() {
   cdDaReadPos_ = 0;
   generatedSampleCount_ = 0;
   firstNonzeroOutputSeen_ = false;
+  clockSamplesPending_ = 0;
+  playbackQueue_.clear();
 }
 
 SPU::Snapshot SPU::snapshot() const {
@@ -76,6 +78,7 @@ SPU::Snapshot SPU::snapshot() const {
   state.xaReadPos = xaReadPos_;
   state.cdDaReadPos = cdDaReadPos_;
   state.generatedSampleCount = generatedSampleCount_;
+  state.clockSamplesPending = clockSamplesPending_;
   state.firstNonzeroOutputSeen = firstNonzeroOutputSeen_;
   return state;
 }
@@ -107,6 +110,8 @@ void SPU::restore(const Snapshot &state) {
   xaReadPos_ = std::min<uint32_t>(state.xaReadPos, xaBuffer_.size());
   cdDaReadPos_ = std::min<uint32_t>(state.cdDaReadPos, cdDaBuffer_.size());
   generatedSampleCount_ = state.generatedSampleCount;
+  clockSamplesPending_ = state.clockSamplesPending;
+  playbackQueue_.clear();
   firstNonzeroOutputSeen_ = state.firstNonzeroOutputSeen;
 }
 
@@ -301,6 +306,7 @@ void SPU::writeRegister(uint32_t addr, uint16_t val) {
     ps1::metrics::count("spu.control_write");
     ps1::metrics::setState("spu.control", val);
     spuCtrl_ = val;
+    if (!(val & 0x40)) irqPending_ = false;
     // Immediately update SPUSTAT to mirror control bits 0-5.
     // On real hardware this happens within a few CPU cycles.
     // Without this, PsyQ SpuInit busy-waits on SPUSTAT forever
@@ -847,6 +853,46 @@ void SPU::processVoice(uint32_t voiceIdx, int32_t &outL, int32_t &outR,
 void SPU::generateSamples(int16_t *outputBuffer, uint32_t numSamples) {
   std::lock_guard<std::mutex> lock(mutex_);
   ps1::metrics::count("spu.audio_callback");
+  if (!guestClock_) {
+    generateSamplesLocked(outputBuffer, numSamples, false);
+    return;
+  }
+  const auto available = std::min<size_t>(numSamples * 2, playbackQueue_.size());
+  for (size_t i = 0; i < available; ++i) {
+    outputBuffer[i] = playbackQueue_.front();
+    playbackQueue_.pop_front();
+  }
+  std::fill(outputBuffer + available, outputBuffer + numSamples * 2, 0);
+}
+
+void SPU::accrueSamples(uint32_t count) {
+  std::lock_guard lock(mutex_);
+  clockSamplesPending_ += count;
+}
+
+bool SPU::serviceClock() {
+  std::lock_guard lock(mutex_);
+  if (!guestClock_) return false;
+  // At most one VBlank of work per cooperative yield. Stop exactly at an
+  // IRQ so the guest can change the IRQ address before more samples run.
+  std::array<int16_t, 2048> output{};
+  const uint32_t requested = std::min<uint64_t>(clockSamplesPending_, 1024);
+  const uint32_t generated = irqPending_ ? 0 :
+      generateSamplesLocked(output.data(), requested, true);
+  clockSamplesPending_ -= generated;
+  playbackQueue_.insert(playbackQueue_.end(), output.begin(), output.begin() + generated * 2);
+  // A missing/paused audio device must never stall the guest clock.
+  constexpr size_t maxQueued = SAMPLE_RATE / 4 * 2;
+  while (playbackQueue_.size() > maxQueued) playbackQueue_.pop_front();
+  const bool irq = irqPending_;
+  irqPending_ = false;
+  if (irq) ps1::metrics::count("spu.guest_irq");
+  return irq;
+}
+
+uint32_t SPU::generateSamplesLocked(int16_t *outputBuffer, uint32_t numSamples,
+                                   bool stopAtIrq) {
+  if (numSamples == 0) return 0;
 
   // KON/KOFF are pulse registers, not persistent bitfields. Preserve every
   // non-zero write and its order between audio callbacks. If a voice is keyed
@@ -898,6 +944,7 @@ void SPU::generateSamples(int16_t *outputBuffer, uint32_t numSamples) {
 
   uint64_t nonzeroOutputSamples = 0;
   int32_t peakOutput = 0;
+  uint32_t generated = 0;
   for (uint32_t s = 0; s < numSamples; s++) {
     int32_t mixL = 0, mixR = 0;
     int16_t prevOutput = 0;
@@ -956,9 +1003,11 @@ void SPU::generateSamples(int16_t *outputBuffer, uint32_t numSamples) {
       }
     }
     peakOutput = std::max(peakOutput, std::max(absL, absR));
+    ++generated;
+    if (stopAtIrq && irqPending_) break;
   }
-  ps1::metrics::count("spu.output_sample", numSamples);
-  generatedSampleCount_ += numSamples;
+  ps1::metrics::count("spu.output_sample", generated);
+  generatedSampleCount_ += generated;
   ps1::metrics::count("spu.nonzero_output_sample", nonzeroOutputSamples);
   ps1::metrics::setState(
       "spu.output_peak",
@@ -981,6 +1030,7 @@ void SPU::generateSamples(int16_t *outputBuffer, uint32_t numSamples) {
 
   // Update SPU status
   spuStat_ = spuCtrl_ & 0x3F; // Mirror control bits to status
+  return generated;
 }
 
 } // namespace ps1::spu

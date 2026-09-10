@@ -4,6 +4,8 @@
 #include "runtime/dma/dma.h"
 #include "runtime/memory.h"
 #include "runtime/psyq/psyq_state.h"
+#include "runtime/psyq/psyq_libetc.h"
+#include "runtime/spu/spu.h"
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
@@ -255,6 +257,50 @@ TEST_F(BiosTest, DmaCallbacksDispatchOnceForEachCompletedTransfer) {
   bios->drainPendingCallbacks();
   EXPECT_EQ(g_dispatchedCallbacks.size(), 1u);
 
+  g_testRecompDispatchHook = nullptr;
+  state.reset();
+}
+
+TEST_F(BiosTest, SpuInterruptRegistrationCannotAliasVblank) {
+  auto &state = psyq::psyq_state();
+  state.reset();
+  state.intrCallback[0] = 0x80010000;
+  ctx.r[A0] = 9;
+  ctx.r[A1] = 0x80085150;
+  psyq::hle_libetc_InterruptCallback(&ctx);
+  EXPECT_EQ(ctx.r[V0], 0u);
+  EXPECT_EQ(state.intrCallback[0], 0x80010000u);
+  EXPECT_EQ(state.intrCallback[9], 0x80085150u);
+  ctx.r[A0] = 11;
+  ctx.r[A1] = 0x80020000;
+  psyq::hle_libetc_InterruptCallback(&ctx);
+  EXPECT_EQ(state.intrCallback[0], 0x80010000u);
+  g_dispatchedCallbacks.clear();
+  g_testRecompDispatchHook = &recordDispatchedCallback;
+  state.vsyncCounter.store(1);
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(g_dispatchedCallbacks, (std::vector<uint32_t>{0x80010000}));
+  g_testRecompDispatchHook = nullptr;
+  state.reset();
+}
+
+TEST_F(BiosTest, SpuCallbackIsDeliveredFromAudioEdgeWithoutVblank) {
+  spu::SPU audio;
+  audio.enableGuestClock();
+  bios->setSpu(&audio);
+  auto &state = psyq::psyq_state();
+  state.reset();
+  state.intrCallback[9] = 0x80085150;
+  auto sound = audio.snapshot();
+  sound.irqPending = true;
+  audio.restore(sound);
+  g_dispatchedCallbacks.clear();
+  g_testRecompDispatchHook = &recordDispatchedCallback;
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(g_dispatchedCallbacks, (std::vector<uint32_t>{0x80085150}));
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(g_dispatchedCallbacks.size(), 1u);
+  EXPECT_EQ(state.vsyncCounter.load(), 0u);
   g_testRecompDispatchHook = nullptr;
   state.reset();
 }

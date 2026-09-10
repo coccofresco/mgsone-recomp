@@ -1,0 +1,84 @@
+{
+  "target": "MGS USA v1.0",
+  "savestate_version": 7,
+  "tests": 111,
+  "runs": {
+    "v6_load": {
+      "metrics": "data/native/stream-clock/metrics.json",
+      "counters": {
+        "host.savestate.loaded": 1,
+        "spu.guest_irq": 3924,
+        "spu.output_sample": 1836765,
+        "timing.vblank": 2501,
+        "timing.vblank_host_pulses_coalesced": 3365
+      },
+      "timing": {
+        "host.elapsed_after_load_us": 4037115,
+        "host.elapsed_us": 5904811,
+        "timing.vblank_index": 14003,
+        "timing.vblanks_after_load": 1500
+      },
+      "interpreter_counters": {}
+    },
+    "cutscene_boot": {
+      "metrics": "data/native/stream-clock/cutscene-metrics.json",
+      "counters": {
+        "host.savestate.saved": 1,
+        "spu.guest_irq": 22823,
+        "spu.output_sample": 10290000,
+        "timing.vblank": 14000,
+        "timing.vblank_host_pulses_coalesced": 22445
+      },
+      "timing": {
+        "host.elapsed_us": 36523419,
+        "timing.vblank_index": 14000
+      },
+      "interpreter_counters": {}
+    },
+    "v7_repeat": {
+      "metrics": "data/native/stream-clock/repeat-metrics.json",
+      "counters": {
+        "host.savestate.loaded": 3,
+        "spu.guest_irq": 4454,
+        "spu.output_sample": 2062164,
+        "timing.vblank": 2805,
+        "timing.vblank_host_pulses_coalesced": 3209
+      },
+      "timing": {
+        "host.elapsed_after_load_us": 4230722,
+        "host.elapsed_us": 6043243,
+        "timing.vblank_index": 10813,
+        "timing.vblanks_after_load": 1800
+      },
+      "interpreter_counters": {}
+    },
+    "normal_ntsc": {
+      "metrics": "data/native/stream-clock/realtime-metrics.json",
+      "counters": {
+        "host.savestate.loaded": 1,
+        "spu.guest_irq": 1844,
+        "spu.output_sample": 885107,
+        "timing.vblank": 1200
+      },
+      "timing": {
+        "host.elapsed_after_load_us": 14993739,
+        "host.elapsed_us": 20002524,
+        "timing.vblank_index": 9913,
+        "timing.vblanks_after_load": 900
+      },
+      "interpreter_counters": {}
+    }
+  },
+  "stream_trace": {
+    "path": "data/native/stream-clock/stream-ticks.jsonl",
+    "samples": 450,
+    "first_frame": 9014,
+    "last_frame": 9912,
+    "tick_deltas": {
+      "0": 9,
+      "2": 322,
+      "1": 74,
+      "3": 44
+    }
+  }
+}
