@@ -302,9 +302,8 @@ void hle_ResetGraph(recomp_context *ctx) {
 // ClearOTag
 //
 // PsyQ ClearOTag(ot, n):
-//   Fills the first `n` entries of ordering table `ot` with end-of-list
-//   terminators.  On real hardware each entry is a 24-bit linked-list pointer
-//   that forms a chain; the last entry (ot[0]) must hold 0x00FFFFFF.
+//   Links n empty tags forward, ending at ot[n-1] = 0x00FFFFFF.
+//   Each tag holds a 24-bit link and a zero command-word count.
 //
 //   a0 = base address of the OT (uint32_t*)
 //   a1 = number of entries
@@ -316,9 +315,9 @@ void hle_ClearOTag(recomp_context *ctx) {
     ctx->r[V0] = base;
     return;
   }
-  // Fill [1 .. n-1] with self-pointers (each entry points to previous)
+  // Forward ordering table: each empty tag points to the next entry.
   for (uint32_t i = 0; i < n - 1; i++) {
-    ctx->mem->write32(base + i * 4, base + (i - 1) * 4);
+    ctx->mem->write32(base + i * 4, (base + (i + 1) * 4) & 0x00FFFFFFu);
   }
   // Last entry = 0x00FFFFFF (end-of-list sentinel)
   ctx->mem->write32(base + (n - 1) * 4, 0x00FFFFFFu);
@@ -337,11 +336,11 @@ void hle_ClearOTagR(recomp_context *ctx) {
     ctx->r[V0] = base;
     return;
   }
-  // ot[n-1] = end-of-list
-  ctx->mem->write32(base + (n - 1) * 4, 0x00FFFFFFu);
-  // ot[i] links forward: ot[i] -> ot[i+1]
-  for (uint32_t i = 0; i < n - 1; i++) {
-    ctx->mem->write32(base + i * 4, base + (i + 1) * 4);
+  // DMA6/OTC layout: traverse from ot[n-1] back to ot[0]. GPU tags
+  // contain 24-bit physical links, never the KSEG high byte as word count.
+  ctx->mem->write32(base, 0x00FFFFFFu);
+  for (uint32_t i = 1; i < n; i++) {
+    ctx->mem->write32(base + i * 4, (base + (i - 1) * 4) & 0x00FFFFFFu);
   }
   ctx->r[V0] = base;
 }

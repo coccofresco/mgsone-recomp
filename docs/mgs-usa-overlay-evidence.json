@@ -1,0 +1,30 @@
+{
+  "region": "USA v1.0",
+  "overlays": [
+    {
+      "region": "USA v1.0",
+      "stage": "title",
+      "resource": "655b.b",
+      "load_address": "0x800C5968",
+      "code_end": "0x800D60FC",
+      "size": 69983,
+      "sha256": "8a909480158d16c1f6849df915751ce927335d0d6df5a7849a5bc20fdd042c71",
+      "donor_entry": "0x800D5578",
+      "donor_frame": 1164,
+      "donor_cpu_percent": 165,
+      "donor_ram_byte_identical": true,
+      "donor_snapshot": "data/oracle/usa-overlay/title-entry.ram"
+    },
+    {
+      "stage": "opening",
+      "load_address": "0x800C5968",
+      "code_end": "0x800CFF24",
+      "size": 43044,
+      "sha256": "359a5fffcf6555bb40861beea2d576691770fbe015d524d1395b2101c1884db8",
+      "donor_ram_byte_identical": true,
+      "donor_frame": 2000,
+      "donor_cpu_percent": 165,
+      "donor_snapshot": "data/oracle/usa-overlay/ram/ram-frame-2000.bin"
+    }
+  ]
+}

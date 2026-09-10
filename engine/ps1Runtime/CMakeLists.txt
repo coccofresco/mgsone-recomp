@@ -181,6 +181,7 @@ add_library(ps1Runtime_lib STATIC
     src/games/crash3_scenery_refinement.cpp
     src/games/crash3_scenery_construction.cpp
     src/games/crash3_profile.cpp
+    src/games/mgs_profile.cpp
     src/memory_access.cpp
     src/mips_interpreter.cpp
     src/mips_construction_lineage.cpp
@@ -196,6 +197,7 @@ add_library(ps1Runtime_lib STATIC
     src/cdrom/virtual_fs.cpp
     src/cdrom/cdrom_controller.cpp
     src/bios/bios.cpp
+    src/bios/kernel_threads.cpp
     src/bios/bios_access.cpp
     src/bios/syscall_a.cpp
     src/bios/syscall_b.cpp

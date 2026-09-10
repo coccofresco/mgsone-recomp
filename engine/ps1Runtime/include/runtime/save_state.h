@@ -44,7 +44,7 @@ class Bios;
 
 struct SaveStateHeader {
   char magic[4] = {'P', 'S', '1', 'S'}; // "PS1S"
-  uint32_t version = 4;
+  uint32_t version = 5;
   uint32_t flags = 0;
   uint32_t checksum = 0; // Fast XOR integrity check of the 2 MiB RAM image
 };

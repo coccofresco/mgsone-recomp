@@ -501,7 +501,10 @@ int main(int argc, char **argv) {
     overrides[setting.substr(0, separator)] = setting.substr(separator + 1);
   }
 
-  const auto work = std::filesystem::temp_directory_path() / "ps1trace-libretro";
+  const char* workOverride = std::getenv("PS1_DONOR_WORK_DIRECTORY");
+  const auto work = workOverride && *workOverride
+      ? std::filesystem::absolute(workOverride)
+      : std::filesystem::temp_directory_path() / "ps1trace-libretro";
   systemDirectory = (work / "system").string();
   saveDirectory = (work / "save").string();
   std::filesystem::create_directories(systemDirectory);

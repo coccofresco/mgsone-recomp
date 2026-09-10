@@ -314,20 +314,7 @@ void DMA::executeBlockTransfer(uint32_t ch) {
 
       switch (ch) {
       case CDROM_CH:
-        if (cdrom_ && cdrom_->hasSectorReady()) {
-          const uint8_t *sector = cdrom_->getSectorBuffer();
-          uint32_t sectorSz = cdrom_->getSectorSize();
-          // Skip raw sector header to reach user data payload.
-          // Raw sector (2352 bytes): 12-sync + 4-header + 8-subheader +
-          // 2048-data sectorSize=2048 -> user data at offset 24 sectorSize=2340
-          // -> sub-header+data at offset 12
-          uint32_t dataOff = (sectorSz == 2048) ? 24 : 12;
-          uint32_t offset = dataOff + i * 4;
-          if (offset + 3 < 2352) {
-            word = sector[offset] | (sector[offset + 1] << 8) |
-                   (sector[offset + 2] << 16) | (sector[offset + 3] << 24);
-          }
-        }
+        if (cdrom_) word = cdrom_->readDataWord();
         break;
       case MDEC_OUT:
         if (mdec_ && mdec_->dmaOutReady())
@@ -350,9 +337,6 @@ void DMA::executeBlockTransfer(uint32_t ch) {
     addr += step;
   }
 
-  if (ch == CDROM_CH && cdrom_) {
-    cdrom_->clearSectorReady();
-  }
 }
 
 void DMA::executeLinkedListTransfer(uint32_t ch) {

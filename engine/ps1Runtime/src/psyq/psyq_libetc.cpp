@@ -22,23 +22,17 @@ inline std::size_t clampSlot(uint32_t n) {
 
 } // namespace
 
-// ResetCallback: re-initialises the interrupt subsystem.  Real PSY-Q
-// allocates state, installs entry-point handlers and returns the address
-// of an internal sentinel ("non-zero == initialised").  We have no IRQs
-// to install -- callbacks are drained cooperatively from `hle_VSync` -- so
-// reset the soft state and hand back a non-zero token.  A non-zero return
-// is load-bearing: PSY-Q boilerplate checks it to detect init failure and
-// aborts the main loop when it sees zero.
+// ResetCallback starts the interrupt subsystem. Repeated calls must preserve
+// installed handlers: CD, sound and graphics each initialize it independently.
+// The runtime's PsyqState::reset owns clearing handlers on a machine reset.
 void hle_libetc_ResetCallback(recomp_context *ctx) {
   auto &s = psyq_state();
-  for (auto &cb : s.intrCallback) cb = 0;
-  for (auto &cb : s.dmaCallback)  cb = 0;
   s.callbacksEnabled = true;
   ctx->r[V0] = 1;
 }
 
 // StopCallback / RestartCallback: gate the cooperative callback path.
-// We honour the flag for `CheckCallback` but the runtime drains anyway --
+// The flag is retained, but the runtime currently drains anyway --
 // real IRQ masking would suppress dispatch, which we cannot model without
 // a full COP0 emulation.  Returning the previous state matches PSY-Q.
 void hle_libetc_StopCallback(recomp_context *ctx) {
@@ -55,13 +49,9 @@ void hle_libetc_RestartCallback(recomp_context *ctx) {
   ctx->r[V0] = prev;
 }
 
-// CheckCallback: returns non-zero iff currently executing inside a
-// callback context.  In the cooperative model we are never inside one
-// from the game thread's perspective.  Some PSY-Q routines branch on
-// this to choose between sync and async paths; returning 0 selects the
-// sync path which matches our runtime.
+// SDK CD control chooses its nonblocking path inside interrupt callbacks.
 void hle_libetc_CheckCallback(recomp_context *ctx) {
-  ctx->r[V0] = 0;
+  ctx->r[V0] = ctx->callbackDrainBlockDepth != 0 ? 1u : 0u;
 }
 
 // InterruptCallback(n, fn): store the per-IRQ-line callback, return prev.

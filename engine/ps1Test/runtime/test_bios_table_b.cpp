@@ -78,3 +78,81 @@ TEST_F(BiosTableBTest, EventSystemProxy) {
   bios->executeB0();
   EXPECT_EQ(ctx.r[V0], 1); // Success
 }
+
+TEST_F(BiosTableBTest, KernelTablesSurviveThreadRegisterChanges) {
+  ctx.r[K0] = 0;
+  ctx.r[K1] = 0;
+  ctx.r[T1] = 0x56;
+  bios->executeB0();
+  EXPECT_EQ(ctx.r[V0], 0x801FFF80u);
+  ctx.r[T1] = 0x57;
+  bios->executeB0();
+  EXPECT_EQ(ctx.r[V0], 0x801FFE00u);
+}
+
+TEST_F(BiosTableBTest, KernelAllocatorHonorsArenaAndOverflow) {
+  ctx.r[A0] = 0xA000E800;
+  ctx.r[A1] = 32;
+  ctx.r[T1] = 8;
+  bios->executeC0();
+  auto allocate = [&](uint32_t bytes) {
+    ctx.r[A0] = bytes;
+    ctx.r[T1] = 0;
+    bios->executeB0();
+    return ctx.r[V0];
+  };
+  EXPECT_EQ(allocate(1), 0xA000E800u);
+  EXPECT_EQ(allocate(9), 0xA000E808u);
+  EXPECT_EQ(allocate(0xFFFFFFFFu), 0u);
+  EXPECT_EQ(allocate(16), 0u);
+  EXPECT_EQ(allocate(8), 0xA000E818u);
+}
+
+#if defined(__unix__) || defined(__APPLE__)
+extern void (*g_testRecompDispatchHook)(recomp_context *, uint32_t);
+namespace {
+KernelThreads *threadProbe = nullptr;
+int threadProbePhase = 0;
+void runThreadProbe(recomp_context *ctx, uint32_t address) {
+  EXPECT_EQ(address, 0x80012340u);
+  EXPECT_EQ(ctx->r[SP], 0x801e0000u);
+  EXPECT_EQ(ctx->r[GP], 0x800abc00u);
+  volatile uint32_t retainedLocal = 0x12345678;
+  ctx->r[S0] = 0xfeed1234;
+  threadProbePhase = 1;
+  threadProbe->change(0xff000000);
+  EXPECT_EQ(retainedLocal, 0x12345678u);
+  EXPECT_EQ(ctx->r[S0], 0xfeed1234u);
+  threadProbePhase = 2;
+  threadProbe->change(0xff000000);
+  ADD_FAILURE() << "Test worker must remain suspended";
+}
+}
+TEST_F(BiosTableBTest, NativeThreadSwitchRetainsStackAndGuestRegisters) {
+  mem.write32(0x108, 0x80001000);
+  mem.write32(0x110, 0x80001100);
+  mem.write32(0x114, 2 * 0xc0);
+  mem.write32(0x1000, 0x80001100);
+  mem.write32(0x1100, 0x4000);
+  mem.write32(0x11c0, 0x1000);
+  ctx.r[SP] = 0x801f0000;
+  ctx.r[S0] = 0xabcd0001;
+  KernelThreads threads(ctx);
+  threadProbe = &threads;
+  threadProbePhase = 0;
+  struct HookReset {
+    ~HookReset() { g_testRecompDispatchHook = nullptr; threadProbe = nullptr; }
+  } reset;
+  g_testRecompDispatchHook = runThreadProbe;
+  const auto handle = threads.open(0x80012340, 0x801e0000, 0x800abc00);
+  ASSERT_EQ(handle, 0xff000001u);
+  threads.change(handle);
+  EXPECT_EQ(threadProbePhase, 1);
+  EXPECT_EQ(ctx.r[SP], 0x801f0000u);
+  EXPECT_EQ(ctx.r[S0], 0xabcd0001u);
+  EXPECT_EQ(mem.read32(0x1000), 0x80001100u);
+  threads.change(handle);
+  EXPECT_EQ(threadProbePhase, 2);
+  EXPECT_EQ(ctx.r[S0], 0xabcd0001u);
+}
+#endif

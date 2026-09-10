@@ -1,0 +1,28 @@
+{
+  "native_boot": true,
+  "vblanks": 3000,
+  "guest_elapsed_seconds": 50.002783,
+  "wall_seconds": 53.018,
+  "interpreter_fallbacks": {},
+  "visible_frames": [
+    "frame-1000.ppm",
+    "frame-1500.ppm",
+    "frame-2000.ppm",
+    "frame-2500.ppm",
+    "frame-3000.ppm",
+    "frame-500.ppm"
+  ],
+  "presentation": "vulkan",
+  "scope": "Initial logos and opening overlay; not a full gameplay test",
+  "target": "USA v1.0, SLUS-00594",
+  "executable_sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32",
+  "artifact_directory": "data/native/usa-wide-smoke",
+  "wide_matrix_adjustments": 1669,
+  "renderer": "Vulkan 1.4.341, NVIDIA GeForce RTX 4060",
+  "runtime_tests_passed": 127,
+  "recompiler_tests_passed": 129,
+  "recompiler_tests_skipped": 1,
+  "python_tests_passed": 20,
+  "donor_cpu_percent": 165,
+  "native_cpu_budget": "Host-speed native execution; no calibrated 165% guest-cycle budget"
+}

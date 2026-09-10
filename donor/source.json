@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/libretro/swanstation",
+  "commit": "7f69c199ed88d5723f71dd3a6e9c1b7a45b535a6",
+  "instrumentation_source": "/home/xander/ps1-donors/swanstation",
+  "imported_snapshot_header": "/home/xander/Condivisa/crash3-resource-index/tools/donor_trace/pc_memory_snapshot.h",
+  "patch": "swanstation-trace.patch",
+  "existing_binary_sha256": "dfcd9a73cbbf71281560915e6606a9318aea9e6697ba032f5e01aa997289de4d"
+}

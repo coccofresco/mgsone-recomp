@@ -1,5 +1,6 @@
 #include "bios_internal.h"
 #include "runtime/bios/bios.h"
+#include "runtime/input/input.h"
 #include <fmt/format.h>
 
 namespace ps1::bios {
@@ -12,10 +13,20 @@ using detail::readString;
 
 void Bios::handleB0(uint32_t index) {
   switch (index) {
-  case 0x00: // alloc_kernel_memory
-    BIOS_LOG("[BIOS] alloc_kernel_memory({}) [STUB]\n", ctx_.r[A0]);
-    ctx_.r[V0] = 0;
+  case 0x00: { // alloc_kernel_memory, aligned guest kernel arena
+    const uint32_t size = (ctx_.r[A0] + 7u) & ~7u;
+    if (size < ctx_.r[A0] || kernelHeapNext_ > kernelHeapEnd_ ||
+        size > kernelHeapEnd_ - kernelHeapNext_) ctx_.r[V0] = 0;
+    else {ctx_.r[V0]=kernelHeapNext_;kernelHeapNext_+=size;}
     break;
+  }
+  case 0x0E:
+    ctx_.r[V0]=kernelThreads_.open(ctx_.r[A0],ctx_.r[A1],ctx_.r[A2]);
+    break;
+  case 0x0F:
+    ctx_.r[V0]=kernelThreads_.close(ctx_.r[A0]);break;
+  case 0x10:
+    kernelThreads_.change(ctx_.r[A0]);break;
   case 0x07: // DeliverEvent
     eventSystem_.triggerEvent(ctx_.r[A0], ctx_.r[A1]);
     break;
@@ -166,13 +177,41 @@ void Bios::handleB0(uint32_t index) {
   case 0x4C: // StopCARD
     BIOS_LOG("[BIOS] StopCARD()\n");
     break;
+  case 0x50: // _new_card: acknowledge insertion for the next transfer
+    ctx_.r[V0] = 1;
+    break;
+  case 0x4E: // _card_write
+  case 0x4F: { // _card_read
+    const uint32_t slot = ctx_.r[A0] >> 4;
+    const uint32_t sector = ctx_.r[A1];
+    if (slot >= 2 || sector >= input::MemoryCard::CARD_SIZE / input::MemoryCard::SECTOR_SIZE) {
+      ctx_.r[V0] = 0;
+      break;
+    }
+    ctx_.r[V0] = 1;
+    if (!input_ || !input_->getMemoryCard(slot).isPresent()) {
+      eventSystem_.triggerEvent(0xF0000011u, 0x0100u);
+      break;
+    }
+    auto& card = input_->getMemoryCard(slot);
+    auto state = card.snapshot();
+    for (uint32_t i = 0; i < input::MemoryCard::SECTOR_SIZE; ++i) {
+      const uint32_t offset = sector * input::MemoryCard::SECTOR_SIZE + i;
+      if (index == 0x4E) state.data[offset] = ctx_.mem->read8(ctx_.r[A2] + i);
+      else ctx_.mem->write8(ctx_.r[A2] + i, state.data[offset]);
+    }
+    if (index == 0x4E) card.restore(state);
+    // Event callbacks run later at a cooperative boundary, after submission.
+    eventSystem_.triggerEvent(0xF0000011u, 0x0004u);
+    break;
+  }
   case 0x56: // GetC0Table -- return pointer to C0 jump table
-    BIOS_LOG("[BIOS] GetC0Table() -> 0x{:08X}\n", ctx_.r[K1]);
-    ctx_.r[V0] = ctx_.r[K1];
+    BIOS_LOG("[BIOS] GetC0Table() -> 0x{:08X}\n", 0x801FFF80u);
+    ctx_.r[V0] = 0x801FFF80u;
     break;
   case 0x57: // GetB0Table -- return pointer to B0 jump table
-    BIOS_LOG("[BIOS] GetB0Table() -> 0x{:08X}\n", ctx_.r[K0]);
-    ctx_.r[V0] = ctx_.r[K0];
+    BIOS_LOG("[BIOS] GetB0Table() -> 0x{:08X}\n", 0x801FFE00u);
+    ctx_.r[V0] = 0x801FFE00u;
     break;
   case 0x42: // B0:42 -- internal PsyQ CdInit verification (SetConf/cdioctl-like)
     // Called by CdInit after 2 rounds of _96_CdInitSubFunc+testEvent+GetStat.

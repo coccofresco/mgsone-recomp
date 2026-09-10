@@ -1,12 +1,22 @@
-# Metal Gear Solid — PSX recomp italiana
+# Metal Gear Solid — PSX recomp
 
 Repository locale per sviluppare la ricompilazione nativa di Metal Gear Solid
-PSX PAL italiano, CD1 **SLES-01508** e CD2 **SLES-11508**.
+PSX. Riferimento attuale: **USA v1.0**, CD1 **SLUS-00594** e CD2 **SLUS-00776**.
+Le immagini italiane e il relativo audit restano disponibili come confronto.
 
-Stato: base di sviluppo, strumenti compilati, inventario degli asset 3D dei due CD
-e analisi iniziale del boot e dell’eseguibile principale interno.
-Non è ancora un port giocabile. Il profilo MGS e la gestione degli overlay
-specifici del gioco devono essere sviluppati e verificati.
+Stato: **avvio nativo USA verificato**, dai loghi Konami all’inizio della
+sequenza subacquea, con presentazione Vulkan e temporizzazione NTSC.
+Non è ancora un port giocabile: sono ricompilati gli overlay iniziali `title`
+e `opening`, mentre gameplay e scenari successivi restano da completare.
+
+Il profilo USA abilita di base la proiezione 16:9. SwanStation strumentato è
+il donor/oracolo e usa CPU al 165%; il codice nativo gira alla velocità
+host, mantenendo i divisori originali 30/20 fps. Non è ancora implementato
+un modello di budget CPU nativo equivalente esattamente al 165%.
+
+- [Stato, verifiche e limiti del runtime](docs/mgs-runtime-progress.md)
+- [Aggiornamenti PSXRecomp](docs/psxrecomp-upstream-2026-09-10.md)
+- [Valutazione RecompOne](docs/recompone-review-2026-09-10.md)
 
 ## Asset originali e presentazione Vulkan
 
@@ -36,6 +46,19 @@ Il progetto Crash originale non è stato modificato. Il suo profilo resta nel
 motore come riferimento: non deve essere selezionato per MGS.
 
 ## Preparazione
+
+Per il target attuale USA v1.0:
+
+```bash
+python3 scripts/prepare_usa_discs.py
+./scripts/build_native.sh 'data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue'
+./scripts/run_native.sh
+```
+
+La build copre l’avvio iniziale, non il gioco completo. Gli archivi,
+i CD estratti e il codice generato rimangono esclusi da Git.
+
+Preparazione precedente dei CD italiani:
 
 Servono Python 3.11+, CMake 3.20+, Ninja, compilatore C++20, SDL2, Vulkan e glslc.
 La configurazione può scaricare gli header Vulkan fissati dal motore se assenti.
@@ -70,7 +93,7 @@ riferimenti locali sotto `.local/` sono esclusi da Git.
 ## Prossimi passi
 
 1. Completare l’inventario con la semantica delle risorse opache e dei caricamenti dinamici.
-2. Identificare e verificare le funzioni nel main interno MGS1.EXE/MGS2.EXE e negli overlay italiani.
+2. Verificare il main SLUS-00594/SLUS-00776 e completare gli overlay USA v1.0.
 3. Collegare la traduzione a un profilo MGS isolato e ottenere un boot ripetibile.
 4. Verificare intro, menu, gameplay, codec, filmati, audio, salvataggi e cambio CD.
 5. Adattare le migliorie grafiche di Crash solo dopo aver misurato la fedeltà base.

@@ -1085,6 +1085,18 @@ std::string InstructionEmitter::emitFunction(const RecompFunction &func) const {
         return false;
     }
 
+    // An idle thread can spin on a register loaded before the loop. With
+    // only NOPs around the branch, no work is in flight; interrupts are the
+    // only way any other guest thread can run (MGS USA's SIO idle task).
+    bool idleLoop = true;
+    for (size_t loopIdx = firstIdx; loopIdx <= branchIdx + 1; ++loopIdx) {
+      if (loopIdx != branchIdx && func.instructions[loopIdx] != 0) {
+        idleLoop = false;
+        break;
+      }
+    }
+    if (idleLoop) return true;
+
     // Track whether the actual branch condition depends on a memory value
     // read during this iteration. A read-only counted scan (for example an
     // audio-table reduction) is not polling and must not become a callback

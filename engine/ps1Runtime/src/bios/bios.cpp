@@ -263,6 +263,14 @@ void Bios::triggerCdromEvent(uint8_t cdIntType) {
   BIOS_LOG("[BIOS] triggerCdromEvent: INT{} -> spec 0x{:04X}\n", cdIntType,
            spec);
 
+  // A registered low-level PsyQ driver owns the response FIFO, DMA and ACK.
+  // Queue it at a cooperative boundary rather than consuming its response
+  // through the high-level CdControl/CdRead replacement as well.
+  if (const uint32_t handler = ps1::psyq::psyq_state().intrCallback[2]) {
+    eventSystem_.queueCallback(handler);
+    return;
+  }
+
   // HLE PsyQ CDROM interrupt handler variables
   //
   // On a real PS1 the BIOS exception handler at 0x80000080 reads the CDROM
@@ -515,7 +523,7 @@ void Bios::triggerVBlankEvent() {
   // recomp_context.
   //
   uint32_t swapCb = ps1::psyq::psyq_state().gpuSwapCb;
-  if (swapCb != 0) {
+  if (swapCb != 0 && !kernelThreads_.active()) {
     ps1::metrics::trace("callback.vsync_queue", {{"callback", swapCb}});
     eventSystem_.queueCallbackWithArg(swapCb,
                                       4); // a0 = 4 -> "swap done"
@@ -652,11 +660,17 @@ void Bios::drainPendingCallbacks() {
         ++lastIntrTickFrame_;
         if (uint32_t cb = st.intrCallback[0]; cb != 0)
           eventSystem_.queueCallback(cb);
+        // Kernel-threaded titles wait in their idle task instead of calling
+        // blocking VSync. Deliver their registered VSync callback here too.
+        if (kernelThreads_.active() && st.gpuSwapCb != 0)
+          eventSystem_.queueCallbackWithArg(st.gpuSwapCb, 4);
       }
     }
   }
 
+  kernelThreads_.captureCurrent();
   eventSystem_.drainPendingCallbacks();
+  kernelThreads_.scheduleSelected();
 
   // Deferred CD customExceptionExit dispatch
   //

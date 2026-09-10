@@ -72,6 +72,7 @@ public:
     uint8_t mode = 0;
     std::array<uint8_t, 2352> sectorBuffer{};
     uint32_t sectorSize = 0;
+    uint32_t dataReadOffset = 0;
     bool sectorReady = false;
     uint32_t cyclesUntilResponse = 0;
     uint32_t cyclesPerSector = 0;
@@ -136,6 +137,8 @@ public:
   // Get sector data for DMA transfer
   const uint8_t *getSectorBuffer() const { return sectorBuffer_.data(); }
   uint32_t getSectorSize() const { return sectorSize_; }
+  uint8_t readDataByte();
+  uint32_t readDataWord();
   uint8_t getMode() const { return mode_; }
   bool hasSectorReady() const { return sectorReady_; }
   void clearSectorReady() { sectorReady_ = false; }
@@ -210,6 +213,7 @@ private:
   // Sector data
   std::array<uint8_t, 2352> sectorBuffer_;
   uint32_t sectorSize_ = 2048;
+  uint32_t dataReadOffset_ = 0;
   bool sectorReady_ = false;
 
   // Timing

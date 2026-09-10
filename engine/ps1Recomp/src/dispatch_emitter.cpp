@@ -37,6 +37,12 @@ std::string emitDispatchBody() {
         return;
     }
 
+    if (auto overlay = recomp_lookup_overlay(rdram, addr)) {
+        overlay(rdram, ctx);
+        if (continueDeferredTail()) continue;
+        return;
+    }
+
     // 2. Direct lookup in dispatch table
     recomp_func_t fn = recomp_lookup(addr);
     if (fn) {

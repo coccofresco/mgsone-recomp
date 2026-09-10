@@ -1607,6 +1607,8 @@ int main(int argc, char *argv[]) {
     // loaded from disc into RAM at a specific address. Functions are prefixed
     // with overlay name to avoid collisions when multiple overlays share RAM.
     OverlayHandler overlayHandler;
+    std::string overlayLookupBody;
+    std::string overlayResumeBody;
     if (config.contains("overlays")) {
       const auto &overlays =
           toml::find<std::vector<toml::value>>(config, "overlays");
@@ -1667,6 +1669,15 @@ int main(int argc, char *argv[]) {
             continue;
           }
         }
+
+        const auto baseNames = addr_to_name;
+        const auto baseResumes = resume_to_name;
+        const uint32_t identitySize = toml::find_or<int64_t>(ov, "identity_size", 0);
+        if (identitySize &&
+            (ovl_codeOffset > ovl_data.size() ||
+             identitySize > ovl_data.size() - ovl_codeOffset ||
+             uint64_t(ovl_ramBase & 0x1fffffffu) + identitySize > 0x200000u))
+          throw std::runtime_error("Overlay identity outside RAM or binary");
 
         // Get function list -- from config or scan for prologues
         std::vector<uint32_t> ovl_funcs;
@@ -1783,7 +1794,7 @@ int main(int argc, char *argv[]) {
                 continue;
               auto targets = detectJumpTable(
                   rfunc.instructions, ii, parser, code, ovl_ramBase,
-                  ovl_codeSize);
+                  static_cast<uint32_t>(ovl_data.size() - ovl_codeOffset));
               targets.erase(
                   std::remove_if(targets.begin(), targets.end(),
                                  [fAddr, fEnd](uint32_t target) {
@@ -1818,6 +1829,27 @@ int main(int argc, char *argv[]) {
                             "{{ /* Overlay stub -- no binary data */ }}\n",
                             fName);
           }
+        }
+
+        // Identified overlays share RAM but never share a dispatch map. The
+        // immutable identity bytes are checked on each external transfer; a
+        // stale translation cannot survive a stage load at the same address.
+        if (identitySize) {
+          std::string condition = fmt::format("    if (normalized >= 0x{:08X}u && normalized < 0x{:08X}u", ovl_ramBase, ovl_ramBase + ovl_codeSize);
+          for (uint32_t i = 0; i < identitySize; ++i)
+            condition += fmt::format(" && rdram[0x{:X}] == {}", (ovl_ramBase & 0x1fffffffu) + i, ovl_data[ovl_codeOffset + i]);
+          condition += ") {\n        switch (normalized) {\n";
+          overlayLookupBody += condition;
+          for (auto address : ovl_funcs)
+            overlayLookupBody += fmt::format("        case 0x{:08X}u: return {};\n", address, addr_to_name.at(address));
+          overlayLookupBody += "        default: return nullptr;\n        }\n    }\n";
+          overlayResumeBody += condition;
+          for (const auto &[address, name] : resume_to_name)
+            if (name.rfind("overlay_" + ovl_name + "__", 0) == 0)
+              overlayResumeBody += fmt::format("        case 0x{:08X}u: return {};\n", address, name);
+          overlayResumeBody += "        default: return nullptr;\n        }\n    }\n";
+          addr_to_name = baseNames;
+          resume_to_name = baseResumes;
         }
 
         // Register overlay section for tracking
@@ -1941,6 +1973,10 @@ int main(int argc, char *argv[]) {
     result_cpp +=
         "typedef void (*recomp_func_t)(uint8_t*, recomp_context*);\n\n";
 
+    result_cpp += "static recomp_func_t recomp_lookup_overlay(uint8_t* rdram, uint32_t addr, bool resume = false) {\n    const uint32_t normalized = (addr & 0x1fffffffu) | 0x80000000u;\n    if (resume) {\n";
+    result_cpp += overlayResumeBody;
+    result_cpp += "    } else {\n" + overlayLookupBody + "    }\n    return nullptr;\n}\n\n";
+
     // Global dispatch table (unordered_map)
     result_cpp += "static std::unordered_map<uint32_t, recomp_func_t> recomp_func_table;\n";
     result_cpp += "static std::unordered_map<uint32_t, recomp_func_t> recomp_resume_table;\n";
@@ -1988,6 +2024,9 @@ int main(int argc, char *argv[]) {
         "    if (!recomp_table_ready) recomp_init_dispatch_table();\n"
         "    const uint32_t normalized = (addr & 0x1FFFFFFFu) | "
         "0x80000000u;\n"
+        "    if (auto fn = recomp_lookup_overlay(rdram, normalized, true)) {\n"
+        "        ctx->nativeResumePc = normalized; fn(rdram, ctx); return;\n"
+        "    }\n"
         "    auto it = recomp_resume_table.find(normalized);\n"
         "    if (it == recomp_resume_table.end()) {\n"
         "        fmt::print(stderr, \"[SaveState] FATAL: no native "

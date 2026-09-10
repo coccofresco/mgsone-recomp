@@ -1,0 +1,303 @@
+diff --git a/src/core/bus.cpp b/src/core/bus.cpp
+index 92403773..eba49e67 100644
+--- a/src/core/bus.cpp
++++ b/src/core/bus.cpp
+@@ -16,6 +16,7 @@
+ #include "spu.h"
+ #include "timers.h"
+ #include <cstdio>
++#include <cstdlib>
+ #include <cstring>
+ #include <tuple>
+ #include <utility>
+@@ -97,6 +98,48 @@ static Common::MemoryArena m_memory_arena;
+ 
+ static CPUFastmemMode m_fastmem_mode = CPUFastmemMode::Disabled;
+ 
++static void TraceDonorRAMWrite(uint32_t offset, uint32_t value,
++                               MemoryAccessSize size)
++{
++  static FILE* trace = []() -> FILE* {
++    const char* path = std::getenv("PS1_DONOR_RAM_WRITE_TRACE");
++    return (path && *path) ? std::fopen(path, "w") : nullptr;
++  }();
++  if (!trace)
++    return;
++
++  static const unsigned long address_from = []() {
++    const char* text = std::getenv("PS1_DONOR_RAM_WRITE_ADDRESS_FROM");
++    return text ? std::strtoul(text, nullptr, 0) : 0ul;
++  }();
++  static const unsigned long address_to = []() {
++    const char* text = std::getenv("PS1_DONOR_RAM_WRITE_ADDRESS_TO");
++    return text ? std::strtoul(text, nullptr, 0) : ~0ul;
++  }();
++  static const unsigned long frame_from = []() {
++    const char* text = std::getenv("PS1_DONOR_RAM_WRITE_FRAME_FROM");
++    return text ? std::strtoul(text, nullptr, 0) : 0ul;
++  }();
++  static const unsigned long frame_to = []() {
++    const char* text = std::getenv("PS1_DONOR_RAM_WRITE_FRAME_TO");
++    return text ? std::strtoul(text, nullptr, 0) : ~0ul;
++  }();
++  const uint32_t frame = System::GetFrameNumber();
++  if (offset < address_from || offset > address_to || frame < frame_from ||
++      frame > frame_to)
++    return;
++
++  static unsigned long long sequence = 0;
++  std::fprintf(trace,
++               "{\"schema\":\"ps1trace/v1\","
++               "\"source\":\"swanstation\",\"seq\":%llu,"
++               "\"frame\":%u,\"host_us\":0,"
++               "\"event\":\"cpu.ram_write\",\"pc\":%u,"
++               "\"address\":%u,\"size\":%u,\"value\":%u}\n",
++               ++sequence, frame, CPU::g_state.current_instruction_pc, offset,
++               static_cast<unsigned>(size), value);
++}
++
+ #ifdef WITH_MMAP_FASTMEM
+ static uint8_t* m_fastmem_base = nullptr;
+ static std::vector<Common::MemoryArena::View> m_fastmem_ram_views;
+@@ -562,6 +605,7 @@ ALWAYS_INLINE static TickCount DoRAMAccess(uint32_t offset, uint32_t& value)
+   }
+   else
+   {
++    TraceDonorRAMWrite(offset, value, size);
+     const uint32_t page_index = offset / HOST_PAGE_SIZE;
+     if constexpr (skip_redundant_writes)
+     {
+diff --git a/src/core/cdrom.cpp b/src/core/cdrom.cpp
+index 59ca133c..cec8f1b4 100644
+--- a/src/core/cdrom.cpp
++++ b/src/core/cdrom.cpp
+@@ -8,6 +8,8 @@
+ #include "spu.h"
+ #include "system.h"
+ #include <cmath>
++#include <cstdio>
++#include <cstdlib>
+ #include <cstring>
+ #if defined(CPU_X64)
+ #include <emmintrin.h>
+@@ -854,6 +856,35 @@ void CDROM::ExecuteCommand(TickCount ticks_late)
+     return;
+   }
+ 
++  static FILE* donor_cd_trace = []() -> FILE* {
++    const char* path = std::getenv("PS1_DONOR_CD_TRACE");
++    return (path && *path) ? std::fopen(path, "w") : nullptr;
++  }();
++  static unsigned long long donor_cd_sequence = 0;
++  if (donor_cd_trace)
++  {
++    const uint32_t command = static_cast<uint8_t>(m_command);
++    const uint32_t parameters = m_param_fifo.GetSize();
++    const uint32_t p0 = parameters > 0 ? m_param_fifo.Peek(0) : 0;
++    const uint32_t p1 = parameters > 1 ? m_param_fifo.Peek(1) : 0;
++    const uint32_t p2 = parameters > 2 ? m_param_fifo.Peek(2) : 0;
++    uint32_t target_lba = m_setloc_pending ? m_setloc_position.ToLBA() : m_current_lba;
++    if (command == static_cast<uint8_t>(Command::Setloc) && parameters >= 3)
++      target_lba = CDImage::Position::FromBCD(p0, p1, p2).ToLBA();
++    if (target_lba >= 150)
++      target_lba -= 150;
++    std::fprintf(donor_cd_trace,
++                 "{\"schema\":\"ps1trace/v1\","
++                 "\"source\":\"swanstation\",\"seq\":%llu,"
++                 "\"frame\":%u,\"host_us\":0,"
++                 "\"event\":\"cdrom.command\","
++                 "\"command\":%u,\"parameters\":%u,"
++                 "\"p0\":%u,\"p1\":%u,\"p2\":%u,\"lba\":%u}\n",
++                 ++donor_cd_sequence, System::GetFrameNumber(), command,
++                 parameters, p0, p1, p2, target_lba);
++    std::fflush(donor_cd_trace);
++  }
++
+   if (!m_response_fifo.IsEmpty())
+     m_response_fifo.Clear();
+ 
+diff --git a/src/core/cpu_core.cpp b/src/core/cpu_core.cpp
+index 3f53ca0e..61064813 100644
+--- a/src/core/cpu_core.cpp
++++ b/src/core/cpu_core.cpp
+@@ -10,6 +10,10 @@
+ #include "settings.h"
+ #include "system.h"
+ #include "timing_event.h"
++#include <array>
++#include <cstdio>
++#include <cstdlib>
++#include "donor_pc_memory_snapshot.h"
+ 
+ namespace CPU {
+ 
+@@ -21,6 +25,81 @@ static void FlushPipeline();
+ State g_state;
+ bool g_using_interpreter = false;
+ 
++static void TraceDonorPC()
++{
++  static FILE* trace = []() -> FILE* {
++    const char* path = std::getenv("PS1_DONOR_PC_TRACE");
++    return (path && *path) ? std::fopen(path, "w") : nullptr;
++  }();
++  if (!trace)
++    return;
++
++  struct Targets
++  {
++    std::array<uint32_t, 64> values{};
++    size_t count = 0;
++  };
++  static const Targets targets = []() {
++    Targets parsed;
++    const char* cursor = std::getenv("PS1_DONOR_PC_TARGETS");
++    while (cursor && *cursor && parsed.count < parsed.values.size())
++    {
++      while (*cursor == ',' || *cursor == ';' || *cursor == ' ' || *cursor == '\t')
++        cursor++;
++      if (!*cursor)
++        break;
++      char* end = nullptr;
++      const unsigned long value = std::strtoul(cursor, &end, 0);
++      if (end == cursor)
++        break;
++      parsed.values[parsed.count++] = static_cast<uint32_t>(value);
++      cursor = end;
++    }
++    return parsed;
++  }();
++  if (targets.count == 0)
++    return;
++
++  static const unsigned long frame_from = []() {
++    const char* text = std::getenv("PS1_DONOR_PC_FRAME_FROM");
++    return text ? std::strtoul(text, nullptr, 0) : 0ul;
++  }();
++  static const unsigned long frame_to = []() {
++    const char* text = std::getenv("PS1_DONOR_PC_FRAME_TO");
++    return text ? std::strtoul(text, nullptr, 0) : ~0ul;
++  }();
++  const uint32_t frame = System::GetFrameNumber();
++  if (frame < frame_from || frame > frame_to)
++    return;
++
++  bool matched = false;
++  for (size_t index = 0; index < targets.count; index++)
++    matched |= targets.values[index] == g_state.current_instruction_pc;
++  if (!matched)
++    return;
++
++  static unsigned long long sequence = 0;
++  const auto& r = g_state.regs.r;
++  donor_snapshot::capture(frame,g_state.current_instruction_pc,r,Bus::g_ram,Bus::g_ram_size,
++                          g_state.dcache.data(),g_state.dcache.size());
++  std::fprintf(trace,
++               "{\"schema\":\"ps1trace/v1\","
++               "\"source\":\"swanstation\",\"seq\":%llu,"
++               "\"frame\":%u,\"host_us\":0,"
++               "\"event\":\"mips.pc\",\"pc\":%u,"
++               "\"v0\":%u,\"v1\":%u,"
++               "\"a0\":%u,\"a1\":%u,\"a2\":%u,\"a3\":%u,"
++               "\"t0\":%u,\"t1\":%u,\"t2\":%u,\"t3\":%u,"
++               "\"t4\":%u,\"t5\":%u,\"t6\":%u,\"t7\":%u,"
++               "\"s0\":%u,\"s1\":%u,\"s2\":%u,\"s3\":%u,"
++               "\"s4\":%u,\"s5\":%u,\"s6\":%u,\"s7\":%u,"
++               "\"t8\":%u,\"t9\":%u,\"gp\":%u,\"sp\":%u,"
++               "\"s8\":%u,\"ra\":%u}\n",
++               ++sequence, frame, g_state.current_instruction_pc, r[2], r[3], r[4], r[5], r[6], r[7], r[8],
++               r[9], r[10], r[11], r[12], r[13], r[14], r[15], r[16], r[17], r[18], r[19], r[20], r[21],
++               r[22], r[23], r[24], r[25], r[28], r[29], r[30], r[31]);
++}
++
+ static constexpr uint32_t INVALID_BREAKPOINT_PC = UINT32_C(0xFFFFFFFF);
+ static uint32_t s_last_breakpoint_check_pc = INVALID_BREAKPOINT_PC;
+ 
+@@ -450,6 +529,7 @@ template<PGXPMode pgxp_mode, bool debug>
+ ALWAYS_INLINE_RELEASE static void ExecuteInstruction()
+ {
+ restart_instruction:
++  TraceDonorPC();
+   const Instruction inst = g_state.current_instruction;
+ 
+   // Skip nops. Makes PGXP-CPU quicker, but also the regular interpreter.
+diff --git a/src/core/gpu.cpp b/src/core/gpu.cpp
+index 24c38e2d..f1a71c94 100644
+--- a/src/core/gpu.cpp
++++ b/src/core/gpu.cpp
+@@ -10,6 +10,8 @@
+ #include "system.h"
+ #include "timers.h"
+ #include <cmath>
++#include <cstdio>
++#include <cstdlib>
+ #include <cstring>
+ std::unique_ptr<GPU> g_gpu;
+ 
+@@ -19,6 +21,37 @@ GPU::GPU() = default;
+ 
+ GPU::~GPU() = default;
+ 
++void GPU::TraceDonorGP0(uint32_t address, uint32_t value)
++{
++  static FILE* trace = []() -> FILE* {
++    const char* path = std::getenv("PS1_DONOR_GPU_TRACE");
++    return (path && *path) ? std::fopen(path, "w") : nullptr;
++  }();
++  if (!trace)
++    return;
++
++  static const unsigned long from = []() {
++    const char* value = std::getenv("PS1_DONOR_GPU_TRACE_FROM");
++    return value ? std::strtoul(value, nullptr, 0) : 0ul;
++  }();
++  static const unsigned long to = []() {
++    const char* value = std::getenv("PS1_DONOR_GPU_TRACE_TO");
++    return value ? std::strtoul(value, nullptr, 0) : ~0ul;
++  }();
++  const uint32_t frame = System::GetFrameNumber();
++  if (frame < from || frame > to)
++    return;
++
++  static unsigned long long sequence = 0;
++  std::fprintf(trace,
++               "{\"schema\":\"ps1trace/v1\","
++               "\"source\":\"swanstation\",\"seq\":%llu,"
++               "\"frame\":%u,\"host_us\":0,"
++               "\"event\":\"gpu.gp0_word\","
++               "\"word\":%u,\"word_address\":%u}\n",
++               ++sequence, frame, value, address);
++}
++
+ bool GPU::Initialize(HostDisplay* host_display)
+ {
+   m_host_display = host_display;
+@@ -368,6 +401,7 @@ void GPU::WriteRegister(uint32_t offset, uint32_t value)
+   switch (offset)
+   {
+     case 0x00:
++      TraceDonorGP0(UINT32_MAX, value);
+       m_fifo.Push(value);
+       ExecuteCommands();
+       UpdateCommandTickEvent();
+diff --git a/src/core/gpu.h b/src/core/gpu.h
+index 0312a7f1..4db56d49 100644
+--- a/src/core/gpu.h
++++ b/src/core/gpu.h
+@@ -74,6 +74,7 @@ public:
+   ALWAYS_INLINE bool BeginDMAWrite() const { return (m_GPUSTAT.dma_direction == DMADirection::CPUtoGP0); }
+   ALWAYS_INLINE void DMAWrite(uint32_t address, uint32_t value)
+   {
++    TraceDonorGP0(address, value);
+     m_fifo.Push((static_cast<uint64_t>(address) << 32) | static_cast<uint64_t>(value));
+   }
+   void EndDMAWrite();
+@@ -498,6 +499,8 @@ protected:
+   uint32_t m_fifo_size = 128;
+ 
+ private:
++  void TraceDonorGP0(uint32_t address, uint32_t value);
++
+   using GP0CommandHandler = bool (GPU::*)();
+   using GP0CommandHandlerTable = std::array<GP0CommandHandler, 256>;
+   static GP0CommandHandlerTable GenerateGP0CommandHandlerTable();

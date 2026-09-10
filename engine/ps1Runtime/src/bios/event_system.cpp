@@ -263,7 +263,13 @@ void EventSystem::drainPendingCallbacks() {
                         {{"callback", cb.handlerPc},
                          {"a0", cb.hasArg ? cb.a0 : 0},
                          {"has_a0", cb.hasArg ? 1 : 0}});
-    recomp_dispatch(ctx_.mem->ramPtr(), &ctx_, cb.handlerPc);
+    {
+      // An IRQ callback owns its controller transaction until it returns.
+      // Polling inside the callback must not publish the next CD sector or
+      // invoke the same interrupt handler recursively.
+      recomp_callback_drain_guard guard(&ctx_);
+      recomp_dispatch(ctx_.mem->ramPtr(), &ctx_, cb.handlerPc);
+    }
 
     const bool cop2DataChanged =
         !std::equal(std::begin(ctx_.cop2d), std::end(ctx_.cop2d),

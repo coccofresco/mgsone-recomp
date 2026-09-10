@@ -215,6 +215,10 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
                      const InterruptController &irq,
                      const input::InputController &input,
                      const mdec::MDEC *mdec, const bios::Bios *biosHle) {
+  if (biosHle && biosHle->hasNativeThreadContinuations()) {
+    fmt::print(stderr, "[SaveState] Native BIOS thread stacks are not serializable\n");
+    return false;
+  }
   const std::string temporaryPath = path + ".tmp";
   std::ofstream f(temporaryPath, std::ios::binary | std::ios::trunc);
   if (!f) {
@@ -316,6 +320,7 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
   writePod(f, cd.mode);
   writePod(f, cd.sectorBuffer);
   writePod(f, cd.sectorSize);
+  writePod(f, cd.dataReadOffset);
   writePod(f, cd.sectorReady);
   writePod(f, cd.cyclesUntilResponse);
   writePod(f, cd.cyclesPerSector);
@@ -445,6 +450,10 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
                      cdrom::CdromController &cdrom, Timers &timers,
                      InterruptController &irq, input::InputController &input,
                      mdec::MDEC *mdec, bios::Bios *biosHle) {
+  if (biosHle && biosHle->hasNativeThreadContinuations()) {
+    fmt::print(stderr, "[SaveState] Native BIOS thread stacks are not serializable\n");
+    return false;
+  }
   std::ifstream f(path, std::ios::binary);
   if (!f) {
     fmt::print(stderr, "[SaveState] Cannot open '{}' for reading\n", path);
@@ -461,7 +470,7 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
     return false;
   }
   if (header.version != 1 && header.version != 2 && header.version != 3 &&
-      header.version != 4) {
+      header.version != 4 && header.version != 5) {
     fmt::print(stderr, "[SaveState] Unsupported version {} in '{}'\n",
                header.version, path);
     return false;
@@ -583,7 +592,8 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
         readPod(f, cd.setLocSeconds) && readPod(f, cd.setLocSector) &&
         readPod(f, cd.currentLba) && readPod(f, cd.seekTarget) &&
         readPod(f, cd.mode) && readPod(f, cd.sectorBuffer) &&
-        readPod(f, cd.sectorSize) && readPod(f, cd.sectorReady) &&
+        readPod(f, cd.sectorSize) &&
+        (header.version < 5 || readPod(f, cd.dataReadOffset)) && readPod(f, cd.sectorReady) &&
         readPod(f, cd.cyclesUntilResponse) && readPod(f, cd.cyclesPerSector) &&
         readPod(f, cd.readCycleCounter) && readPod(f, cd.waitingForAck) &&
         readPod(f, cd.pendingClockCycles) && readPod(f, cd.xaFilterFile) &&
@@ -593,7 +603,7 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
         readPod(f, cd.hasSecondaryResponse) &&
         readPod(f, cd.secondaryResponseDelay) &&
         readPod(f, cd.secondaryInterrupt) && readVector(f, cd.secondaryData);
-    if (!cdValid || cd.sectorSize > cd.sectorBuffer.size()) {
+    if (!cdValid || cd.sectorSize > cd.sectorBuffer.size() || cd.dataReadOffset > cd.sectorSize) {
       fmt::print(stderr, "[SaveState] Invalid CD state in '{}'\n", path);
       return false;
     }
@@ -740,7 +750,7 @@ bool SaveState::isValid(const std::string &path) {
   return header.magic[0] == 'P' && header.magic[1] == 'S' &&
          header.magic[2] == '1' && header.magic[3] == 'S' &&
          (header.version == 1 || header.version == 2 || header.version == 3 ||
-          header.version == 4);
+          header.version == 4 || header.version == 5);
 }
 
 } // namespace ps1

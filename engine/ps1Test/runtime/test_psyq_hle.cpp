@@ -305,28 +305,41 @@ TEST_F(PsyqHleTest, ClearOTagNZeroIsNop) {
 
 // ClearOTagR
 
-TEST_F(PsyqHleTest, ClearOTagRLastEntryIsEndMarker) {
+TEST_F(PsyqHleTest, ClearOTagRFirstEntryIsEndMarker) {
     const uint32_t base = 0x2000;
     ctx.r[A0] = base;
     ctx.r[A1] = 4;
     hle_ClearOTagR(&ctx);
 
-    // Last entry (ot[3]) = end-of-list
-    EXPECT_EQ(mem.read32(base + 3 * 4), 0x00FFFFFFu);
+    EXPECT_EQ(mem.read32(base), 0x00FFFFFFu);
 }
 
-TEST_F(PsyqHleTest, ClearOTagRLinksForward) {
-    const uint32_t base = 0x2000;
+TEST_F(PsyqHleTest, ClearOTagRTraversesBackwardWithoutKsegCommandCounts) {
+    const uint32_t base = 0x80002000;
     ctx.r[A0] = base;
     ctx.r[A1] = 3;
     hle_ClearOTagR(&ctx);
+    EXPECT_EQ(mem.read32(base), 0x00FFFFFFu);
+    EXPECT_EQ(mem.read32(base + 4), 0x2000u);
+    EXPECT_EQ(mem.read32(base + 8), 0x2004u);
+    // Insert a GPU command in the middle bucket, as MGS does. Traversing
+    // from the far end must reach it without interpreting empty tags as data.
+    mem.write32(0x3000, 0x01002000);
+    mem.write32(0x3004, 0xe1000400);
+    mem.write32(base + 4, 0x3000);
+    ctx.r[A0] = base + 8;
+    hle_DrawOTag(&ctx);
+    ASSERT_EQ(gp0Words.size(), 1u);
+    EXPECT_EQ(gp0Words[0], 0xe1000400u);
+}
 
-    // ot[0] should point to ot[1]
-    EXPECT_EQ(mem.read32(base + 0 * 4), base + 1 * 4);
-    // ot[1] should point to ot[2]
-    EXPECT_EQ(mem.read32(base + 1 * 4), base + 2 * 4);
-    // ot[2] = end
-    EXPECT_EQ(mem.read32(base + 2 * 4), 0x00FFFFFFu);
+TEST_F(PsyqHleTest, ClearOTagTraversesForward) {
+    ctx.r[A0] = 0x80002000;
+    ctx.r[A1] = 3;
+    hle_ClearOTag(&ctx);
+    EXPECT_EQ(mem.read32(0x2000), 0x2004u);
+    EXPECT_EQ(mem.read32(0x2004), 0x2008u);
+    EXPECT_EQ(mem.read32(0x2008), 0x00ffffffu);
 }
 
 TEST_F(PsyqHleTest, ClearOTagRNZeroIsNop) {

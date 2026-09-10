@@ -36,7 +36,9 @@ void Bios::handleC0(uint32_t index) {
     BIOS_LOG("[BIOS] InstallExceptionHandlers() [STUB]\n");
     break;
   case 0x08: // SysInitKMem
-    BIOS_LOG("[BIOS] SysInitKMem() [STUB]\n");
+    kernelHeapNext_ = ctx_.r[A0];
+    kernelHeapEnd_ = kernelHeapNext_ + ctx_.r[A1];
+    ctx_.r[V0] = 1;
     break;
   case 0x0A: // ChangeClearRCnt
     // Controls whether root counter interrupts auto-clear after firing.

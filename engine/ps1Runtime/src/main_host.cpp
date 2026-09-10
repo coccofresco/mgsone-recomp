@@ -1,3 +1,4 @@
+#include <runtime/games/mgs_profile.h>
 // ps1Runtime -- PS1 Hardware Simulation Runtime
 // Full system integration: CPU, GPU, SPU, CD-ROM, DMA, Input, MDEC, Timers
 // Game code runs in separate thread; main thread handles SDL events + rendering
@@ -513,7 +514,9 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   ps1::games::crash3::ProfileOptions crash3Profile;
-  if (!runtimeConfig.game.profile.empty()) {
+  const bool mgsProfile = runtimeConfig.game.profile == ps1::games::mgs::PROFILE_NAME;
+  ps1::games::mgs::configure(mgsProfile, runtimeConfig.game.widescreen16x9);
+  if (!runtimeConfig.game.profile.empty() && !mgsProfile) {
     if (runtimeConfig.game.profile != ps1::games::crash3::PROFILE_NAME) {
       fmt::print(stderr,
                  "Unknown game.profile '{}'; supported game-specific profile: "
@@ -537,6 +540,7 @@ int main(int argc, char *argv[]) {
                crash3Profile.presentationDepthCorrections ? "on" : "off",
                ps1::games::crash3::sceneryCullGuardPixels());
   }
+  if (mgsProfile) fmt::print("[GameProfile] MGS USA v1.0: {}, native host execution; reference donor CPU 165%\n", ps1::games::mgs::widescreen16x9() ? "16:9" : "4:3");
   const auto displayAreaPolicy =
       ps1::gpu::displayAreaPolicyFromName(runtimeConfig.video.displayArea);
   if (!displayAreaPolicy.has_value()) {
@@ -843,9 +847,9 @@ int main(int argc, char *argv[]) {
   rendererOptions.displaySignalProfile = *displaySignalProfile;
   rendererOptions.preserveAspect = runtimeConfig.video.preserveAspect;
   rendererOptions.presentationAspectWidth =
-      ps1::games::crash3::widescreen16x9() ? 16 : 4;
+      (ps1::games::crash3::widescreen16x9() || ps1::games::mgs::widescreen16x9()) ? 16 : 4;
   rendererOptions.presentationAspectHeight =
-      ps1::games::crash3::widescreen16x9() ? 9 : 3;
+      (ps1::games::crash3::widescreen16x9() || ps1::games::mgs::widescreen16x9()) ? 9 : 3;
   rendererOptions.internalScale = runtimeConfig.video.internalResScale;
   if (const char *overrideScale = std::getenv("PS1_INTERNAL_RES_SCALE")) {
     char *end = nullptr;

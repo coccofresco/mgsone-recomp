@@ -56,6 +56,7 @@ void CdromController::reset() {
   mode_ = 0;
   sectorBuffer_.fill(0);
   sectorSize_ = 2048;
+  dataReadOffset_ = 0;
   sectorReady_ = false;
   cyclesUntilResponse_ = 0;
   cyclesPerSector_ = 33868800 / 75; // ~451584 cycles per sector at 1x
@@ -92,6 +93,7 @@ CdromController::Snapshot CdromController::snapshot() const {
   result.mode = mode_;
   result.sectorBuffer = sectorBuffer_;
   result.sectorSize = sectorSize_;
+  result.dataReadOffset = dataReadOffset_;
   result.sectorReady = sectorReady_;
   result.cyclesUntilResponse = cyclesUntilResponse_;
   result.cyclesPerSector = cyclesPerSector_;
@@ -129,6 +131,7 @@ void CdromController::restore(const Snapshot &state) {
   mode_ = state.mode;
   sectorBuffer_ = state.sectorBuffer;
   sectorSize_ = state.sectorSize;
+  dataReadOffset_ = state.dataReadOffset;
   sectorReady_ = state.sectorReady;
   cyclesUntilResponse_ = state.cyclesUntilResponse;
   cyclesPerSector_ = state.cyclesPerSector;
@@ -307,7 +310,7 @@ uint8_t CdromController::readRegister(uint32_t addr) {
     }
     return result;
   case 2:     // Data read (sector data)
-    return 0; // DMA should be used instead
+    return readDataByte();
   case 3:
     if (indexReg_ == 0 || indexReg_ == 2) {
       result = interruptEnable_ | 0xE0;
@@ -319,6 +322,22 @@ uint8_t CdromController::readRegister(uint32_t addr) {
     return result;
   }
   return 0;
+}
+
+// CPU and DMA consume one shared FIFO cursor. Games can DMA the 12-byte
+// raw-sector header first and transfer the payload in a second DMA burst.
+uint8_t CdromController::readDataByte() {
+  if (!sectorReady_ || dataReadOffset_ >= sectorSize_) return 0;
+  const uint32_t base = sectorSize_ == 2048 ? 24u : 12u;
+  if (base + dataReadOffset_ >= sectorBuffer_.size()) return 0;
+  const uint8_t value = sectorBuffer_[base + dataReadOffset_++];
+  if (dataReadOffset_ == sectorSize_) sectorReady_ = false;
+  return value;
+}
+uint32_t CdromController::readDataWord() {
+  uint32_t word = 0;
+  for (unsigned i = 0; i < 4; ++i) word |= uint32_t(readDataByte()) << (i * 8);
+  return word;
 }
 
 // Interrupt
@@ -432,6 +451,7 @@ void CdromController::tickOwned(uint32_t cycles) {
           std::memcpy(sectorBuffer_.data(), sector->raw,
                       std::min<size_t>(SECTOR_SIZE_RAW, 2352));
           sectorReady_ = true;
+          dataReadOffset_ = 0;
 
           // Determine data size based on mode
           sectorSize_ = (mode_ & (1 << 5)) ? 2340 : 2048;

@@ -62,6 +62,7 @@ add_executable(ps1Runtime_tests
     runtime/test_gte.cpp
     runtime/test_gte_color_oracle.cpp
     runtime/test_crash3_profile.cpp
+    runtime/test_mgs_profile.cpp
     runtime/test_crash3_scenery_detail.cpp
     runtime/test_source_surface_partition.cpp
     runtime/test_source_selection_program.cpp

@@ -1,5 +1,6 @@
 #include "bios_internal.h"
 #include "runtime/bios/bios.h"
+#include "runtime/input/input.h"
 #include "runtime/cdrom/cdrom_controller.h"
 #include "runtime/gpu/gpu.h"
 #include <cctype>
@@ -473,55 +474,17 @@ void Bios::handleA0(uint32_t index) {
     ctx_.r[V0] = 0;
     break;
 
-  case 0xAB: // _96_CdInitSubFunc -- PsyQ CD initialization sub-function
-    BIOS_LOG("[BIOS] _96_CdInitSubFunc({}) -- firing INT3+INT2\n", ctx_.r[A0]);
-    // On real hardware _96_CdInitSubFunc runs as the INT2 completion handler
-    // for the CdlInit command.  Before returning it sends a GetStat (0x01)
-    // which immediately generates INT3 (Ack).  The CdInit polling loop then
-    // checks testEvent(0) [spec=0x0004 = INT3] to verify the drive responded.
-    // We fire INT3 first so that testEvent(0) succeeds, then INT2 for event 1.
-    triggerCdromEvent(3); // INT3 Ack  -> spec 0x0004 -> event 0 (GetStat Ack)
-    triggerCdromEvent(2); // INT2 Complete -> spec 0x8000 -> event 1
-    ctx_.r[V0] = 0;       // success
+  case 0xAB: // _card_info
+  case 0xAC: { // _card_load
+    const uint32_t slot = ctx_.r[A0] >> 4;
+    const bool present = slot < 2 && input_ && input_->getMemoryCard(slot).isPresent();
+    eventSystem_.triggerEvent(0xF4000001u, present ? 0x0004u : 0x0100u);
+    ctx_.r[V0] = 1;
     break;
-
-  case 0xAC: { // _96_CdGetStatus -- send GetStat to query disc/drive state
-    // PsyQ CdInit calls this after _96_CdInitSubFunc to probe disc presence.
-    // On real HW: sends GetStat(0x01), which fires INT3(Ack) with status byte.
-    // We deliver INT3 synchronously and cancel the controller's pending
-    // response to prevent double-interrupt for games using
-    // SetCustomExitFromException.
-    BIOS_LOG("[BIOS] _96_CdGetStatus() -- HLE GetStat (synchronous)\n");
-    if (cdrom_) {
-      cdrom_->writeRegister(0x1F801800, 0);    // index = 0
-      cdrom_->writeRegister(0x1F801801, 0x01); // GetStat
-      cdrom_->cancelPendingInterrupt();
-    }
-    triggerCdromEvent(3); // INT3 Ack -> disc-present status
+  }
+  case 0xAD: // _card_auto
     ctx_.r[V0] = 0;
     break;
-  }
-
-  case 0xAD: { // _96_CdReset -- send CdlInit (hardware reset)
-    BIOS_LOG("[BIOS] _96_CdReset() -- HLE CdlInit (synchronous)\n");
-    // Initialize the CDROM controller state without queuing an async response.
-    // We deliver INT3+INT2 synchronously below, so we DON'T want the controller
-    // to fire its own deferred INT3+INT2 later (that would cause double-events,
-    // disrupting games that use SetCustomExitFromException for CD interrupts).
-    if (cdrom_) {
-      cdrom_->writeRegister(0x1F801800, 0); // index = 0
-      cdrom_->writeRegister(0x1F801801,
-                            0x0A); // CdlInit -> sets controller state
-      // Discard the queued response so tick() doesn't fire a duplicate event.
-      cdrom_->cancelPendingInterrupt();
-    }
-    // Fire INT3+INT2 immediately on the game thread so CdSync/testEvent/
-    // SetCustomExitFromException handlers see the response right away.
-    triggerCdromEvent(3); // INT3 Ack      -> cdSyncByte = 2
-    triggerCdromEvent(2); // INT2 Complete -> cdSyncByte = 2
-    ctx_.r[V0] = 0;       // success
-    break;
-  }
 
   default:
     BIOS_LOG("[BIOS] Unimplemented A0 call: 0x{:02X} (A0: {:08X}, A1: "

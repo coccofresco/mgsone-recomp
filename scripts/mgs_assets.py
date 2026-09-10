@@ -327,7 +327,7 @@ def audit(disc_path, out):
     stage_file = files['/MGS/STAGE.DIR']
     data = disc.read(stage_file['lba'], stage_file['size'])
     (out / 'STAGE.DIR').write_bytes(data)
-    exe_paths = [p for p in files if re.fullmatch(r'/MGS/MGS[12]\.EXE', p)]
+    exe_paths = [p for p in files if re.fullmatch(r'/MGS/(?:MGS[12]\.EXE|SLUS_00[57]\.(?:94|76))', p)]
     require(len(exe_paths) == 1, 'expected one internal game executable')
     exe_path = exe_paths[0]
     exe_file = files[exe_path]

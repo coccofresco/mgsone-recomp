@@ -1222,3 +1222,20 @@ TEST(InstructionEmitter, RegHelper) {
 TEST(InstructionEmitter, LabelHelper) {
   EXPECT_EQ(InstructionEmitter::label(0x80010040), "L_80010040");
 }
+
+TEST(InstructionEmitter, RegisterOnlyIdleLoopYieldsForOtherGuestThreads) {
+  RecompFunction f;
+  f.name = "idle_thread";
+  f.address = 0x80010000;
+  f.instructions = {
+      encI(0x23, 4, 2, 0),                       // load outside the idle loop
+      0u,
+      encI(0x04, 2, 0, static_cast<uint16_t>(-2)),
+      0u,
+      encR(0, 31, 0, 0, 0, 0x08), 0u,
+  };
+  f.size = static_cast<uint32_t>(f.instructions.size() * 4);
+  f.isLabelTarget.assign(f.instructions.size(), false);
+  EXPECT_NE(makeEmitter().emitFunction(f).find("runtimeBiosDrainPendingCallbacks"),
+            std::string::npos);
+}

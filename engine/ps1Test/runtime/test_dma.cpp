@@ -1,3 +1,4 @@
+#include "runtime/cdrom/cdrom_controller.h"
 #include "runtime/dma/dma.h"
 #include "runtime/gpu/gpu.h"
 #include "runtime/memory.h"
@@ -206,4 +207,31 @@ TEST_F(DmaTest, SpuTransferUsesAndAdvancesTransferAddress) {
   dma.writeRegister(0x1F8010C8,
                     (1u << 28) | (1u << 24) | 1u);
   EXPECT_EQ(dma.completionGeneration(DMA::SPU_CH), 2u);
+}
+
+// MGS reads the raw-sector header, then its payload, in separate DMA bursts.
+TEST_F(DmaTest, CdromSplitDmaPreservesFifoCursor) {
+  cdrom::CdromController cd;
+  auto state = cd.snapshot();
+  state.sectorSize = 2340;
+  state.sectorReady = true;
+  for (unsigned i = 0; i < state.sectorBuffer.size(); ++i)
+    state.sectorBuffer[i] = static_cast<uint8_t>((i * 37u) ^ (i >> 8));
+  cd.restore(state);
+  dma.setCDROM(&cd);
+  dma.writeRegister(0x1F8010F0, 0x00008000);
+  auto transfer = [&](uint32_t address, uint32_t words) {
+    dma.writeRegister(0x1F8010B0, address);
+    dma.writeRegister(0x1F8010B4, words);
+    dma.writeRegister(0x1F8010B8, 0x11000000);
+  };
+  transfer(0x1000, 3);
+  EXPECT_TRUE(cd.hasSectorReady());
+  EXPECT_EQ(cd.snapshot().dataReadOffset, 12u);
+  transfer(0x2000, 512);
+  for (unsigned i = 0; i < 12; ++i)
+    EXPECT_EQ(mem.read8(0x1000 + i), state.sectorBuffer[12 + i]);
+  for (unsigned i = 0; i < 2048; ++i)
+    ASSERT_EQ(mem.read8(0x2000 + i), state.sectorBuffer[24 + i]) << i;
+  EXPECT_EQ(cd.snapshot().dataReadOffset, 2060u);
 }
