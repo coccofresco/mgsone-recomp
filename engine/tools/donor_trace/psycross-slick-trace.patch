@@ -1,0 +1,444 @@
+diff --git a/src/PsyX_trace.h b/src/PsyX_trace.h
+new file mode 100644
+index 0000000..50eb584
+--- /dev/null
++++ b/src/PsyX_trace.h
+@@ -0,0 +1,29 @@
++#ifndef PSYX_TRACE_H
++#define PSYX_TRACE_H
++
++#include <stddef.h>
++#include <stdint.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++typedef struct PsyXTraceField
++{
++	const char* name;
++	int64_t value;
++} PsyXTraceField;
++
++int PsyX_TraceEnabled(void);
++int PsyX_TraceGteEnabled(void);
++void PsyX_TraceSetFrame(int64_t frame);
++void PsyX_TraceEvent(const char* event, const PsyXTraceField* fields, size_t fieldCount);
++
++#define PSYX_TRACE_FIELDS(eventName, fields) \
++	PsyX_TraceEvent((eventName), (fields), sizeof(fields) / sizeof((fields)[0]))
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif
+diff --git a/src/PsyX_trace.cpp b/src/PsyX_trace.cpp
+new file mode 100644
+index 0000000..d89e103
+--- /dev/null
++++ b/src/PsyX_trace.cpp
+@@ -0,0 +1,108 @@
++#include "PsyX_trace.h"
++
++#include <atomic>
++#include <chrono>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <mutex>
++
++namespace {
++
++std::atomic<int64_t> g_traceFrame{0};
++std::atomic<uint64_t> g_traceSequence{0};
++std::mutex g_traceMutex;
++FILE* g_traceOutput = nullptr;
++bool g_traceOpenAttempted = false;
++
++FILE* traceOutputUnlocked()
++{
++	if (g_traceOpenAttempted)
++		return g_traceOutput;
++
++	g_traceOpenAttempted = true;
++	const char* path = std::getenv("PS1_TRACE_JSONL");
++	if (path != nullptr && path[0] != '\0')
++		g_traceOutput = std::fopen(path, "a");
++	return g_traceOutput;
++}
++
++void writeJsonString(FILE* output, const char* value)
++{
++	std::fputc('"', output);
++	for (const unsigned char* p = reinterpret_cast<const unsigned char*>(value); *p; ++p)
++	{
++		switch (*p)
++		{
++		case '"': std::fputs("\\\"", output); break;
++		case '\\': std::fputs("\\\\", output); break;
++		case '\n': std::fputs("\\n", output); break;
++		case '\r': std::fputs("\\r", output); break;
++		case '\t': std::fputs("\\t", output); break;
++		default:
++			if (*p < 0x20)
++				std::fprintf(output, "\\u%04x", static_cast<unsigned>(*p));
++			else
++				std::fputc(*p, output);
++			break;
++		}
++	}
++	std::fputc('"', output);
++}
++
++int envEnabled(const char* name)
++{
++	const char* value = std::getenv(name);
++	return value != nullptr && value[0] != '\0' && std::strcmp(value, "0") != 0;
++}
++
++} // namespace
++
++extern "C" int PsyX_TraceEnabled(void)
++{
++	const char* path = std::getenv("PS1_TRACE_JSONL");
++	return path != nullptr && path[0] != '\0';
++}
++
++extern "C" int PsyX_TraceGteEnabled(void)
++{
++	return PsyX_TraceEnabled() && envEnabled("PS1_TRACE_GTE");
++}
++
++extern "C" void PsyX_TraceSetFrame(int64_t frame)
++{
++	g_traceFrame.store(frame, std::memory_order_release);
++}
++
++extern "C" void PsyX_TraceEvent(const char* event, const PsyXTraceField* fields, size_t fieldCount)
++{
++	if (!PsyX_TraceEnabled())
++		return;
++
++	std::lock_guard<std::mutex> lock(g_traceMutex);
++	FILE* output = traceOutputUnlocked();
++	if (output == nullptr)
++		return;
++
++	const auto now = std::chrono::steady_clock::now().time_since_epoch();
++	const int64_t hostUs = std::chrono::duration_cast<std::chrono::microseconds>(now).count();
++	const char* source = std::getenv("PS1_TRACE_SOURCE");
++	if (source == nullptr || source[0] == '\0')
++		source = "psycross-slick";
++
++	std::fputs("{\"schema\":\"ps1trace/v1\",\"source\":", output);
++	writeJsonString(output, source);
++	std::fprintf(output, ",\"seq\":%llu,\"frame\":%lld,\"host_us\":%lld,\"event\":",
++		static_cast<unsigned long long>(g_traceSequence.fetch_add(1, std::memory_order_relaxed)),
++		static_cast<long long>(g_traceFrame.load(std::memory_order_acquire)),
++		static_cast<long long>(hostUs));
++	writeJsonString(output, event);
++	for (size_t i = 0; i < fieldCount; ++i)
++	{
++		std::fputc(',', output);
++		writeJsonString(output, fields[i].name);
++		std::fprintf(output, ":%lld", static_cast<long long>(fields[i].value));
++	}
++	std::fputs("}\n", output);
++	std::fflush(output);
++}
+diff --git a/src/PsyX_main.cpp b/src/PsyX_main.cpp
+index 42e1562..074bf2a 100644
+--- a/src/PsyX_main.cpp
++++ b/src/PsyX_main.cpp
+@@ -3,6 +3,7 @@
+ #endif // _WIN32
+ 
+ #include "PsyX_main.h"
++#include "PsyX_trace.h"
+ 
+ #include "PsyX/PsyX_version.h"
+ #include "PsyX/PsyX_globals.h"
+@@ -150,6 +151,37 @@ extern void GR_UpdateSwapIntervalState(int swapInterval);
+  * frame-locked sequence audio play ~17% slow. */
+ int g_vmode = MODE_NTSC;
+ int g_frameSkip = 0;
++
++static void PsyX_TraceVBlankTick(void)
++{
++	const int64_t frame = g_psxSysCounters[PsxCounter_VBLANK];
++	const int drawX1 = activeDrawEnv.clip.x + activeDrawEnv.clip.w;
++	const int drawY1 = activeDrawEnv.clip.y + activeDrawEnv.clip.h;
++	const int dispX1 = activeDispEnv.disp.x + activeDispEnv.disp.w;
++	const int dispY1 = activeDispEnv.disp.y + activeDispEnv.disp.h;
++	const int overlap = activeDispEnv.disp.x < drawX1 && dispX1 > activeDrawEnv.clip.x &&
++		activeDispEnv.disp.y < drawY1 && dispY1 > activeDrawEnv.clip.y;
++
++	PsyX_TraceSetFrame(frame);
++	{
++		const PsyXTraceField fields[] = {
++			{"display_x", activeDispEnv.disp.x}, {"display_y", activeDispEnv.disp.y},
++			{"display_w", activeDispEnv.disp.w}, {"display_h", activeDispEnv.disp.h},
++			{"draw_x0", activeDrawEnv.clip.x}, {"draw_y0", activeDrawEnv.clip.y},
++			{"draw_x1", drawX1}, {"draw_y1", drawY1},
++			{"draw_offset_x", activeDrawEnv.ofs[0]}, {"draw_offset_y", activeDrawEnv.ofs[1]},
++			{"display_draw_overlap", overlap}
++		};
++		PSYX_TRACE_FIELDS("gpu.vblank_latch", fields);
++	}
++	{
++		const PsyXTraceField fields[] = {
++			{"index", frame}, {"video_mode", g_vmode},
++			{"nominal_hz", g_vmode == MODE_NTSC ? VBLANK_FREQUENCY_NTSC : VBLANK_FREQUENCY_PAL}
++		};
++		PSYX_TRACE_FIELDS("timing.vblank", fields);
++	}
++}
+ 
+ #ifdef __EMSCRIPTEN__
+ 
+@@ -172,6 +204,7 @@ void emIntrCallback(void* userData)
+ 			vsync_callback();
+ 
+ 		g_psxSysCounters[PsxCounter_VBLANK]++;
++		PsyX_TraceVBlankTick();
+ 	}
+ }
+ 
+@@ -247,6 +280,7 @@ int intrThreadMain(void* data)
+ 
+ 				// do vblank events
+ 				g_psxSysCounters[PsxCounter_VBLANK]++;
++				PsyX_TraceVBlankTick();
+ 
+ 				Util_GetHPCTime(&g_vblTimer, 1);
+ 			}
+@@ -1074,6 +1108,13 @@ void PsyX_EndScene()
+ 	}
+ 
+ 	GR_SwapWindow();
++	{
++		const PsyXTraceField fields[] = {
++			{"display_x", activeDispEnv.disp.x}, {"display_y", activeDispEnv.disp.y},
++			{"display_w", activeDispEnv.disp.w}, {"display_h", activeDispEnv.disp.h}
++		};
++		PSYX_TRACE_FIELDS("host.present", fields);
++	}
+ }
+ 
+ #if !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
+diff --git a/src/psx/libetc.c b/src/psx/libetc.c
+index 27348a2..a7adfa5 100644
+--- a/src/psx/libetc.c
++++ b/src/psx/libetc.c
+@@ -1,6 +1,7 @@
+ #include "psx/libetc.h"
+ 
+ #include "../PsyX_main.h"
++#include "../PsyX_trace.h"
+ #include "PsyX/PsyX_public.h"
+ 
+ #include <SDL_timer.h>
+@@ -29,10 +30,20 @@ int ResetCallback(void)
+ 
+ int VSync(int mode)
+ {
++	int result;
++	{
++		const PsyXTraceField fields[] = {{"mode", mode}};
++		PSYX_TRACE_FIELDS("psyq.vsync_call", fields);
++	}
+ 	if (mode < 0)
+ 	{
+ 		// don't wait but still return vblank count
+-		return PsyX_Sys_GetVBlankCount();
++		result = PsyX_Sys_GetVBlankCount();
++		{
++			const PsyXTraceField fields[] = {{"mode", mode}, {"result", result}};
++			PSYX_TRACE_FIELDS("psyq.vsync_return", fields);
++		}
++		return result;
+ 	}
+ 
+ 	if (mode == 0)
+@@ -45,13 +56,24 @@ int VSync(int mode)
+ 		// FIXME: wait many times?
+ 	}
+ 
+-	return PsyX_Sys_GetVBlankCount();
++	result = PsyX_Sys_GetVBlankCount();
++	{
++		const PsyXTraceField fields[] = {{"mode", mode}, {"result", result}};
++		PSYX_TRACE_FIELDS("psyq.vsync_return", fields);
++	}
++	return result;
+ }
+ 
+ int VSyncCallback(void(*f)(void))
+ {
+ 	int old = (int)vsync_callback;
+ 	vsync_callback = f;
++	{
++		const PsyXTraceField fields[] = {
++			{"callback", (int64_t)(uintptr_t)f}, {"previous", (int64_t)(uintptr_t)old}
++		};
++		PSYX_TRACE_FIELDS("psyq.vsync_callback_register", fields);
++	}
+ 	return old;
+ }
+ 
+diff --git a/src/psx/libgpu.c b/src/psx/libgpu.c
+index f17a1fb..388a77b 100644
+--- a/src/psx/libgpu.c
++++ b/src/psx/libgpu.c
+@@ -5,6 +5,7 @@
+ 
+ #include "../gpu/PsyX_GPU.h"
+ #include "PsyX/PsyX_render.h"
++#include "../PsyX_trace.h"
+ #include "PsyX/PsyX_public.h"
+ 
+ #include <stdint.h>
+@@ -52,6 +53,10 @@ int ClearImage2(RECT16* rect, u_char r, u_char g, u_char b)
+ 
+ int DrawSync(int mode)
+ {
++	{
++		const PsyXTraceField fields[] = {{"mode", mode}, {"splits", g_splitIndex}};
++		PSYX_TRACE_FIELDS("gpu.draw_sync", fields);
++	}
+ 	// Update VRAM seems needed to be here
+ 	GR_UpdateVRAM();
+ 	GR_ReadFramebufferDataToVRAM();
+@@ -287,6 +292,18 @@ DISPENV* PutDispEnv(DISPENV* env)//To Finish
+ 		currentDispEnv = *env;
+ 	}
+ 
++	{
++		const PsyXTraceField display[] = {{"x", env->disp.x}, {"y", env->disp.y}};
++		const PsyXTraceField state[] = {
++			{"requested_x", env->disp.x}, {"requested_y", env->disp.y},
++			{"active_x", activeDispEnv.disp.x}, {"active_y", activeDispEnv.disp.y},
++			{"current_x", currentDispEnv.disp.x}, {"current_y", currentDispEnv.disp.y},
++			{"interlaced", env->isinter}
++		};
++		PSYX_TRACE_FIELDS("gpu.display_start", display);
++		PSYX_TRACE_FIELDS("gpu.put_dispenv", state);
++	}
++
+ 	return 0;
+ }
+ 
+@@ -321,5 +338,21 @@ DRAWENV* PutDrawEnv(DRAWENV* env)//Guessed
+ {
+ 	memcpy((char*)&activeDrawEnv, env, sizeof(DRAWENV));
++	{
++		const PsyXTraceField areaStart[] = {{"x", env->clip.x}, {"y", env->clip.y}};
++		const PsyXTraceField areaEnd[] = {
++			{"x", env->clip.x + env->clip.w - 1},
++			{"y", env->clip.y + env->clip.h - 1}
++		};
++		const PsyXTraceField offset[] = {{"x", env->ofs[0]}, {"y", env->ofs[1]}};
++		const PsyXTraceField state[] = {
++			{"x", env->clip.x}, {"y", env->clip.y}, {"w", env->clip.w}, {"h", env->clip.h},
++			{"offset_x", env->ofs[0]}, {"offset_y", env->ofs[1]}, {"isbg", env->isbg}
++		};
++		PSYX_TRACE_FIELDS("gpu.draw_area_start", areaStart);
++		PSYX_TRACE_FIELDS("gpu.draw_area_end", areaEnd);
++		PSYX_TRACE_FIELDS("gpu.draw_offset", offset);
++		PSYX_TRACE_FIELDS("gpu.put_drawenv", state);
++	}
+ 	return 0;
+ }
+ 
+@@ -463,6 +496,10 @@ void DrawOTagEnv(u_long* p, DRAWENV* env)
+ 
+ void DrawOTag(u_long* p)
+ {
++	{
++		const PsyXTraceField fields[] = {{"tag", (int64_t)(uintptr_t)p}};
++		PSYX_TRACE_FIELDS("gpu.draw_otag", fields);
++	}
+ 	do
+ 	{
+ 		if (g_GPUDisabledState)
+diff --git a/src/gte/PsyX_GTE.cpp b/src/gte/PsyX_GTE.cpp
+index 72e91cf..99999a1 100644
+--- a/src/gte/PsyX_GTE.cpp
++++ b/src/gte/PsyX_GTE.cpp
+@@ -1,4 +1,5 @@
+ #include "PsyX_GTE.h"
++#include "../PsyX_trace.h"
+ #include "PsyX/PsyX_globals.h"
+ #include "PsyX/PsyX_public.h"
+ 
+@@ -23,5 +24,61 @@ GTERegisters gteRegs;
+ #define gteop(code)			(code & 0x1ffffff)
+ 
++namespace {
++
++uint32_t hashGteRegisters()
++{
++	uint32_t hash = 2166136261u;
++	for (int bank = 0; bank < 2; ++bank)
++	{
++		const unsigned int* registers = bank == 0 ? gteRegs.CP2D.r : gteRegs.CP2C.r;
++		for (int i = 0; i < 32; ++i)
++		{
++			const uint32_t value = registers[i];
++			for (unsigned shift = 0; shift < 32; shift += 8)
++			{
++				hash ^= (value >> shift) & 0xffu;
++				hash *= 16777619u;
++			}
++		}
++	}
++	return hash;
++}
++
++class GteTraceScope
++{
++public:
++	explicit GteTraceScope(int op)
++		: command_(GTE_FUNCT(gteop(op))), sf_(GTE_SF(gteop(op))), lm_(GTE_LM(gteop(op))),
++		  active_(PsyX_TraceGteEnabled() != 0), inputHash_(active_ ? hashGteRegisters() : 0)
++	{
++	}
++
++	~GteTraceScope()
++	{
++		if (!active_)
++			return;
++		const PsyXTraceField fields[] = {
++			{"command", command_}, {"sf", sf_}, {"lm", lm_}, {"input_hash", inputHash_},
++			{"output_hash", hashGteRegisters()}, {"flag", C2_FLAG},
++			{"ir0", C2_IR0}, {"ir1", C2_IR1}, {"ir2", C2_IR2}, {"ir3", C2_IR3},
++			{"sxy0", C2_SXY0}, {"sxy1", C2_SXY1}, {"sxy2", C2_SXY2},
++			{"sz0", C2_SZ0}, {"sz1", C2_SZ1}, {"sz2", C2_SZ2}, {"sz3", C2_SZ3},
++			{"mac0", C2_MAC0}, {"mac1", C2_MAC1}, {"mac2", C2_MAC2}, {"mac3", C2_MAC3},
++			{"rgb2", C2_RGB2}, {"otz", C2_OTZ}
++		};
++		PSYX_TRACE_FIELDS("gte.command", fields);
++	}
++
++private:
++	int command_;
++	int sf_;
++	int lm_;
++	bool active_;
++	uint32_t inputHash_;
++};
++
++} // namespace
++
+ #define VX(n)				(n < 3 ? gteRegs.CP2D.p[ n << 1 ].sw.l : C2_IR1)
+ #define VY(n)				(n < 3 ? gteRegs.CP2D.p[ n << 1 ].sw.h : C2_IR2)
+ #define VZ(n)				(n < 3 ? gteRegs.CP2D.p[ (n << 1) + 1 ].sw.l : C2_IR3)
+@@ -879,6 +936,7 @@ int GTE_operator(int op)
+ 	int cv;
+ 	int mx;
+ 	int h_over_sz3 = 0;
++	GteTraceScope trace(op);
+ 
+ 	lm = GTE_LM(gteop(op));
+ 	m_sf = GTE_SF(gteop(op));

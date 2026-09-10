@@ -1,0 +1,4 @@
+# Crash Bandicoot 3 PAL recomp: external gameplay-level holdout captured in
+# quick slot 5 at guest VBlank 169325.  Keep the first two VBlanks neutral so
+# the restored pad state is latched, then walk straight ahead for seven seconds.
+169327 169685 up

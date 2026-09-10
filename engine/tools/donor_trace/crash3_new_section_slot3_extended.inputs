@@ -1,0 +1,5 @@
+# Crash Bandicoot 3 PAL recomp: independent streamed-section holdout from the
+# user-provided 2026-09-01 quick slot 3 (restored guest VBlank 173327).  Keep
+# two neutral VBlanks after restore, then walk straight ahead for thirty
+# seconds.  Runtime transition policy must not depend on these frame numbers.
+173330 174829 up

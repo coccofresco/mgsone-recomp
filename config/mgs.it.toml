@@ -1,0 +1,27 @@
+# Metadati del titolo; NON è un input diretto per ps1Recomp.
+# Le ricette iniziali dell’analizzatore sono in data/disc*.analysis.toml.
+[game]
+name = "Metal Gear Solid"
+platform = "psx"
+region = "PAL"
+language = "it"
+status = "bootstrap"
+runtime_profile_implemented = false
+
+[[discs]]
+index = 1
+serial = "SLES-01508"
+boot_from_system_cnf = "sles_015.08"
+entry_pc = "0x80066A98"
+load_address = "0x80010000"
+text_size = 362496
+image_sha256 = "0ef4a4cf4a3e7e02008d2e56b3ba5cd5f282d98eb8ffa3c33de03db8965b0deb"
+
+[[discs]]
+index = 2
+serial = "SLES-11508"
+boot_from_system_cnf = "sles_115.08"
+entry_pc = "0x80066A98"
+load_address = "0x80010000"
+text_size = 362496
+image_sha256 = "f7ad9ade4a2c630a4044fa5e51a59393ba94a940861928c51363057adc20dca1"

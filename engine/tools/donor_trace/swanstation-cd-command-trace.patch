@@ -1,0 +1,49 @@
+diff --git a/src/core/cdrom.cpp b/src/core/cdrom.cpp
+index 59ca133c..21c8d1d6 100644
+--- a/src/core/cdrom.cpp
++++ b/src/core/cdrom.cpp
+@@ -8,6 +8,8 @@
+ #include "spu.h"
+ #include "system.h"
+ #include <cmath>
++#include <cstdio>
++#include <cstdlib>
+ #include <cstring>
+ #if defined(CPU_X64)
+ #include <emmintrin.h>
+@@ -854,5 +856,34 @@ void CDROM::ExecuteCommand(TickCount ticks_late)
+     return;
+   }
+-
++
++  static FILE* donor_cd_trace = []() -> FILE* {
++    const char* path = std::getenv("PS1_DONOR_CD_TRACE");
++    return (path && *path) ? std::fopen(path, "w") : nullptr;
++  }();
++  static unsigned long long donor_cd_sequence = 0;
++  if (donor_cd_trace)
++  {
++    const uint32_t command = static_cast<uint8_t>(m_command);
++    const uint32_t parameters = m_param_fifo.GetSize();
++    const uint32_t p0 = parameters > 0 ? m_param_fifo.Peek(0) : 0;
++    const uint32_t p1 = parameters > 1 ? m_param_fifo.Peek(1) : 0;
++    const uint32_t p2 = parameters > 2 ? m_param_fifo.Peek(2) : 0;
++    uint32_t target_lba = m_setloc_pending ? m_setloc_position.ToLBA() : m_current_lba;
++    if (command == static_cast<uint8_t>(Command::Setloc) && parameters >= 3)
++      target_lba = CDImage::Position::FromBCD(p0, p1, p2).ToLBA();
++    if (target_lba >= 150)
++      target_lba -= 150;
++    std::fprintf(donor_cd_trace,
++                 "{\"schema\":\"ps1trace/v1\","
++                 "\"source\":\"swanstation\",\"seq\":%llu,"
++                 "\"frame\":%u,\"host_us\":0,"
++                 "\"event\":\"cdrom.command\","
++                 "\"command\":%u,\"parameters\":%u,"
++                 "\"p0\":%u,\"p1\":%u,\"p2\":%u,\"lba\":%u}\n",
++                 ++donor_cd_sequence, System::GetFrameNumber(), command,
++                 parameters, p0, p1, p2, target_lba);
++    std::fflush(donor_cd_trace);
++  }
++
+   if (!m_response_fifo.IsEmpty())
+     m_response_fifo.Clear();

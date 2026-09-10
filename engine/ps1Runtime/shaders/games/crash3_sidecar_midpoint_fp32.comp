@@ -1,0 +1,103 @@
+#version 450
+
+// Diagnostic/device-compatibility implementation of the Vulkan-only midpoint.
+// Endpoint coordinates are already stored as float in the presentation ABI;
+// this variant keeps the whole construction on the GPU when shaderFloat64 is
+// unavailable. The production path continues to select the FP64 shader.
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 1, binding = 1, std430) buffer CrashSidecarWords {
+  uint words[];
+} u_scene;
+
+layout(push_constant) uniform CrashSidecarMidpointState {
+  uint source_vertex_word_offset;
+  uint destination_vertex_word_offset;
+  uint previous_vertex_word_offset;
+  uint vertex_count;
+  uint vertex_stride_words;
+  uint current_origin_x;
+  uint current_origin_y;
+  uint reserved;
+} u_midpoint;
+
+const uint PREVIOUS_VERTEX_WORDS = 4u;
+const uint PREVIOUS_ORIGIN_X_MASK = 0x7ffu;
+const uint PREVIOUS_ORIGIN_Y_MASK = 0x3ffu;
+const uint PREVIOUS_ORIGIN_Y_SHIFT = 11u;
+const uint PREVIOUS_VALID = 1u << 31;
+
+bool finite_float(float value) {
+  return !isnan(value) && !isinf(value);
+}
+
+void main() {
+  const uint first_vertex = gl_GlobalInvocationID.x * 3u;
+  if (first_vertex >= u_midpoint.vertex_count ||
+      u_midpoint.vertex_count - first_vertex < 3u)
+    return;
+
+  vec2 positions[3];
+  float projective_w[3];
+  bool complete = true;
+  for (uint corner = 0u; corner < 3u; ++corner) {
+    const uint vertex_index = first_vertex + corner;
+    const uint source = u_midpoint.source_vertex_word_offset +
+                        vertex_index * u_midpoint.vertex_stride_words;
+    const uint previous = u_midpoint.previous_vertex_word_offset +
+                          vertex_index * PREVIOUS_VERTEX_WORDS;
+    const uint previous_origin_flags = u_scene.words[previous + 3u];
+    complete = complete &&
+               (previous_origin_flags & PREVIOUS_VALID) != 0u;
+    if (!complete)
+      continue;
+
+    precise float previous_w =
+        uintBitsToFloat(u_scene.words[previous + 2u]);
+    precise float current_w = uintBitsToFloat(u_scene.words[source + 2u]);
+    precise float interpolated_w = 0.5 * previous_w + 0.5 * current_w;
+    complete = complete && finite_float(interpolated_w) &&
+               interpolated_w > 0.0;
+    if (!complete)
+      continue;
+
+    const vec2 previous_origin = vec2(
+        float(previous_origin_flags & PREVIOUS_ORIGIN_X_MASK),
+        float((previous_origin_flags >> PREVIOUS_ORIGIN_Y_SHIFT) &
+              PREVIOUS_ORIGIN_Y_MASK));
+    const vec2 current_origin =
+        vec2(float(u_midpoint.current_origin_x),
+             float(u_midpoint.current_origin_y));
+    for (uint component = 0u; component < 2u; ++component) {
+      precise float previous_position =
+          uintBitsToFloat(u_scene.words[previous + component]);
+      precise float current_position =
+          uintBitsToFloat(u_scene.words[source + component]);
+      precise float previous_local =
+          previous_position - previous_origin[component];
+      precise float current_local =
+          current_position - current_origin[component];
+      precise float local =
+          (0.5 * previous_local * previous_w +
+           0.5 * current_local * current_w) /
+          interpolated_w;
+      precise float absolute = local + current_origin[component];
+      complete = complete && finite_float(absolute);
+      positions[corner][component] = absolute;
+    }
+    projective_w[corner] = interpolated_w;
+  }
+
+  // Preserve triangle atomicity exactly as in the FP64 production shader.
+  if (!complete)
+    return;
+  for (uint corner = 0u; corner < 3u; ++corner) {
+    const uint vertex_index = first_vertex + corner;
+    const uint destination = u_midpoint.destination_vertex_word_offset +
+                             vertex_index * u_midpoint.vertex_stride_words;
+    u_scene.words[destination + 0u] = floatBitsToUint(positions[corner].x);
+    u_scene.words[destination + 1u] = floatBitsToUint(positions[corner].y);
+    u_scene.words[destination + 2u] = floatBitsToUint(projective_w[corner]);
+  }
+}

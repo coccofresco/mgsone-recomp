@@ -1,0 +1,33 @@
+{
+  "schema": "ps1trace-donors/v1",
+  "donors": [
+    {
+      "name": "pcsx-redux",
+      "repository": "https://github.com/grumpycoders/pcsx-redux.git",
+      "commit": "e1b865f73d6eda2f30ca5d1276a536a347f5081c",
+      "role": "executable-oracle",
+      "probe": "pcsx-redux-state-api.patch + pcsx-redux-trace.lua"
+    },
+    {
+      "name": "swanstation",
+      "repository": "https://github.com/libretro/swanstation.git",
+      "commit": "7f69c199ed88d5723f71dd3a6e9c1b7a45b535a6",
+      "role": "executable-oracle",
+      "probe": "libretro_headless.cpp software frame/RAM oracle + swanstation-cd-command-trace.patch"
+    },
+    {
+      "name": "beetle-psx-libretro",
+      "repository": "https://github.com/libretro/beetle-psx-libretro.git",
+      "commit": "ef51860dbd71ad6b7ce67115d4780c2ee321d968",
+      "role": "executable-oracle",
+      "probe": "libretro_headless.cpp software frame/RAM oracle"
+    },
+    {
+      "name": "psycross-slick",
+      "repository": "https://github.com/SlickAmogus/PsyCross.git",
+      "commit": "d199cca8e460a8439f9de56b00aaec640c69420c",
+      "role": "selective-implementation-donor",
+      "probe": "psycross-slick-trace.patch"
+    }
+  ]
+}

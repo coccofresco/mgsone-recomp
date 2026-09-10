@@ -1,0 +1,4 @@
+# Crash Bandicoot 3 PAL recomp: the user's slot-0 checkpoint faces the first
+# warp-room barrier. Hold forward long enough to exercise the barrier object,
+# its collision/event code and any deferred page request.
+3728 3890 up

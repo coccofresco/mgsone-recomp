@@ -1,0 +1,3 @@
+# Crash Bandicoot 3 PAL recomp: select NEW GAME after the title menu settles.
+# Guest-VBlank coordinates intentionally differ from libretro reset frames.
+2200 2202 cross

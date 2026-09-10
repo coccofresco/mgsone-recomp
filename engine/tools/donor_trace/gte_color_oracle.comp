@@ -1,0 +1,20 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+#extension GL_ARB_gpu_shader_int64 : require
+#include "../../ps1Runtime/shaders/gte_color_math.glsl"
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0, std430) buffer Samples { uint words[]; } samples;
+void main() {
+  const uint sample_index = gl_GlobalInvocationID.x;
+  if (sample_index >= samples.words.length() / 6u)
+    return;
+  const uint base = sample_index * 6u;
+  const uint rgb = samples.words[base];
+  uint result = 0u;
+  const int factor = int(samples.words[base + 4u] << 16u) >> 16;
+  for (uint channel = 0u; channel < 3u; ++channel)
+    result |= uint(ps1_gte_dpcs_channel(
+        int((rgb >> (channel * 8u)) & 255u),
+        int(samples.words[base + 1u + channel]), factor)) << (channel * 8u);
+  samples.words[base + 5u] = result;
+}

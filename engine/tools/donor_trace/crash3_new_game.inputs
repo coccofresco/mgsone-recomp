@@ -1,0 +1,4 @@
+# Deterministic PAL SCES-01420 donor navigation. Frame numbers are libretro
+# reset frames with SwanStation's fast-boot option. Keep presses short so the
+# game's edge-triggered pad polling sees one activation.
+3000 3002 cross

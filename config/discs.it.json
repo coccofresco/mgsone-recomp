@@ -1,0 +1,26 @@
+{
+  "discs": [
+    {
+      "disc": 1,
+      "boot_executable": "sles_015.08",
+      "image_size": 691615008,
+      "image_sha256": "0ef4a4cf4a3e7e02008d2e56b3ba5cd5f282d98eb8ffa3c33de03db8965b0deb",
+      "exe_sha256": "f568f4b49459ff56ab8def9e045f725cc635de1806106b45fad720626b839c8a",
+      "entry_pc": "0x80066A98",
+      "load_address": "0x80010000",
+      "text_size": 362496,
+      "stack_base": "0x801FFFF0"
+    },
+    {
+      "disc": 2,
+      "boot_executable": "sles_115.08",
+      "image_size": 712684224,
+      "image_sha256": "f7ad9ade4a2c630a4044fa5e51a59393ba94a940861928c51363057adc20dca1",
+      "exe_sha256": "508d192950e3e1681c643650b84af44e6aaa43cb2b2cf25dfb38a08d8df643a5",
+      "entry_pc": "0x80066A98",
+      "load_address": "0x80010000",
+      "text_size": 362496,
+      "stack_base": "0x801FFFF0"
+    }
+  ]
+}

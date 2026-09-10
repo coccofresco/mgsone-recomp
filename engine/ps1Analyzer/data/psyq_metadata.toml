@@ -1,0 +1,704 @@
+# PsyQ function metadata: subsystem + stub_type per known SDK function name.
+#
+# This is the source of truth for the subsystem/stub_type fields that the
+# signature generator (tools/extract_psyq_signatures.py) joins into the
+# generated psyq_signatures.toml.
+#
+# Migrated from ps1Analyzer/src/psyq_signatures.cpp::initDatabase() on
+# 2026-04-25 (Sessao 0.3). When ps1Analyzer C++ is updated to read this file
+# directly, initDatabase() can be deleted.
+#
+# Fields per [[function]]:
+#   name        - exact PsyQ symbol name (case-sensitive)
+#   subsystem   - one of: graphics, sound, cdrom, controller, gte, vsync,
+#                          memory, libc, math, other
+#   stub_type   - one of: stub, skip, passthrough, recompile
+#
+# Names not present here will be emitted with empty subsystem/stub_type
+# (the matcher should fall back to prefix-based classification).
+
+# ---------------------------------------------------------------------------
+# Graphics (libgpu, libgs, libgp)
+# ---------------------------------------------------------------------------
+
+[[function]]
+name = "GsInitGraph"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GsDefDispBuff"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GsSortClear"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GsDrawOt"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GsSortOt"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GsSwapDispBuff"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GsInit3D"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GsSetProjection"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GsMapModelingData"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GsLinkObject4"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GsSortObject4"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "SetDispMask"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "ResetGraph"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "SetGraphDebug"
+subsystem = "graphics"
+stub_type = "recompile"
+
+[[function]]
+name = "SetDefDrawEnv"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "SetDefDispEnv"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "PutDrawEnv"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "PutDispEnv"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "DrawPrim"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "DrawOTag"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "DrawOTagEnv"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "ClearOTag"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "ClearOTagR"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "LoadImage"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "StoreImage"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "MoveImage"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "LoadTPage"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "LoadClut"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GetTPage"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "GetClut"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "FntLoad"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "FntOpen"
+subsystem = "graphics"
+stub_type = "stub"
+
+[[function]]
+name = "FntPrint"
+subsystem = "graphics"
+stub_type = "skip"
+
+[[function]]
+name = "FntFlush"
+subsystem = "graphics"
+stub_type = "stub"
+
+# ---------------------------------------------------------------------------
+# Sound (libspu, libsnd)
+# ---------------------------------------------------------------------------
+
+[[function]]
+name = "SpuInit"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SpuSetKey"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SpuSetCommonAttr"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SpuSetVoiceAttr"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SpuSetTransferMode"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SpuSetTransferStartAddr"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SpuWrite"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SpuIsTransferCompleted"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SsInit"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SsStart"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SsSetMVol"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SsSetTempo"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SsVabOpenHead"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SsVabTransBody"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SsVabTransCompleted"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SsSeqPlay"
+subsystem = "sound"
+stub_type = "stub"
+
+[[function]]
+name = "SsSeqStop"
+subsystem = "sound"
+stub_type = "stub"
+
+# ---------------------------------------------------------------------------
+# CD-ROM (libcd)
+# ---------------------------------------------------------------------------
+
+[[function]]
+name = "CdInit"
+subsystem = "cdrom"
+stub_type = "stub"
+
+[[function]]
+name = "CdRead"
+subsystem = "cdrom"
+stub_type = "stub"
+
+[[function]]
+name = "CdReadSync"
+subsystem = "cdrom"
+stub_type = "stub"
+
+[[function]]
+name = "CdDataSync"
+subsystem = "cdrom"
+stub_type = "stub"
+
+[[function]]
+name = "CD_datasync"
+subsystem = "cdrom"
+stub_type = "stub"
+
+[[function]]
+name = "CdSync"
+subsystem = "cdrom"
+stub_type = "stub"
+
+[[function]]
+name = "CdSearchFile"
+subsystem = "cdrom"
+stub_type = "stub"
+
+[[function]]
+name = "CdControl"
+subsystem = "cdrom"
+stub_type = "stub"
+
+[[function]]
+name = "CdControlF"
+subsystem = "cdrom"
+stub_type = "stub"
+
+[[function]]
+name = "CdControlB"
+subsystem = "cdrom"
+stub_type = "stub"
+
+[[function]]
+name = "CdIntToPos"
+subsystem = "cdrom"
+stub_type = "recompile"
+
+[[function]]
+name = "CdPosToInt"
+subsystem = "cdrom"
+stub_type = "recompile"
+
+# ---------------------------------------------------------------------------
+# Controller (libetc, libpad)
+# ---------------------------------------------------------------------------
+
+[[function]]
+name = "PadInit"
+subsystem = "controller"
+stub_type = "stub"
+
+[[function]]
+name = "PadInitDirect"
+subsystem = "controller"
+stub_type = "stub"
+
+[[function]]
+name = "PadRead"
+subsystem = "controller"
+stub_type = "stub"
+
+[[function]]
+name = "PadStartCom"
+subsystem = "controller"
+stub_type = "stub"
+
+[[function]]
+name = "PadStopCom"
+subsystem = "controller"
+stub_type = "stub"
+
+# ---------------------------------------------------------------------------
+# VSync / System (libetc, libapi)
+# ---------------------------------------------------------------------------
+
+[[function]]
+name = "VSync"
+subsystem = "vsync"
+stub_type = "stub"
+
+[[function]]
+name = "VSyncCallback"
+subsystem = "vsync"
+stub_type = "stub"
+
+[[function]]
+name = "DrawSync"
+subsystem = "vsync"
+stub_type = "stub"
+
+[[function]]
+name = "ResetCallback"
+subsystem = "vsync"
+stub_type = "stub"
+
+[[function]]
+name = "StopCallback"
+subsystem = "vsync"
+stub_type = "stub"
+
+[[function]]
+name = "RestartCallback"
+subsystem = "vsync"
+stub_type = "stub"
+
+[[function]]
+name = "ChangeClearPAD"
+subsystem = "vsync"
+stub_type = "stub"
+
+# ---------------------------------------------------------------------------
+# Memory (libapi, kernel)
+# ---------------------------------------------------------------------------
+
+[[function]]
+name = "InitHeap"
+subsystem = "memory"
+stub_type = "passthrough"
+
+[[function]]
+name = "malloc"
+subsystem = "memory"
+stub_type = "passthrough"
+
+[[function]]
+name = "malloc3"
+subsystem = "memory"
+stub_type = "passthrough"
+
+[[function]]
+name = "free"
+subsystem = "memory"
+stub_type = "passthrough"
+
+[[function]]
+name = "calloc"
+subsystem = "memory"
+stub_type = "passthrough"
+
+[[function]]
+name = "realloc"
+subsystem = "memory"
+stub_type = "passthrough"
+
+# ---------------------------------------------------------------------------
+# LibC (libc)
+# ---------------------------------------------------------------------------
+
+[[function]]
+name = "printf"
+subsystem = "libc"
+stub_type = "skip"
+
+[[function]]
+name = "sprintf"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "memcpy"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "memset"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "memmove"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "memcmp"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "strlen"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "strcpy"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "strncpy"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "strcmp"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "strcat"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "rand"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "srand"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "abs"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "labs"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "atoi"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "atol"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "strtol"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "setjmp"
+subsystem = "libc"
+stub_type = "passthrough"
+
+[[function]]
+name = "longjmp"
+subsystem = "libc"
+stub_type = "passthrough"
+
+# ---------------------------------------------------------------------------
+# Math (libmath)
+# ---------------------------------------------------------------------------
+
+[[function]]
+name = "rsin"
+subsystem = "math"
+stub_type = "passthrough"
+
+[[function]]
+name = "rcos"
+subsystem = "math"
+stub_type = "passthrough"
+
+[[function]]
+name = "ratan2"
+subsystem = "math"
+stub_type = "recompile"
+
+[[function]]
+name = "SquareRoot0"
+subsystem = "math"
+stub_type = "passthrough"
+
+[[function]]
+name = "SquareRoot12"
+subsystem = "math"
+stub_type = "passthrough"
+
+# ---------------------------------------------------------------------------
+# GTE high-level (libgte)
+# ---------------------------------------------------------------------------
+
+[[function]]
+name = "InitGeom"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "SetGeomOffset"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "SetGeomScreen"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "SetRotMatrix"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "SetTransMatrix"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "SetLightMatrix"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "SetColorMatrix"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "SetBackColor"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "SetFarColor"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "RotTransPers"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "RotTransPers3"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "RotTrans"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "NormalClip"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "AverageZ3"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "AverageZ4"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "RotMatrix"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "TransMatrix"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "MulMatrix0"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "MulMatrix"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "CompMatrix"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "ApplyMatrix"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "ApplyMatrixLV"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "OuterProduct0"
+subsystem = "gte"
+stub_type = "stub"
+
+[[function]]
+name = "OuterProduct12"
+subsystem = "gte"
+stub_type = "stub"

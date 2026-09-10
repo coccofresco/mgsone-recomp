@@ -1,0 +1,4 @@
+# SwanStation native serialized state at runner reset-frame 12000, reached
+# with crash3_new_game.inputs. These numbers are relative to the state load,
+# NOT recomp VBlanks and NOT a claimed pose-matched counterpart of slot 0.
+1 180 up

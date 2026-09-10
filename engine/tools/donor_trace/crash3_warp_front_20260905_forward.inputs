@@ -1,0 +1,3 @@
+# Immutable user checkpoint: warp_front_idle_20260905.ps1s at VBlank 44018.
+# Two neutral latches, then forward to exercise the shared object/scenery depth.
+44020 44200 up

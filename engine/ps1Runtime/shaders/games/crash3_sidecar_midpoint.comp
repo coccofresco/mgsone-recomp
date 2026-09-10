@@ -1,0 +1,117 @@
+#version 450
+#extension GL_ARB_gpu_shader_fp64 : require
+
+// Produces presentation-only geometry wholly on Vulkan. The host uploads the
+// two genuine game endpoints: B is the ordinary vertex stream and A is the
+// compact previous-endpoint table. A prior GPU copy has already cloned B into
+// the destination, so rejected triangles remain exact endpoint B without any
+// write. No generated position ever crosses back through host memory.
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 1, binding = 1, std430) buffer CrashSidecarWords {
+  uint words[];
+} u_scene;
+
+layout(push_constant) uniform CrashSidecarMidpointState {
+  uint source_vertex_word_offset;
+  uint destination_vertex_word_offset;
+  uint previous_vertex_word_offset;
+  uint vertex_count;
+  uint vertex_stride_words;
+  uint current_origin_x;
+  uint current_origin_y;
+  uint reserved;
+} u_midpoint;
+
+const uint PREVIOUS_VERTEX_WORDS = 4u;
+const uint PREVIOUS_ORIGIN_X_MASK = 0x7ffu;
+const uint PREVIOUS_ORIGIN_Y_MASK = 0x3ffu;
+const uint PREVIOUS_ORIGIN_Y_SHIFT = 11u;
+const uint PREVIOUS_VALID = 1u << 31;
+const double MAX_FLOAT = 3.40282346638528859811704183484516925440e38lf;
+
+bool finite_double(double value) {
+  return !isnan(value) && !isinf(value);
+}
+
+void main() {
+  const uint first_vertex = gl_GlobalInvocationID.x * 3u;
+  if (first_vertex >= u_midpoint.vertex_count ||
+      u_midpoint.vertex_count - first_vertex < 3u)
+    return;
+
+  dvec2 positions[3];
+  double projective_w[3];
+  bool complete = true;
+  for (uint corner = 0u; corner < 3u; ++corner) {
+    const uint vertex_index = first_vertex + corner;
+    const uint source = u_midpoint.source_vertex_word_offset +
+                        vertex_index * u_midpoint.vertex_stride_words;
+    const uint previous = u_midpoint.previous_vertex_word_offset +
+                          vertex_index * PREVIOUS_VERTEX_WORDS;
+    const uint previous_origin_flags = u_scene.words[previous + 3u];
+    complete = complete &&
+               (previous_origin_flags & PREVIOUS_VALID) != 0u;
+    if (!complete)
+      continue;
+
+    precise double previous_w =
+        double(uintBitsToFloat(u_scene.words[previous + 2u]));
+    precise double current_w =
+        double(uintBitsToFloat(u_scene.words[source + 2u]));
+    precise double current_weight = 0.5lf;
+    precise double previous_weight = 1.0lf - current_weight;
+    precise double interpolated_w =
+        previous_weight * previous_w + current_weight * current_w;
+    complete = complete && finite_double(interpolated_w) &&
+               interpolated_w > 0.0lf && interpolated_w <= MAX_FLOAT;
+    if (!complete)
+      continue;
+
+    const dvec2 previous_origin = dvec2(
+        double(previous_origin_flags & PREVIOUS_ORIGIN_X_MASK),
+        double((previous_origin_flags >> PREVIOUS_ORIGIN_Y_SHIFT) &
+               PREVIOUS_ORIGIN_Y_MASK));
+    const dvec2 current_origin =
+        dvec2(double(u_midpoint.current_origin_x),
+              double(u_midpoint.current_origin_y));
+    for (uint component = 0u; component < 2u; ++component) {
+      precise double previous_position = double(uintBitsToFloat(
+          u_scene.words[previous + component]));
+      precise double current_position = double(uintBitsToFloat(
+          u_scene.words[source + component]));
+      precise double previous_local =
+          previous_position - previous_origin[component];
+      precise double current_local =
+          current_position - current_origin[component];
+      precise double previous_term =
+          previous_weight * previous_local * previous_w;
+      precise double current_term =
+          current_weight * current_local * current_w;
+      precise double local =
+          (previous_term + current_term) / interpolated_w;
+      precise double absolute = local + current_origin[component];
+      complete = complete && finite_double(absolute) &&
+                 abs(absolute) <= MAX_FLOAT;
+      positions[corner][component] = absolute;
+    }
+    projective_w[corner] = interpolated_w;
+  }
+
+  // Triangle atomicity: the B clone is left untouched unless every corner is
+  // valid. This avoids transient cracks at topology/streaming boundaries.
+  if (!complete)
+    return;
+  for (uint corner = 0u; corner < 3u; ++corner) {
+    const uint vertex_index = first_vertex + corner;
+    const uint destination = u_midpoint.destination_vertex_word_offset +
+                             vertex_index * u_midpoint.vertex_stride_words;
+    u_scene.words[destination + 0u] =
+        floatBitsToUint(float(positions[corner].x));
+    u_scene.words[destination + 1u] =
+        floatBitsToUint(float(positions[corner].y));
+    u_scene.words[destination + 2u] =
+        floatBitsToUint(float(projective_w[corner]));
+  }
+}

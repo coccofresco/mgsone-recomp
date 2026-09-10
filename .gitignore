@@ -1,0 +1,15 @@
+/.local/
+/build*/
+/data/
+/generated/
+__pycache__/
+*.pyc
+*.bin
+*.img
+*.iso
+*.chd
+*.sub
+*.exe
+/engine/ps1Runtime/src/recompiled_out.cpp
+/engine/ps1Runtime/src/recompiled_out.generated.h
+/engine/ps1Runtime/src/recompiled_out.part*.cpp

@@ -1,0 +1,4 @@
+# Crash Bandicoot 3 PAL recomp: second gameplay-level holdout captured in
+# quick slot 6 at guest VBlank 173893.  Latch neutral input for two VBlanks,
+# then walk straight ahead for ten seconds to cross the reported failure area.
+173895 174394 up

@@ -1,0 +1,3 @@
+# Crash Bandicoot 3 PAL current warp-room reference. The state resumes at
+# guest VBlank 3726; keep two neutral latches, then rotate right for 61 ticks.
+3728 3788 right

@@ -1,0 +1,6 @@
+# Crash Bandicoot 3 PAL recomp: extended streaming-section sweep from the
+# user-provided quick slot 6 (guest VBlank 173893).  Hold forward for thirty
+# seconds so every resident-table handoff reached on the straight route is
+# consumed by the same identity-based transition audit; no frame in this file
+# selects or changes the runtime handoff policy.
+173895 175394 up

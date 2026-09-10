@@ -1,0 +1,3 @@
+# Crash Bandicoot 3 PAL slot-0 resident-scene holdout.  The checkpoint resumes
+# at guest VBlank 8738; rotate far enough to expose a different lateral slice.
+8740 8800 left

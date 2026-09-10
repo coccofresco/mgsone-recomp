@@ -1,0 +1,263 @@
+diff --git a/src/core/cdrom.cc b/src/core/cdrom.cc
+index 48e0d2b..20cdaf4 100644
+--- a/src/core/cdrom.cc
++++ b/src/core/cdrom.cc
+@@ -22,6 +22,7 @@
+  */
+ 
+ #include "core/cdrom.h"
++#include "core/pcsxlua.h"
+ 
+ #include <magic_enum/magic_enum_all.hpp>
+ 
+@@ -1263,6 +1264,7 @@ class CDRomImpl : public PCSX::CDRom {
+         }
+ 
+         m_cmd = rt;
++        PCSX::LuaFFI::traceCDCommand(m_cmd, m_paramC, m_setSector.toLBA());
+         if (PCSX::g_emulator->settings.get<PCSX::Emulator::SettingDebugSettings>()
+                 .get<PCSX::Emulator::DebugSettings::LoggingCDROM>()) {
+             logCDROM(rt);
+diff --git a/src/core/gpu.cc b/src/core/gpu.cc
+index 1acaa6d..5f79487 100644
+--- a/src/core/gpu.cc
++++ b/src/core/gpu.cc
+@@ -20,6 +20,7 @@
+ #define IMGUI_DEFINE_MATH_OPERATORS
+ 
+ #include "core/gpu.h"
++#include "core/pcsxlua.h"
+ 
+ #include <magic_enum/magic_enum_all.hpp>
+ 
+@@ -37,6 +38,11 @@
+ 
+ namespace PCSX {
+ 
++GPU::TraceState GPU::getTraceState() {
++    return {m_statusControl[5], m_statusControl[8], m_drawingStartRaw,
++            m_drawingEndRaw, m_drawingOffsetRaw, readStatus()};
++}
++
+ // clang-format off
+ // clang-format doesn't understand duff's device pattern...
+ template <GPU::Shading shading, GPU::Shape shape, GPU::Textured textured, GPU::Blend blend, GPU::Modulation modulation>
+@@ -465,6 +471,7 @@ void PCSX::GPU::writeStatus(uint32_t value) {
+     bool gotUnknown = false;
+ 
+     m_statusControl[cmd] = value;
++    PCSX::LuaFFI::traceGPUControl(value);
+ 
+     switch (cmd) {
+         case 0: {
+@@ -710,12 +717,14 @@ void PCSX::GPU::Command::processWrite(Buffer &buf, Logged::Origin origin, uint32
+                         g_emulator->m_gpuLogger->addNode(prim, origin, originValue, length);
+                         m_gpu->write0(&prim);
+                         m_gpu->m_drawingStartRaw = packetInfo & 0xfffff;
++                        PCSX::LuaFFI::traceGPUDrawState(3, m_gpu->m_drawingStartRaw);
+                     } break;
+                     case 4: {  // drawing area bottom right
+                         DrawingAreaEnd prim(packetInfo);
+                         g_emulator->m_gpuLogger->addNode(prim, origin, originValue, length);
+                         m_gpu->write0(&prim);
+                         m_gpu->m_drawingEndRaw = packetInfo & 0xfffff;
++                        PCSX::LuaFFI::traceGPUDrawState(4, m_gpu->m_drawingEndRaw);
+                     } break;
+                     case 5: {  // drawing offset
+                         DrawingOffset prim(packetInfo);
+@@ -723,6 +732,7 @@ void PCSX::GPU::Command::processWrite(Buffer &buf, Logged::Origin origin, uint32
+                         g_emulator->m_gpuLogger->addNode(prim, origin, originValue, length);
+                         m_gpu->write0(&prim);
+                         m_gpu->m_drawingOffsetRaw = packetInfo & 0x3fffff;
++                        PCSX::LuaFFI::traceGPUDrawState(5, m_gpu->m_drawingOffsetRaw);
+                     } break;
+                     case 6: {  // mask bit
+                         MaskBit prim(packetInfo);
+diff --git a/src/core/gpu.h b/src/core/gpu.h
+index 8680fb0..06b2489 100644
+--- a/src/core/gpu.h
++++ b/src/core/gpu.h
+@@ -92,6 +92,15 @@ class GPU {
+     }
+ 
+     uint32_t readStatus();
++    struct TraceState {
++        uint32_t displayStart;
++        uint32_t displayMode;
++        uint32_t drawingStart;
++        uint32_t drawingEnd;
++        uint32_t drawingOffset;
++        uint32_t status;
++    };
++    TraceState getTraceState();
+     void dma(uint32_t madr, uint32_t bcr, uint32_t chcr);
+     static void gpuInterrupt();
+ 
+diff --git a/src/core/pcsxffi.lua b/src/core/pcsxffi.lua
+index 25256ac..c3ea8de 100644
+--- a/src/core/pcsxffi.lua
++++ b/src/core/pcsxffi.lua
+@@ -58,6 +58,16 @@ uint8_t* getScratchPtr();
+ psxRegisters* getRegisters();
+ uint8_t** getReadLUT();
+ uint8_t** getWriteLUT();
++typedef struct {
++    uint32_t displayStart, displayMode;
++    uint32_t drawingStart, drawingEnd, drawingOffset;
++    uint32_t status;
++} GPUTraceState;
++GPUTraceState getGPUTraceState();
++void setGPUControlTraceCallback(void (*callback)(uint32_t value, uint64_t cycles));
++void setGPUDrawTraceCallback(void (*callback)(uint32_t command, uint32_t value, uint64_t cycles));
++void setCDTraceCallback(void (*callback)(uint32_t command, uint32_t parameterCount, uint32_t lba, uint64_t cycles));
++void setSPUTraceCallback(void (*callback)(bool keyOn, uint32_t voices, uint64_t cycles));
+ Breakpoint* addBreakpoint(uint32_t address, enum BreakpointType type, unsigned width, const char* cause, bool (*invoker)(uint32_t address, unsigned width, const char* cause), const char* label);
+ void enableBreakpoint(Breakpoint*);
+ void disableBreakpoint(Breakpoint*);
+@@ -197,6 +207,7 @@ PCSX = {
+         end
+     end,
+     GPU = {
++        getTraceState = function() return C.getGPUTraceState() end,
+         takeScreenShot = function()
+             local ss = C.takeScreenShot()
+             return {
+@@ -207,6 +218,12 @@ PCSX = {
+             }
+         end,
+     },
++    Trace = {
++        setGPUControlCallback = function(callback) C.setGPUControlTraceCallback(callback) end,
++        setGPUDrawCallback = function(callback) C.setGPUDrawTraceCallback(callback) end,
++        setCDCallback = function(callback) C.setCDTraceCallback(callback) end,
++        setSPUCallback = function(callback) C.setSPUTraceCallback(callback) end,
++    },
+     createSaveState = function()
+         local slice = C.createSaveState()
+         return Support.File._createSliceWrapper(slice)
+diff --git a/src/core/pcsxlua.cc b/src/core/pcsxlua.cc
+index 9190357..7d95fd1 100644
+--- a/src/core/pcsxlua.cc
++++ b/src/core/pcsxlua.cc
+@@ -30,6 +30,16 @@
+ 
+ namespace {
+ 
++using GPUControlTraceCallback = void (*)(uint32_t value, uint64_t cycles);
++using GPUDrawTraceCallback = void (*)(uint32_t command, uint32_t value, uint64_t cycles);
++using CDTraceCallback = void (*)(uint32_t command, uint32_t parameterCount, uint32_t lba, uint64_t cycles);
++using SPUTraceCallback = void (*)(bool keyOn, uint32_t voices, uint64_t cycles);
++
++GPUControlTraceCallback s_gpuControlTraceCallback = nullptr;
++GPUDrawTraceCallback s_gpuDrawTraceCallback = nullptr;
++CDTraceCallback s_cdTraceCallback = nullptr;
++SPUTraceCallback s_spuTraceCallback = nullptr;
++
+ struct LuaBreakpoint {
+     PCSX::Debug::BreakpointUserListType wrapper;
+ };
+@@ -42,6 +52,11 @@ void* getScratchPtr() { return PCSX::g_emulator->m_mem->m_hard; }
+ void* getRegisters() { return &PCSX::g_emulator->m_cpu->m_regs; }
+ void* getReadLUT() { return PCSX::g_emulator->m_mem->m_readLUT; }
+ void* getWriteLUT() { return PCSX::g_emulator->m_mem->m_writeLUT; }
++PCSX::GPU::TraceState getGPUTraceState() { return PCSX::g_emulator->m_gpu->getTraceState(); }
++void setGPUControlTraceCallback(GPUControlTraceCallback callback) { s_gpuControlTraceCallback = callback; }
++void setGPUDrawTraceCallback(GPUDrawTraceCallback callback) { s_gpuDrawTraceCallback = callback; }
++void setCDTraceCallback(CDTraceCallback callback) { s_cdTraceCallback = callback; }
++void setSPUTraceCallback(SPUTraceCallback callback) { s_spuTraceCallback = callback; }
+ 
+ LuaBreakpoint* addBreakpoint(uint32_t address, PCSX::Debug::BreakpointType type, unsigned width, const char* cause,
+                              bool (*invoker)(uint32_t address, unsigned width, const char* cause), const char* label) {
+@@ -125,6 +140,22 @@ void quit(int code) { PCSX::g_system->quit(code); }
+ 
+ }  // namespace
+ 
++void PCSX::LuaFFI::traceGPUControl(uint32_t value) {
++    if (s_gpuControlTraceCallback) s_gpuControlTraceCallback(value, getCPUCycles());
++}
++
++void PCSX::LuaFFI::traceGPUDrawState(uint32_t command, uint32_t value) {
++    if (s_gpuDrawTraceCallback) s_gpuDrawTraceCallback(command, value, getCPUCycles());
++}
++
++void PCSX::LuaFFI::traceCDCommand(uint32_t command, uint32_t parameterCount, uint32_t lba) {
++    if (s_cdTraceCallback) s_cdTraceCallback(command, parameterCount, lba, getCPUCycles());
++}
++
++void PCSX::LuaFFI::traceSPUKeyEvent(bool keyOn, uint32_t voices) {
++    if (s_spuTraceCallback) s_spuTraceCallback(keyOn, voices, getCPUCycles());
++}
++
+ template <typename T, size_t S>
+ static void registerSymbol(PCSX::Lua L, const char (&name)[S], const T ptr) {
+     L.push<S>(name);
+@@ -146,6 +177,11 @@ static void registerAllSymbols(PCSX::Lua L) {
+     REGISTER(L, getRegisters);
+     REGISTER(L, getReadLUT);
+     REGISTER(L, getWriteLUT);
++    REGISTER(L, getGPUTraceState);
++    REGISTER(L, setGPUControlTraceCallback);
++    REGISTER(L, setGPUDrawTraceCallback);
++    REGISTER(L, setCDTraceCallback);
++    REGISTER(L, setSPUTraceCallback);
+     REGISTER(L, addBreakpoint);
+     REGISTER(L, enableBreakpoint);
+     REGISTER(L, disableBreakpoint);
+diff --git a/src/core/pcsxlua.h b/src/core/pcsxlua.h
+index 81d1e7c..ceff394 100644
+--- a/src/core/pcsxlua.h
++++ b/src/core/pcsxlua.h
+@@ -19,12 +19,18 @@
+ 
+ #pragma once
+ 
++#include <cstdint>
++
+ #include "lua/luawrapper.h"
+ 
+ namespace PCSX {
+ 
+ namespace LuaFFI {
+ void open_pcsx(Lua);
++void traceGPUControl(uint32_t value);
++void traceGPUDrawState(uint32_t command, uint32_t value);
++void traceCDCommand(uint32_t command, uint32_t parameterCount, uint32_t lba);
++void traceSPUKeyEvent(bool keyOn, uint32_t voices);
+ }
+ 
+ }  // namespace PCSX
+diff --git a/src/spu/registers.cc b/src/spu/registers.cc
+index fc19248..0f5fb47 100644
+--- a/src/spu/registers.cc
++++ b/src/spu/registers.cc
+@@ -42,6 +42,7 @@
+ #include <algorithm>
+ 
+ #include "core/logger.h"
++#include "core/pcsxlua.h"
+ #include "spu/externals.h"
+ #include "spu/interface.h"
+ 
+@@ -297,18 +298,22 @@ void PCSX::SPU::impl::writeRegister(uint32_t reg, uint16_t val) {
+ 
+         case H_SPUon1:
+             SoundOn(0, 16, val);
++            PCSX::LuaFFI::traceSPUKeyEvent(true, val);
+             break;
+ 
+         case H_SPUon2:
+             SoundOn(16, 24, val);
++            PCSX::LuaFFI::traceSPUKeyEvent(true, static_cast<uint32_t>(val) << 16);
+             break;
+ 
+         case H_SPUoff1:
+             SoundOff(0, 16, val);
++            PCSX::LuaFFI::traceSPUKeyEvent(false, val);
+             break;
+ 
+         case H_SPUoff2:
+             SoundOff(16, 24, val);
++            PCSX::LuaFFI::traceSPUKeyEvent(false, static_cast<uint32_t>(val) << 16);
+             break;
+ 
+         case H_CDLeft:
