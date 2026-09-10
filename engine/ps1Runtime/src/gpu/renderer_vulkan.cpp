@@ -1,4 +1,7 @@
 #include "runtime/gpu/renderer_vulkan.h"
+#include "runtime/gpu/mgs_asset_cache_vulkan.h"
+#include "runtime/games/mgs_profile.h"
+#include "runtime/games/mgs_scene.h"
 
 #include "runtime/games/crash3_object_presenter.h"
 #include "runtime/games/crash3_profile.h"
@@ -2160,6 +2163,7 @@ struct RendererVulkan::Impl {
   std::vector<VkSemaphore> renderFinishedSemaphores;
   VkRenderPass swapchainRenderPass = VK_NULL_HANDLE;
 
+  std::unique_ptr<MgsAssetGpuCache> mgsAssetCache;
   VkCommandPool commandPool = VK_NULL_HANDLE;
   std::array<FrameContext, kFramesInFlight> frames{};
   uint32_t currentFrame = 0;
@@ -21567,6 +21571,16 @@ struct RendererVulkan::Impl {
         replaySeedSmokeRequested && replayCapabilityAssessment.capable();
     createDevice();
     createCommandResources();
+    if (games::mgs::active()) {
+      const char *cachePath = std::getenv("PS1_MGS_ASSET_CACHE");
+      if (cachePath && *cachePath && std::strcmp(cachePath, "off") != 0) {
+        mgsAssetCache = MgsAssetGpuCache::upload(physicalDevice, device,
+            graphicsQueue, commandPool, games::mgs::AssetCache::load(cachePath),
+            environmentSwitchEnabled("PS1_MGS_ASSET_VERIFY"));
+        if (environmentSwitchEnabled("PS1_MGS_SCENE_CAPTURE"))
+          games::mgs::setSceneAssetCache(&mgsAssetCache->assets());
+      }
+    }
     createDescriptors();
     createNativeSnapshotResources();
     scanoutSampler = createSampler(VK_FILTER_LINEAR);
@@ -28082,6 +28096,8 @@ struct RendererVulkan::Impl {
         consumeGpuTimings(frame);
     }
     reportGpuTimings();
+    if (mgsAssetCache) games::mgs::setSceneAssetCache(nullptr);
+    mgsAssetCache.reset();
     destroySwapchain();
     destroyScanoutTarget();
     destroyReplayVisibilityResources();

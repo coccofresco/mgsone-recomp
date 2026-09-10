@@ -26,6 +26,7 @@ def main():
     # CD_sync poll: the original delay slot sets a0=-1 before VSync.
     assert struct.unpack_from('<I', data, 0x8ff54 - 0x10000 + 2048)[0] == 0x2404ffff
     assert struct.unpack_from('<I', data, 0x17b38 - 0x10000 + 2048)[0] == 0x84830006
+    assert struct.unpack_from('<I', data, 0x1919c - 0x10000 + 2048)[0] == 0x27bdffd8
     analysis = ROOT / 'data/mgs.usa.analysis.toml'
     with (ROOT / '.local/analyze-usa.log').open('w') as log:
         subprocess.run([str(ROOT / 'build/ps1Analyzer/ps1Analyzer'), str(exe), str(analysis)],
@@ -95,6 +96,8 @@ def main():
     s += '\n[game]\nprofile = "mgs_usa_v1_0"\nwidescreen_16_9 = true\n\n[timing]\nvideo_standard = "ntsc"\n'
     s += '\n[instruction_overrides]\n"0x8008FF54" = "if (ctx->bios) ps1::runtimeBiosDrainPendingCallbacks(ctx->bios, 0x8008FF50u); pgxp_addiu(ctx, 4, 0, -1);"\n'
     s += '\n"0x80017B38" = "extern void mgsAdjustProjection(recomp_context*); mgsAdjustProjection(ctx); pgxp_invalidate_gpr(ctx, 3); ctx->r3 = (int16_t)MEM_READ16(ctx, ctx->r4 + 6);"\n'
+    # Capture after native pose composition and before geometric bounds.
+    s += '\n"0x8001919C" = "extern void mgsCaptureSceneBeforeBounds(recomp_context*); mgsCaptureSceneBeforeBounds(ctx); pgxp_addiu(ctx, 29, 29, -40);"\n'
     image = next(cue.parent.glob('*.bin'))
     disc = Disc(image)
     record = disc.files()['/MGS/STAGE.DIR']

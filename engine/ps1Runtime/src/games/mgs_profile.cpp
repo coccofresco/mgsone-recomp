@@ -7,10 +7,13 @@
 namespace ps1::games::mgs {
 namespace {
 bool wide = false;
+bool enabledProfile = false;
 }
 void configure(bool enabled, bool widescreen) noexcept {
+  enabledProfile = enabled;
   wide = enabled && widescreen;
 }
+bool active() noexcept { return enabledProfile; }
 bool widescreen16x9() noexcept { return wide; }
 } // namespace ps1::games::mgs
 

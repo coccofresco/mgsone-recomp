@@ -1,6 +1,7 @@
 #include "runtime/save_state.h"
 #include "runtime/bios/bios.h"
 #include "runtime/games/crash3_profile.h"
+#include "runtime/games/mgs_scene.h"
 #include "runtime/psyq/psyq_pad.h"
 #include "runtime/psyq/psyq_state.h"
 #include <cstring>
@@ -762,6 +763,7 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
     input.getMemoryCard(0).restore(cards[0]);
     input.getMemoryCard(1).restore(cards[1]);
     restorePsyqState(psyqState);
+    games::mgs::resetSceneCapture();
     std::copy(std::begin(extraIntrCallbacks), std::end(extraIntrCallbacks),
               psyq::psyq_state().intrCallback + 8);
     if (header.version >= 3)

@@ -1,8 +1,11 @@
 # Contratto per la presentazione Vulkan di MGS
 
-**Proposta di architettura, non integrazione già attiva.** I formati e le prove
-su disco sono in [mgs-3d-formats.md](mgs-3d-formats.md). Non esiste ancora un boot
-MGS validato nel runtime; gli agganci PAL ITA indicati sotto vanno identificati.
+**Cache originale residente in Vulkan e cattura della scena USA implementate;
+sostituzione del rendering ancora da implementare.** Il runtime USA raggiunge
+il gameplay del molo. I formati e le prove iniziali su disco sono in
+[mgs-3d-formats.md](mgs-3d-formats.md). La prima integrazione concreta, i comandi
+e i limiti verificati sono in [mgs-vulkan-cache.md](mgs-vulkan-cache.md).
+Il contratto seguente descrive anche le parti ancora da realizzare.
 
 ## Separazione delle responsabilità
 
@@ -55,9 +58,11 @@ senza che cambi la geometria: mantenere generazioni separate.
 
 ## Confini di cattura candidati
 
-I nomi qui sotto provengono da Integral; **nessun indirizzo numerico è ancora
-certificato per `MGS1.EXE` italiano**. Prima di installare hook servono confronto
-di istruzioni/strutture e tracce effettive dell'eseguibile italiano e degli overlay.
+I nomi sorgente provengono dal reversing di Integral. Per USA v1.0 è verificato
+`DG_BoundChanl` a `0x8001919C`: il recipe controlla il fingerprint dell'eseguibile
+e della prima istruzione e cattura prima del culling. Gli altri hook candidati
+richiedono ancora confronto di istruzioni/strutture e tracce USA; non si riusano
+gli indirizzi numerici di Integral o della versione italiana.
 
 1. `GV_LoadInit`, `DG_LoadInitKmd`, `DG_LoadInitKmdar`: riconoscere e copiare
    l'asset prima della rilocazione e della riscrittura dei seam. Associare il
@@ -95,7 +100,7 @@ Il passo successivo ricompone in float la gerarchia dagli operandi sorgente:
 root, joint, traslazioni, adjust e waist, nell'ordine verificato del titolo.
 L'interpolazione tra due tick deve usare la stessa istanza/generazione, rispettare
 teletrasporti, tagli di camera, cambio animazione e joint parentali. Non estrapolare
-una scena dopo unload. Il tick PAL si misura nel runtime; non si eredita il 30 fps
+una scena dopo unload. Il tick nativo si misura nel runtime; non si eredita il 30 fps
 fisso del plugin Noesis. La quantizzazione già presente nell'asset rimane originale.
 
 I seam di KMD richiedono il vertice **del parent trasformato**, non una normale
@@ -129,7 +134,7 @@ escluso. Il formato del modello da solo non decide la visibilità narrativa.
 1. **Asset:** range, indici, parent/seam, extend, UV, associazioni texture e ZMD;
    confrontare le estrazioni con uno strumento indipendente. Questo lavoro ha
    una prima evidenza offline, dettagliata nel documento sui formati.
-2. **Agganci italiani:** identificare loader e pipeline nel main interno, poi
+2. **Agganci USA:** completare loader e pipeline nel main interno, poi
    verificare lifetime di cache/oggetti e gli overlay usati dallo scenario scelto.
 3. **Geometria e posa:** confronto di punti modello/world/view e giunzioni su
    pose ferme e animate; esplicitare la tolleranza solo dove si introduce float.
@@ -142,6 +147,6 @@ escluso. Il formato del modello da solo non decide la visibilità narrativa.
    codec, filmati, camera e transizioni; near-plane e widescreen come prove
    specifiche, non dedotte dall'esito di un visualizzatore offline.
 
-I criteri separano ciò che è già osservato da ciò che deve ancora essere
-implementato. Il prossimo traguardo è una cattura semantica ripetibile di uno
-scenario, dopo avere stabilito l'esecuzione del main italiano e dei suoi overlay.
+La cattura iniziale del molo è ripetibile anche caricando un savestate. Restano
+materiali e deformazioni, provenienza dei draw e composizione sincronizzata con
+il framebuffer, prima di poter sostituire il contributo delle mesh originali.

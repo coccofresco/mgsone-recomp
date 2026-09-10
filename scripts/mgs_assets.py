@@ -216,7 +216,7 @@ def kmd(data, geometry=False, header_offset=0, pointer_base=0):
             'texture_ids': [f'{t:04x}' for t in sorted(all_textures)]}
 
 
-def zmd(data):
+def zmd(data, geometry=False):
     magic, count, vertex_offset, body_size = unpack('<4I', data)
     require(magic == 0x61444d4b, 'invalid ZMD magic')
     require(0 < count <= 4096, 'invalid ZMD count')
@@ -226,7 +226,7 @@ def zmd(data):
     models = []
     for _ in range(count):
         identity, = unpack('<I', data, cursor)
-        parsed = kmd(data, header_offset=cursor + 4, pointer_base=shared)
+        parsed = kmd(data, geometry=geometry, header_offset=cursor + 4, pointer_base=shared)
         models.append({'id': f'{identity:04x}', 'parsed': parsed})
         cursor += 4 + 32 + parsed['total_models'] * 88
     require(cursor <= shared, 'ZMD headers overlap shared geometry')
@@ -242,7 +242,7 @@ def lit(data):
 PLANE_LUT = [[sum(((value >> (7 - bit)) & 1) << (bit * 8 + plane)
                    for bit in range(8)) for value in range(256)] for plane in range(4)]
 
-def pcx(data):
+def pcx(data, pixels_out=False):
     span(data, 0, 128)
     require(data[0] == 10 and data[2] == 1, 'unsupported PCX header')
     xmin, ymin, xmax, ymax = unpack('<4H', data, 4)
@@ -292,7 +292,7 @@ def pcx(data):
     for r, g, b in struct.iter_unpack('3B', palette):
         word = ((r >> 3) | (g >> 3) << 5 | (b >> 3) << 10 | bool((r | g | b) & 7) << 15) if r or g or b else 0
         palette_words.append(word)
-    return {'width': width, 'height': height,
+    result = {'width': width, 'height': height,
             'bits_per_plane': data[3], 'planes': data[65],
             'bytes_per_line': stride, 'flags': flags,
             'texture_vram': [px, py], 'clut_vram': [cx, cy], 'colors': colors,
@@ -300,6 +300,9 @@ def pcx(data):
             'palette_ps1_sha256': sha(struct.pack('<' + 'H' * colors, *palette_words)),
             'indices_outside_declared_palette': len(pixels.translate(None, bytes(range(colors)))),
             'validation': 'RLE and palette decoded; dynamic CLUT state not resolved'}
+    if pixels_out:
+        result.update(pixels=bytes(pixels), palette_rgb=palette, palette_words=palette_words)
+    return result
 
 
 def oar(data):

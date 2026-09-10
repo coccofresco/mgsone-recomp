@@ -182,6 +182,8 @@ add_library(ps1Runtime_lib STATIC
     src/games/crash3_scenery_construction.cpp
     src/games/crash3_profile.cpp
     src/games/mgs_profile.cpp
+    src/games/mgs_asset_cache.cpp
+    src/games/mgs_scene.cpp
     src/memory_access.cpp
     src/mips_interpreter.cpp
     src/mips_construction_lineage.cpp
@@ -317,6 +319,7 @@ endif()
 
 add_library(ps1Runtime_vulkan_renderer STATIC
     src/gpu/renderer_vulkan.cpp
+    src/gpu/mgs_asset_cache_vulkan.cpp
 )
 
 # The sidecar's capture/profile and Vulkan presentation sources are bounded
