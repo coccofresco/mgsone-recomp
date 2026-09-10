@@ -130,6 +130,7 @@ foreach(shader_source IN LISTS PS1RECOMP_VULKAN_SHADER_SOURCES)
     # Both direct and GPU-pulled shaders share the fragment projective-depth
     # contract. Header-only iterations must rebuild every consuming module.
     list(APPEND shader_dependencies
+        "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_original_mesh.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_depth_vertex.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_depth_fragment.glsl")
     if(shader_name STREQUAL "replay_precise.vert" OR
@@ -184,6 +185,7 @@ add_library(ps1Runtime_lib STATIC
     src/games/mgs_profile.cpp
     src/games/mgs_asset_cache.cpp
     src/games/mgs_scene.cpp
+    src/games/mgs_mesh_replay.cpp
     src/memory_access.cpp
     src/mips_interpreter.cpp
     src/mips_construction_lineage.cpp

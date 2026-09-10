@@ -889,6 +889,20 @@ int main(int argc, char *argv[]) {
   rendererOptions.trueDepthMode = runtimeConfig.video.trueDepthMode;
   rendererOptions.wipDepthManifest = runtimeConfig.video.wipDepthManifest;
   rendererOptions.trueColor = runtimeConfig.video.trueColor;
+  if (const char *meshMode = std::getenv("PS1_MGS_MESH_REPLAY");
+      ps1::games::mgs::active() && meshMode &&
+      std::strcmp(meshMode, "1") == 0) {
+    // Use the inherited, tested complete replay executor. The authoritative
+    // native raster remains 1x; these options affect presentation only.
+    rendererOptions.internalScale = 4;
+    rendererOptions.pgxp = true;
+    rendererOptions.pgxpNearClip = false;
+    rendererOptions.trueDepth = true;
+    rendererOptions.trueDepthMode = "hybrid";
+    rendererOptions.trueColor = true;
+    fmt::print("[MGS mesh] original-cache Vulkan projection, 4x ordered "
+               "composition\n");
+  }
   if (const char *disableReplay = std::getenv("PS1_DISABLE_PRECISION_REPLAY");
       disableReplay != nullptr && *disableReplay != '\0' &&
       *disableReplay != '0') {

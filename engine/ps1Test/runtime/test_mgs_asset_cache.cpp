@@ -1,12 +1,15 @@
-#include "runtime/games/mgs_asset_cache.h"
-#include "runtime/games/mgs_scene.h"
-#include "runtime/games/mgs_profile.h"
-#include "runtime/memory.h"
 #include "runtime/cpu_context.h"
-#include <gtest/gtest.h>
+#include "runtime/games/mgs_asset_cache.h"
+#include "runtime/games/mgs_mesh_replay.h"
+#include "runtime/games/mgs_profile.h"
+#include "runtime/games/mgs_scene.h"
+#include "runtime/gpu/modern_replay.h"
+#include "runtime/memory.h"
 #include <algorithm>
+#include <bit>
 #include <cstdlib>
 #include <cstring>
+#include <gtest/gtest.h>
 
 using namespace ps1;
 using namespace ps1::games::mgs;
@@ -46,6 +49,10 @@ std::vector<uint8_t> fixture() {
   put(sections[1],4,~0u); put(sections[1],8,~0u); put(sections[1],16,4);
   put(sections[1],20,4); put(sections[1],28,1);
   sections[2].resize(4*48);
+  for (unsigned v = 0; v < 4; ++v) {
+    put(sections[2], v * 48, std::bit_cast<uint32_t>(float(v * 10)));
+    put(sections[2], v * 48 + 12, std::bit_cast<uint32_t>(-1.0f));
+  }
   sections[6] = sourceModel();
   constexpr const char *tags[] = {"ASST","MODL","VRTX","TEXR","TEXI","PLTE","SRCE"};
   constexpr uint32_t strides[] = {64,32,48,32,1,4,1};
@@ -121,4 +128,112 @@ TEST(MgsAssetCacheTest, ValidatesLocallyExtractedUsaCache) {
   const auto cache=AssetCache::load(p);
   EXPECT_GT(cache.section(AssetCache::Assets).count,1000u);
   EXPECT_GT(cache.section(AssetCache::Models).count,1000u);
+}
+
+TEST(MgsAssetCacheTest,
+     OriginalMeshPacketUsesImmutableGpuOffsetsAndPreservesNativeState) {
+  struct Mode {
+    std::string previous;
+    bool existed;
+    Mode() : existed(std::getenv("PS1_MGS_MESH_REPLAY") != nullptr) {
+      if (existed)
+        previous = std::getenv("PS1_MGS_MESH_REPLAY");
+      setenv("PS1_MGS_MESH_REPLAY", "1", 1);
+    }
+    ~Mode() {
+      setSceneAssetCache(nullptr);
+      configure(false, false);
+      if (existed)
+        setenv("PS1_MGS_MESH_REPLAY", previous.c_str(), 1);
+      else
+        unsetenv("PS1_MGS_MESH_REPLAY");
+    }
+  } mode;
+  auto cache = AssetCache::decode(fixture());
+  Memory memory;
+  loadModel(memory, 0x80011000);
+  constexpr uint32_t channel = 0x80010000, queue = 0x80010100,
+                     object = 0x80010200, packs = 0x80013000;
+  memory.write16(channel + 80, 320);
+  memory.write16(channel + 86, 1);
+  memory.write32(channel + 88, queue);
+  memory.write32(queue, object);
+  memory.write32(object + 36, 0x80011000);
+  memory.write16(object + 46, 1);
+  memory.write32(object + 72 + 64, 0x80011020);
+  memory.write16(object + 72 + 82, 1);
+  memory.write32(object + 72 + 84, packs);
+  for (uint32_t offset : {0u, 8u, 16u}) {
+    memory.write16(channel + 16 + offset, 4096);
+    memory.write16(object + 72 + offset, 4096);
+  }
+  memory.write32(object + 72 + 28, 1000);
+  memory.write32(object + 72 + 24, 100);
+  gpu::replay::DrawPacket packet;
+  packet.opcode = 0x3c;
+  packet.vertexCount = 4;
+  packet.indexCount = 6;
+  packet.triangleIndices = {0, 1, 2, 1, 2, 3};
+  packet.textured = packet.gouraud = true;
+  packet.state.drawOffset = {160, 112};
+  constexpr unsigned order[] = {0, 1, 3, 2};
+  for (unsigned k = 0; k < 4; ++k) {
+    const int x = int(order[k] * 3.2);
+    memory.write32(packs + 4 + k * 12, 0x3c808080);
+    memory.write32(packs + 8 + k * 12, x | (29u << 16));
+    auto &v = packet.vertices[k];
+    v.nativeX = 160 + x;
+    v.nativeY = 141;
+    v.color = {128, 128, 128};
+    v.provenance.dmaNodeSource = (packs & 0x1fffffffu) + 1;
+    v.provenance.gp0WordSource = (packs & 0x1fffffffu) + 8 + k * 12 + 1;
+    v.provenance.evidence = gpu::replay::ReplayVertexDmaTraversalExact |
+                            gpu::replay::ReplayVertexGp0WordSourceExact;
+  }
+  recomp_context ctx{};
+  ctx.mem = &memory;
+  ctx.r4 = channel;
+  ctx.r5 = 0;
+  configure(true, false);
+  setSceneAssetCache(&cache);
+  std::vector<uint8_t> before(memory.ramPtr(),
+                              memory.ramPtr() + Memory::RAM_SIZE);
+  captureSceneBeforeBounds(&ctx);
+  prepareMeshReplay(&ctx);
+  auto wrong = packet;
+  wrong.vertices[0].color.r = 0;
+  const auto wrongBefore = wrong;
+  EXPECT_FALSE(replaceMeshReplayPacket(wrong));
+  EXPECT_EQ(wrong, wrongBefore);
+  // A new float projection must not claim the native GTE event. Keeping that
+  // evidence used to make the recorder reject mixed fallback frames.
+  packet.vertices[0].provenance.projectionId = 42;
+  packet.vertices[0].provenance.evidence |=
+      gpu::replay::ReplayVertexProjectionEventExact;
+  auto fallback = packet;
+  fallback.opcode = 0x20;
+  fallback.fallbackReason =
+      gpu::replay::PacketFallbackReason::MissingPrecisionPacketAtomic;
+  adaptMeshReplayPacket(fallback);
+  EXPECT_EQ(fallback.vertices[0].provenance.projectionId, 0u);
+  EXPECT_EQ(fallback.vertices[0].provenance.dmaNodeSource,
+            packet.vertices[0].provenance.dmaNodeSource);
+  EXPECT_FALSE(fallback.vertices[0].provenance.has(
+      gpu::replay::ReplayVertexProjectionEventExact));
+  ASSERT_TRUE(replaceMeshReplayPacket(packet));
+  EXPECT_EQ(packet.vertices[0].provenance.projectionId, 0u);
+  EXPECT_TRUE(packet.vertices[0].provenance.has(
+      gpu::replay::ReplayVertexDmaTraversalExact));
+  EXPECT_FALSE(packet.vertices[0].provenance.has(
+      gpu::replay::ReplayVertexProjectionEventExact));
+  ASSERT_TRUE(packet.originalMesh);
+  EXPECT_DOUBLE_EQ(packet.vertices[1].x, 163.2);
+  EXPECT_DOUBLE_EQ(packet.vertices[1].y, 141.0);
+  EXPECT_DOUBLE_EQ(packet.vertices[2].x, 169.6);
+  EXPECT_EQ(packet.originalMesh->pointBytes[2],
+            cache.section(AssetCache::Vertices).offset + 3 * 48);
+  EXPECT_FLOAT_EQ(packet.originalMesh->viewRows[2][3], 1000.0f);
+  EXPECT_EQ(std::memcmp(before.data(), memory.ramPtr(), before.size()), 0);
+  resetSceneCapture();
+  EXPECT_FALSE(replaceMeshReplayPacket(packet));
 }

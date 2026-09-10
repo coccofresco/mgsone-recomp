@@ -20,7 +20,11 @@ layout(set = 1, binding = 0, std140) uniform CrashReplayDrawState {
   uvec4 texture_state;
   uvec4 texture_window;
   uvec4 destination_state;
+  vec4 mgs_view_rows[12];
+  uvec4 mgs_point_bytes;
+  vec4 mgs_projection;
 } u_draw;
+#include "games/mgs_original_mesh.glsl"
 
 layout(push_constant) uniform ReplayVisibilityOwnerState {
   // The high bit of y requests diagnostic raw-W reconstruction; z remains
@@ -36,9 +40,10 @@ invariant gl_Position;
 
 void main() {
   const float multiplier = uintBitsToFloat(u_visibility.state.w);
-  const float w = a_projective_w * multiplier;
+  const vec3 original = mgs_original_position(a_position_native, a_projective_w);
+  const float w = original.z * multiplier;
   const vec2 ndc =
-      a_position_native * u_draw.position_scale_bias.xy +
+      original.xy * u_draw.position_scale_bias.xy +
       u_draw.position_scale_bias.zw;
   // The proof-oriented visibility pass must reproduce the submitted replay
   // policy exactly.  The F8 pre-correction plane has a different purpose: it

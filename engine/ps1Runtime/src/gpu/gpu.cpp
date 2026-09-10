@@ -1,6 +1,7 @@
 #include "runtime/gpu/gpu.h"
 #include "runtime/games/crash3_profile.h"
 #include "runtime/games/crash3_screen_composition.h"
+#include "runtime/games/mgs_mesh_replay.h"
 #include "runtime/gpu/display_geometry.h"
 #include "runtime/memory.h"
 #include "runtime/metrics.h"
@@ -3374,6 +3375,7 @@ bool GPU::capturePolygonPacket(const Vertex *vertices,
   packet.state.dither = ditherEnable_;
   packet.state.drawToDisplayArea = (gpuStat_ & (1u << 10)) != 0;
 
+  games::mgs::adaptMeshReplayPacket(packet);
   replayRecorder_.recordDraw(std::move(packet), replayNativeVram());
   return true;
 }

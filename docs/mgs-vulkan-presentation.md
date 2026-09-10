@@ -1,7 +1,8 @@
 # Contratto per la presentazione Vulkan di MGS
 
-**Cache originale residente in Vulkan e cattura della scena USA implementate;
-sostituzione del rendering ancora da implementare.** Il runtime USA raggiunge
+**Cache originale residente in Vulkan, cattura della scena USA e prima
+sostituzione selettiva della geometria implementate.** Il percorso sperimentale è
+descritto in [mgs-original-mesh-replay.md](mgs-original-mesh-replay.md). Il runtime USA raggiunge
 il gameplay del molo. I formati e le prove iniziali su disco sono in
 [mgs-3d-formats.md](mgs-3d-formats.md). La prima integrazione concreta, i comandi
 e i limiti verificati sono in [mgs-vulkan-cache.md](mgs-vulkan-cache.md).

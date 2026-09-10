@@ -1799,3 +1799,85 @@ TEST(GpuModernReplayVulkanBakeTest,
   expectAtomicFailure(bakeModernReplayVulkan(resetPlan, 4),
                       VulkanReplayBakeReason::InvalidDepthCommand, 0);
 }
+
+TEST(GpuModernReplayVulkanBakeTest,
+     NativeProjectionFallbackRequiresExplicitOptInAndConstantW) {
+  auto packet = precisePacket();
+  makeScreen2D(packet);
+  packet.route = PacketRoute::Projected3D;
+  packet.semanticReason = PacketSemanticReason::PolygonDefault;
+  packet.fallbackReason = PacketFallbackReason::MissingPrecisionPacketAtomic;
+  packet.state.depth.invalidateOnAccepted = false;
+  for (unsigned i = 0; i < packet.vertexCount; ++i)
+    packet.vertices[i].inventedW = true;
+  auto features = feedbackFeatures();
+  auto plan = makePlan(packet);
+  EXPECT_FALSE(bakeModernReplayVulkan(plan, 4, features).accepted());
+  features.allowNativeProjectionFallback = true;
+  EXPECT_TRUE(bakeModernReplayVulkan(plan, 4, features).accepted());
+  firstMutableDraw(plan).vertices[1].w = 123.0;
+  EXPECT_FALSE(bakeModernReplayVulkan(plan, 4, features).accepted());
+}
+
+TEST(GpuModernReplayVulkanBakeTest,
+     OriginalMeshBakesGpuReferencesWithoutChangingCompactVertexAbi) {
+  auto packet = precisePacket(1, true);
+  packet.originalMesh.emplace();
+  packet.originalMesh->pointBytes = {128, 176, 224, 272};
+  packet.originalMesh->projection = {320, 160, 112, 1};
+  packet.originalMesh->viewRows[0] = {1, 0, 0, 30};
+  const auto result =
+      bakeModernReplayVulkan(makePlan(packet), 4, feedbackFeatures());
+  ASSERT_TRUE(result.accepted());
+  const auto &draw =
+      std::get<VulkanReplayBakedDraw>(result.batch.commands[0].payload);
+  EXPECT_EQ(draw.segments[0].uniforms.mgsPointBytes,
+            packet.originalMesh->pointBytes);
+  EXPECT_EQ(draw.segments[0].uniforms.mgsViewRows,
+            packet.originalMesh->viewRows);
+  for (unsigned i = 0; i < 6; ++i)
+    EXPECT_FLOAT_EQ(result.batch.vertices[i].positionNative[0],
+                    float(packet.triangleIndices[i]));
+  EXPECT_EQ(sizeof(vulkan_abi::Vertex), 32u);
+}
+
+TEST(GpuModernReplayVulkanBakeTest, PaintRunsKeepHolesRowsAndNativeWords) {
+  auto paint = paintPixels();
+  paint.blend.enabled = false;
+  paint.blend.texturedStpOnly = false;
+  paint.mask.forceMaskBit = false;
+  auto pixel = paint.pixels[0];
+  pixel.nativeColor = 0x1f;
+  pixel.sourceMaskBit = false;
+  pixel.destination = {10, 20};
+  paint.pixels = {pixel};
+  pixel.destination.x = 11;
+  paint.pixels.push_back(pixel);
+  pixel.destination.x = 13;
+  paint.pixels.push_back(pixel);
+  pixel.destination = {10, 21};
+  paint.pixels.push_back(pixel);
+  auto features = feedbackFeatures();
+  features.allowPaintPixels = true;
+  auto result = bakeModernReplayVulkan(makePlan(paint), 4, features);
+  ASSERT_TRUE(result.accepted());
+  // Three runs: [10,11], [13], then a new row at [10].
+  EXPECT_EQ(result.batch.vertices.size(), 9u);
+  const auto &upload =
+      std::get<VulkanReplayBakedNativeUpload>(result.batch.commands[0].payload);
+  EXPECT_EQ(upload.destination.width, 2u);
+  EXPECT_EQ(upload.pixelCount, 2u);
+  const auto &draw =
+      std::get<VulkanReplayBakedDraw>(result.batch.commands[1].payload);
+  EXPECT_EQ(draw.scissor.width, 8u);
+  EXPECT_EQ(draw.scissor.height, 4u);
+  EXPECT_EQ(result.batch.nativeUploadPixels[0], 0x1fu);
+  EXPECT_EQ(result.batch.nativeUploadPixels[1], 0x1fu);
+  paint.blend.enabled = true;
+  paint.pixels[1].nativeColor = 0x03e0;
+  result = bakeModernReplayVulkan(makePlan(paint), 4, features);
+  ASSERT_TRUE(result.accepted());
+  EXPECT_EQ(result.batch.vertices.size(), 9u);
+  EXPECT_EQ(result.batch.nativeUploadPixels[0], 0x1fu);
+  EXPECT_EQ(result.batch.nativeUploadPixels[1], 0x03e0u);
+}

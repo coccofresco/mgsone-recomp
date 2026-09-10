@@ -5,7 +5,7 @@
 
 namespace ps1::gpu {
 // Device-local lifetime is independent of the swapchain, stage and savestate.
-// This owns storage only. Draw ownership belongs to the future MGS scene adapter.
+// This owns storage only. Draw ownership belongs to the MGS scene adapter.
 class MgsAssetGpuCache {
 public:
   static std::unique_ptr<MgsAssetGpuCache> upload(VkPhysicalDevice physical,

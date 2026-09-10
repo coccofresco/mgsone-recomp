@@ -409,6 +409,9 @@ firstLiveGeometryCapabilities(const RendererOptions &options) {
       replay::replayCapabilityBit(replay::ReplayCapability::DepthInvalidate) |
       replay::replayCapabilityBit(
           replay::ReplayCapability::DepthTestWriteLessEqual);
+  if (games::mgs::active())
+    capabilities |= replay::replayCapabilityBit(
+        replay::ReplayCapability::FallbackMissingPrecision);
   return capabilities;
 }
 
@@ -6379,6 +6382,10 @@ struct RendererVulkan::Impl {
       // its device-local raw-scene cache only after that slot's fence has
       // completed and before the corresponding command buffer is recorded.
       bufferInfos[2] = bufferInfos[1];
+      if (mgsAssetCache) {
+        bufferInfos[2].buffer = mgsAssetCache->buffer();
+        bufferInfos[2].range = mgsAssetCache->assets().bytes().size();
+      }
       std::array<VkWriteDescriptorSet, 3> writes{};
       writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       writes[0].dstSet = resources.uniformDescriptorSets[index];
@@ -18142,6 +18149,70 @@ struct RendererVulkan::Impl {
     return midpoint;
   }
 
+  bool growReplayUpload(uint32_t frameIndex, VkDeviceSize required) {
+    auto &upload = replayGeometryResources.uploads[frameIndex];
+    if (required <= upload.size)
+      return true;
+    VkPhysicalDeviceProperties properties{};
+    vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+    const VkDeviceSize limit = properties.limits.maxStorageBufferRange;
+    if (required > limit || required > UINT32_MAX)
+      return false;
+    VkDeviceSize capacity = upload.size;
+    while (capacity < required)
+      capacity = std::min(limit, capacity * 2);
+    BufferResource replacement;
+    try {
+      createBuffer(capacity,
+                   VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                       VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+                       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
+                       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                   replacement.buffer, replacement.memory);
+      replacement.size = capacity;
+      requireVulkan(vkMapMemory(device, replacement.memory, 0, capacity, 0,
+                                &replacement.mapped),
+                    "vkMapMemory(grown replay upload)");
+    } catch (...) {
+      destroyBufferResource(replacement);
+      throw;
+    }
+    // This frame slot's fence has completed before prepare. Other slots keep
+    // their buffers/descriptors until their own completion; no queue idle.
+    std::array<VkDescriptorBufferInfo, 3> infos{
+        {{replacement.buffer, 0, sizeof(replay::vulkan_abi::DrawUniforms)},
+         {replacement.buffer, 0, capacity},
+         {replacement.buffer, 0, capacity}}};
+    const auto &raw =
+        replayGeometryResources.crash3RawScenes[frameIndex].storage;
+    if (mgsAssetCache)
+      infos[2] = {mgsAssetCache->buffer(), 0,
+                  mgsAssetCache->assets().bytes().size()};
+    else if (raw.buffer)
+      infos[2] = {raw.buffer, 0, raw.size};
+    std::array<VkWriteDescriptorSet, 3> writes{};
+    for (uint32_t i = 0; i < 3; ++i) {
+      writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      writes[i].dstSet =
+          replayGeometryResources.uniformDescriptorSets[frameIndex];
+      writes[i].dstBinding = i;
+      writes[i].descriptorCount = 1;
+      writes[i].descriptorType = i == 0
+                                     ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
+                                     : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      writes[i].pBufferInfo = &infos[i];
+    }
+    vkUpdateDescriptorSets(device, writes.size(), writes.data(), 0, nullptr);
+    destroyBufferResource(upload);
+    upload = replacement;
+    ps1::metrics::count("host.renderer.replay_upload.growths");
+    ps1::metrics::setState("host.renderer.replay_upload.capacity_bytes",
+                           capacity);
+    return true;
+  }
+
   std::optional<PreparedReplayGeometry> prepareReplayGeometryUpload(
       const replay::VulkanReplayBakedBatch &batch, uint32_t frameIndex,
       const Crash3ResidentSupplement *supplement,
@@ -19894,7 +19965,7 @@ struct RendererVulkan::Impl {
     }
     const VkDeviceSize totalBytes = nativeUploadBase + nativeUploadBytes;
     BufferResource &upload = replayGeometryResources.uploads[frameIndex];
-    if (totalBytes > upload.size || totalBytes > UINT32_MAX)
+    if (!growReplayUpload(frameIndex, totalBytes))
       return std::nullopt;
 
     auto *destination = static_cast<std::byte *>(upload.mapped);
@@ -21577,7 +21648,8 @@ struct RendererVulkan::Impl {
         mgsAssetCache = MgsAssetGpuCache::upload(physicalDevice, device,
             graphicsQueue, commandPool, games::mgs::AssetCache::load(cachePath),
             environmentSwitchEnabled("PS1_MGS_ASSET_VERIFY"));
-        if (environmentSwitchEnabled("PS1_MGS_SCENE_CAPTURE"))
+        if (environmentSwitchEnabled("PS1_MGS_SCENE_CAPTURE") ||
+            environmentSwitchEnabled("PS1_MGS_MESH_REPLAY"))
           games::mgs::setSceneAssetCache(&mgsAssetCache->assets());
       }
     }
@@ -21784,7 +21856,9 @@ struct RendererVulkan::Impl {
       schedulerConfig.nearClipMode =
           options.pgxpNearClip ? replay::ReplayNearClipMode::GeometricClip
                                : replay::ReplayNearClipMode::Saturate;
-      schedulerConfig.requireFullPrecisionCoverage = true;
+      // MGS mixes certified original geometry with explicitly supported native
+      // projection fallbacks. Their lack of precision remains in the IR.
+      schedulerConfig.requireFullPrecisionCoverage = !games::mgs::active();
       // The exact strong latch and authoritative native snapshot can retire a
       // visually incomplete capture without wedging the non-dropping FIFO.
       // Strict M1 remains fail-closed; only the whole prefix is reanchored.
@@ -26812,7 +26886,8 @@ struct RendererVulkan::Impl {
                     .allowCopyRectScratch =
                         supportsFirstLiveGeometryProfile(options),
                     .allowPaintPixels =
-                        supportsFirstLiveGeometryProfile(options)});
+                        supportsFirstLiveGeometryProfile(options),
+                    .allowNativeProjectionFallback = games::mgs::active()});
           }();
           if (!baked.accepted()) {
             ps1::metrics::setState(
@@ -27870,6 +27945,17 @@ struct RendererVulkan::Impl {
                     "vkQueueSubmit");
     }
     if (preparedReplayGeometry.has_value() && replayBatch.has_value()) {
+      if (games::mgs::active()) {
+        uint64_t originals = 0;
+        for (const auto &command : replayBatch->commands) {
+          const auto *draw =
+              std::get_if<replay::VulkanReplayBakedDraw>(&command.payload);
+          if (draw && draw->segmentCount &&
+              draw->segments[0].uniforms.mgsProjection[3] != 0.0f)
+            ++originals;
+        }
+        ps1::metrics::count("mgs.mesh.gpu_submitted_packets", originals);
+      }
       commitCrash3RawSceneUpload(*preparedReplayGeometry, currentFrame);
     }
     frame.gpuTimingPending =

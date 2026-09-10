@@ -1289,3 +1289,84 @@ TEST(GpuModernReplayVulkanDepthTest,
   ps1::metrics::reset();
   ps1::metrics::setEnabledForTesting(false);
 }
+
+TEST(GpuModernReplayVulkanDepthTest,
+     OptInGpuPaintRunsPreserveOpaqueBlendedPixelsAndHoles) {
+  if (!std::getenv("PS1_RUN_VULKAN_INTEGRATION"))
+    GTEST_SKIP();
+  ScopedEnvironment readback("PS1_VULKAN_REPLAY_READBACK", "all");
+  ScopedEnvironment from("PS1_VULKAN_REPLAY_READBACK_FRAME_FROM", "2");
+  ScopedEnvironment to("PS1_VULKAN_REPLAY_READBACK_FRAME_TO", "3");
+  ScopedEnvironment region("PS1_VULKAN_REPLAY_READBACK_REGION", "32,0,16,16");
+  metrics::reset();
+  metrics::setEnabledForTesting(true);
+  GPU gpu;
+  configureVulkanNativeOracle(gpu, true);
+  RendererOptions options;
+  options.internalScale = 4;
+  options.pgxp = true;
+  options.trueDepth = true;
+  options.trueDepthMode = "hybrid";
+  options.trueColor = true;
+  RendererVulkan renderer(gpu, options);
+  ASSERT_TRUE(
+      renderer.init("Opaque paint runs GPU oracle", 320, 240, false, false));
+  gpu.writeGP1(0x03000000u);
+  gpu.writeGP1(0x05000000u);
+  gpu.snapshotDisplayBuffer(1);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  gpu.writeGP0(0xE3000000u);
+  gpu.writeGP0(0xE4000000u | 1023u | (511u << 10));
+  gpu.writeGP0(0xE5000000u);
+  gpu.writeGP0(0xE6000000u);
+  for (const auto [x, width] :
+       std::array<std::pair<uint32_t, uint32_t>, 2>{{{32, 5}, {39, 9}}}) {
+    gpu.writeGP0(0x600000ffu);
+    gpu.writeGP0(x);
+    gpu.writeGP0(width | (16u << 16));
+  }
+  gpu.snapshotDisplayBuffer(2);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  std::array<Color32, 16> colors{};
+  colors.fill({255, 0, 0, 255});
+  colors[5] = colors[6] = {0, 0, 0, 255};
+  const std::array<uint8_t, 16> masks{};
+  const auto expected = diagnosticReportForNativeSamples(colors, masks);
+  ASSERT_TRUE(expected.captured());
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_rgba8_hash"),
+            metricHash(expected.actual.rgba8));
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_mask_hash"),
+            metricHash(expected.actual.maskR8));
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_depth_hash"),
+            metricHash(expected.actual.depthD32));
+  // A uniform translucent source has different final native words over
+  // the red bands and black hole, but may still be grouped horizontally.
+  gpu.writeGP0(0xE1000000u);
+  gpu.writeGP0(0x62006400u);
+  gpu.writeGP0(32u);
+  gpu.writeGP0(16u | (16u << 16));
+  gpu.snapshotDisplayBuffer(3);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  colors.fill({127, 50, 0, 255});
+  colors[5] = colors[6] = {0, 50, 0, 255};
+  const auto blended = diagnosticReportForNativeSamples(colors, masks);
+  ASSERT_TRUE(blended.captured());
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_rgba8_hash"),
+            metricHash(blended.actual.rgba8));
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_mask_hash"),
+            metricHash(blended.actual.maskR8));
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_depth_hash"),
+            metricHash(blended.actual.depthD32));
+  renderer.destroy();
+  metrics::reset();
+  metrics::setEnabledForTesting(false);
+}

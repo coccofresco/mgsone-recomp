@@ -858,7 +858,15 @@ VulkanReplayBakeReason validateDraw(const ReplayExecutionOperation &item,
     return VulkanReplayBakeReason::DestinationMaskReadDisabled;
   }
 
-  if (packet.fallbackReason != PacketFallbackReason::None ||
+  const bool nativeFallback =
+      features.allowNativeProjectionFallback &&
+      packet.route == PacketRoute::Projected3D && packet.validMask == 0 &&
+      packet.fallbackReason ==
+          PacketFallbackReason::MissingPrecisionPacketAtomic &&
+      !packet.originalMesh && !packet.state.depth.testEnabled &&
+      !packet.state.depth.writeEnabled;
+  if ((!nativeFallback &&
+       packet.fallbackReason != PacketFallbackReason::None) ||
       (packet.textured && packet.state.texturePage.textureDisable) ||
       (!packet.textured && packet.rawTexture) ||
       packet.state.blend.texturedStpOnly !=
@@ -980,7 +988,7 @@ VulkanReplayBakeReason validateDraw(const ReplayExecutionOperation &item,
   const uint8_t fullMask =
       static_cast<uint8_t>((1u << packet.vertexCount) - 1u);
   if (packet.route == PacketRoute::Projected3D) {
-    if (packet.validMask != fullMask)
+    if (!nativeFallback && packet.validMask != fullMask)
       return VulkanReplayBakeReason::IncompletePrecisionProvenance;
   } else if (packet.validMask != 0) {
     return VulkanReplayBakeReason::IncompletePrecisionProvenance;
@@ -1006,7 +1014,7 @@ VulkanReplayBakeReason validateDraw(const ReplayExecutionOperation &item,
     const ReplayVertex &vertex = packet.vertices[vertexIndex];
     if (vertex.coordinateSpace !=
             ReplayVertex::CoordinateSpace::PostDrawOffsetNativePixels ||
-        vertex.reconciledX || vertex.reconciledY) {
+        (!nativeFallback && (vertex.reconciledX || vertex.reconciledY))) {
       return VulkanReplayBakeReason::IncompletePrecisionProvenance;
     }
     if (!vulkan_abi::tryNormalizeProjectiveWDepth(vertex.w).has_value())
@@ -1016,7 +1024,12 @@ VulkanReplayBakeReason validateDraw(const ReplayExecutionOperation &item,
         !std::isfinite(vertex.rawDepth) || !std::isfinite(vertex.nearDepth)) {
       return VulkanReplayBakeReason::NonFiniteVertexAttribute;
     }
-    if (packet.route == PacketRoute::Projected3D) {
+    if (nativeFallback) {
+      if (vertex.x != vertex.nativeX || vertex.y != vertex.nativeY ||
+          vertex.w != CRASH_REPLAY_FALLBACK_W || vertex.preciseXY ||
+          vertex.preciseX || vertex.preciseY)
+        return VulkanReplayBakeReason::IncompletePrecisionProvenance;
+    } else if (packet.route == PacketRoute::Projected3D) {
       if (!vertex.preciseXY || !vertex.preciseX || !vertex.preciseY ||
           !vertex.rawDepthValid || vertex.inventedW ||
           (packet.textured && !vertex.preciseUV)) {
@@ -1099,6 +1112,11 @@ vulkan_abi::DrawUniforms drawUniforms(const DrawPacket &packet) noexcept {
   // Opaque/no-check-mask draws never need a destination snapshot.  Keeping
   // the binding coordinates zeroed makes accidental feedback use detectable.
   uniforms.destinationState = {};
+  if (packet.originalMesh) {
+    uniforms.mgsViewRows = packet.originalMesh->viewRows;
+    uniforms.mgsPointBytes = packet.originalMesh->pointBytes;
+    uniforms.mgsProjection = packet.originalMesh->projection;
+  }
   return uniforms;
 }
 
@@ -1287,26 +1305,27 @@ VulkanReplayBakedNativeUpload bakeNativeUpload(const NativeTileUpload &upload,
 }
 
 VulkanReplayBakedNativeUpload
-bakePaintPixelNativeUpload(const PaintedPixel &pixel,
-                           std::size_t firstPixel) noexcept {
+bakePaintPixelNativeUpload(const PaintedPixel &pixel, std::size_t firstPixel,
+                           uint32_t width = 1) noexcept {
   VulkanReplayBakedNativeUpload baked;
   baked.destination =
-      NativeRect{pixel.destination.x, pixel.destination.y, 1u, 1u};
+      NativeRect{pixel.destination.x, pixel.destination.y, width, 1u};
   baked.firstPixel = firstPixel;
-  baked.pixelCount = 1u;
+  baked.pixelCount = width;
   baked.nativeRevision = 0;
   baked.regionCount = 1u;
   baked.regions[0].sourceWordOffset = firstPixel;
-  baked.regions[0].bufferRowLength = 1u;
+  baked.regions[0].bufferRowLength = width;
   baked.regions[0].bufferImageHeight = 1u;
-  baked.regions[0].destination = {
-      static_cast<uint32_t>(pixel.destination.x),
-      static_cast<uint32_t>(pixel.destination.y), 1u, 1u};
+  baked.regions[0].destination = {static_cast<uint32_t>(pixel.destination.x),
+                                  static_cast<uint32_t>(pixel.destination.y),
+                                  width, 1u};
   return baked;
 }
 
 DrawPacket makePaintPixelDraw(const PaintPixels &paint,
-                              const PaintedPixel &pixel) noexcept {
+                              const PaintedPixel &pixel,
+                              uint32_t width = 1) noexcept {
   DrawPacket packet;
   packet.opcode = 0x40u;
   packet.route = PacketRoute::Screen2D;
@@ -1319,7 +1338,7 @@ DrawPacket makePaintPixelDraw(const PaintPixels &paint,
 
   const int32_t x = pixel.destination.x;
   const int32_t y = pixel.destination.y;
-  packet.state.drawArea = DrawArea{x, y, x, y};
+  packet.state.drawArea = DrawArea{x, y, x + int32_t(width) - 1, y};
   packet.state.blend = paint.blend;
   packet.state.blend.enabled =
       paint.blend.enabled &&
@@ -1338,7 +1357,7 @@ DrawPacket makePaintPixelDraw(const PaintPixels &paint,
       std::array<int32_t, 2>{0, 2}};
   for (std::size_t index = 0; index < offsets.size(); ++index) {
     ReplayVertex &vertex = packet.vertices[index];
-    vertex.nativeX = x + offsets[index][0];
+    vertex.nativeX = x + offsets[index][0] * int32_t(width);
     vertex.nativeY = y + offsets[index][1];
     vertex.x = static_cast<double>(vertex.nativeX);
     vertex.y = static_cast<double>(vertex.nativeY);
@@ -1664,8 +1683,12 @@ bakeModernReplayVulkan(const ModernReplayExecutionPlan &plan,
                    static_cast<uint32_t>(candidate.vertices.size()),
                    firstVisibilityOwnerToken);
       for (std::size_t index = 0; index < packet.indexCount; ++index) {
-        candidate.vertices.push_back(
-            bakeVertex(packet.vertices[packet.triangleIndices[index]]));
+        candidate.vertices.push_back([&] {
+          auto v = bakeVertex(packet.vertices[packet.triangleIndices[index]]);
+          if (packet.originalMesh)
+            v.positionNative[0] = packet.triangleIndices[index];
+          return v;
+        }());
       }
       for (uint8_t triangleIndex = 0; triangleIndex < packet.indexCount / 3u;
            ++triangleIndex) {
@@ -1690,18 +1713,36 @@ bakeModernReplayVulkan(const ModernReplayExecutionPlan &plan,
     }
     case ReplayExecutionKind::PaintPixels: {
       const PaintPixels &paint = std::get<PaintPixels>(source);
-      for (const PaintedPixel &pixel : paint.pixels) {
+      for (std::size_t start = 0; start < paint.pixels.size();) {
+        const PaintedPixel &pixel = paint.pixels[start];
+        uint32_t width = 1;
+        // A run contains disjoint consecutive accepted destination pixels.
+        // Identical source color/STP may share one draw even when blending;
+        // preserve each final native word separately in the mirror upload.
+        // Holes, repeated destinations, row and source changes split runs.
+        while (start + width < paint.pixels.size()) {
+          const auto &next = paint.pixels[start + width];
+          if (next.destination.y != pixel.destination.y ||
+              next.destination.x != pixel.destination.x + int32_t(width) ||
+              next.color != pixel.color ||
+              next.sourceMaskBit != pixel.sourceMaskBit)
+            break;
+          ++width;
+        }
+        start += width;
         alignNativeUploadArena(candidate.nativeUploadPixels);
         const std::size_t firstPixel = candidate.nativeUploadPixels.size();
-        candidate.nativeUploadPixels.push_back(pixel.nativeColor);
+        for (uint32_t i = 0; i < width; ++i)
+          candidate.nativeUploadPixels.push_back(
+              paint.pixels[start - width + i].nativeColor);
 
         VulkanReplayBakedCommand nativeCommand;
         nativeCommand.sourceOrdinal = item.ordinal;
         nativeCommand.payload =
-            bakePaintPixelNativeUpload(pixel, firstPixel);
+            bakePaintPixelNativeUpload(pixel, firstPixel, width);
         candidate.commands.push_back(std::move(nativeCommand));
 
-        const DrawPacket packet = makePaintPixelDraw(paint, pixel);
+        const DrawPacket packet = makePaintPixelDraw(paint, pixel, width);
         const uint32_t firstVisibilityOwnerToken =
             static_cast<uint32_t>(candidate.visibilityOwners.size() + 1u);
         VulkanReplayBakedCommand drawCommand;

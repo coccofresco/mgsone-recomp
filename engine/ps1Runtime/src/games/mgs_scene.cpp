@@ -1,6 +1,7 @@
 #include "runtime/games/mgs_scene.h"
-#include "runtime/games/mgs_profile.h"
 #include "runtime/cpu_context.h"
+#include "runtime/games/mgs_mesh_replay.h"
+#include "runtime/games/mgs_profile.h"
 #include "runtime/memory.h"
 #include "runtime/metrics.h"
 #include "runtime/psyq/psyq_state.h"
@@ -124,8 +125,16 @@ uint32_t matchOriginalDefinition(const AssetCache &cache, const Memory &memory, 
   }
   return found;
 }
-void setSceneAssetCache(const AssetCache *cache) { assets = cache; resetSceneCapture(); }
-void resetSceneCapture() { std::lock_guard lock(snapshotMutex); latest.reset(); }
+void setSceneAssetCache(const AssetCache *cache) {
+  assets = cache;
+  setMeshReplayCache(cache);
+  resetSceneCapture();
+}
+void resetSceneCapture() {
+  std::lock_guard lock(snapshotMutex);
+  latest.reset();
+  resetMeshReplay();
+}
 std::shared_ptr<const SceneSnapshot> latestSceneSnapshot() {
   std::lock_guard lock(snapshotMutex); return latest;
 }

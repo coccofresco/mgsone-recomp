@@ -37,6 +37,9 @@ struct VulkanReplayBakeFeatures {
   // one-pixel Screen2D draws plus exact R16 mirror uploads.  Keep the command
   // family opt-in even when all of those lower-level paths are available.
   bool allowPaintPixels = false;
+  // Explicit coexistence with original screen-coordinate polygons. These
+  // retain packet-atomic W and painter ordering, without claiming precision.
+  bool allowNativeProjectionFallback = false;
 };
 
 struct VulkanReplayBakedRect {

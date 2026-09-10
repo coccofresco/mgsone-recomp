@@ -37,9 +37,12 @@ Gli strumenti di audit sono in `scripts/mgs_assets.py`; gli asset estratti e
 l'esempio di geometria originale sono in `data/`, esclusi da Git.
 La [cache Vulkan USA](docs/mgs-vulkan-cache.md) è implementata: circa 90 MiB
 residenti con geometrie KMD/ZMD e texture PCX originali dei due CD. La cattura
-opzionale acquisisce camera e istanze prima del culling. La sostituzione visiva
-delle mesh, la risoluzione dei materiali e la selezione dei LOD restano da
-completare: attualmente lo schermo continua a usare la presentazione originale.
+acquisisce camera e istanze prima del culling. La [prima sostituzione delle
+mesh](docs/mgs-original-mesh-replay.md) è disponibile in modalità sperimentale:
+`PS1_MGS_MESH_REPLAY=1 scripts/run_native.sh`. Vulkan legge i vertici dalla cache
+e li proietta in float, mantenendo materiali, HUD ed effetti del gioco. Il
+percorso predefinito resta quello originale; prestazioni, geometrie dinamiche,
+materiali indipendenti dalla VRAM e LOD richiedono ulteriore lavoro.
 
 ## Base riutilizzata
 

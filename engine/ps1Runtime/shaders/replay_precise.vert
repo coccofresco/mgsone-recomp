@@ -42,7 +42,11 @@ layout(set = 1, binding = 0, std140) uniform CrashReplayDrawState {
   uvec4 texture_window;
   // xy=scratch snapshot origin in scaled target pixels, zw=snapshot extent.
   uvec4 destination_state;
+  vec4 mgs_view_rows[12];
+  uvec4 mgs_point_bytes;
+  vec4 mgs_projection;
 } u_draw;
+#include "games/mgs_original_mesh.glsl"
 
 // Presentation correction is independent from the D32 occlusion hypothesis.
 // Remapping only depth values, rather than homogeneous X/Y/W, makes screen
@@ -72,7 +76,8 @@ const float MAX_PRESENTED_SURFACE_DEPTH = 0.999999940395355224609375;
 invariant gl_Position;
 
 void main() {
-  const float w = a_projective_w;
+  const vec3 original = mgs_original_position(a_position_native, a_projective_w);
+  const float w = original.z;
   const float occlusion_w =
       w * uintBitsToFloat(u_presentation.occlusion_multiplier_bits) +
       uintBitsToFloat(u_presentation.occlusion_bias_bits);
@@ -80,7 +85,7 @@ void main() {
       w * uintBitsToFloat(u_presentation.surface_multiplier_bits) +
       uintBitsToFloat(u_presentation.surface_bias_bits);
   const vec2 ndc =
-      a_position_native * u_draw.position_scale_bias.xy +
+      original.xy * u_draw.position_scale_bias.xy +
       u_draw.position_scale_bias.zw;
 
   // Vertex Z supplies homogeneous clipping only. The fragment shader computes

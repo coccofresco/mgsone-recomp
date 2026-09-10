@@ -144,7 +144,7 @@ def build(discs, output):
         other_resource_occurrences=dict(ignored),
         lod_policy='retain every distinct source variant; no unverified cross-asset replacement',
         lod_families=[],
-        runtime_status='GPU storage only; no draw replacement until scene/material provenance is certified')
+        runtime_status='Immutable GPU storage; optional native-scene bridge replaces certified geometry, retaining runtime materials')
     output.mkdir(parents=True, exist_ok=True)
     temp = output / 'assets.mgsc.tmp'
     temp.write_bytes(binary)

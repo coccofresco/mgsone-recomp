@@ -2,9 +2,9 @@
 
 Stato verificato il 10 settembre 2026: estrazione completa di KMD/ZMD/PCX dagli
 archivi STAGE.DIR dei due CD USA v1.0, cache immutabile caricata nella memoria
-Vulkan e cattura della scena nativa prima del culling. **Non è ancora attiva la
-sostituzione del rendering delle mesh.** La simulazione e il percorso grafico
-originale continuano a funzionare.
+Vulkan e cattura della scena nativa prima del culling. È ora disponibile anche
+la [sostituzione sperimentale delle mesh](mgs-original-mesh-replay.md). La
+simulazione e il calcolo grafico originale continuano a funzionare.
 
 ## Costruzione e utilizzo
 
@@ -71,8 +71,8 @@ il dispositivo, la coda e il pool del renderer ereditato, un buffer device-local
 con uso storage/transfer e uno staging temporaneo. Il buffer resta residente
 attraverso frame, ricreazione swapchain e caricamento savestate. Il dispositivo
 deve supportare una storage-buffer range almeno pari alla cache; non è ancora
-implementata la suddivisione su più buffer. Non ci sono shader MGS che disegnano
-questi record in questa prima integrazione.
+implementata la suddivisione su più buffer. Lo shader MGS opzionale legge direttamente questi record; l'adattatore di
+scena ne certifica la corrispondenza con i pacchetti da sostituire.
 
 ## Cattura della scena USA
 
@@ -92,8 +92,8 @@ il loader, ma è ancora diagnostica e non ottimizzata per l'uso finale.
 Sul checkpoint locale del molo sono stati osservati 27 oggetti, 22 semanticamente
 visibili, 295 parti e 19 oggetti associati con certezza. Gli otto restanti sono
 **non certificati**, senza dedurre se la causa sia deformazione, variante o
-modifica runtime. Nessuno di questi risultati autorizza ancora la soppressione
-dei pacchetti originali.
+modifica runtime. La modalità di sola cattura non sopprime pacchetti. La nuova modalità mesh
+verifica anche posa e provenienza dei pacchetti prima di sostituirli.
 
 ## Verifiche riproducibili
 
@@ -113,8 +113,7 @@ in `.local/` e `data/native/asset-cache/`; non includiamo gli asset originali in
 Il test di invarianza è sintetico; non costituisce ancora un confronto completo
 di gameplay con una presentazione sostitutiva.
 
-Restano da implementare risoluzione dei materiali e palette correnti,
-deformazioni, trasformazioni degli extend/seam, sincronizzazione snapshot/frame,
-disegno Vulkan e composizione di HUD/effetti con soppressione dei soli draw
-certificati. Il [contratto di presentazione](mgs-vulkan-presentation.md) descrive
+Il passo successivo ha implementato trasformazioni extend/seam, cattura per
+buffer e disegno Vulkan dei pacchetti certificati. Restano materiali autonomi,
+deformazioni, ampliamento della geometria oltre i pacchetti originali e LOD. Il [contratto di presentazione](mgs-vulkan-presentation.md) descrive
 questi passaggi e i criteri di verifica.

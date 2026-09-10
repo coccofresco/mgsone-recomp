@@ -37,7 +37,8 @@ tryNormalizeProjectiveWDepth(double projectiveW) noexcept {
 }
 
 // Must remain byte-for-byte identical to CrashReplayDrawState in
-// replay_precise.vert/frag (std140: six 16-byte vectors).
+// replay_precise.vert/frag. The six-vector prefix remains compatible with
+// existing fragment/Crash shaders; the appended fields are MGS vertex state.
 struct alignas(16) DrawUniforms {
   std::array<float, 4> positionScaleBias{};
   std::array<float, 4> depthScaleBias{};
@@ -45,6 +46,9 @@ struct alignas(16) DrawUniforms {
   std::array<uint32_t, 4> textureState{};
   std::array<uint32_t, 4> textureWindow{};
   std::array<uint32_t, 4> destinationState{};
+  std::array<std::array<float, 4>, 12> mgsViewRows{};
+  std::array<uint32_t, 4> mgsPointBytes{};
+  std::array<float, 4> mgsProjection{};
 };
 
 // Binding offsets for replay_precise.vert:
@@ -334,7 +338,10 @@ struct alignas(16) VisibilityStackRecord {
 static_assert(std::is_standard_layout_v<DrawUniforms>);
 static_assert(std::is_trivially_copyable_v<DrawUniforms>);
 static_assert(alignof(DrawUniforms) == 16);
-static_assert(sizeof(DrawUniforms) == 96);
+static_assert(sizeof(DrawUniforms) == 320);
+static_assert(offsetof(DrawUniforms, mgsViewRows) == 96);
+static_assert(offsetof(DrawUniforms, mgsPointBytes) == 288);
+static_assert(offsetof(DrawUniforms, mgsProjection) == 304);
 static_assert(offsetof(DrawUniforms, positionScaleBias) == 0);
 static_assert(offsetof(DrawUniforms, depthScaleBias) == 16);
 static_assert(offsetof(DrawUniforms, uvDomain) == 32);

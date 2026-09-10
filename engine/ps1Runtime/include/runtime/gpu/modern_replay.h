@@ -8,6 +8,7 @@
 #include <deque>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <span>
 #include <string_view>
 #include <variant>
@@ -465,6 +466,16 @@ constexpr uint32_t replayDrawFlagBit(ReplayDrawFlag flag) {
   return static_cast<uint32_t>(flag);
 }
 
+// Original-asset geometry consumed by the MGS Vulkan bridge. Offsets address
+// the immutable storage buffer in bytes; bit 31 selects signed packed i16 XYZ.
+// Per-corner transforms also represent rigid parent seams without skin weights.
+struct OriginalMeshGeometry {
+  std::array<uint32_t, 4> pointBytes{};
+  std::array<std::array<float, 4>, 12> viewRows{};
+  std::array<float, 4> projection{};
+  bool operator==(const OriginalMeshGeometry &) const = default;
+};
+
 struct DrawPacket {
   static constexpr std::size_t MAX_VERTICES = 4;
   static constexpr std::size_t MAX_INDICES = 6;
@@ -491,6 +502,7 @@ struct DrawPacket {
   bool textured = false;
   bool gouraud = false;
   bool rawTexture = false;
+  std::optional<OriginalMeshGeometry> originalMesh;
 
   bool operator==(const DrawPacket &) const = default;
 };
