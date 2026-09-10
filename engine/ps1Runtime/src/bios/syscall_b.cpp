@@ -134,16 +134,12 @@ void Bios::handleB0(uint32_t index) {
   case 0x34: // read
     ctx_.r[V0] = fileIo_.read(ctx_.r[A0], ctx_.r[A1], ctx_.r[A2]);
     break;
-  case 0x35: // write -- stub (stdout)
-    BIOS_LOG("[BIOS] write(fd: {}, src: 0x{:08X}, len: {}) [STUB]\n",
-               ctx_.r[A0], ctx_.r[A1], ctx_.r[A2]);
-    if (ctx_.r[A0] == 1) { // stdout
-      for (uint32_t i = 0; i < ctx_.r[A2]; i++) {
-        char c = ctx_.mem->read8(ctx_.r[A1] + i);
-        fmt::print("{}", c);
-      }
-    }
-    ctx_.r[V0] = ctx_.r[A2];
+  case 0x35: // write
+    if (ctx_.r[A0] == 1 || ctx_.r[A0] == 2) {
+      for (uint32_t i = 0; i < ctx_.r[A2]; ++i)
+        fmt::print("{}", static_cast<char>(ctx_.mem->read8(ctx_.r[A1] + i)));
+      ctx_.r[V0] = ctx_.r[A2];
+    } else ctx_.r[V0] = fileIo_.write(ctx_.r[A0], ctx_.r[A1], ctx_.r[A2]);
     break;
   case 0x36: // close
     ctx_.r[V0] = fileIo_.close(ctx_.r[A0]);
@@ -190,7 +186,7 @@ void Bios::handleB0(uint32_t index) {
     }
     ctx_.r[V0] = 1;
     if (!input_ || !input_->getMemoryCard(slot).isPresent()) {
-      eventSystem_.triggerEvent(0xF0000011u, 0x0100u);
+      cardEvents_.push({0xF0000011u, 0x0100u});
       break;
     }
     auto& card = input_->getMemoryCard(slot);
@@ -200,9 +196,15 @@ void Bios::handleB0(uint32_t index) {
       if (index == 0x4E) state.data[offset] = ctx_.mem->read8(ctx_.r[A2] + i);
       else ctx_.mem->write8(ctx_.r[A2] + i, state.data[offset]);
     }
-    if (index == 0x4E) card.restore(state);
+    bool success = true;
+    if (index == 0x4E) {
+      const auto old = card.snapshot();
+      card.restore(state);
+      success = card.flush();
+      if (!success) card.restore(old);
+    }
     // Event callbacks run later at a cooperative boundary, after submission.
-    eventSystem_.triggerEvent(0xF0000011u, 0x0004u);
+    cardEvents_.push({0xF0000011u, success ? 0x0004u : 0x8000u});
     break;
   }
   case 0x56: // GetC0Table -- return pointer to C0 jump table
@@ -213,14 +215,17 @@ void Bios::handleB0(uint32_t index) {
     BIOS_LOG("[BIOS] GetB0Table() -> 0x{:08X}\n", 0x801FFE00u);
     ctx_.r[V0] = 0x801FFE00u;
     break;
-  case 0x42: // B0:42 -- internal PsyQ CdInit verification (SetConf/cdioctl-like)
-    // Called by CdInit after 2 rounds of _96_CdInitSubFunc+testEvent+GetStat.
-    // Return value: 1 = success (CdInit succeeds), 0 = failure (enters 5-retry
-    // hardware loop then prints "CdInit: Init failed").
-    // Returning 1 here skips the retry loop and lets CdInit succeed.
-    BIOS_LOG("[BIOS] B0:42 [STUB] (a0=0x{:08X}, a1=0x{:08X}, a2={})\n",
-               ctx_.r[A0], ctx_.r[A1], ctx_.r[A2]);
-    ctx_.r[V0] = 1; // success -- skip retry loop
+  case 0x41: // format(device)
+    ctx_.r[V0] = fileIo_.format(readString(*ctx_.mem, ctx_.r[A0])) ? 1 : 0;
+    break;
+  case 0x42: // firstfile(name, DIRENTRY*)
+    ctx_.r[V0] = fileIo_.firstFile(readString(*ctx_.mem, ctx_.r[A0]), ctx_.r[A1]);
+    break;
+  case 0x43: // nextfile(DIRENTRY*)
+    ctx_.r[V0] = fileIo_.nextFile(ctx_.r[A0]);
+    break;
+  case 0x45: // erase
+    ctx_.r[V0] = fileIo_.erase(readString(*ctx_.mem, ctx_.r[A0])) ? 1 : 0;
     break;
   case 0x5B: // ChangeClearPad
     BIOS_LOG("[BIOS] ChangeClearPad({}) [STUB]\n", ctx_.r[A0]);

@@ -285,3 +285,17 @@ TEST_F(PsyqPadTest, AnalogDirectBufferIncludesAxesAndModeId) {
   hle_libetc_PadGetState(&ctx);
   EXPECT_EQ(ctx.r[V0], 6u);
 }
+
+TEST_F(PsyqPadTest, SecondPortUsesSdkPort10AndFirstPortIsIndependent) {
+  input.setPadType(0, input::PadType::None);
+  input.setPadType(1, input::PadType::Analog);
+  ctx.r[A0] = 0x10;
+  hle_libetc_PadGetState(&ctx);
+  EXPECT_EQ(ctx.r[V0], 6u);
+  ctx.r[A1] = 1;
+  hle_libpad_PadInfoMode(&ctx);
+  EXPECT_EQ(ctx.r[V0], 7u);
+  ctx.r[A0] = 0;
+  hle_libetc_PadGetState(&ctx);
+  EXPECT_EQ(ctx.r[V0], 0u);
+}

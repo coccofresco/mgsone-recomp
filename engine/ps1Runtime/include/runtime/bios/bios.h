@@ -78,7 +78,7 @@ public:
 
   // Hardware attachment (call after construction)
   void setGPU(gpu::GPU *gpu) { gpu_ = gpu; }
-  void setInputController(input::InputController *input) { input_ = input; }
+  void setInputController(input::InputController *input) { input_ = input; fileIo_.setInputController(input); }
   void setCdromController(cdrom::CdromController *cdrom) { cdrom_ = cdrom; }
   void setDma(::ps1::DMA *dma) { dma_ = dma; }
 
@@ -258,6 +258,7 @@ private:
   std::atomic<bool> customExceptionRegistered_{false};
   uint32_t customExceptionBuffer_ = 0;
 
+  std::queue<std::pair<uint32_t, uint32_t>> cardEvents_;
   KernelThreads kernelThreads_{ctx_};
   uint32_t kernelHeapNext_ = 0;
   uint32_t kernelHeapEnd_ = 0;

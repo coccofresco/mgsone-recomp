@@ -693,6 +693,17 @@ int main(int argc, char *argv[]) {
   input.setPadType(0, runtimeConfig.input.enableAnalog
                           ? ps1::input::PadType::Analog
                           : ps1::input::PadType::Digital);
+  const std::filesystem::path memoryCardDirectory = runtimeConfig.paths.memcardDir.empty()
+      ? std::filesystem::path("data/memory_cards") : std::filesystem::path(runtimeConfig.paths.memcardDir);
+  std::filesystem::create_directories(memoryCardDirectory);
+  for (unsigned slot = 0; slot < 2; ++slot) {
+    const auto path = memoryCardDirectory / fmt::format("card{}.mcd", slot + 1);
+    if (!input.getMemoryCard(slot).attachFile(path.string())) {
+      fmt::print(stderr, "[MemoryCard] Cannot load/create {}; existing image preserved\n", path.string());
+      return 1;
+    }
+    fmt::print("[MemoryCard] Slot {}: {}\n", slot + 1, path.string());
+  }
   ps1::input::InputScript inputScript;
   bool inputScriptEnabled = false;
   if (const char *path = std::getenv("PS1_INPUT_SCRIPT");
@@ -1098,8 +1109,11 @@ int main(int argc, char *argv[]) {
             fmt::format("quick_slot_{}.ps1s", saveStateSlot))
         .string();
   };
-  fmt::print("[Input] keyboard + SDL GameController enabled; F5 save, F9 "
-             "load, F6/F7 slot, F8 depth\n");
+  if (mgsProfile)
+    fmt::print("[Input] keyboard + SDL GameController enabled; use in-game memory-card saves; F5/F9 unavailable\n");
+  else
+    fmt::print("[Input] keyboard + SDL GameController enabled; F5 save, F9 "
+               "load, F6/F7 slot, F8 depth\n");
 
   // Initialize dispatch table before starting the game
   recomp_init_dispatch_table();
@@ -1344,6 +1358,11 @@ int main(int argc, char *argv[]) {
           break;
         } else if (event.key.keysym.sym == SDLK_ESCAPE) {
           running = false;
+        } else if (mgsProfile && event.key.repeat == 0 &&
+                   (event.key.keysym.sym == SDLK_F5 || event.key.keysym.sym == SDLK_F9)) {
+          SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "MGS - Savestate non disponibile",
+              "F5/F9 non sono ancora supportati per MGS. Nessuno stato e' stato salvato o caricato.\n"
+              "I salvataggi su memory card si effettuano dal gioco.", nullptr);
         } else if (event.key.keysym.sym == SDLK_F5 && event.key.repeat == 0) {
           const std::string path = saveStatePath();
           if (stateCoordinator.request(ps1::SaveStateCoordinator::Action::Save,
@@ -1665,17 +1684,20 @@ int main(int argc, char *argv[]) {
       gpu.snapshotDisplayBuffer(newCount);
       ps1::metrics::setTraceFrame(newCount);
 
+      if (inputScriptEnabled) inputScript.apply(newCount, input);
+      input.latchVBlank();
+      if (!mgsProfile) {
+        bios.updatePadBuffers();
+        ps1::psyq::psyq_pad_refresh_direct_buffers(&ctx);
+      }
+      // Publish only after the host input snapshot is ready. MGS copies
+      // that snapshot into guest pad buffers on its own execution thread.
       irqCtrl.raiseInterrupt(ps1::IRQ_VBLANK);
       timingState.vsyncCounter.store(newCount, std::memory_order_release);
       timingState.pendingVblanks.fetch_add(1, std::memory_order_release);
       if (vblankCounterMirror != 0)
         memory.write32(vblankCounterMirror, newCount);
       ps1::metrics::setState("timing.vblank_index", newCount);
-      if (inputScriptEnabled)
-        inputScript.apply(newCount, input);
-      input.latchVBlank();
-      bios.updatePadBuffers();
-      ps1::psyq::psyq_pad_refresh_direct_buffers(&ctx);
       ps1::metrics::count("timing.vblank");
       ps1::metrics::trace("timing.vblank", {{"index", newCount}});
       if (metricsFlushVblanks != 0 && newCount % metricsFlushVblanks == 0) {

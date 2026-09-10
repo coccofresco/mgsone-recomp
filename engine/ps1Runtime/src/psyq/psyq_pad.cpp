@@ -145,7 +145,7 @@ void hle_libetc_PadInitDirect(recomp_context *ctx) {
 //  port reports a known PadType is sufficient.  Unknown ports report
 //  Discovery so the game's "wait for stable" loops still bail out cleanly.
 void hle_libetc_PadGetState(recomp_context *ctx) {
-  int port = static_cast<int>(static_cast<int32_t>(ctx->r[A0]));
+  const int port = ctx->r[A0] == 0x10 ? 1 : (ctx->r[A0] == 0 ? 0 : -1);
   auto *input = inputOf(ctx);
   if (!input || port < 0 || port > 1) {
     ctx->r[V0] = PAD_STATE_DISCOVERY;
@@ -157,7 +157,7 @@ void hle_libetc_PadGetState(recomp_context *ctx) {
 }
 
 void hle_libpad_PadInfoMode(recomp_context *ctx) {
-  const int port = static_cast<int>(static_cast<int32_t>(ctx->r[A0]));
+  const int port = ctx->r[A0] == 0x10 ? 1 : (ctx->r[A0] == 0 ? 0 : -1);
   auto *input = inputOf(ctx);
   if (!input || port < 0 || port > 1 ||
       input->getPadType(port) == input::PadType::None) {
@@ -239,6 +239,14 @@ void psyq_register_libetc_pad() {
   psyq_register("libpad_PadInitDirectImpl", &hle_libetc_PadInitDirect);
   psyq_register("libpad_PadGetState",   &hle_libetc_PadGetState);
   psyq_register("libpad_PadInfoMode",   &hle_libpad_PadInfoMode);
+  psyq_register("libpad_PadStartCom", &hle_libetc_PadStartCom);
+  psyq_register("libpad_PadStopCom", &hle_libetc_PadStopCom);
+  // The current host exposes no actuator protocol; report zero actuators
+  // rather than letting native SIO access uninitialized SDK-private state.
+  psyq_register("libpad_PadInfoAct", +[](recomp_context* c) { c->r[V0] = 0; });
+  psyq_register("libpad_PadSetAct", +[](recomp_context* c) { c->r[V0] = 0; });
+  psyq_register("libpad_PadSetActAlign", +[](recomp_context* c) { c->r[V0] = 1; });
+  psyq_register("libpad_PadSetMainMode", +[](recomp_context* c) { c->r[V0] = 0; });
 }
 
 } // namespace ps1::psyq

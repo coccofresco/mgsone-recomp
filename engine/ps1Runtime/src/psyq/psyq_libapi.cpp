@@ -74,13 +74,9 @@ void hle_libapi_write(recomp_context *ctx)  { dispatchB(ctx, 0x35); }
 void hle_libapi_erase(recomp_context *ctx)  { dispatchB(ctx, 0x45); } // delete(filename)
 void hle_libapi_format(recomp_context *ctx) { dispatchB(ctx, 0x41); }
 void hle_libapi__bu_init(recomp_context *ctx)   { dispatchA(ctx, 0x70); }
-// PS1 BIOS table A: A0:0x42 = firstfile2, A0:0x43 = nextfile.
-// Previously dispatched to B0:0x42 (SetConf -- stub returns 1 = "ok") and
-// B0:0x43 (HookEntryInt) which silently corrupted the firstfile2 caller's
-// out-pointer with wrong values.  Game subsequently tried to read a file
-// at a garbage LBA and the CD wait loop hung pre-render.
-void hle_libapi_firstfile2(recomp_context *ctx) { dispatchA(ctx, 0x42); }
-void hle_libapi_nextfile(recomp_context *ctx)   { dispatchA(ctx, 0x43); }
+// Directory operations belong to BIOS table B (42/43).
+void hle_libapi_firstfile2(recomp_context *ctx) { dispatchB(ctx, 0x42); }
+void hle_libapi_nextfile(recomp_context *ctx)   { dispatchB(ctx, 0x43); }
 void hle_libapi__96_remove(recomp_context *ctx) { dispatchA(ctx, 0x71); }
 
 // Pad

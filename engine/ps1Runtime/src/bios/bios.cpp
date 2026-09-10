@@ -7,6 +7,7 @@
 #include "runtime/input/input.h"
 #include "runtime/metrics.h"
 #include "runtime/psyq/psyq_state.h"
+#include "runtime/psyq/psyq_pad.h"
 #include <algorithm>
 #include <chrono>
 #include <cstring>
@@ -24,6 +25,12 @@ using detail::readString;
 
 Bios::Bios(recomp_context &ctx, cdrom::VirtualFs &fs, Memory &mem)
     : ctx_(ctx), heap_(mem), eventSystem_(ctx), fileIo_(fs, mem) {
+  fileIo_.setCardCompletion([this](unsigned, unsigned bytes, bool success) {
+    // MGS decrements its pending byte count on every 128-byte HwCARD event.
+    for (unsigned frame = 0; frame < (success ? (bytes + 127) / 128 : 1); ++frame)
+      cardEvents_.push({0xF0000011u, success ? 4u : 0x8000u});
+    cardEvents_.push({0xF4000001u, success ? 4u : 0x8000u});
+  });
   // Reset syscall and handlers
   // In a real PS1, vectors are at 0x80000080
 
@@ -651,6 +658,10 @@ void Bios::drainPendingCallbacks() {
     auto &st = ps1::psyq::psyq_state();
     uint32_t frame = st.vsyncCounter.load(std::memory_order_relaxed);
     const uint32_t pending = frame - lastIntrTickFrame_;
+    if (pending && kernelThreads_.active()) {
+      updatePadBuffers();
+      psyq::psyq_pad_refresh_direct_buffers(&ctx_);
+    }
     constexpr uint32_t kMaxVblankCallbacksPerDrain = 4096;
     if (pending > kMaxVblankCallbacksPerDrain) {
       ps1::metrics::count("savestate.vblank_epoch_rebased");
@@ -668,6 +679,10 @@ void Bios::drainPendingCallbacks() {
     }
   }
 
+  if (!cardEvents_.empty()) {
+    const auto event = cardEvents_.front(); cardEvents_.pop();
+    eventSystem_.triggerEvent(event.first, event.second);
+  }
   kernelThreads_.captureCurrent();
   eventSystem_.drainPendingCallbacks();
   kernelThreads_.scheduleSelected();

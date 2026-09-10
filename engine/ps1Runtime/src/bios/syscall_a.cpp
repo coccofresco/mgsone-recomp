@@ -18,6 +18,7 @@ uint32_t sRandSeed = 1;
 }
 
 void Bios::handleA0(uint32_t index) {
+  if (index <= 4) { handleB0(index + 0x32); return; }
   switch (index) {
   // String functions
   case 0x0A: { // bzero
@@ -478,7 +479,7 @@ void Bios::handleA0(uint32_t index) {
   case 0xAC: { // _card_load
     const uint32_t slot = ctx_.r[A0] >> 4;
     const bool present = slot < 2 && input_ && input_->getMemoryCard(slot).isPresent();
-    eventSystem_.triggerEvent(0xF4000001u, present ? 0x0004u : 0x0100u);
+    cardEvents_.push({0xF4000001u, present ? 0x0004u : 0x0100u});
     ctx_.r[V0] = 1;
     break;
   }

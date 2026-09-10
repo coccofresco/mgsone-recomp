@@ -156,3 +156,46 @@ TEST_F(BiosTableBTest, NativeThreadSwitchRetainsStackAndGuestRegisters) {
   EXPECT_EQ(ctx.r[S0], 0xabcd0001u);
 }
 #endif
+
+#include "runtime/input/input.h"
+#include "runtime/psyq/psyq_state.h"
+extern void (*g_testRecompDispatchHook)(recomp_context *, uint32_t);
+namespace {
+unsigned cardHardwareCompletions = 0;
+unsigned cardSoftwareCompletions = 0;
+void countCardCompletion(recomp_context *, uint32_t address) {
+  if (address == 0x80012300) ++cardHardwareCompletions;
+  if (address == 0x80012304) ++cardSoftwareCompletions;
+}
+}
+TEST_F(BiosTableBTest, FileWriteDeliversOneHardwareEventPerSectorThenSoftwareCompletion) {
+  psyq::psyq_state().reset();
+  input::InputController input;
+  bios->setInputController(&input);
+  auto registerEvent = [&](uint32_t eventClass, uint32_t callback) {
+    ctx.r[T1] = 8; ctx.r[A0] = eventClass; ctx.r[A1] = 4;
+    ctx.r[A2] = 0x1000; ctx.r[A3] = callback; bios->executeB0();
+    ctx.r[A0] = ctx.r[V0]; ctx.r[T1] = 0x0c; bios->executeB0();
+  };
+  registerEvent(0xf0000011, 0x80012300);
+  registerEvent(0xf4000001, 0x80012304);
+  cardHardwareCompletions = cardSoftwareCompletions = 0;
+  g_testRecompDispatchHook = countCardCompletion;
+  struct ResetHook { ~ResetHook() { g_testRecompDispatchHook = nullptr; } } reset;
+  writeString(0x1000, "bu00:TESTFILE");
+  ctx.r[T1] = 0; ctx.r[A0] = 0x1000; ctx.r[A1] = 0x10202; bios->executeA0();
+  const auto fd = ctx.r[V0];
+  ASSERT_LT(fd, 16u);
+  for (unsigned i = 0; i < 512; ++i) mem.write8(0x2000 + i, uint8_t(i));
+  ctx.r[T1] = 3; ctx.r[A0] = fd; ctx.r[A1] = 0x2000; ctx.r[A2] = 512;
+  bios->executeA0();
+  ASSERT_EQ(ctx.r[V0], 512u);
+  EXPECT_EQ(cardHardwareCompletions, 0u);
+  for (unsigned i = 1; i <= 4; ++i) {
+    bios->drainPendingCallbacks();
+    EXPECT_EQ(cardHardwareCompletions, i);
+    EXPECT_EQ(cardSoftwareCompletions, 0u);
+  }
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(cardSoftwareCompletions, 1u);
+}

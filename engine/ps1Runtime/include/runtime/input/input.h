@@ -66,12 +66,25 @@ public:
   bool loadFromFile(const std::string &path);
   bool saveToFile(const std::string &path) const;
 
+  bool attachFile(const std::string &path);
+  bool flush() const;
+  int findFile(const std::string &name) const;
+  int createFile(const std::string &name, unsigned blocks);
+  bool eraseFile(const std::string &name);
+  std::string fileName(unsigned block) const;
+  uint32_t fileSize(unsigned block) const;
+  std::vector<unsigned> fileChain(unsigned first) const;
+  int readFile(unsigned first, unsigned offset, uint8_t *out, unsigned size) const;
+  int writeFile(unsigned first, unsigned offset, const uint8_t *data, unsigned size);
+
   // SIO communication
   uint8_t transfer(uint8_t dataIn);
   bool isPresent() const { return present_; }
   void setPresent(bool p) { present_ = p; }
 
 private:
+  std::string backingPath_;
+  void fixChecksum(unsigned offset);
   std::array<uint8_t, CARD_SIZE> data_;
   bool present_ = true;
 

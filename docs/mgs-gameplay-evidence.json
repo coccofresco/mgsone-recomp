@@ -1,0 +1,28 @@
+{
+  "target": "MGS USA v1.0 CD1 SLUS-00594",
+  "input_fixture": "config/mgs-usa-gameplay.input",
+  "diagnostic_vblank_period_us": 1000,
+  "timing_note": "Accelerated diagnostic, not an NTSC frame-rate measurement.",
+  "vblanks": 20000,
+  "bios_thread_switches": 73147,
+  "interpreter_fallbacks": {},
+  "metrics_path": "data/native/gameplay-native/metrics.json",
+  "inspected_frames": [
+    "data/native/gameplay-native/frames/frame-12000.ppm",
+    "data/native/gameplay-native/frames/frame-14000.ppm",
+    "data/native/gameplay-native/frames/frame-16000.ppm",
+    "data/native/gameplay-native/frames/frame-18000.ppm"
+  ],
+  "observed": [
+    "Native dock gameplay",
+    "Snake movement and camera response to Right/Up",
+    "Manual Codec opening after Select"
+  ],
+  "presentation": "headless software raster; interactive launch uses Vulkan",
+  "runtime_tests_passed": 84,
+  "python_tests_passed": 21,
+  "in_game_save_verified": false,
+  "memory_card_persistence_unit_test_verified": true,
+  "heliport_compiled": true,
+  "heliport_transition_verified": false
+}

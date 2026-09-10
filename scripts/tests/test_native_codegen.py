@@ -64,3 +64,47 @@ identity_size = 36
             self.assertNotIn('recomp_func_table[0x80100000]', generated)
             self.assertIn('rdram[0x100020] == 11', generated)
             self.assertIn('rdram[0x100020] == 12', generated)
+
+    def test_additional_overlay_leaf_callback_is_dispatched(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            exe = bytearray(4096)
+            exe[:8] = b'PS-X EXE'
+            struct.pack_into('<I', exe, 0x10, 0x80010000)
+            struct.pack_into('<II', exe, 0x18, 0x80010000, 2048)
+            struct.pack_into('<II', exe, 2048, 0x03e00008, 0)
+            (path / 'main.exe').write_bytes(exe)
+            (path / 'callback.bin').write_bytes(struct.pack('<7I',
+                0x03e00008, 0, 0, 0, 0x2402002a, 0x03e00008, 0))
+            config = f'''[binary]
+path = "main.exe"
+entry_point = "0x80010000"
+[[functions]]
+name = "main"
+address = "0x80010000"
+size = 8
+[[overlays]]
+name = "callback"
+ram_base = {0x80100000}
+size = 28
+binary_path = "callback.bin"
+functions = [{0x80100000}]
+additional_functions = [{0x80100010}]
+identity_size = 8
+'''
+            (path / 'test.toml').write_text(config)
+            run = subprocess.run([str(RECOMP), str(path / 'test.toml'), str(path / 'out.cpp')],
+                                 cwd=path, capture_output=True, text=True)
+            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            generated = (path / 'out.cpp').read_text()
+            self.assertIn('case 0x80100010u: return overlay_callback__80100010;', generated)
+            self.assertIn('void overlay_callback__80100010(', generated)
+            for invalid in (0x80100011, 0x8010001c, 0x180100010, -0x7feffff0):
+                with self.subTest(invalid=invalid):
+                    (path / 'test.toml').write_text(config.replace(
+                        f'additional_functions = [{0x80100010}]',
+                        f'additional_functions = [{invalid}]'))
+                    rejected = subprocess.run(
+                        [str(RECOMP), str(path / 'test.toml'), str(path / 'bad.cpp')],
+                        cwd=path, capture_output=True, text=True)
+                    self.assertNotEqual(rejected.returncode, 0)

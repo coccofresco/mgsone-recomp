@@ -17,9 +17,14 @@ thread switches and 56,793 Gouraud-textured quad commands, with no interpreter
 fallback counters. The corresponding screenshots were inspected. An earlier
 accelerated diagnostic reached 4,000 VBlanks; it is not the timing reference.
 
-This establishes initial native boot, not a playable or fully verified port.
-Only the `title` and `opening` overlays are compiled. Later stages, complete
-intro playback, codec, gameplay, saves and disc switching need further work.
+Initial boot is established, and the input follow-up reaches controllable
+dock gameplay with manual Codec opening. This is not a fully verified port.
+The compiled overlays now include `title`, `opening`, `d00a`, `s00a` and `s01a`.
+The heliport transition, in-game saves and disc switching still need validation.
+The final accelerated gameplay probe completed 20,000 VBlanks with no
+interpreter fallback counters; movement and manual Codec captures were inspected.
+See [input and memory-card implementation](mgs-input-memory-card.md) and
+[gameplay evidence](mgs-gameplay-evidence.json).
 Audio output is nonzero in runtime metrics; listening quality is not certified.
 
 The default 16:9 profile also passed the Vulkan smoke test: 3,000 VBlanks
@@ -44,8 +49,8 @@ Machine-readable results are in [mgs-native-boot-evidence.json](mgs-native-boot-
 - The register-only MTS idle loop yields to pending interrupts. Native-thread
   VSync callbacks are delivered once per elapsed VBlank, including idle waits.
 - BIOS kernel allocation, stable syscall table pointers and minimal memory-card
-  presence/sector transactions cover startup. Memory-card filesystem behavior
-  and persistence are not complete.
+  presence/sector transactions cover startup. Persistent card images and BIOS
+  file operations now have regression coverage; in-game save/load is pending.
 - The original CD, GTE, DrawOTagEnv and ResetGraph routines are compiled.
   ResetGraph must initialize SDK-private GPU information: the inherited HLE
   no-op caused native SetDrawEnv to emit an invalid drawing area.
@@ -67,9 +72,12 @@ is unchanged. The harness uses `PS1_DONOR_WORK_DIRECTORY` for isolated state.
 `run_oracle.sh` defaults to interpreter instrumentation, software rendering,
 fast boot and **165% CPU**. USA reaches main entry at donor frame 686.
 
-Both raw `.b` overlays load at `0x800C5968`. The title resource is byte-identical
+All five raw `.b` overlays load at `0x800C5968`. The title resource is byte-identical
 to the donor snapshot at its actor entry (frame 1164); opening is byte-identical
-to donor RAM at frame 2000. Hashes, lengths and code boundaries are in
+to donor RAM at frame 2000. The executable ranges and 64-byte identities of
+`d00a` and `s00a` match donor RAM at frames 7000 and 10000 respectively; mutable
+actor-table fields and trailing data are excluded from that code comparison.
+Hashes, lengths and code boundaries are in
 [mgs-usa-overlay-evidence.json](mgs-usa-overlay-evidence.json). Identity matching
 is a stage-selection mechanism, not a checksum of every instruction at runtime.
 

@@ -224,6 +224,7 @@ add_library(ps1Runtime_lib STATIC
     src/gpu/vulkan_replay_capability.cpp
     src/spu/spu.cpp
     src/dma/dma.cpp
+    src/input/memory_card_files.cpp
     src/input/input.cpp
     src/input/input_script.cpp
     src/mdec/mdec.cpp

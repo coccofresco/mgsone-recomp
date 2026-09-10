@@ -1,5 +1,6 @@
 #include "runtime/input/input.h"
 #include <fmt/format.h>
+#include <filesystem>
 
 namespace ps1::input {
 
@@ -18,7 +19,19 @@ void MemoryCard::reset() {
   // Magic: "MC" at offset 0
   data_[0] = 'M';
   data_[1] = 'C';
-  data_[0x7F] = 0x0E; // Checksum placeholder
+  fixChecksum(0);
+  for (unsigned block = 1; block <= NUM_BLOCKS; ++block) {
+    const unsigned offset = block * SECTOR_SIZE;
+    data_[offset] = 0xa0;
+    data_[offset + 8] = data_[offset + 9] = 0xff;
+    fixChecksum(offset);
+  }
+  for (unsigned frame = 16; frame <= 35; ++frame) {
+    const unsigned offset = frame * SECTOR_SIZE;
+    std::fill_n(data_.begin() + offset, 4, 0xff);
+    data_[offset + 8] = data_[offset + 9] = 0xff;
+    fixChecksum(offset);
+  }
 }
 
 MemoryCard::Snapshot MemoryCard::snapshot() const {
@@ -47,19 +60,24 @@ void MemoryCard::restore(const Snapshot &state) {
 }
 
 bool MemoryCard::loadFromFile(const std::string &path) {
-  std::ifstream file(path, std::ios::binary);
-  if (!file)
-    return false;
-  file.read(reinterpret_cast<char *>(data_.data()), CARD_SIZE);
-  return file.good() || file.eof();
+  std::ifstream file(path, std::ios::binary | std::ios::ate);
+  if (!file || file.tellg() != CARD_SIZE) return false;
+  std::array<uint8_t, CARD_SIZE> candidate;
+  file.seekg(0);
+  if (!file.read(reinterpret_cast<char *>(candidate.data()), CARD_SIZE)) return false;
+  data_ = candidate;
+  return true;
 }
 
 bool MemoryCard::saveToFile(const std::string &path) const {
-  std::ofstream file(path, std::ios::binary);
-  if (!file)
-    return false;
-  file.write(reinterpret_cast<const char *>(data_.data()), CARD_SIZE);
-  return file.good();
+  const auto temporary = path + ".tmp";
+  std::ofstream file(temporary, std::ios::binary | std::ios::trunc);
+  if (!file.write(reinterpret_cast<const char *>(data_.data()), CARD_SIZE)) return false;
+  file.close();
+  if (!file) return false;
+  std::error_code error;
+  std::filesystem::rename(temporary, path, error);
+  return !error;
 }
 
 uint8_t MemoryCard::transfer(uint8_t dataIn) {

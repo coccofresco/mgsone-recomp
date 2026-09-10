@@ -7,6 +7,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <functional>
+namespace ps1::input { class InputController; class MemoryCard; }
 
 namespace ps1::bios {
 
@@ -15,6 +17,9 @@ struct FileDescriptor {
   std::string path;
   std::vector<uint8_t> data;
   uint32_t cursor;
+  input::MemoryCard *card = nullptr;
+  unsigned firstBlock = 0;
+  unsigned cardSlot = 0;
 };
 
 class FileIO {
@@ -22,6 +27,13 @@ public:
   FileIO(cdrom::VirtualFs &fs, Memory &mem);
   ~FileIO() = default;
 
+  void setInputController(input::InputController* input) { input_ = input; }
+  void setCardCompletion(std::function<void(unsigned, unsigned, bool)> callback) { cardCompletion_ = std::move(callback); }
+  int32_t write(int32_t fd, uint32_t source, int32_t size);
+  uint32_t firstFile(const std::string &pattern, uint32_t output);
+  uint32_t nextFile(uint32_t output);
+  bool erase(const std::string &path);
+  bool format(const std::string &path);
   // BIOS API
   int32_t open(const char *path, int32_t mode);
   int32_t close(int32_t fd);
@@ -32,6 +44,10 @@ public:
   void setOverlayManager(OverlayManager *mgr) { overlayMgr_ = mgr; }
 
 private:
+  input::InputController* input_ = nullptr;
+  std::function<void(unsigned, unsigned, bool)> cardCompletion_;
+  std::vector<std::pair<std::string, uint32_t>> directory_;
+  unsigned directoryIndex_ = 0;
   cdrom::VirtualFs &fs_;
   Memory &mem_;
   OverlayManager *overlayMgr_ = nullptr;

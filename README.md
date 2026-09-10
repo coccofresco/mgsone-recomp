@@ -6,8 +6,10 @@ Le immagini italiane e il relativo audit restano disponibili come confronto.
 
 Stato: **avvio nativo USA verificato**, dai loghi Konami all’inizio della
 sequenza subacquea, con presentazione Vulkan e temporizzazione NTSC.
-Non è ancora un port giocabile: sono ricompilati gli overlay iniziali `title`
-e `opening`, mentre gameplay e scenari successivi restano da completare.
+È verificato anche il **gameplay nel molo iniziale**, con movimento di Snake
+e apertura del Codec. Sono ricompilati `title`, `opening`, `d00a`, `s00a` e
+`s01a`; il passaggio all’eliporto e i salvataggi dal gioco restano da validare.
+Non è ancora un port completo.
 
 Il profilo USA abilita di base la proiezione 16:9. SwanStation strumentato è
 il donor/oracolo e usa CPU al 165%; il codice nativo gira alla velocità
@@ -15,6 +17,7 @@ host, mantenendo i divisori originali 30/20 fps. Non è ancora implementato
 un modello di budget CPU nativo equivalente esattamente al 165%.
 
 - [Stato, verifiche e limiti del runtime](docs/mgs-runtime-progress.md)
+- [Controlli e memory card persistenti](docs/mgs-input-memory-card.md)
 - [Aggiornamenti PSXRecomp](docs/psxrecomp-upstream-2026-09-10.md)
 - [Valutazione RecompOne](docs/recompone-review-2026-09-10.md)
 - [Valutazione OpenGTPS1: input e memory card](docs/opengtps1-review-2026-09-10.md)
@@ -94,9 +97,9 @@ riferimenti locali sotto `.local/` sono esclusi da Git.
 ## Prossimi passi
 
 1. Completare l’inventario con la semantica delle risorse opache e dei caricamenti dinamici.
-2. Verificare il main SLUS-00594/SLUS-00776 e completare gli overlay USA v1.0.
-3. Collegare la traduzione a un profilo MGS isolato e ottenere un boot ripetibile.
-4. Verificare intro, menu, gameplay, codec, filmati, audio, salvataggi e cambio CD.
+2. Verificare il passaggio all’eliporto e il primo salvataggio/caricamento dal gioco.
+3. Completare gli overlay USA v1.0 degli scenari successivi.
+4. Estendere le verifiche a combattimento, filmati, audio e cambio CD.
 5. Adattare le migliorie grafiche di Crash solo dopo aver misurato la fedeltà base.
 
 Vedi [docs/bootstrap.md](docs/bootstrap.md) per verifiche e riferimento esterno.

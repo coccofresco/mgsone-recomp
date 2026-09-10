@@ -1717,6 +1717,18 @@ int main(int argc, char *argv[]) {
                      ovl_funcs.size());
         }
 
+        if (ov.contains("additional_functions")) {
+          for (auto value : toml::find<std::vector<int64_t>>(ov, "additional_functions")) {
+            if (value < 0 || static_cast<uint64_t>(value) > UINT32_MAX)
+              throw std::runtime_error("Additional overlay function is not a 32-bit address");
+            const uint32_t address = static_cast<uint32_t>(value);
+            if ((address & 3u) || address < ovl_ramBase ||
+                static_cast<uint64_t>(address) >= static_cast<uint64_t>(ovl_ramBase) + ovl_codeSize)
+              throw std::runtime_error("Additional overlay function outside code range");
+            ovl_funcs.push_back(address);
+          }
+        }
+
         // Determine function sizes (distance to next function)
         std::sort(ovl_funcs.begin(), ovl_funcs.end());
         ovl_funcs.erase(std::unique(ovl_funcs.begin(), ovl_funcs.end()),

@@ -49,10 +49,40 @@ def main():
             section = section.replace('hle = true', 'hle = false').replace('stub_type = "stub"', 'stub_type = "recompile"')
         result.append(section)
     s = ''.join(result)
-    s = s.replace('address = "0x80093134"', 'address = "0x80093134"\nentry_aliases = ["0x80093174"]', 1)
+    # Direct overlay JALs into verified main-function interiors.
+    # Register native entries rather than taking the private interpreter path.
+    main_entries = {
+        0x8001c65c: [0x8001c680],
+        0x8002778c: [0x80027838],
+        0x800279ec: [0x80027a94],
+        0x8002f610: [0x8002f6c0],
+        0x8003189c: [0x80031940],
+        0x80033428: [0x800334d4],
+        0x80034b64: [0x80034bd8],
+        0x8003a01c: [0x8003a074],
+        0x8003a918: [0x8003a928],
+        0x8003f088: [0x8003f09c],
+        0x80041100: [0x80041114],
+        0x80052254: [0x80052288, 0x8005229c],
+        0x800723f8: [0x800724f4],
+        0x8008b168: [0x8008b180],
+        0x8008f7d0: [0x8008f7f0],
+        0x80093134: [0x80093174],
+    }
+    for owner, entries in main_entries.items():
+        aliases = ", ".join(f'"0x{x:08X}"' for x in entries)
+        s = s.replace(f'address = "0x{owner:08X}"',
+                      f'address = "0x{owner:08X}"\nentry_aliases = [{aliases}]', 1)
     for name, address in [('ResetCallback', 0x8009ae54), ('InterruptCallback', 0x8009ae84),
                           ('DMACallback', 0x8009aeb4), ('CheckCallback', 0x8009afa8), ('VSync', 0x8009ac44)]:
         s += f'\n[[hle_functions]]\nsubsystem = "Other"\nhle = true\nstub_type = "stub"\nlibrary = "libetc"\nname = "libetc_{name}"\naddress = "0x{address:08X}"\n'
+    # RecompOne MIT PsyQ signatures, verified against this fingerprinted EXE.
+    for name, address in [('PadInitDirect', 0x8009ee48), ('PadStartCom', 0x8009d524),
+                          ('PadStopCom', 0x8009d5f0), ('PadGetState', 0x8009cdf4),
+                          ('PadInfoMode', 0x8009ceb4), ('PadInfoAct', 0x8009cfac),
+                          ('PadSetAct', 0x8009d1a8), ('PadSetActAlign', 0x8009d128),
+                          ('PadSetMainMode', 0x8009d160)]:
+        s += f'\n[[hle_functions]]\nsubsystem = "Other"\nhle = true\nstub_type = "stub"\nlibrary = "libpad"\nname = "libpad_{name}"\naddress = "0x{address:08X}"\n'
     # The analyzer omitted the bodies of these initially HLE-matched wrappers.
     for start in sorted(native_sdk - existing):
         end = next(address for address in boundaries if address > start)
@@ -70,6 +100,9 @@ def main():
     record = disc.files()['/MGS/STAGE.DIR']
     archive = disc.read(record['lba'], record['size'])
     specifications = [
+        ('d00a', '8d69b08b378fd6124a1390e82097477fde4b71c9161a7d27cdfdb93b422dfb38', 0x800e3a8c, 64),
+        ('s00a', '0162b192109171aa249343e10340f0756efe2f03694f51b5844cbb20797be96f', 0x800e3688, 64),
+        ('s01a', 'bd046ff36bc34bb60f845d6139be04ac0c000e0f526746209acbeb4fa354e84b', 0x800e74b4, 64),
         ('title', '8a909480158d16c1f6849df915751ce927335d0d6df5a7849a5bc20fdd042c71', 0x800d60fc, 16),
         ('opening', '359a5fffcf6555bb40861beea2d576691770fbe015d524d1395b2101c1884db8', 0x800cff24, 64),
     ]
@@ -82,6 +115,29 @@ def main():
         overlay.parent.mkdir(parents=True, exist_ok=True)
         overlay.write_bytes(payload)
         s += f'\n[[overlays]]\nname = "usa_{name}"\nram_base = {0x800c5968}\nsize = {code_end-0x800c5968}\nbinary_path = "overlays/usa/{name}.bin"\nidentity_size = {identity_size}\n'
+    # Verified callback references in USA overlay code/actor tables. These
+    # entries follow JR RA/NOP but lack prologues or direct JAL callers.
+    callbacks = {
+        'd00a': [0x800c850c, 0x800c8bb4, 0x800c9abc, 0x800d29ac,
+                 0x800d4210, 0x800d634c, 0x800db2c0, 0x800db7c8,
+                 0x800dd940, 0x800e38e4],
+        's01a': [0x800c7574, 0x800cb6c0, 0x800cbd68, 0x800ccc70,
+                 0x800d5b60, 0x800d73c4, 0x800de990, 0x800dec84,
+                 0x800e0804, 0x800e5b08, 0x800e63bc, 0x800e6f0c,
+                 0x800e7110],
+        's00a': [0x800c6120, 0x800c896c, 0x800c9014, 0x800c9f1c,
+                 0x800d2e0c, 0x800d4670, 0x800d6328, 0x800d661c,
+                 0x800daf60, 0x800db464, 0x800ddc40, 0x800e22dc,
+                 0x800e2db8, 0x800e3060, 0x800e3264],
+    }
+    for stage, addresses in callbacks.items():
+        payload = (ROOT / f'data/overlays/usa/{stage}.bin').read_bytes()
+        for address in addresses:
+            offset = address - 0x800c5968
+            if payload[offset-8:offset] != bytes.fromhex('0800e00300000000'):
+                parser.error(f'Unexpected callback boundary {stage}: {address:08x}')
+        s = s.replace(f'name = "usa_{stage}"\n',
+                      f'name = "usa_{stage}"\nadditional_functions = {addresses}\n')
     output = ROOT / 'data/mgs.usa.native.toml'
     output.write_text(s)
     print(output)
