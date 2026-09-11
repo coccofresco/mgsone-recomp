@@ -2,7 +2,9 @@
 
 Dall'11 settembre 2026 `scripts/run_native.sh` seleziona per impostazione
 predefinita la presentazione dalla cache Vulkan in **3840×2160**, con rapporto
-**16:9 fisso**. Ridimensionare o massimizzare la finestra non cambia il target
+**16:9 fisso**. Il gioco si apre a schermo intero; F11 alterna schermo intero
+e finestra (inizialmente 1280×720). `PS1_PRESENT_WINDOWED=1` forza l’apertura
+in finestra. Ridimensionare o massimizzare la finestra non cambia il target
 interno: il quadro viene centrato, ridotto se necessario e circondato da bande
 nere quando le proporzioni della finestra differiscono. F9 e F5 mantengono il
 loro significato di caricamento e salvataggio.
@@ -36,7 +38,10 @@ il target 3840×2160, l'esecuzione del replay geometrico e l'oracolo nativo a 1�
 
 I test di geometria verificano inoltre il mantenimento di offset e ritagli del
 segnale nel target UHD, oltre all'inquadratura centrata in finestre quadrate,
-ultrawide e UHD. Il ridimensionamento agisce esclusivamente sul viewport finale.
+ultrawide e UHD. Il ridimensionamento agisce esclusivamente sul viewport finale. Prima di ogni
+presentazione il renderer confronta il drawable SDL con la swapchain e la
+ricrea quando differiscono: non attende soltanto OUT_OF_DATE/SUBOPTIMAL del
+driver, per evitare che il compositor Wayland stiri una vecchia superficie.
 
 Con `PS1_VULKAN_REPLAY_READBACK_DUMP_DIRECTORY` il diagnostico scrive ora anche
 il target finale `*-scanout.ppm`, oltre alla porzione dell'atlante. Questo

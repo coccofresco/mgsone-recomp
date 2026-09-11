@@ -26808,8 +26808,17 @@ struct RendererVulkan::Impl {
               const RendererOptions &options,
               const replay::ReplayNativeSnapshotIdentity *replaySnapshot,
               VulkanPresentationView presentationView) {
-    if (drawableIsZero(window))
+    int drawableWidth = 0, drawableHeight = 0;
+    SDL_Vulkan_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+    if (drawableWidth <= 0 || drawableHeight <= 0)
       return false;
+    // Wayland may keep presenting/scaling an old swapchain without reporting
+    // OUT_OF_DATE. Fit the viewport to the actual drawable, not its old size.
+    if (uint32_t(drawableWidth) != swapchainExtent.width ||
+        uint32_t(drawableHeight) != swapchainExtent.height) {
+      recreateSwapchain(window);
+      ps1::metrics::count("host.renderer.drawable_resize");
+    }
     const ScopedMetricTimer renderTimer("host.renderer.vulkan_render_total_us");
     const bool crash3FullSceneSidecar =
         environmentSwitchEnabled("PS1_CRASH3_VULKAN_SCENE_SIDECAR");

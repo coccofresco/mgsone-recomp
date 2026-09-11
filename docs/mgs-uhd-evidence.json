@@ -71,5 +71,16 @@
     "Native baseline reanchors are excluded from geometry GPU submission counters.",
     "The 600-VBlank run included resize and a GPU readback; it is not an isolated throughput benchmark.",
     "The user savestate was only read; no save command was issued."
-  ]
+  ],
+  "window_correction": {
+    "default": "fullscreen desktop; F11 toggles a 1280x720 window",
+    "resize": "compare actual SDL drawable to swapchain before every render, including Wayland without OUT_OF_DATE",
+    "wayland_resize_test_passed": true,
+    "x11_targeted_tests_passed": 55,
+    "compositor_active_window_capture": [
+      3840,
+      2160
+    ],
+    "compositor_capture_path": ".local/mgs-uhd-fullscreen-visible.png"
+  }
 }

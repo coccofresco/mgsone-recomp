@@ -13,6 +13,8 @@
 #include "runtime/pgxp.h"
 
 #include <gtest/gtest.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_vulkan.h>
 
 #include <algorithm>
 #include <array>
@@ -1560,6 +1562,29 @@ TEST(GpuModernReplayVulkanDepthTest,
   const auto w = metrics::getState("host.renderer.present.viewport_width");
   const auto h = metrics::getState("host.renderer.present.viewport_height");
   EXPECT_LE(std::abs(w * 9 - h * 16), 16);
+  SDL_Window *window = nullptr;
+  for (uint32_t id=1; id<4096 && !window; ++id) {
+    auto *candidate=SDL_GetWindowFromID(id);
+    if (candidate && std::string(SDL_GetWindowTitle(candidate))=="MGS UHD raster oracle") window=candidate;
+  }
+  ASSERT_NE(window,nullptr);
+  SDL_SetWindowSize(window,1000,500);
+  bool resized=false;
+  for (unsigned attempt=0; attempt<100 && !resized; ++attempt) {
+    SDL_PumpEvents();
+    int ww=0,wh=0; SDL_GetWindowSize(window,&ww,&wh);
+    resized=ww==1000 && wh==500;
+    if (!resized) SDL_Delay(10);
+  }
+  ASSERT_TRUE(resized);
+  renderer.renderFrame(); renderer.drainReplayDiagnostics();
+  int dw=0,dh=0; SDL_Vulkan_GetDrawableSize(window,&dw,&dh);
+  EXPECT_EQ(metrics::getState("host.renderer.present.window_width"),dw);
+  EXPECT_EQ(metrics::getState("host.renderer.present.window_height"),dh);
+  EXPECT_EQ(metrics::getState("host.vulkan.internal_width"),3840);
+  EXPECT_EQ(metrics::getState("host.vulkan.internal_height"),2160);
+  EXPECT_LE(std::abs(metrics::getState("host.renderer.present.viewport_width")*9-
+                     metrics::getState("host.renderer.present.viewport_height")*16),16);
   renderer.destroy();
   metrics::reset();
   metrics::setEnabledForTesting(false);

@@ -937,10 +937,16 @@ int main(int argc, char *argv[]) {
   const char *presentationTitle = std::getenv("PS1_WINDOW_TITLE");
   if (presentationTitle == nullptr || presentationTitle[0] == '\0')
     presentationTitle = "ps1Recomp";
+  const bool uhdPresentation = rendererOptions.presentationWidth == 3840;
+  const char *windowed = std::getenv("PS1_PRESENT_WINDOWED");
+  const bool startFullscreen = uhdPresentation
+      ? !(windowed && std::strcmp(windowed, "1") == 0)
+      : runtimeConfig.video.fullscreen;
   if (!diagnosticHeadless &&
-      !renderer.init(presentationTitle, runtimeConfig.video.windowWidth,
-                     runtimeConfig.video.windowHeight, presentationVsync,
-                     runtimeConfig.video.fullscreen)) {
+      !renderer.init(presentationTitle,
+                     uhdPresentation ? 1280 : runtimeConfig.video.windowWidth,
+                     uhdPresentation ? 720 : runtimeConfig.video.windowHeight,
+                     presentationVsync, startFullscreen)) {
     fmt::print(stderr, "Failed to initialize Vulkan renderer!\n");
     SDL_Quit();
     return 1;
@@ -1389,6 +1395,12 @@ int main(int argc, char *argv[]) {
       case SDL_KEYDOWN:
         if (ignoreDiagnosticInput) {
           break;
+        } else if (event.key.keysym.sym == SDLK_F11 && event.key.repeat == 0) {
+          if (auto *window = SDL_GetWindowFromID(event.key.windowID)) {
+            const bool full = (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0;
+            if (SDL_SetWindowFullscreen(window, full ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP) != 0)
+              fmt::print(stderr, "[Window] fullscreen change failed: {}\n", SDL_GetError());
+          }
         } else if (event.key.keysym.sym == SDLK_ESCAPE) {
           running = false;
         } else if (event.key.keysym.sym == SDLK_F5 && event.key.repeat == 0) {
