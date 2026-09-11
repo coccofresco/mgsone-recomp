@@ -874,10 +874,10 @@ int main(int argc, char *argv[]) {
     errno = 0;
     const long parsed = std::strtol(overrideScale, &end, 10);
     if (errno != 0 || end == overrideScale || *end != '\0' || parsed < 1 ||
-        parsed > 8) {
+        parsed > ps1::gpu::replay::MAX_INTERNAL_SCALE) {
       fmt::print(stderr,
                  "[Vulkan] invalid PS1_INTERNAL_RES_SCALE '{}': expected "
-                 "1..8\n",
+                 "1..12\n",
                  overrideScale);
       return 1;
     }
@@ -895,14 +895,22 @@ int main(int argc, char *argv[]) {
       std::strcmp(meshMode, "1") == 0) {
     // Use the inherited, tested complete replay executor. The authoritative
     // native raster remains 1x; these options affect presentation only.
-    rendererOptions.internalScale = 4;
+    // 320 native columns × 12 = 3840 genuine geometry samples. The 224-line
+    // dock is supersampled vertically (2688) and resolved DOWN to 2160.
+    rendererOptions.internalScale = 12;
+    rendererOptions.presentationWidth = 3840;
+    rendererOptions.presentationHeight = 2160;
+    rendererOptions.preserveAspect = true;
+    rendererOptions.presentationAspectWidth = 16;
+    rendererOptions.presentationAspectHeight = 9;
     rendererOptions.pgxp = true;
     rendererOptions.pgxpNearClip = false;
     rendererOptions.trueDepth = true;
     rendererOptions.trueDepthMode = "hybrid";
     rendererOptions.trueColor = true;
-    fmt::print("[MGS mesh] original-cache Vulkan projection, 4x ordered "
-               "composition\n");
+    fmt::print("[MGS mesh] original-cache Vulkan projection, 3840x2160, fixed "
+               "16:9, 12x "
+               "geometry raster; native oracle stays 1x\n");
   }
   if (const char *disableReplay = std::getenv("PS1_DISABLE_PRECISION_REPLAY");
       disableReplay != nullptr && *disableReplay != '\0' &&

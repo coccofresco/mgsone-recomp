@@ -38,7 +38,8 @@ l'esempio di geometria originale sono in `data/`, esclusi da Git.
 La [cache Vulkan USA](docs/mgs-vulkan-cache.md) contiene circa 90 MiB residenti
 con geometrie KMD/ZMD e texture PCX originali dei due CD. La
 [presentazione dalla cache](docs/mgs-original-mesh-replay.md) è disponibile con
-`PS1_MGS_MESH_REPLAY=1 scripts/run_native.sh`: tutte le 27 istanze del molo,
+`scripts/run_native.sh`: la [presentazione UHD](docs/mgs-uhd-presentation.md)
+è ora predefinita, a 3840×2160 e 16:9 fisso. Tutte le 27 istanze del molo,
 deformazioni, suddivisioni, texture e quad degli effetti sono supportati.
 Vulkan legge gli originali e proietta in float; simulazione e framebuffer PS1
 continuano sotto al cofano. HUD e Codec sono composti come grafica 2D runtime.

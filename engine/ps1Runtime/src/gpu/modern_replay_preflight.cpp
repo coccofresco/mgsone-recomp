@@ -303,7 +303,7 @@ bool validDepthCompare(DepthCompare compare) {
 }
 
 bool validReplayPolicy(const ReplayPolicyState &policy) {
-  if (policy.internalScale == 0 || policy.internalScale > 8)
+  if (policy.internalScale == 0 || policy.internalScale > MAX_INTERNAL_SCALE)
     return false;
   switch (policy.trueDepthMode) {
   case ReplayDepthMode::Off:

@@ -24,7 +24,7 @@ void main() {
   const uint scale = pc.source.w;
   if (pc.extentFormat.x == 0u || pc.extentFormat.y == 0u ||
       pc.extentFormat.z != FORMAT_RGB555 || pc.source.z == 0u || scale == 0u ||
-      scale > 8u || pc.source.x >= VRAM_ROW_BYTES ||
+      scale > 12u || pc.source.x >= VRAM_ROW_BYTES ||
       (pc.source.x & 1u) != 0u || pc.source.y >= VRAM_HEIGHT) {
     o_color = vec4(0.0, 0.0, 0.0, 1.0);
     return;

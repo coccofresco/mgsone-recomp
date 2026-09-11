@@ -1,0 +1,75 @@
+{
+  "schema": "mgs-uhd-evidence/v1",
+  "date": "2026-09-11",
+  "scene": "USA v1.0 dock, user checkpoint",
+  "presentation": [
+    3840,
+    2160
+  ],
+  "geometry_raster_scale": 12,
+  "atlas": [
+    12288,
+    6144
+  ],
+  "active_dock_raster": [
+    3840,
+    2688
+  ],
+  "native_oracle_scale": 1,
+  "cpp_tests_passed": 365,
+  "python_tests_passed": 25,
+  "subpixel_gpu_test": {
+    "native_offset": 0.25,
+    "uhd_column_offset": 3,
+    "lit_samples_in_12x12_cell": 108,
+    "native_upscale_would_light": 144
+  },
+  "runtime": {
+    "vblanks": 600,
+    "elapsed_us": 17566354,
+    "geometry_replaced": 177912,
+    "geometry_gpu_submitted": 177311,
+    "texture_gpu_submitted": 177311,
+    "matched_instances": 27,
+    "cache_uploads": 1,
+    "pose_rejected": 0
+  },
+  "resize": {
+    "square_window": [
+      800,
+      800
+    ],
+    "square_viewport": [
+      0,
+      175,
+      800,
+      450
+    ],
+    "wide_window": [
+      1200,
+      500
+    ],
+    "wide_viewport": [
+      156,
+      0,
+      888,
+      500
+    ],
+    "target_after_resize": [
+      3840,
+      2160
+    ]
+  },
+  "local_artifacts": [
+    "data/native/mesh-replay/uhd-final-gpu/frame-97150-present-1-ordinary-scanout.ppm",
+    ".local/mgs-uhd-square.png",
+    "data/native/mesh-replay/uhd-final-metrics.json",
+    ".local/test-mgs-uhd-complete.log"
+  ],
+  "notes": [
+    "The final scanout PPM header is exactly 3840 2160; the separate atlas crop is 3840 2688.",
+    "Native baseline reanchors are excluded from geometry GPU submission counters.",
+    "The 600-VBlank run included resize and a GPU readback; it is not an isolated throughput benchmark.",
+    "The user savestate was only read; no save command was issued."
+  ]
+}

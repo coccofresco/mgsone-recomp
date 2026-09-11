@@ -14,6 +14,25 @@ struct SDL_Window;
 
 namespace ps1::gpu {
 
+// Map both rectangle endpoints so cropped/offset signals retain the same
+// framing with noninteger, anisotropic presentation scaling.
+inline OutputViewport mapVulkanScanoutViewport(const DisplayScanoutPlan &plan,
+                                               uint32_t width,
+                                               uint32_t height) {
+  if (!plan.canvas.width || !plan.canvas.height)
+    return {};
+  const auto x = uint64_t(plan.destinationOrigin.x) * width / plan.canvas.width;
+  const auto y =
+      uint64_t(plan.destinationOrigin.y) * height / plan.canvas.height;
+  const auto right =
+      (uint64_t(plan.destinationOrigin.x) + plan.activeExtent.width) * width /
+      plan.canvas.width;
+  const auto bottom =
+      (uint64_t(plan.destinationOrigin.y) + plan.activeExtent.height) * height /
+      plan.canvas.height;
+  return {int(x), int(y), int(right - x), int(bottom - y)};
+}
+
 struct VulkanReplayExtent {
   uint32_t width = 0;
   uint32_t height = 0;
@@ -135,8 +154,8 @@ isVulkanScanoutPushConstantsValid(const VulkanScanoutPushConstants &push) {
   return push.source[0] < GPU::VRAM_WIDTH * sizeof(Color16) &&
          push.source[1] < GPU::VRAM_HEIGHT && push.source[2] != 0 &&
          push.source[2] <= GPU::VRAM_HEIGHT && push.source[3] >= 1 &&
-         push.source[3] <= 8 && push.active[0] != 0 && push.active[1] != 0 &&
-         knownFormat &&
+         push.source[3] <= replay::MAX_INTERNAL_SCALE && push.active[0] != 0 &&
+         push.active[1] != 0 && knownFormat &&
          (packed ? push.source[3] == 1 : (push.source[0] & 1u) == 0);
 }
 
@@ -147,7 +166,7 @@ inline constexpr bool isVulkanTemporalScanoutPushConstantsValid(
          previous[0] < GPU::VRAM_WIDTH * sizeof(Color16) &&
          previous[1] < GPU::VRAM_HEIGHT && previous[2] != 0 &&
          previous[2] <= GPU::VRAM_HEIGHT && previous[3] >= 1 &&
-         previous[3] <= 8 && (previous[0] & 1u) == 0;
+         previous[3] <= replay::MAX_INTERNAL_SCALE && (previous[0] & 1u) == 0;
 }
 
 // Endpoint-A colour may fill disoccluded pixels in a synthetic midpoint only
@@ -402,8 +421,8 @@ planVulkanReplayResources(int requestedScale) {
   constexpr uint32_t nativeWidth = GPU::VRAM_WIDTH;
   constexpr uint32_t nativeHeight = GPU::VRAM_HEIGHT;
   const uint32_t scale = requestedScale < 1 ? 1u
-                         : requestedScale > 8
-                             ? 8u
+                         : requestedScale > int(replay::MAX_INTERNAL_SCALE)
+                             ? replay::MAX_INTERNAL_SCALE
                              : static_cast<uint32_t>(requestedScale);
   const uint64_t nativePixels =
       static_cast<uint64_t>(nativeWidth) * nativeHeight;

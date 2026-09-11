@@ -1779,7 +1779,7 @@ TEST(GpuModernReplayVulkanBakeTest,
   const ModernReplayExecutionPlan plan = makePlan(precisePacket());
   expectAtomicFailure(bakeModernReplayVulkan(plan, 0, painterWriteFeatures()),
                       VulkanReplayBakeReason::InvalidScale);
-  expectAtomicFailure(bakeModernReplayVulkan(plan, 9, painterWriteFeatures()),
+  expectAtomicFailure(bakeModernReplayVulkan(plan, 13, painterWriteFeatures()),
                       VulkanReplayBakeReason::InvalidScale);
   expectAtomicFailure(bakeModernReplayVulkan(plan, 2, painterWriteFeatures()),
                       VulkanReplayBakeReason::PolicyScaleMismatch, 1);

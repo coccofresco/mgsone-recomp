@@ -332,8 +332,9 @@ std::vector<uint32_t> readSpirv(const char *name) {
 
 uint32_t acceleratedScale(int requested) {
   // Keep accidental configuration values from allocating an unbounded image.
-  // 8x still covers research captures while Crash 3 currently targets 4x.
-  return static_cast<uint32_t>(std::clamp(requested, 1, 8));
+  // 12x supplies genuine 3840-column MGS geometry; Crash 3 still targets 4x.
+  return static_cast<uint32_t>(
+      std::clamp(requested, 1, int(replay::MAX_INTERNAL_SCALE)));
 }
 
 replay::ReplayDepthMode
@@ -364,9 +365,11 @@ bool supportsFirstLiveGeometryProfile(const RendererOptions &options) {
   // baker selects painter-write versus less-equal; disabling strict here
   // silently fell back to native pixels even for fully precise geometry.
   // Other scales and geometric near clipping retain their separate gates.
-  return options.internalScale == 4 && options.pgxp && !options.pgxpNearClip &&
-         options.trueDepth && (options.trueDepthMode == "hybrid" ||
-                               options.trueDepthMode == "strict") &&
+  return (options.internalScale == 4 ||
+          (games::mgs::active() && options.internalScale == 12)) &&
+         options.pgxp && !options.pgxpNearClip && options.trueDepth &&
+         (options.trueDepthMode == "hybrid" ||
+          options.trueDepthMode == "strict") &&
          options.trueColor;
 }
 
@@ -3571,7 +3574,8 @@ struct RendererVulkan::Impl {
     if (hostSceneDepthBytes != 0u)
       appendPlane(hostSceneDepthBytes, hostSceneDepthOffset,
                   "host scene depth");
-    if (replayReadbackConfig.temporalMidpoint) {
+    if (replayReadbackConfig.temporalMidpoint ||
+        !replayReadbackConfig.colorDumpDirectory.empty()) {
       const VkDeviceSize scanoutPixels =
           static_cast<VkDeviceSize>(scanoutExtent.width) * scanoutExtent.height;
       if (scanoutExtent.width == 0u || scanoutExtent.height == 0u ||
@@ -21464,7 +21468,8 @@ struct RendererVulkan::Impl {
   }
 
   void ensureScanoutTarget(const DisplayScanoutPlan &scanout,
-                           uint32_t internalScale) {
+                           uint32_t internalScale,
+                           const RendererOptions &options) {
     if (!validDisplayScanoutPlan(scanout))
       throw std::runtime_error("invalid Vulkan display scanout plan");
     VkPhysicalDeviceProperties properties{};
@@ -21488,8 +21493,16 @@ struct RendererVulkan::Impl {
         canvasHeight > std::numeric_limits<uint32_t>::max() / effectiveScale) {
       throw std::overflow_error("Vulkan display canvas scale overflow");
     }
-    const VkExtent2D wanted{canvasWidth * effectiveScale,
-                            canvasHeight * effectiveScale};
+    if ((options.presentationWidth == 0) != (options.presentationHeight == 0))
+      throw std::runtime_error("fixed presentation requires both dimensions");
+    const VkExtent2D wanted =
+        options.presentationWidth
+            ? VkExtent2D{options.presentationWidth, options.presentationHeight}
+            : VkExtent2D{canvasWidth * effectiveScale,
+                         canvasHeight * effectiveScale};
+    if (wanted.width > widthLimit || wanted.height > heightLimit)
+      throw std::runtime_error(
+          "fixed Vulkan presentation exceeds device limits");
     scanoutScale = effectiveScale;
     ps1::metrics::setState("host.vulkan.internal_width", wanted.width);
     ps1::metrics::setState("host.vulkan.internal_height", wanted.height);
@@ -21641,6 +21654,9 @@ struct RendererVulkan::Impl {
     }
     replaySeedSmokeEnabled =
         replaySeedSmokeRequested && replayCapabilityAssessment.capable();
+    if (games::mgs::active() && options.presentationWidth == 3840 &&
+        !replayCapabilityAssessment.capable())
+      throw std::runtime_error("MGS UHD requires a device supporting the 12x Vulkan replay atlas");
     createDevice();
     createCommandResources();
     if (games::mgs::active()) {
@@ -26374,14 +26390,10 @@ struct RendererVulkan::Impl {
   }
 
   VkRect2D scanoutActiveRect(const DisplayScanoutPlan &scanout) const {
-    const uint64_t x =
-        static_cast<uint64_t>(scanout.destinationOrigin.x) * scanoutScale;
-    const uint64_t y =
-        static_cast<uint64_t>(scanout.destinationOrigin.y) * scanoutScale;
-    const uint64_t width =
-        static_cast<uint64_t>(scanout.activeExtent.width) * scanoutScale;
-    const uint64_t height =
-        static_cast<uint64_t>(scanout.activeExtent.height) * scanoutScale;
+    const auto viewport = mapVulkanScanoutViewport(scanout, scanoutExtent.width,
+                                                   scanoutExtent.height);
+    const uint64_t x = viewport.x, y = viewport.y, width = viewport.width,
+                   height = viewport.height;
     if (x > std::numeric_limits<int32_t>::max() ||
         y > std::numeric_limits<int32_t>::max() ||
         width > std::numeric_limits<uint32_t>::max() ||
@@ -26705,6 +26717,16 @@ struct RendererVulkan::Impl {
     }
     fitted.width = std::max(fitted.width, 1);
     fitted.height = std::max(fitted.height, 1);
+    ps1::metrics::setState("host.renderer.present.viewport_x", fitted.x);
+    ps1::metrics::setState("host.renderer.present.viewport_y", fitted.y);
+    ps1::metrics::setState("host.renderer.present.viewport_width",
+                           fitted.width);
+    ps1::metrics::setState("host.renderer.present.viewport_height",
+                           fitted.height);
+    ps1::metrics::setState("host.renderer.present.window_width",
+                           swapchainExtent.width);
+    ps1::metrics::setState("host.renderer.present.window_height",
+                           swapchainExtent.height);
     VkViewport viewport{static_cast<float>(fitted.x),
                         static_cast<float>(fitted.y),
                         static_cast<float>(fitted.width),
@@ -26791,7 +26813,8 @@ struct RendererVulkan::Impl {
     const ScopedMetricTimer renderTimer("host.renderer.vulkan_render_total_us");
     const bool crash3FullSceneSidecar =
         environmentSwitchEnabled("PS1_CRASH3_VULKAN_SCENE_SIDECAR");
-    ensureScanoutTarget(scanout, acceleratedScale(options.internalScale));
+    ensureScanoutTarget(scanout, acceleratedScale(options.internalScale),
+                        options);
     const Crash3PresentationCanvasSignature renderCanvas{
         scanout.canvas.width,
         scanout.canvas.height,

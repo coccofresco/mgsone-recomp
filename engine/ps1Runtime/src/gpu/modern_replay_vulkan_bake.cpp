@@ -1511,7 +1511,7 @@ VulkanReplayBakeResult
 bakeModernReplayVulkan(const ModernReplayExecutionPlan &plan,
                        uint32_t internalScale,
                        VulkanReplayBakeFeatures features) {
-  if (internalScale == 0 || internalScale > 8)
+  if (internalScale == 0 || internalScale > MAX_INTERNAL_SCALE)
     return failure(VulkanReplayBakeReason::InvalidScale);
 
   const std::span<const ReplayExecutionOperation> operations =
@@ -1822,7 +1822,7 @@ bakeModernReplayVulkan(const ModernReplayExecutionPlan &plan,
 VulkanReplayVisibilityBoundsResult measureVulkanReplayVisibilityBounds(
     const VulkanReplayBakedBatch &batch) noexcept {
   VulkanReplayVisibilityBoundsResult result;
-  if (batch.internalScale == 0 || batch.internalScale > 8)
+  if (batch.internalScale == 0 || batch.internalScale > MAX_INTERNAL_SCALE)
     return result;
 
   const uint64_t atlasWidth =

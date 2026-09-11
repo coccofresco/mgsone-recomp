@@ -474,8 +474,9 @@ void validate(const Reset &operation) {
 }
 
 void validate(const FrameLatch &latch) {
-  if (latch.policy.internalScale == 0 || latch.policy.internalScale > 8) {
-    throw std::invalid_argument("FrameLatch replay scale must be 1..8");
+  if (latch.policy.internalScale == 0 ||
+      latch.policy.internalScale > MAX_INTERNAL_SCALE) {
+    throw std::invalid_argument("FrameLatch replay scale must be 1..12");
   }
   switch (latch.policy.trueDepthMode) {
   case ReplayDepthMode::Off:

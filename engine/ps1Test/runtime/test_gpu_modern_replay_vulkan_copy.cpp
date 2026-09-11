@@ -1499,3 +1499,68 @@ TEST(GpuModernReplayVulkanDepthTest,
   metrics::reset();
   metrics::setEnabledForTesting(false);
 }
+
+TEST(GpuModernReplayVulkanDepthTest,
+     OptInUhdRasterHasTwelveSubpixelsAndNativeOracle) {
+  if (!std::getenv("PS1_RUN_VULKAN_INTEGRATION"))
+    GTEST_SKIP();
+  ScopedEnvironment readback("PS1_VULKAN_REPLAY_READBACK", "all");
+  ScopedEnvironment from("PS1_VULKAN_REPLAY_READBACK_FRAME_FROM", "2");
+  ScopedEnvironment to("PS1_VULKAN_REPLAY_READBACK_FRAME_TO", "2");
+  ScopedEnvironment region("PS1_VULKAN_REPLAY_READBACK_REGION", "32,0,1,1");
+  struct Profile {
+    Profile() { games::mgs::configure(true, true); }
+    ~Profile() { games::mgs::configure(false, false); }
+  } profile;
+  metrics::reset();
+  metrics::setEnabledForTesting(true);
+  GPU gpu;
+  configureVulkanNativeOracle(gpu, true);
+  RendererOptions options;
+  options.internalScale = 12;
+  options.presentationWidth = 3840;
+  options.presentationHeight = 2160;
+  options.preserveAspect = true;
+  options.presentationAspectWidth = 16;
+  options.presentationAspectHeight = 9;
+  options.pgxp = true;
+  options.trueDepth = true;
+  options.trueColor = true;
+  RendererVulkan renderer(gpu, options);
+  ASSERT_TRUE(renderer.init("MGS UHD raster oracle", 800, 800, false, false));
+  gpu.writeGP1(0x03000000);
+  gpu.writeGP1(0x05000000);
+  gpu.writeGP0(0xe3000000);
+  gpu.writeGP0(0xe4000000 | 1023 | (511 << 10));
+  gpu.snapshotDisplayBuffer(1);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  // A quarter-native-pixel offset must become exactly three UHD columns.
+  // Upscaling a native framebuffer would instead color all twelve columns.
+  gpu.writeGP0(0x2800ff00);
+  const std::array<uint32_t, 4> xy = {packedVertex(32, 0), packedVertex(33, 0),
+                                      packedVertex(32, 1), packedVertex(33, 1)};
+  for (uint32_t k = 0; k < 4; ++k) {
+    const auto p =
+        projectedVertexAtDepth(xy[k], float(int16_t(xy[k])) + .25f,
+                               float(int16_t(xy[k] >> 16)), 4096, 100 + k);
+    gpu.writeGP0(xy[k], UINT32_MAX, &p);
+  }
+  gpu.snapshotDisplayBuffer(2);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  EXPECT_EQ(metrics::getState("host.vulkan.internal_width"), 3840);
+  EXPECT_EQ(metrics::getState("host.vulkan.internal_height"), 2160);
+  EXPECT_EQ(metrics::getState("host.renderer.vulkan_replay_scale"), 12);
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_nonblack"),
+            108);
+  EXPECT_GT(metrics::get("host.renderer.vulkan_replay_route.m1_geometry"), 0u);
+  EXPECT_TRUE(isVulkanNativeOraclePolicyActive(gpu));
+  const auto w = metrics::getState("host.renderer.present.viewport_width");
+  const auto h = metrics::getState("host.renderer.present.viewport_height");
+  EXPECT_LE(std::abs(w * 9 - h * 16), 16);
+  renderer.destroy();
+  metrics::reset();
+  metrics::setEnabledForTesting(false);
+}

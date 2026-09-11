@@ -9,13 +9,14 @@ pacchetti e framebuffer PS1 di riferimento.
 ## Avvio
 
 ```sh
-PS1_MGS_MESH_REPLAY=1 scripts/run_native.sh
+scripts/run_native.sh
 ```
 
 Servono build e [cache USA v2](mgs-vulkan-cache.md). La modalità imposta la
-presentazione a 4×, PGXP, true color e profondità ibrida. F9 carica lo slot
-selezionato; F5 lo salva. Il comando ordinario conserva la presentazione
-predefinita. Una cache assente impedisce di attivare il percorso sostitutivo.
+presentazione [UHD 3840×2160 a 16:9 fisso](mgs-uhd-presentation.md), PGXP, true
+color e profondità ibrida. F9 carica lo slot selezionato; F5 lo salva. Dal giorno
+11 settembre è il percorso predefinito; `PS1_MGS_MESH_REPLAY=0` seleziona quello
+di riferimento. Una cache assente impedisce di attivare il percorso sostitutivo.
 
 ## Geometria e posa
 
@@ -120,8 +121,8 @@ corrotte producono intenzionalmente differenze rispetto al framebuffer PS1.
 l'ordinamento e la suddivisione continuano a dipendere dal codice nativo.
 La posa world proviene ancora dalle matrici native quantizzate. Non sono
 implementati invio indipendente dal culling PS1, famiglie LOD certificate,
-selezione del massimo dettaglio o interpolazione 2×. La modalità resta opt-in;
-il costo della presentazione a 4× richiede ulteriore ottimizzazione.
+selezione del massimo dettaglio o interpolazione 2×. Il costo della presentazione richiede ulteriore ottimizzazione. Le misure
+seguenti descrivono la precedente configurazione a 4×, non quella UHD.
 
 Prova isolata a clock normale, senza readback GPU: 240 VBlank in 6,462706 secondi
 contro 4 nominali. La correttezza della scena non implica ancora velocità reale a 4×.

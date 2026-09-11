@@ -1,4 +1,5 @@
 #include "runtime/gpu/modern_replay_vulkan_diagnostics.h"
+#include "runtime/gpu/replay_limits.h"
 
 #include "runtime/gpu/modern_replay_vulkan_abi.h"
 #include "runtime/metrics.h"
@@ -358,8 +359,7 @@ diagnoseVulkanReplayReadback(const VulkanReplayDiagnosticRegion &region,
     report.status = VulkanReplayDiagnosticStatus::EmptyRegion;
     return report;
   }
-  if (region.internalScale == 0 ||
-      region.internalScale > EnhancedSurface::MAX_SCALE) {
+  if (region.internalScale == 0 || region.internalScale > MAX_INTERNAL_SCALE) {
     report.status = VulkanReplayDiagnosticStatus::InvalidScale;
     return report;
   }
@@ -468,8 +468,7 @@ captureVulkanReplayReadback(const VulkanReplayDiagnosticRegion &region,
     report.status = VulkanReplayDiagnosticStatus::EmptyRegion;
     return report;
   }
-  if (region.internalScale == 0 ||
-      region.internalScale > EnhancedSurface::MAX_SCALE) {
+  if (region.internalScale == 0 || region.internalScale > MAX_INTERNAL_SCALE) {
     report.status = VulkanReplayDiagnosticStatus::InvalidScale;
     return report;
   }

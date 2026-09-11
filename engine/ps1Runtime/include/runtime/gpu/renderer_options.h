@@ -24,6 +24,10 @@ struct RendererOptions {
   std::string trueDepthMode = "hybrid";
   std::string wipDepthManifest;
   bool trueColor = false;
+  // Optional fixed offscreen presentation size, independent of the window.
+  // Zero preserves the display-canvas × internalScale behavior.
+  uint32_t presentationWidth = 0;
+  uint32_t presentationHeight = 0;
 };
 
 inline constexpr std::optional<DisplayAreaPolicy>

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "runtime/gpu/replay_limits.h"
 #include <array>
 #include <chrono>
 #include <condition_variable>

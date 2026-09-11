@@ -42,8 +42,8 @@ ReplayPolicyState CrashReplayRecorder::policy() const {
 }
 
 void CrashReplayRecorder::configure(ReplayRecorderConfig config) {
-  if (config.internalScale == 0 || config.internalScale > 8)
-    throw std::invalid_argument("CrashReplay internal scale must be 1..8");
+  if (config.internalScale == 0 || config.internalScale > MAX_INTERNAL_SCALE)
+    throw std::invalid_argument("CrashReplay internal scale must be 1..12");
   switch (config.trueDepthMode) {
   case ReplayDepthMode::Off:
   case ReplayDepthMode::Hybrid:

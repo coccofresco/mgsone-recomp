@@ -7,6 +7,7 @@
 #include "runtime/metrics.h"
 #include <cstdlib>
 #include <gtest/gtest.h>
+#include <utility>
 #include <vector>
 
 using namespace ps1::gpu;
@@ -601,7 +602,7 @@ TEST(GpuModernOutputTest, VulkanReplayDepthDomainRejectsOutOfRangeW) {
 
 TEST(GpuModernOutputTest, BoundsReplayAtlasScaleLikeVulkanPresentation) {
   EXPECT_EQ(planVulkanReplayResources(0).internalScale, 1u);
-  EXPECT_EQ(planVulkanReplayResources(99).internalScale, 8u);
+  EXPECT_EQ(planVulkanReplayResources(99).internalScale, 12u);
 }
 
 TEST(GpuModernOutputTest, QualifiesExactFourXReplayImageSet) {
@@ -802,4 +803,40 @@ TEST(GpuModernOutputTest, ReusedLatchUpdatesStateWithoutRecopyingModernPixels) {
   EXPECT_NE(state.contentRevision, firstRevision);
   EXPECT_EQ(state.latchFrame, 12u);
   EXPECT_EQ(display.front(), (Color32{0, 255, 0, 255}));
+}
+
+TEST(GpuModernOutputTest, UhdReplayPreservesNativeOracleAndMapsSignalCanvas) {
+  GPU gpu;
+  configureVulkanNativeOracle(gpu, true);
+  const auto resources = planVulkanReplayResources(12);
+  EXPECT_EQ(resources.internalScale, 12u);
+  EXPECT_EQ(resources.atlasExtent.width, 12288u);
+  EXPECT_EQ(resources.atlasExtent.height, 6144u);
+  EXPECT_TRUE(isVulkanNativeOraclePolicyActive(gpu));
+  DisplayScanoutPlan plan{};
+  plan.canvas = {320, 224};
+  plan.activeExtent = {320, 224};
+  auto viewport = mapVulkanScanoutViewport(plan, 3840, 2160);
+  EXPECT_EQ(viewport.x, 0);
+  EXPECT_EQ(viewport.y, 0);
+  EXPECT_EQ(viewport.width, 3840);
+  EXPECT_EQ(viewport.height, 2160);
+  plan.destinationOrigin = {16, 14};
+  plan.activeExtent = {288, 196};
+  viewport = mapVulkanScanoutViewport(plan, 3840, 2160);
+  EXPECT_EQ(viewport.x, 192);
+  EXPECT_EQ(viewport.y, 135);
+  EXPECT_EQ(viewport.width, 3456);
+  EXPECT_EQ(viewport.height, 1890);
+  for (const auto &size :
+       {std::pair{800, 800}, std::pair{2560, 1080}, std::pair{3840, 2160}}) {
+    const auto fitted = fitDisplayViewport(size.first, size.second, 16, 9);
+    EXPECT_LE(std::abs(fitted.width * 9 - fitted.height * 16), 16);
+    EXPECT_GE(fitted.x, 0);
+    EXPECT_GE(fitted.y, 0);
+    EXPECT_LE(fitted.x + fitted.width, size.first);
+    EXPECT_LE(fitted.y + fitted.height, size.second);
+    EXPECT_LE(std::abs(2 * fitted.x + fitted.width - size.first), 1);
+    EXPECT_LE(std::abs(2 * fitted.y + fitted.height - size.second), 1);
+  }
 }
