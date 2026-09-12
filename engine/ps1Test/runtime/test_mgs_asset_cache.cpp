@@ -254,6 +254,19 @@ TEST(MgsAssetCacheTest,
             cache.section(AssetCache::Vertices).offset + 3 * 48);
   EXPECT_FLOAT_EQ(packet.originalMesh->viewRows[2][3], 1000.0f);
   EXPECT_EQ(std::memcmp(before.data(), memory.ramPtr(), before.size()), 0);
+  // A distinct presentation pose must not contaminate the native packet
+  // oracle, including its derived subdivision faces. Use a deliberate large
+  // difference so an accidental oracle comparison against it fails the test.
+  for (unsigned offset = 0; offset < 32; offset += 4)
+    memory.write32(object + offset, memory.read32(object + 72 + offset));
+  memory.write32(object + 40, 0x40);
+  memory.write32(object + 20, 100);
+  captureSceneBeforeBounds(&ctx);
+  prepareMeshReplay(&ctx);
+  auto modernPacket = packet;
+  ASSERT_TRUE(replaceMeshReplayPacket(modernPacket));
+  EXPECT_DOUBLE_EQ(modernPacket.vertices[1].x, 195.2);
+  EXPECT_FLOAT_EQ(modernPacket.originalMesh->viewRows[0][3], 100);
   // Trace one subdivision cell back to the four immutable parent corners.
   beginMeshDivide(&ctx);
   memory.write32(0x1f800034, 0x1f800038);
@@ -285,9 +298,10 @@ TEST(MgsAssetCacheTest,
             packet.originalMesh->pointBytes);
   EXPECT_EQ(childPacket.originalMesh->weights[3],
             (std::array<float, 4>{.25f, .25f, .25f, .25f}));
-  EXPECT_NEAR(childPacket.vertices[1].x, 161.6, 1e-5);
+  EXPECT_NEAR(childPacket.vertices[1].x, 193.6, 1e-5);
   // A source behind the eye remains a cache draw: the GPU clips its true
   // signed eye coordinates. Native GTE saturation is only the oracle.
+  memory.write32(object + 40, 0);
   memory.write32(object + 72 + 28, uint32_t(-1000));
   for (unsigned k = 0; k < 4; ++k) {
     const int x = int(order[k] * 10 * (131071.0 / 65536.0));

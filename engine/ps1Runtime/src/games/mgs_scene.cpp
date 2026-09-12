@@ -6,6 +6,7 @@
 #include "runtime/metrics.h"
 #include "runtime/psyq/psyq_state.h"
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 #include <mutex>
 #include <unordered_map>
@@ -17,6 +18,7 @@ std::unordered_map<uint32_t, std::vector<uint32_t>> assetNames;
 std::mutex snapshotMutex;
 std::shared_ptr<const SceneSnapshot> latest;
 uint64_t sequence = 0;
+bool precisePose = true;
 bool ramRange(uint32_t address, uint64_t size) {
   const uint32_t physical = address & 0x1fffffffu;
   return physical < Memory::RAM_SIZE && size <= Memory::RAM_SIZE - physical;
@@ -251,6 +253,8 @@ uint32_t matchSceneDefinition(const AssetCache &cache, const Memory &memory,
 }
 void setSceneAssetCache(const AssetCache *cache) {
   assets = cache;
+  const char *poseMode = std::getenv("PS1_MGS_PRECISE_POSE");
+  precisePose = !poseMode || std::string_view(poseMode) != "0";
   assetNames.clear();
   if (cache) {
     for (uint32_t i = 0; i < cache->section(AssetCache::Names).count; ++i)
@@ -287,15 +291,18 @@ void captureSceneBeforeBounds(recomp_context *ctx) {
   for (size_t i = 0; i < 4; ++i) snap->clip[i] = int16_t(u16(c + 92 + i*2));
   std::unordered_map<uint32_t, std::pair<uint32_t, bool>> definitions;
   uint32_t matched = 0, visible = 0, modelCount = 0;
+  uint32_t preciseInstances = 0, preciseModels = 0, invalidPoses = 0, inheritedRoots = 0;
   for (uint32_t i = 0; i < count; ++i) {
     const uint32_t address = u32(ram(m, queue) + i*4);
     if (!ramRange(address, 72)) { resetSceneCapture(); return; }
     const auto *o = ram(m, address);
     SceneInstance instance;
     instance.guestAddress = address; instance.definition = u32(o + 36);
+    instance.rootAddress = u32(o + 32);
     instance.flags = u32(o + 40); instance.group = u16(o + 44);
     instance.visible = !(instance.flags & 0x80) && (!instance.group || (instance.group & snap->currentGroup));
     const uint32_t n = u16(o + 46);
+    instance.primaryModels = n;
     if (n > 4096 || !ramRange(instance.definition, 32)) { resetSceneCapture(); return; }
     const uint32_t total = u32(ram(m, instance.definition) + 4);
     if (total > 4096 || n > total || !ramRange(address + 72, uint64_t(total)*92)) { resetSceneCapture(); return; }
@@ -314,6 +321,7 @@ void captureSceneBeforeBounds(recomp_context *ctx) {
       model.guestAddress = object;
       model.assetModel = instance.asset == ~0u ? ~0u : assets->word(AssetCache::Assets, instance.asset, 9) + j;
       model.world = matrix(m, object);
+      model.presentationWorld = model.world;
       const uint32_t descriptor = u32(ram(m, object + 64));
       if (!ramRange(descriptor, 88)) { resetSceneCapture(); return; }
       model.flags = u32(ram(m, descriptor));
@@ -322,11 +330,43 @@ void captureSceneBeforeBounds(recomp_context *ctx) {
     }
     snap->instances.push_back(std::move(instance));
   }
+  if (precisePose) {
+    reconstructScenePoses(m, *snap);
+    for (const auto &instance : snap->instances) {
+      const auto &pose = instance.pose;
+      if (pose.source == ScenePoseSource::Rotations ||
+          pose.source == ScenePoseSource::Movements) {
+        ++preciseInstances;
+        preciseModels += pose.models;
+        metrics::count("mgs.pose.articulated_instances");
+        metrics::count("mgs.pose.articulated_models", pose.models);
+      }
+      if (pose.invalidInput) {
+        ++invalidPoses;
+        metrics::count("mgs.pose.invalid_inputs");
+      }
+      if (pose.inheritedRoot) {
+        ++inheritedRoots;
+        metrics::count("mgs.pose.inherited_roots");
+      }
+      metrics::trace("mgs.pose", {{"object", instance.guestAddress},
+                                  {"source", int64_t(pose.source)},
+                                  {"models", pose.models},
+                                  {"invalid", pose.invalidInput},
+                                  {"inherited_root", pose.inheritedRoot},
+                                  {"rotation_error_millionths", int64_t(pose.maxRotationError * 1000000)},
+                                  {"translation_error_milli", int64_t(pose.maxTranslationError * 1000)}});
+    }
+  }
   metrics::count("mgs.scene.captures");
   metrics::setState("mgs.scene.instances", count);
   metrics::setState("mgs.scene.visible_instances", visible);
   metrics::setState("mgs.scene.matched_instances", matched);
   metrics::setState("mgs.scene.models", modelCount);
+  metrics::setState("mgs.pose.articulated_instances", preciseInstances);
+  metrics::setState("mgs.pose.articulated_models", preciseModels);
+  metrics::setState("mgs.pose.invalid_inputs", invalidPoses);
+  metrics::setState("mgs.pose.inherited_roots", inheritedRoots);
   metrics::trace("mgs.scene", {{"channel", channel}, {"instances", count},
                                {"visible", visible}, {"matched", matched}, {"models", modelCount}});
   std::lock_guard lock(snapshotMutex); latest = std::move(snap);

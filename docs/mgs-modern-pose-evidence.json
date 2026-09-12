@@ -1,0 +1,114 @@
+{
+  "schema": "mgs-modern-pose-evidence/v1",
+  "date": "2026-09-12",
+  "branch": "presentation/modern-scene",
+  "game": "Metal Gear Solid USA v1.0 disc 1",
+  "scene": "s00a dock, local user checkpoint",
+  "exe_sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32",
+  "user_state_sha256_unchanged": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+  "reference": {
+    "project": "FoxdieTeam/mgs_reversing",
+    "commit": "217509eae471629b1a53633b816c61adfef9ed5c",
+    "path": "source/libdg/screen.c",
+    "usa_apply_rots": "0x8001D170",
+    "usa_apply_movs": "0x8001D030",
+    "usa_rotation_zyx": "0x80096A44"
+  },
+  "implementation_sha256": {
+    "engine/ps1Runtime/src/games/mgs_pose.cpp": "c2071276931cb7ed2e2191cd90c727c49189e0114c00a9010b2fcd475e1d6798",
+    "engine/ps1Runtime/src/games/mgs_scene.cpp": "53835cd88554d4fd1e735bdd0010461e4cdb7c79a85033c3dfc8141f9e8d753f",
+    "engine/ps1Runtime/src/games/mgs_mesh_replay.cpp": "aaccb2ae91ebadb86c6bdea7d2137c537538f153df06b7ac91349127695a39db"
+  },
+  "tests": {
+    "passed": 308,
+    "failures": 0,
+    "skipped": 0,
+    "suites": 23,
+    "guest_pose_samples": 160,
+    "guest_pose_modes": 5,
+    "guest_oracle_maximum_errors": {
+      "maximum_rotation_error": 0.002772,
+      "maximum_translation_error": 5.83216
+    },
+    "guest_memory_unchanged": true
+  },
+  "final_gameplay_run": {
+    "vblanks_after_load": 1400,
+    "loaded_states": 1,
+    "matched_instances": 27,
+    "instances": 27,
+    "articulated_instances": 4,
+    "articulated_models": 64,
+    "inherited_roots": 3,
+    "mapped_packets": 289341,
+    "replaced_packets": 289341,
+    "gpu_submitted_packets": 288712,
+    "precise_pose_replaced_packets": 144674,
+    "texture_cached_packets": 289341,
+    "texture_gpu_submitted_packets": 288712,
+    "invalid_pose_inputs": 0,
+    "pose_projection_rejections": 0,
+    "cache_uploads": 1,
+    "cache_device_bytes": 94074416,
+    "cache_gpu_readback_equal": true,
+    "max_rotation_difference": 0.002314,
+    "max_translation_difference": 3.844,
+    "trace_events": {
+      "mgs.pose": 12447
+    },
+    "elapsed_after_load_us": 35968652,
+    "note": "Input intervals are requested, not a deterministic guarantee of a particular Codec conversation. Replaced packets exceed GPU submissions during replay reanchor. Diagnostics and tests ran concurrently for part of this run; not a performance benchmark."
+  },
+  "earlier_movement_codec_run": {
+    "vblanks_after_load": 1400,
+    "mapped_replaced_gpu_submitted_packets": 176018,
+    "precise_pose_replaced_packets": 78062,
+    "codec_ui_unmapped_packets": 3663,
+    "invalid_pose_inputs": 0,
+    "pose_projection_rejections": 0,
+    "cache_uploads": 1,
+    "note": "Separate run with the same input fixture before the final verification. Counts vary with the guest path; do not merge counters from the two runs."
+  },
+  "images": [
+    {
+      "path": "data/native/modern-pose-gpu/frame-97200-present-1-ordinary-scanout.ppm",
+      "sha256": "f56fb824d215309279895a07beca1b1c3b90a8142cfe35bed3ca8a0009354935",
+      "width": 3840,
+      "height": 2160,
+      "inspected": false
+    },
+    {
+      "path": "data/native/modern-pose-gpu/frame-97203-present-2-ordinary-scanout.ppm",
+      "sha256": "7cd239bc2e5d32cde70d1a1d5fef1113b0dadb5ba206852b8ec1feb01c897e90",
+      "width": 3840,
+      "height": 2160,
+      "inspected": false
+    },
+    {
+      "path": "data/native/modern-pose-gpu/frame-97206-present-3-ordinary-scanout.ppm",
+      "sha256": "e0200085db14c070e65f6a4ce1cc5eb0835ac79b53ab4c6ca24b09a9117e0b6f",
+      "width": 3840,
+      "height": 2160,
+      "inspected": true
+    }
+  ],
+  "cross_run_pixel_comparison": {
+    "valid_isolation_proof": false,
+    "native_frames_equal": false,
+    "note": "Equal host VBlank labels did not produce identical native scanout in separate runs. Pixel differences cannot be attributed solely to the new pose. Read-only unit checks and instruction-level pose oracles are the isolation evidence."
+  },
+  "commands": {
+    "build": "cmake --build build --target ps1Runtime ps1Runtime_tests --parallel 4",
+    "tests": "PS1_RUN_VULKAN_INTEGRATION=1 PS1_TEST_MGS_USA_EXE=data/assets/usa/disc1/SLUS_005.94 PS1_TEST_MGS_ASSET_CACHE=data/presentation/usa/assets.mgsc build/ps1Test/ps1Runtime_tests --gtest_filter='*Mgs*:*SaveState*:*ModernReplay*:PsyqGpuTest.*' --gtest_output=xml:data/native/modern-pose-tests.xml",
+    "gameplay": "timeout 180s env PS1_MGS_ASSET_VERIFY=1 PS1_PRESENT_WINDOWED=1 SDL_AUDIODRIVER=dummy PS1_VBLANK_PERIOD_US=1000 PS1_AUTOLOAD_VBLANK=300 PS1_EXIT_AFTER_LOAD_VBLANKS=1400 PS1_INPUT_SCRIPT=scripts/fixtures/mgs-dock-cache.input PS1_METRICS=data/native/modern-pose-metrics.json PS1_TRACE_JSONL=data/native/modern-pose-trace.jsonl PS1_TRACE_EVENTS=mgs.pose,mgs.mesh.reject,mgs.mesh.unmapped,mgs.texture.miss PS1_VULKAN_REPLAY_READBACK=capture PS1_VULKAN_REPLAY_READBACK_FRAME_FROM=97200 PS1_VULKAN_REPLAY_READBACK_FRAME_TO=97206 PS1_VULKAN_REPLAY_READBACK_INTERVAL=3 PS1_VULKAN_REPLAY_READBACK_DUMP_DIRECTORY=data/native/modern-pose-gpu scripts/run_native.sh",
+    "native_pose_reference": "PS1_MGS_PRECISE_POSE=0 scripts/run_native.sh"
+  },
+  "remaining_limits": [
+    "External root matrices and camera are native quantized inputs",
+    "Animation angles and update rates remain original; no 2x interpolation",
+    "Face submission, culling, subdivision, ordering and shading still follow native rendering",
+    "No highest-LOD family selection",
+    "Only dock gameplay has been validated",
+    "No complete pixel-equivalence or real-time performance certification"
+  ]
+}

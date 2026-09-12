@@ -35,6 +35,7 @@ struct Face {
   uint64_t sequence = 0;
   uint32_t assetModel = 0;
   std::array<Point, 4> view;
+  std::array<Point, 4> nativeView{};
   std::array<std::array<double, 2>, 4> reference{};
   std::array<std::array<int16_t, 2>, 4> xy;
   std::array<uint32_t, 4> colors;
@@ -42,6 +43,7 @@ struct Face {
   uint16_t tpage = 0, clut = 0;
   uint8_t opcode = 0, step = 12;
   bool procedural = false;
+  bool precisePose = false;
   double projection = 0;
   gpu::replay::OriginalMeshGeometry geometry;
 };
@@ -250,6 +252,7 @@ void preparePrimitiveFaces(const SceneSnapshot &scene, const Memory &memory,
         }
         face.reference[k] = reference;
         face.view[k] = point;
+        face.nativeView[k] = point;
         face.geometry.pointBytes[k] =
             cache->section(AssetCache::Templates).offset + k * 16;
         face.xy[k] = {int16_t(u16(pack + 8 + k * step)),
@@ -491,6 +494,9 @@ void prepareMeshReplay(recomp_context *ctx) {
           Face face;
           face.sequence = scene->sequence;
           face.assetModel = global;
+          face.precisePose = instance.pose.source == ScenePoseSource::Rotations ||
+                             instance.pose.source == ScenePoseSource::Movements ||
+                             instance.pose.inheritedRoot;
           face.opcode = p[7];
           face.projection = scene->projection;
           face.clut = u16(p + 14);
@@ -558,7 +564,7 @@ void prepareMeshReplay(recomp_context *ctx) {
               }
             }
             face.geometry.pointBytes[k] = pointByte;
-            const auto &world = instance.models[owners[model]].world;
+            const auto &world = instance.models[owners[model]].presentationWorld;
             for (unsigned row = 0; row < 3; ++row) {
               auto &out = face.geometry.viewRows[k * 3 + row];
               for (unsigned col = 0; col < 4; ++col) {
@@ -584,14 +590,17 @@ void prepareMeshReplay(recomp_context *ctx) {
                     displacement[axis];
             for (unsigned axis = 0; axis < 3; ++axis)
               position[axis] += displacement[axis];
-            face.view[k] = transform(
-                scene->view,
-                transform(instance.models[owners[model]].world, position));
-            if (scene->widescreen)
+            face.view[k] = transform(scene->view, transform(world, position));
+            face.nativeView[k] = transform(
+                scene->view, transform(instance.models[owners[model]].world, position));
+            if (scene->widescreen) {
               face.view[k][0] *= 0.75;
+              face.nativeView[k][0] *= 0.75;
+            }
             face.view[k][1] *= 58.0 / 64.0;
+            face.nativeView[k][1] *= 58.0 / 64.0;
             face.reference[k] =
-                referenceProjection(face.view[k], face.projection);
+                referenceProjection(face.nativeView[k], face.projection);
             face.xy[k] = {int16_t(u16(p + 8 + k * 12)),
                           int16_t(u16(p + 10 + k * 12))};
             face.colors[k] = u32(p + 4 + k * 12) & 0xffffffu;
@@ -626,11 +635,15 @@ void prepareMeshReplay(recomp_context *ctx) {
       continue;
     for (uint32_t k = 0; k < 4; ++k) {
       face.view[k] = {};
+      face.nativeView[k] = {};
       for (uint32_t source = 0; source < 4; ++source)
-        for (uint32_t axis = 0; axis < 3; ++axis)
+        for (uint32_t axis = 0; axis < 3; ++axis) {
           face.view[k][axis] +=
               link.weights[k][source] * parent->second.view[source][axis];
-      face.reference[k] = referenceProjection(face.view[k], face.projection);
+          face.nativeView[k][axis] +=
+              link.weights[k][source] * parent->second.nativeView[source][axis];
+        }
+      face.reference[k] = referenceProjection(face.nativeView[k], face.projection);
       face.xy[k] = {int16_t(u16(p + 8 + k * 12)),
                     int16_t(u16(p + 10 + k * 12))};
       face.colors[k] = u32(p + 4 + k * 12) & 0xffffff;
@@ -941,6 +954,8 @@ bool replaceMeshReplayPacket(gpu::replay::DrawPacket &packet) {
   packet.state.depth.compare = gpu::replay::DepthCompare::Always;
   packet.state.depth.invalidateOnAccepted = packet.state.blend.enabled;
   metrics::count("mgs.mesh.replaced_packets");
+  if (face->precisePose)
+    metrics::count("mgs.mesh.precise_pose_packets");
   if (face->procedural)
     metrics::count("mgs.primitive.replaced_packets");
   metrics::trace("mgs.mesh.replace",

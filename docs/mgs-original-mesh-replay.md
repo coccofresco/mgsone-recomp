@@ -25,6 +25,10 @@ hook all'ingresso USA di `DG_SortChanl` (`0x8001E0AC`) associa i pacchetti alle
 definizioni originali dopo trasformazione, illuminazione e suddivisione.
 Ogni osservatore riproduce l'istruzione originale verificata dalla ricetta.
 
+Aggiornamento del 12 settembre: le [pose articolate](mgs-modern-pose.md) vengono
+ricostruite in virgola mobile dagli operandi originali, con propagazione degli
+agganci fra istanze. Le matrici native restano separate per l'oracolo dei pacchetti.
+
 L'identità richiede la definizione completa: topologia, normali, UV, relazioni
 parent/extend e posizioni. Il cache ID nativo restringe i candidati, senza
 costituire da solo una prova. Sono ammesse modifiche del materiale e del solo
@@ -119,7 +123,8 @@ corrotte producono intenzionalmente differenze rispetto al framebuffer PS1.
 
 È coperta la scena del molo, non l'intero gioco. La selezione delle facce,
 l'ordinamento e la suddivisione continuano a dipendere dal codice nativo.
-La posa world proviene ancora dalle matrici native quantizzate. Non sono
+La camera e le matrici radice esterne restano native quantizzate; la composizione
+articolata usa ora il percorso float descritto sopra. Non sono
 implementati invio indipendente dal culling PS1, famiglie LOD certificate,
 selezione del massimo dettaglio o interpolazione 2×. Il costo della presentazione richiede ulteriore ottimizzazione. Le misure
 seguenti descrivono la precedente configurazione a 4×, non quella UHD.

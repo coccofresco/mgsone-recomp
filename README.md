@@ -43,6 +43,9 @@ con geometrie KMD/ZMD e texture PCX originali dei due CD. La
 deformazioni, suddivisioni, texture e quad degli effetti sono supportati.
 Vulkan legge gli originali e proietta in float; simulazione e framebuffer PS1
 continuano sotto al cofano. HUD e Codec sono composti come grafica 2D runtime.
+Le [pose articolate](docs/mgs-modern-pose.md) sono ora ricostruite dagli operandi
+originali in virgola mobile, inclusi gli agganci fra modelli; le matrici PS1
+restano l'oracolo separato per verificare i pacchetti.
 Il percorso resta sperimentale: altre scene, culling indipendente, famiglie LOD,
 interpolazione e prestazioni richiedono ulteriori verifiche e sviluppo.
 
