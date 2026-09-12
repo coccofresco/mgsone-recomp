@@ -66,6 +66,7 @@ add_executable(ps1Runtime_tests
     runtime/test_mgs_profile.cpp
     runtime/test_mgs_asset_cache.cpp
     runtime/test_mgs_pose.cpp
+    runtime/test_mgs_decomp.cpp
     runtime/test_crash3_scenery_detail.cpp
     runtime/test_source_surface_partition.cpp
     runtime/test_source_selection_program.cpp

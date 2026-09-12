@@ -1,0 +1,253 @@
+{
+  "date": "2026-09-12",
+  "branch": "decomp/native-core",
+  "base_commit": "d7dbf5cab8d3db72442317dca5d68f491b4bc11b",
+  "scope": "Four C decomp entry boundaries and original-format geometry; most game logic remains AOT.",
+  "upstream": {
+    "url": "https://github.com/FoxdieTeam/mgs_reversing",
+    "commit": "217509eae471629b1a53633b816c61adfef9ed5c",
+    "target": "Metal Gear Solid Integral PS1",
+    "source": {
+      "path": ".local/mgs_reversing/source/libdg/text.c",
+      "bytes": 6006,
+      "sha256": "cc95820da4727bc937a6cc7b1a4705a2c43d14d7b9b9e224f9bb059151442ba4"
+    },
+    "adapted_source": {
+      "path": "engine/ps1Runtime/src/games/mgs_decomp/texture.c",
+      "bytes": 2257,
+      "sha256": "b43dd3acc38961bace76ada3878fcb316dd2e2bdf396de6148e6062dcea3075c"
+    }
+  },
+  "usa_abi": {
+    "texture_table": "0x800B46C8",
+    "record_stride": 12,
+    "record_count": 512,
+    "functions": [
+      {
+        "name": "FindTexture",
+        "entry": "0x8001E254",
+        "end": "0x8001E2E8",
+        "sha256": "456664fc84bf05903f3c992245e4deb7d2643f026d647dcff3a3665addad7ddc"
+      },
+      {
+        "name": "DG_InitTextureSystem",
+        "entry": "0x8001E2E8",
+        "end": "0x8001E310",
+        "sha256": "23e3a74fdc3259d37e4121c3f772279f1f8eba07dd4a24ef1cef6e0e96706ad0"
+      },
+      {
+        "name": "DG_GetTexture",
+        "entry": "0x8001E310",
+        "end": "0x8001E378",
+        "sha256": "f2914520224f99164fb9544749114c3990ec0704abcd8e20bf53be8280be7557"
+      },
+      {
+        "name": "DG_SetTexture",
+        "entry": "0x8001E378",
+        "end": "0x8001E54C",
+        "sha256": "887d453adc05745a528e108346b44ce0132ccbb80db4556b12e11bdb758f0c41"
+      }
+    ],
+    "differential_calls": 194,
+    "ram_exclusion": "64 bytes below guest SP occupied by callee spills; temporary registers are not C ABI outputs"
+  },
+  "runtime_binary": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "bytes": 53620808,
+    "sha256": "fb859fdbb93a3320ae0be90bb3705b7e0b01fd9eaced459ea7e99725abdaa3ce"
+  },
+  "executable": {
+    "path": "data/assets/usa/disc1/SLUS_005.94",
+    "bytes": 651264,
+    "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+  },
+  "user_savestate": {
+    "path": "savestates/quick_slot_0.ps1s",
+    "bytes": 3940306,
+    "sha256": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953"
+  },
+  "cache": {
+    "path": "data/presentation/usa-source/assets.mgsc",
+    "bytes": 63741104,
+    "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6",
+    "schema": "MGSAC003",
+    "previous": {
+      "path": "data/presentation/usa/assets.mgsc",
+      "bytes": 94074416,
+      "sha256": "80ebd0c371043395809a2eaf3f602fd14de0e3b89c5c417b9898f985f132d3f1"
+    },
+    "removed_expanded_bytes": 30333312,
+    "sections": {
+      "ASST": {
+        "count": 19340,
+        "stride": 64,
+        "unchanged_original_bytes": true
+      },
+      "MODL": {
+        "count": 6695,
+        "stride": 32,
+        "unchanged_original_bytes": true
+      },
+      "VRTX": {
+        "count": 0,
+        "stride": 48,
+        "unchanged_original_bytes": false
+      },
+      "TEXR": {
+        "count": 18481,
+        "stride": 32,
+        "unchanged_original_bytes": true
+      },
+      "TEXI": {
+        "count": 24542478,
+        "stride": 1,
+        "unchanged_original_bytes": true
+      },
+      "PLTE": {
+        "count": 101960,
+        "stride": 4,
+        "unchanged_original_bytes": true
+      },
+      "SRCE": {
+        "count": 36591512,
+        "stride": 1,
+        "unchanged_original_bytes": true
+      },
+      "NAME": {
+        "count": 19455,
+        "stride": 8,
+        "unchanged_original_bytes": true
+      },
+      "TMPL": {
+        "count": 4,
+        "stride": 16,
+        "unchanged_original_bytes": true
+      }
+    },
+    "disc_rebuild_identical": true
+  },
+  "run": {
+    "exit_code": 0,
+    "log": ".local/decomp-source-final.log",
+    "metrics": {
+      "path": "data/native/decomp-source-final-metrics.json",
+      "bytes": 1846826,
+      "sha256": "6540be55490390b380d25b89887674f2eadbd1788d1fd4964723a68cfc60aba0"
+    },
+    "environment": {
+      "PS1_PRESENT_WINDOWED": "1",
+      "SDL_AUDIODRIVER": "dummy",
+      "PS1_VBLANK_PERIOD_US": "1000",
+      "PS1_AUTOLOAD_VBLANK": "300",
+      "PS1_EXIT_AFTER_LOAD_VBLANKS": "1400",
+      "PS1_INPUT_SCRIPT": "scripts/fixtures/mgs-dock-cache.input",
+      "PS1_MGS_ASSET_VERIFY": "1",
+      "PS1_VULKAN_REPLAY_READBACK": "capture",
+      "PS1_VULKAN_REPLAY_READBACK_FRAME_FROM": "97200",
+      "PS1_VULKAN_REPLAY_READBACK_FRAME_TO": "97206",
+      "PS1_VULKAN_REPLAY_READBACK_INTERVAL": "3"
+    },
+    "vblanks_after_load": 1400,
+    "trace": {
+      "path": "data/native/decomp-source-final.jsonl",
+      "created": false,
+      "note": "No selected fallback/rejection event emitted"
+    }
+  },
+  "counters": {
+    "host.renderer.replay_coverage.m1_submitted.incomplete_frames": 0,
+    "host.renderer.replay_coverage.m1_submitted.unsupported_mutations": 0,
+    "mgs.asset_cache.uploads": 1,
+    "mgs.decomp.DG_GetTexture": 2575,
+    "mgs.decomp.DG_InitTextureSystem": 2,
+    "mgs.decomp.DG_SetTexture": 179,
+    "mgs.decomp.FindTexture": 129,
+    "mgs.decomp.calls": 2885,
+    "mgs.mesh.gpu_submitted_packets": 215970,
+    "mgs.scene.captures": 486,
+    "mgs.scene.recovered_draws": 40053,
+    "mgs.scene.recovery_duplicate_prevented": 28828,
+    "mgs.scene.recovery_gpu_submitted": 40053,
+    "mgs.scene.recovery_list_attempts": 660,
+    "mgs.scene.recovery_lists": 659,
+    "mgs.scene.recovery_material_rejected": 1615,
+    "mgs.scene.source_candidates": 31323,
+    "mgs.source.gpu_original_format_packets": 198181
+  },
+  "state": {
+    "host.renderer.vulkan_replay_atlas_height": 6144,
+    "host.renderer.vulkan_replay_atlas_width": 12288,
+    "mgs.asset_cache.device_bytes": 63741104,
+    "mgs.asset_cache.readback_verified": 1,
+    "mgs.scene.instances": 27,
+    "mgs.scene.matched_instances": 27,
+    "mgs.scene.models": 295,
+    "mgs.scene.recovery_faces": 27,
+    "mgs.scene.source_candidates": 165,
+    "mgs.scene.source_geometry_faces": 2776,
+    "mgs.scene.visible_instances": 22,
+    "mgs.source.original_format_models": 6695,
+    "timing.vblank_index": 98527
+  },
+  "presented_frame": {
+    "path": "data/native/decomp-source-final-gpu/frame-97206-present-3-ordinary-scanout.ppm",
+    "bytes": 24883217,
+    "sha256": "6404ca4a73de286fae10164225fe31397094f30e86e959fe62a56d8fb760c213",
+    "dimensions": [
+      3840,
+      2160
+    ],
+    "visually_inspected": true,
+    "native_pixel_oracle": false,
+    "png": "data/native/decomp-source-final-gpu/presented-4k.png"
+  },
+  "validation": {
+    "build_log": ".local/decomp-source-final-build.log",
+    "focused_tests": {
+      "tests": "334",
+      "failures": "0",
+      "disabled": "0",
+      "errors": "0",
+      "time": "5.507",
+      "timestamp": "2026-09-12T17:49:22.092",
+      "name": "AllTests",
+      "xml": {
+        "path": "data/native/decomp-source-final-tests.xml",
+        "bytes": 102155,
+        "sha256": "a07ba3734b76d683b315cb0ffca8966c17ab7ccb2e783721382bdbf2797b091d"
+      },
+      "filter": "*Mgs*:*SaveState*:*ModernReplay*:PsyqGpuTest.*:PsyqHleTest.DrawOTag*",
+      "vulkan_integration": true,
+      "original_usa_oracle": true
+    },
+    "python_tests": {
+      "passed": 25,
+      "logs": [
+        ".local/decomp-source-python-tests.log",
+        ".local/decomp-bridge-python-tests.log"
+      ]
+    },
+    "broader_suite": {
+      "tests": "1166",
+      "failures": "1",
+      "disabled": "0",
+      "errors": "0",
+      "time": "18.785",
+      "timestamp": "2026-09-12T17:45:57.715",
+      "name": "AllTests",
+      "xml": {
+        "path": "data/native/decomp-source-v3-tests.xml",
+        "bytes": 327745,
+        "sha256": "78c72a3d5987f296f463b6ba58068be2e1408ef6be27d6916f830704e11f36a1"
+      },
+      "note": "Before final source-alias fix. Unrelated FileIOTest.OpenFileReturnsValidFd expects 0; existing allocator starts at 3. Reproduces in isolation. Three optional tests skipped. Relevant tests rerun after final fix."
+    },
+    "installer_idempotent": true
+  },
+  "limitations": [
+    "Most game logic and overlays remain AOT; four decomp entry boundaries are active.",
+    "Dynamic material selection, lighting colors, order, subdivisions and some effects still consume native preparation.",
+    "Readback verifies actual GPU asset bytes and 4K output; not whole-game visual correctness.",
+    "No universal LOD families, modern lighting or 2x interpolation yet."
+  ]
+}

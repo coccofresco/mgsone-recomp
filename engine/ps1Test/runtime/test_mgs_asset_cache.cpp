@@ -228,6 +228,90 @@ TEST_F(MgsSceneRecoveryTest,
   EXPECT_FALSE(recover(false));
 }
 
+TEST_F(MgsSceneRecoveryTest,
+       RenderingReadsOriginalVectorsAndIgnoresExpandedCopies) {
+  auto baseline = recover();
+  ASSERT_TRUE(baseline);
+  auto bytes = fixture(false, true);
+  const auto expanded = cache.section(AssetCache::Vertices);
+  for (uint32_t i = 0; i < expanded.count; ++i) {
+    put(bytes, expanded.offset + i * expanded.stride, 0x7fc00000);
+    put(bytes, expanded.offset + i * expanded.stride + 4, 0x7f800000);
+    put(bytes, expanded.offset + i * expanded.stride + 8, 0xffffffff);
+    put(bytes, expanded.offset + i * expanded.stride + 12, 0);
+  }
+  checksum(bytes);
+  cache = AssetCache::decode(bytes);
+  setSceneAssetCache(&cache);
+  const auto original = cache.sourceModel(0);
+  ASSERT_TRUE(original);
+  const auto actual = recover();
+  ASSERT_TRUE(actual);
+  EXPECT_EQ(actual->buckets[39], baseline->buckets[39]);
+  for (uint32_t k = 0; k < 4; ++k) {
+    constexpr uint32_t order[] = {0, 1, 3, 2};
+    EXPECT_EQ(actual->buckets[39][0].originalMesh->pointBytes[k],
+              (original->positionsByte + order[k] * 8) | 0x80000000u);
+  }
+}
+
+TEST_F(MgsSceneRecoveryTest, SourceOnlyCacheRendersWithoutExpandedVertices) {
+  const auto baseline = recover();
+  ASSERT_TRUE(baseline);
+  const auto legacy = AssetCache::decode(fixture(true, true));
+  std::array<std::vector<uint8_t>, 9> sections;
+  for (unsigned i = 0; i < sections.size(); ++i) {
+    const auto section = legacy.section(static_cast<AssetCache::Section>(i));
+    const auto bytes = legacy.bytes().subspan(section.offset, section.size());
+    sections[i].assign(bytes.begin(), bytes.end());
+  }
+  auto expanded = packFixture(sections, true);
+  std::memcpy(expanded.data(), "MGSAC003", 8);
+  EXPECT_THROW(AssetCache::decode(expanded), std::runtime_error);
+  sections[AssetCache::Vertices].clear();
+  // Byte-distinct texture variants resolve to the same live geometry. This
+  // exercises alias selection as well as projection with no VRTX section.
+  const auto asset = sections[AssetCache::Assets];
+  sections[AssetCache::Assets].insert(sections[AssetCache::Assets].end(),
+                                      asset.begin(), asset.end());
+  put(sections[AssetCache::Assets], 64 + 36, 1);
+  put(sections[AssetCache::Assets], 64 + 48, 178);
+  const auto model = sections[AssetCache::Models];
+  sections[AssetCache::Models].insert(sections[AssetCache::Models].end(),
+                                      model.begin(), model.end());
+  put(sections[AssetCache::Models], 32 + 12, 4);
+  put(sections[AssetCache::Models], 32 + 24, 1);
+  const auto source = sections[AssetCache::Source];
+  sections[AssetCache::Source].insert(sections[AssetCache::Source].end(),
+                                      source.begin(), source.end());
+  sections[AssetCache::Source][178 + 176] = 42;
+  auto bytes = packFixture(sections, true);
+  std::memcpy(bytes.data(), "MGSAC003", 8);
+  cache = AssetCache::decode(bytes);
+  ASSERT_EQ(cache.section(AssetCache::Vertices).count, 0u);
+  const auto original = cache.sourceModel(0);
+  ASSERT_TRUE(original);
+  setSceneAssetCache(&cache);
+  const auto result = recover();
+  ASSERT_TRUE(result);
+  ASSERT_EQ(result->buckets[39].size(), 1u);
+  // Container offsets change; the original projection and guest state do not.
+  EXPECT_EQ(result->buckets[39][0].vertices, baseline->buckets[39][0].vertices);
+  for (uint32_t k = 0; k < 4; ++k) {
+    constexpr uint32_t order[] = {0, 1, 3, 2};
+    EXPECT_EQ(result->buckets[39][0].originalMesh->pointBytes[k],
+              (original->positionsByte + order[k] * 8) | 0x80000000u);
+  }
+  auto invalid = bytes;
+  put(invalid, cache.section(AssetCache::Models).offset + 12, 4);
+  checksum(invalid);
+  EXPECT_THROW(AssetCache::decode(invalid), std::runtime_error);
+  invalid = bytes;
+  put(invalid, original->descriptorByte + 56, 0xffffffff);
+  checksum(invalid);
+  EXPECT_THROW(AssetCache::decode(invalid), std::runtime_error);
+}
+
 TEST_F(MgsSceneRecoveryTest, RespectsSemanticVisibilityAndSupportedMaterials) {
   ASSERT_TRUE(recover());
   for (uint32_t flags : {0xd7u, 0x5fu, 0x257u, 0x457u, 0x55u}) {
@@ -439,6 +523,58 @@ TEST(MgsAssetCacheTest, RejectsCorruptionAndOverlappingSections) {
   b=fixture();b.resize(64);
   EXPECT_THROW(AssetCache::decode(b),std::runtime_error);
 }
+TEST(MgsAssetCacheTest, SourceFormatViewsResolveKmdAndEmbeddedZmdStreams) {
+  auto bytes = fixture(false, true);
+  auto cache = AssetCache::decode(bytes);
+  auto model = cache.sourceModel(0);
+  ASSERT_TRUE(model);
+  EXPECT_EQ(model->positionsByte,
+            cache.section(AssetCache::Source).offset + 120);
+  EXPECT_EQ(model->uvByte, cache.section(AssetCache::Source).offset + 168);
+  EXPECT_EQ(model->normals, 1u);
+  EXPECT_EQ(model->parent, -1);
+  EXPECT_FALSE(cache.sourceModel(1));
+  put(bytes, cache.section(AssetCache::Source).offset + 32 + 56, 0xfffffff0);
+  checksum(bytes);
+  EXPECT_FALSE(AssetCache::decode(bytes).sourceModel(0));
+  bytes = fixture(false, true);
+  cache = AssetCache::decode(bytes);
+  std::array<std::vector<uint8_t>, 9> sections;
+  for (size_t i = 0; i < 7; ++i) {
+    const auto section = cache.section(AssetCache::Section(i));
+    sections[i].assign(bytes.begin() + section.offset,
+                       bytes.begin() + section.offset + section.size());
+  }
+  const auto kmd = sourceModel(true);
+  auto &zmd = sections[6];
+  zmd.assign(198, 0);
+  put(zmd, 0, 0x61444d4b);
+  put(zmd, 4, 1);
+  put(zmd, 8, 124);
+  put(zmd, 16, 0x1234);
+  std::copy(kmd.begin(), kmd.begin() + 120, zmd.begin() + 20);
+  std::copy(kmd.begin() + 120, kmd.end(), zmd.begin() + 140);
+  for (uint32_t field : {56u, 60u, 68u, 72u, 76u, 80u}) {
+    const uint32_t relative =
+        kmd[32 + field] | (uint32_t(kmd[33 + field]) << 8);
+    put(zmd, 52 + field, relative - 120);
+  }
+  put(sections[0], 52, zmd.size());
+  put(sections[0], 60, 0x1234);
+  cache = AssetCache::decode(packFixture(sections, false));
+  model = cache.sourceModel(0);
+  ASSERT_TRUE(model);
+  EXPECT_EQ(model->descriptorByte,
+            cache.section(AssetCache::Source).offset + 52);
+  EXPECT_EQ(model->positionsByte,
+            cache.section(AssetCache::Source).offset + 140);
+  EXPECT_EQ(model->vertexIndicesByte,
+            cache.section(AssetCache::Source).offset + 172);
+  EXPECT_EQ(model->textureIdsByte,
+            cache.section(AssetCache::Source).offset + 196);
+  EXPECT_EQ(model->faces, 1u);
+}
+
 TEST(MgsAssetCacheTest, BindingRequiresFullOriginalGeometryNotOnlyCounts) {
   auto cache=AssetCache::decode(fixture());
   Memory memory; loadModel(memory,0x80011000);
@@ -481,6 +617,11 @@ TEST(MgsAssetCacheTest, ValidatesLocallyExtractedUsaCache) {
   const auto cache=AssetCache::load(p);
   EXPECT_GT(cache.section(AssetCache::Assets).count,1000u);
   EXPECT_GT(cache.section(AssetCache::Models).count,1000u);
+  for (uint32_t m = 0; m < cache.section(AssetCache::Models).count; ++m) {
+    const auto original = cache.sourceModel(m);
+    ASSERT_TRUE(original) << "original model " << m;
+    EXPECT_EQ(original->faces * 4, cache.word(AssetCache::Models, m, 4));
+  }
 }
 
 TEST(MgsAssetCacheTest,
@@ -584,7 +725,8 @@ TEST(MgsAssetCacheTest,
   EXPECT_DOUBLE_EQ(packet.vertices[1].y, 141.0);
   EXPECT_DOUBLE_EQ(packet.vertices[2].x, 169.6);
   EXPECT_EQ(packet.originalMesh->pointBytes[2],
-            cache.section(AssetCache::Vertices).offset + 3 * 48);
+            (cache.section(AssetCache::Source).offset + 120 + 3 * 8) |
+                0x80000000u);
   EXPECT_FLOAT_EQ(packet.originalMesh->viewRows[2][3], 1000.0f);
   EXPECT_EQ(std::memcmp(before.data(), memory.ramPtr(), before.size()), 0);
   // A distinct presentation pose must not contaminate the native packet

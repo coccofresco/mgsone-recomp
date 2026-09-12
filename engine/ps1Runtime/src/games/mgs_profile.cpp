@@ -1,5 +1,6 @@
 #include "runtime/games/mgs_profile.h"
 #include "runtime/cpu_context.h"
+#include "runtime/games/mgs_decomp.h"
 #include "runtime/memory.h"
 #include "runtime/metrics.h"
 #include <cstdint>
@@ -12,6 +13,7 @@ bool enabledProfile = false;
 void configure(bool enabled, bool widescreen) noexcept {
   enabledProfile = enabled;
   wide = enabled && widescreen;
+  configureDecompiled(enabled);
 }
 bool active() noexcept { return enabledProfile; }
 bool widescreen16x9() noexcept { return wide; }

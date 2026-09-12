@@ -27983,7 +27983,8 @@ struct RendererVulkan::Impl {
     }
     if (preparedReplayGeometry.has_value() && replayBatch.has_value()) {
       if (games::mgs::active()) {
-        uint64_t originals = 0, cachedTextures = 0, recovered = 0;
+        uint64_t originals = 0, cachedTextures = 0, recovered = 0,
+                 rawModels = 0;
         for (const auto &command : replayBatch->commands) {
           const auto *draw =
               std::get_if<replay::VulkanReplayBakedDraw>(&command.payload);
@@ -27995,11 +27996,19 @@ struct RendererVulkan::Impl {
             ++cachedTextures;
           if (draw && draw->segmentCount && draw->sourceRecovery)
             ++recovered;
+          if (draw && draw->segmentCount &&
+              draw->segments[0].uniforms.mgsProjection[3] == 1.0f &&
+              std::all_of(draw->segments[0].uniforms.mgsPointBytes.begin(),
+                          draw->segments[0].uniforms.mgsPointBytes.end(),
+                          [](uint32_t p) { return (p & 0x80000000u) != 0; }))
+            ++rawModels;
         }
         ps1::metrics::count("mgs.mesh.gpu_submitted_packets", originals);
         ps1::metrics::count("mgs.texture.gpu_submitted_packets",
                             cachedTextures);
         ps1::metrics::count("mgs.scene.recovery_gpu_submitted", recovered);
+        ps1::metrics::count("mgs.source.gpu_original_format_packets",
+                            rawModels);
       }
       commitCrash3RawSceneUpload(*preparedReplayGeometry, currentFrame);
     }

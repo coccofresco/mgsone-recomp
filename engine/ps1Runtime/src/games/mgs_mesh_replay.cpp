@@ -1,5 +1,6 @@
 #include "runtime/games/mgs_mesh_replay.h"
 #include "runtime/cpu_context.h"
+#include "runtime/games/mgs_decomp.h"
 #include "runtime/games/mgs_profile.h"
 #include "runtime/games/mgs_scene.h"
 #include "runtime/gpu/modern_replay.h"
@@ -205,17 +206,8 @@ void prepareRecoverySources(const SceneSnapshot &scene, const Memory &memory,
   out.capture = scene.sequence;
   out.orderingTable = table & 0x1fffffffu;
   const auto texture = [&](uint16_t id) -> const uint8_t * {
-    if (!id)
-      return nullptr;
-    // USA FindTexture (0x8001E254): TexSets, 512 DG_TEX records, stride 12.
-    for (uint32_t probe = 0; probe < 512; ++probe) {
-      const auto *entry = ptr(0x800B46C8u + ((id + probe) & 511u) * 12);
-      if (!u16(entry))
-        return nullptr;
-      if (u16(entry) == id)
-        return entry;
-    }
-    return nullptr;
+    const uint32_t address = findSourceTexture(memory, id);
+    return address ? ptr(address) : nullptr;
   };
   constexpr uint32_t order[] = {0, 1, 3, 2};
   for (const auto &instance : scene.instances) {
@@ -358,59 +350,26 @@ void indexSourceVertices() {
   sourceVertices.resize(cache->section(AssetCache::Models).count);
   sourceCorners.resize(sourceVertices.size());
   const auto bytes = cache->bytes();
-  for (uint32_t a = 0; a < cache->section(AssetCache::Assets).count; ++a) {
-    if (cache->word(AssetCache::Assets, a, 8) != 'k')
+  uint32_t models = 0;
+  for (uint32_t m = 0; m < sourceVertices.size(); ++m) {
+    const auto view = cache->sourceModel(m);
+    if (!view)
       continue;
-    const auto source =
-        bytes.subspan(cache->section(AssetCache::Source).offset +
-                          cache->word(AssetCache::Assets, a, 12),
-                      cache->word(AssetCache::Assets, a, 13));
-    if (source.size() < 32)
-      continue;
-    uint64_t header = 0, base = 0;
-    if (u32(source.data()) == 0x61444d4b) {
-      base = 16ull + u32(source.data() + 8);
-      uint64_t cursor = 16;
-      for (uint32_t k = 0; k < u32(source.data() + 4); ++k) {
-        if (cursor + 36 > source.size())
-          break;
-        if (u32(source.data() + cursor) ==
-            cache->word(AssetCache::Assets, a, 15)) {
-          header = cursor + 4;
-          break;
-        }
-        cursor += 36ull + uint64_t(u32(source.data() + cursor + 8)) * 88;
-      }
-      if (!header)
-        continue;
+    const auto *indices = bytes.data() + view->vertexIndicesByte;
+    sourceCorners[m].assign(indices, indices + uint64_t(view->faces) * 4);
+    auto &out = sourceVertices[m];
+    out.reserve(view->vertices);
+    for (uint32_t v = 0; v < view->vertices; ++v) {
+      const uint32_t offset = view->positionsByte + v * 8;
+      const auto *p = bytes.data() + offset;
+      out.push_back({{double(int16_t(u16(p))), double(int16_t(u16(p + 2))),
+                      double(int16_t(u16(p + 4)))},
+                     int16_t(u16(p + 6)),
+                     offset | 0x80000000u});
     }
-    const uint32_t first = cache->word(AssetCache::Assets, a, 9),
-                   total = cache->word(AssetCache::Assets, a, 10);
-    if (header + 32ull + uint64_t(total) * 88 > source.size())
-      continue;
-    for (uint32_t m = 0; m < total; ++m) {
-      const auto *def = source.data() + header + 32 + m * 88;
-      const uint32_t count = u32(def + 52);
-      const uint64_t offset = base + u32(def + 56);
-      if (offset + uint64_t(count) * 8 > source.size())
-        continue;
-      const uint64_t indices = base + u32(def + 60);
-      const uint64_t corners = uint64_t(u32(def + 4)) * 4;
-      if (indices + corners > source.size())
-        continue;
-      sourceCorners[first + m].assign(source.begin() + indices,
-                                      source.begin() + indices + corners);
-      auto &out = sourceVertices[first + m];
-      out.reserve(count);
-      for (uint32_t v = 0; v < count; ++v) {
-        const auto *p = source.data() + offset + v * 8;
-        out.push_back({{double(int16_t(u16(p))), double(int16_t(u16(p + 2))),
-                        double(int16_t(u16(p + 4)))},
-                       int16_t(u16(p + 6)),
-                       uint32_t(p - bytes.data()) | 0x80000000u});
-      }
-    }
+    ++models;
   }
+  metrics::setState("mgs.source.original_format_models", models);
 }
 // The oracle retains GTE divide/IR/SXY saturation; the cache projection does
 // not. Billboard rectangles perform two projections in DG_MakePrimsRectangle.
@@ -439,20 +398,20 @@ bool buildSourceFace(const SceneSnapshot &scene, const SceneInstance &instance,
   constexpr unsigned order[] = {0, 1, 3, 2};
   for (unsigned k = 0; k < 4; ++k) {
     const uint32_t corner = begin + f * 4 + order[k];
-    Point position{};
-    for (unsigned axis = 0; axis < 3; ++axis)
-      position[axis] =
-          std::bit_cast<float>(cache->word(AssetCache::Vertices, corner, axis));
-    int32_t seam = int32_t(
-        std::bit_cast<float>(cache->word(AssetCache::Vertices, corner, 3)));
     uint32_t model = m;
     if (f * 4 + order[k] >= sourceCorners[global].size()) {
       complete = false;
       break;
     }
     uint32_t indexedVertex = sourceCorners[global][f * 4 + order[k]];
-    uint32_t pointByte =
-        cache->section(AssetCache::Vertices).offset + corner * 48;
+    if (indexedVertex >= sourceVertices[global].size()) {
+      complete = false;
+      break;
+    }
+    const auto &source = sourceVertices[global][indexedVertex];
+    Point position = source.p;
+    int32_t seam = source.seam;
+    uint32_t pointByte = source.pointByte;
     for (uint32_t step = 0; seam >= 0 && step <= total; ++step) {
       const uint32_t parent = cache->word(AssetCache::Models, first + model, 1);
       if (parent < first || parent - first >= total ||

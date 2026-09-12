@@ -20,6 +20,7 @@ un modello di budget CPU nativo equivalente esattamente al 165%.
 - [Stato, verifiche e limiti del runtime](docs/mgs-runtime-progress.md)
 - [Controlli e memory card persistenti](docs/mgs-input-memory-card.md)
 - [Savestate nativi: tasti, formato e verifiche](docs/mgs-savestates.md)
+- [Migrazione ai moduli C della decompilazione e stream originali](docs/mgs-decomp-native-core.md)
 - [Aggiornamenti PSXRecomp](docs/psxrecomp-upstream-2026-09-10.md)
 - [Valutazione RecompOne](docs/recompone-review-2026-09-10.md)
 - [Valutazione OpenGTPS1: input e memory card](docs/opengtps1-review-2026-09-10.md)
@@ -35,9 +36,10 @@ un modello di budget CPU nativo equivalente esattamente al 165%.
 
 Gli strumenti di audit sono in `scripts/mgs_assets.py`; gli asset estratti e
 l'esempio di geometria originale sono in `data/`, esclusi da Git.
-La [cache Vulkan USA](docs/mgs-vulkan-cache.md) contiene circa 90 MiB residenti
-con geometrie KMD/ZMD e texture PCX originali dei due CD. La
-[presentazione dalla cache](docs/mgs-original-mesh-replay.md) è disponibile con
+La [cache Vulkan USA v3](docs/mgs-decomp-native-core.md) contiene circa 60,8 MiB
+residenti con stream KMD/ZMD originali e texture PCX dei due CD, senza copie
+espanse della geometria. Sostituisce il [contenitore precedente](docs/mgs-vulkan-cache.md).
+La [presentazione dalla cache](docs/mgs-original-mesh-replay.md) è disponibile con
 `scripts/run_native.sh`: la [presentazione UHD](docs/mgs-uhd-presentation.md)
 è ora predefinita, a 3840×2160 e 16:9 fisso. Tutte le 27 istanze del molo,
 deformazioni, suddivisioni, texture e quad degli effetti sono supportati.
@@ -118,7 +120,9 @@ riferimenti locali sotto `.local/` sono esclusi da Git.
 2. Verificare il passaggio all’eliporto e il primo salvataggio/caricamento dal gioco.
 3. Completare gli overlay USA v1.0 degli scenari successivi.
 4. Estendere le verifiche a combattimento, filmati, audio e cambio CD.
-5. Adattare le migliorie grafiche di Crash solo dopo aver misurato la fedeltà base.
+5. Portare risorse, attori e animazione dai sorgenti C, mantenendo la recomp
+   statica per le parti non ancora sostituite; estendere la presentazione
+   diretta degli originali a materiali e illuminazione.
 
 Vedi [docs/bootstrap.md](docs/bootstrap.md) per verifiche e riferimento esterno.
 Il motore mantiene la licenza GPL-3.0 originale; le dipendenze mantengono le

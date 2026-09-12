@@ -9,5 +9,6 @@ cmake -S engine -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
 cmake --build build --target ps1Analyzer ps1Recomp --parallel "${BUILD_JOBS:-4}"
 python3 scripts/prepare_native.py --cue "$1"
 build/ps1Recomp/ps1Recomp data/mgs.usa.native.toml engine/ps1Runtime/src/recompiled_out.cpp
+python3 scripts/install_decomp_bridges.py
 cmake -S engine -B build -G Ninja -DPS1RECOMP_USE_STUB=OFF
 cmake --build build --target ps1Runtime --parallel "${BUILD_JOBS:-4}"

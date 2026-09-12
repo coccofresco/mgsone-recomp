@@ -226,23 +226,32 @@ uint32_t matchSceneDefinition(const AssetCache &cache, const Memory &memory,
                &changed))
       continue;
     if (found != ~0u) {
-      // Aliases are interchangeable only when all rendered source geometry is
-      // identical. File padding/unused streams do not create another mesh.
+      // Both candidates already match the live topology. Compare the original
+      // streams too: material overrides can differ, geometry and seams cannot.
       const auto first = cache.word(AssetCache::Assets, found, 9);
       const auto other = cache.word(AssetCache::Assets, a, 9);
       const auto total = cache.word(AssetCache::Assets, a, 10);
       for (uint32_t m = 0; m < total; ++m) {
-        const uint32_t count = cache.word(AssetCache::Models, first + m, 4);
-        if (count != cache.word(AssetCache::Models, other + m, 4))
+        const auto x = cache.sourceModel(first + m);
+        const auto y = cache.sourceModel(other + m);
+        if (!x || !y || x->faces != y->faces || x->vertices != y->vertices ||
+            x->normals != y->normals)
           return ~0u;
-        for (uint32_t v = 0; v < count; ++v) {
-          const uint32_t x = cache.word(AssetCache::Models, first + m, 3) + v;
-          const uint32_t y = cache.word(AssetCache::Models, other + m, 3) + v;
-          for (uint32_t w = 0; w <= 8; ++w)
-            if (cache.word(AssetCache::Vertices, x, w) !=
-                cache.word(AssetCache::Vertices, y, w))
-              return ~0u;
-        }
+        const auto same = [&](uint32_t a, uint32_t b, uint64_t size) {
+          if (!a || !b)
+            return a == b;
+          return std::memcmp(cache.bytes().data() + a, cache.bytes().data() + b,
+                             size) == 0;
+        };
+        if (!same(x->positionsByte, y->positionsByte,
+                  uint64_t(x->vertices) * 8) ||
+            !same(x->vertexIndicesByte, y->vertexIndicesByte,
+                  uint64_t(x->faces) * 4) ||
+            !same(x->normalsByte, y->normalsByte, uint64_t(x->normals) * 8) ||
+            !same(x->normalIndicesByte, y->normalIndicesByte,
+                  uint64_t(x->faces) * 4) ||
+            !same(x->uvByte, y->uvByte, uint64_t(x->faces) * 8))
+          return ~0u;
       }
     } else {
       found = a;

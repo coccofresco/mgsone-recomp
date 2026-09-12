@@ -8,7 +8,7 @@ import zlib
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from build_mgs_asset_cache import build, pack_sections, SECTIONS
+from build_mgs_asset_cache import build, pack_sections, compact_cache, SECTIONS
 from test_mgs_assets import model, texture
 from mgs_assets import sha, zmd, pcx
 
@@ -35,13 +35,27 @@ class GpuAssetCacheTests(unittest.TestCase):
 
     def test_binary_directory_offsets_and_checksum(self):
         sections = {name: bytes(stride) for name, stride in SECTIONS}
+        sections['VRTX'] = b''
         result = pack_sections(sections)
         magic, size, checksum = struct.unpack_from('<8sII', result)
-        self.assertEqual(magic, b'MGSAC002')
+        self.assertEqual(magic, b'MGSAC003')
         self.assertEqual(size, len(result))
         self.assertEqual(checksum, zlib.crc32(result[16:]))
         for i, (name, stride) in enumerate(SECTIONS):
             tag, offset, count, actual_stride = struct.unpack_from('<4sIII', result, 16+i*16)
-            self.assertEqual((tag, count, actual_stride), (name.encode(), 1, stride))
+            self.assertEqual((tag, count, actual_stride), (name.encode(), 0 if name == 'VRTX' else 1, stride))
             self.assertEqual(offset % 16, 0)
-            self.assertEqual(result[offset:offset+stride], bytes(stride))
+            self.assertEqual(result[offset:offset+count*stride], sections[name])
+
+    def test_compaction_preserves_original_bytes_and_rejects_corruption(self):
+        sections = {name: bytes([i + 1]) * stride for i, (name, stride) in enumerate(SECTIONS)}
+        original = b'MGSAC002' + pack_sections(sections)[8:]
+        compact = compact_cache(original)
+        for i, (name, stride) in enumerate(SECTIONS):
+            _, offset, count, _ = struct.unpack_from('<4sIII', compact, 16+i*16)
+            self.assertEqual(compact[offset:offset+count*stride], sections[name] if name != 'VRTX' else b'')
+        self.assertEqual(compact_cache(compact), compact)
+        corrupt = bytearray(original)
+        corrupt[-1] ^= 1
+        with self.assertRaises(ValueError):
+            compact_cache(corrupt)

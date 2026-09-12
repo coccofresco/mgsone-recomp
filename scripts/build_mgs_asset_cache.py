@@ -8,7 +8,7 @@ import struct
 import zlib
 from mgs_assets import Disc, stages, stage_members, dar_members, kmd, zmd, pcx, sha, require
 
-MAGIC = b'MGSAC002'
+MAGIC = b'MGSAC003'
 SECTIONS = [('ASST', 64), ('MODL', 32), ('VRTX', 48), ('TEXR', 32),
             ('TEXI', 1), ('PLTE', 4), ('SRCE', 1), ('NAME', 8), ('TMPL', 16)]
 
@@ -37,7 +37,9 @@ def build(discs, output):
     source_pool, pixel_pool, palette_pool = {}, {}, {}
     errors = []
     ignored = Counter()
+    logical_corners = 0
     def add_asset(ext, data, context, parsed=None, embedded_id=None):
+        nonlocal logical_corners
         digest = sha(data)
         # Embedded ZMD models share the container bytes but have distinct IDs.
         key = (ext, digest, embedded_id)
@@ -54,17 +56,9 @@ def build(discs, output):
             if ext == 'k':
                 for model in parsed['models']:
                     corners = model['corner_vertex_indices']
-                    first_corner = len(sections['VRTX']) // 48
+                    first_corner = logical_corners
+                    logical_corners += len(corners)
                     parent = model['parent']
-                    for corner, vi in enumerate(corners):
-                        position = model['positions_i16'][vi]
-                        ni = model['corner_normal_indices_raw'][corner] if model['corner_normal_indices_raw'] else 0
-                        normal = model['normals_i16'][ni & 127][:3] if model['normals_i16'] and model['corner_normal_indices_raw'] else (0, 0, 0)
-                        uv = model['corner_uv_u8'][corner] if model['corner_uv_u8'] else (0, 0)
-                        texture = model['face_texture_ids'][corner // 4] if model['face_texture_ids'] else 0xffffffff
-                        sections['VRTX'].extend(struct.pack('<8f4I', *position, *(v / 4096 for v in normal), ni >> 7,
-                            uv[0] | uv[1] << 8, texture, first_model + model['index'],
-                            first_model + parent if parent >= 0 else 0xffffffff))
                     # A parent seam references a SOURCE vertex, not an expanded
                     # corner. Original indexed streams remain available in SRCE.
                     sections['MODL'].extend(struct.pack('<8I', int(model['flags'], 16),
@@ -150,14 +144,15 @@ def build(discs, output):
     for x, y in ((0, 0), (1, 0), (0, 1), (1, 1)):
         sections['TMPL'].extend(struct.pack('<4f', x, y, 0, 1))
     binary = pack_sections(sections)
-    manifest = dict(schema='mgs-asset-cache/v2', discs=disc_rows, assets=assets,
+    manifest = dict(schema='mgs-asset-cache/v3', discs=disc_rows, assets=assets,
         occurrences=occurrences, sections={name: dict(count=len(sections[name]) // stride, stride=stride)
                                          for name, stride in SECTIONS},
         binary_sha256=sha(binary), binary_size=len(binary), errors=errors,
         other_resource_occurrences=dict(ignored),
         lod_policy='retain every distinct source variant; no unverified cross-asset replacement',
         lod_families=[],
-        runtime_status='Immutable GPU geometry/PCX storage; certified scene bridge supports deformations, subdivision and procedural templates')
+        runtime_status='Original KMD/ZMD streams and decoded PCX indices; no expanded geometry copies',
+        logical_corners=logical_corners)
     output.mkdir(parents=True, exist_ok=True)
     temp = output / 'assets.mgsc.tmp'
     temp.write_bytes(binary)
@@ -167,10 +162,46 @@ def build(discs, output):
     return manifest
 
 
+def compact_cache(data):
+    """Remove expanded corners while preserving all original streams verbatim."""
+    require(len(data) >= 160 and data[:8] in (b'MGSAC002', MAGIC), 'expected v2/v3 cache')
+    require(struct.unpack_from('<I', data, 8)[0] == len(data), 'cache length mismatch')
+    require(struct.unpack_from('<I', data, 12)[0] == zlib.crc32(data[16:]), 'cache checksum mismatch')
+    sections = {}
+    end = 160
+    for i, (name, stride) in enumerate(SECTIONS):
+        tag, offset, count, actual_stride = struct.unpack_from('<4sIII', data, 16+i*16)
+        require(tag == name.encode() and stride == actual_stride, 'cache directory mismatch')
+        require(offset % 16 == 0 and offset >= end, 'cache section overlap')
+        end = offset + count * stride
+        require(end <= len(data), 'cache section outside file')
+        sections[name] = data[offset:end] if name != 'VRTX' else b''
+    require(end == len(data), 'cache trailing bytes')
+    return pack_sections(sections)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--disc1', type=Path, required=True)
-    parser.add_argument('--disc2', type=Path, required=True)
-    parser.add_argument('--output', type=Path, default=Path('data/presentation/usa'))
+    parser.add_argument('--disc1', type=Path)
+    parser.add_argument('--disc2', type=Path)
+    parser.add_argument('--from-cache', type=Path)
+    parser.add_argument('--output', type=Path, default=Path('data/presentation/usa-source'))
     args = parser.parse_args()
-    build([args.disc1, args.disc2], args.output)
+    if args.from_cache:
+        if args.disc1 or args.disc2:
+            parser.error('--from-cache cannot be combined with discs')
+        original = args.from_cache.read_bytes()
+        binary = compact_cache(original)
+        args.output.mkdir(parents=True, exist_ok=True)
+        temporary = args.output / 'assets.mgsc.tmp'
+        temporary.write_bytes(binary)
+        temporary.replace(args.output / 'assets.mgsc')
+        manifest = dict(schema='mgs-asset-cache/v3', source_cache=str(args.from_cache),
+                        source_sha256=sha(original), binary_sha256=sha(binary),
+                        binary_size=len(binary), removed_expanded_bytes=len(original)-len(binary))
+        (args.output / 'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
+        print(json.dumps(manifest, indent=2))
+    else:
+        if not args.disc1 or not args.disc2:
+            parser.error('supply --disc1 and --disc2, or --from-cache')
+        build([args.disc1, args.disc2], args.output)
