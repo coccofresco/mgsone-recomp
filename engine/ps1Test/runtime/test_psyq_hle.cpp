@@ -421,6 +421,29 @@ TEST_F(PsyqHleTest, DrawOTagBracketsWholeListAsOneGpuBatch) {
     EXPECT_EQ(events, (std::vector<uint32_t>{1u, 2u, 2u, 3u}));
 }
 
+TEST_F(PsyqHleTest, DrawOTagPresentationObserverSharesTheWholeBatch) {
+  std::vector<uint32_t> events;
+  HleConfig cfg = getConfig();
+  cfg.beginGP0Batch = [&] { events.push_back(1); };
+  cfg.endGP0Batch = [&] { events.push_back(5); };
+  cfg.observeGP0List = [&](uint32_t start, const Memory &memory) {
+    EXPECT_EQ(start, 0x1000u);
+    EXPECT_EQ(&memory, &mem);
+    events.push_back(2);
+    return std::function<void(uint32_t)>{
+        [&](uint32_t anchor) { events.push_back(anchor); }};
+  };
+  configure(cfg);
+  mem.write32(0x1000, 0x1004);
+  mem.write32(0x1004, 0x0100100c);
+  mem.write32(0x1008, 0xe1000400);
+  mem.write32(0x100c, 0xffffff);
+  ctx.r[A0] = 0x80001000;
+  hle_DrawOTag(&ctx);
+  EXPECT_EQ(events, (std::vector<uint32_t>{1, 2, 0x1000, 0x100c, 5}));
+  EXPECT_EQ(gp0Words, (std::vector<uint32_t>{0xe1000400}));
+}
+
 TEST_F(PsyqHleTest, DrawOTagPreservesGuestAddressAndPgxpProvenance) {
     const uint32_t base = 0x1800;
     const uint32_t vertex = (40u << 16) | 20u;

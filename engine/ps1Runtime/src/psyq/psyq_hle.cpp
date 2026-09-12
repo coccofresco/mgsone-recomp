@@ -390,6 +390,9 @@ void hle_DrawOTag(recomp_context *ctx) {
   ps1::metrics::count("draw_otag.calls");
   uint32_t ptr = ctx->r[A0];
   const uint32_t listStart = ptr & 0x1FFFFCu;
+  const auto observeList = g_cfg.observeGP0List
+                               ? g_cfg.observeGP0List(listStart, *ctx->mem)
+                               : std::function<void(uint32_t)>{};
   int safety = 0;
   uint64_t submittedNodes = 0u;
   uint64_t submittedWords = 0u;
@@ -404,6 +407,8 @@ void hle_DrawOTag(recomp_context *ctx) {
     if (wordCount == 0) {
       orderingTableAnchorAddress = ptr & 0x1FFFFCu;
       orderingTableAnchorExact = true;
+      if (observeList)
+        observeList(orderingTableAnchorAddress);
     }
     if (ps1::metrics::gpuWordTraceEnabled()) {
       const uint64_t submission =

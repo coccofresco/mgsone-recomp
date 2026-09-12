@@ -98,6 +98,55 @@ std::vector<const T *> operationsOf(const CrashReplayFrame &frame) {
 } // namespace
 
 TEST(GpuModernReplayRecorderTest,
+     SourceDrawsPreserveNativeOpcodeCoverageAndVram) {
+  auto vram = nativeVram();
+  const auto before = vram;
+  CrashReplayRecorder recorder(enabledConfig());
+  recorder.recordSurfaceSeed(vram);
+  recorder.recordDraw(polygonPacket(0x3c, recorder.observeOpcode(0x3c)), vram);
+  auto source = polygonPacket(0x3c, UNASSIGNED_PACKET_SEQUENCE);
+  source.originalMesh.emplace();
+  source.originalMesh->sourceRecovery = true;
+  source.originalTexture.emplace();
+  recorder.recordPresentationDraw(source, vram);
+  EXPECT_EQ(recorder.observeOpcode(0x20), 2u);
+  recorder.recordDraw(polygonPacket(0x20, 2), vram);
+  const auto frame = recorder.sealAndPublish({});
+  ASSERT_TRUE(frame);
+  EXPECT_TRUE(frame->latch().complete);
+  EXPECT_EQ(frame->latch().sequenceEnd, 3u);
+  EXPECT_EQ(recorder.opcodeCoverage(0x3c), (OpcodeCoverage{1, 1, 1, 0}));
+  EXPECT_EQ(recorder.opcodeCoverage(0x20), (OpcodeCoverage{1, 1, 1, 0}));
+  const auto draws = operationsOf<DrawPacket>(*frame);
+  ASSERT_EQ(draws.size(), 3u);
+  for (unsigned i = 0; i < 3; ++i)
+    EXPECT_EQ(draws[i]->packetSequence, i);
+  EXPECT_EQ(vram, before);
+}
+
+TEST(GpuModernReplayRecorderTest,
+     SourceDrawsRequireSourceAssetsAndCannotClaimNativeCommandEvidence) {
+  const auto vram = nativeVram();
+  CrashReplayRecorder recorder(enabledConfig());
+  auto source = polygonPacket(0x3c, UNASSIGNED_PACKET_SEQUENCE);
+  EXPECT_THROW(recorder.recordPresentationDraw(source, vram), std::logic_error);
+  recorder.recordSurfaceSeed(vram);
+  EXPECT_THROW(recorder.recordPresentationDraw(source, vram),
+               std::invalid_argument);
+  source.originalMesh.emplace();
+  source.originalTexture.emplace();
+  source.vertexCount = 255;
+  EXPECT_THROW(recorder.recordPresentationDraw(source, vram),
+               std::invalid_argument);
+  source.vertexCount = 4;
+  source.vertices[0].provenance.dmaNodeSource = 0x1000;
+  EXPECT_THROW(recorder.recordPresentationDraw(source, vram),
+               std::invalid_argument);
+  EXPECT_EQ(recorder.observeOpcode(0x00), 0u);
+  EXPECT_EQ(recorder.opcodeCoverage(0x3c), OpcodeCoverage{});
+}
+
+TEST(GpuModernReplayRecorderTest,
      ConfigurationIsIndependentAndOpcodeFamiliesAreComplete) {
   CrashReplayRecorder disabled;
   EXPECT_FALSE(disabled.enabled());

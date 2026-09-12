@@ -291,6 +291,7 @@ struct VulkanReplayBakedDraw {
   // distinguish Projected3D OT boundaries from Screen2D invalidation even
   // when both use the same fixed-function ALWAYS+far-write pipeline.
   PacketRoute route = PacketRoute::Projected3D;
+  bool sourceRecovery = false;
   VulkanReplayDrawDepthPath depthPath =
       VulkanReplayDrawDepthPath::LessEqualWrite;
   VulkanReplayFeedbackPlaneMask feedbackPlanes = 0;

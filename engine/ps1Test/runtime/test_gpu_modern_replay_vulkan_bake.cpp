@@ -1824,6 +1824,7 @@ TEST(GpuModernReplayVulkanBakeTest,
   auto packet = precisePacket(1, true);
   packet.originalMesh.emplace();
   packet.originalMesh->pointBytes = {128, 176, 224, 272};
+  packet.originalMesh->sourceRecovery = true;
   packet.originalMesh->projection = {320, 160, 112, 1};
   packet.originalMesh->viewRows[0] = {1, 0, 0, 30};
   const auto result =
@@ -1833,6 +1834,7 @@ TEST(GpuModernReplayVulkanBakeTest,
       std::get<VulkanReplayBakedDraw>(result.batch.commands[0].payload);
   EXPECT_EQ(draw.segments[0].uniforms.mgsPointBytes,
             packet.originalMesh->pointBytes);
+  EXPECT_TRUE(draw.sourceRecovery);
   EXPECT_EQ(draw.segments[0].uniforms.mgsViewRows,
             packet.originalMesh->viewRows);
   for (unsigned i = 0; i < 6; ++i)

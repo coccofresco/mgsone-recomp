@@ -17,6 +17,7 @@ namespace ps1::games::mgs {
 namespace {
 const AssetCache *cache = nullptr;
 bool enabled = false;
+bool recoveryEnabled = false;
 using Point = std::array<double, 3>;
 struct SourcePoint {
   Point p;
@@ -34,6 +35,7 @@ std::unordered_map<uint32_t, std::vector<CachedTexture>> textures;
 struct Face {
   uint64_t sequence = 0;
   uint32_t assetModel = 0;
+  uint64_t sourceFace = 0;
   std::array<Point, 4> view;
   std::array<Point, 4> nativeView{};
   std::array<std::array<double, 2>, 4> reference{};
@@ -48,6 +50,21 @@ struct Face {
   gpu::replay::OriginalMeshGeometry geometry;
 };
 std::array<std::unordered_map<uint32_t, Face>, 2> faces;
+// One source geometry registry, independent of packet allocation/culling.
+// The packet map above is only a native material/order/provenance adapter.
+std::array<std::unordered_map<uint64_t, Face>, 2> sceneFaces;
+struct RecoveryFace {
+  uint64_t sourceFace = 0;
+  uint32_t nativePacket = 0;
+  uint8_t bucket = 0;
+  gpu::replay::DrawPacket draw;
+};
+struct RecoverySource {
+  uint64_t capture = 0;
+  uint32_t orderingTable = 0;
+  std::vector<RecoveryFace> faces;
+};
+std::array<RecoverySource, 2> recoverySources;
 using Weights = std::array<float, 4>;
 struct SubdividedFace {
   uint32_t parent;
@@ -84,6 +101,252 @@ Point transform(const std::array<float, 16> &m, const Point &v) {
 bool range(uint32_t p, uint64_t n) {
   const uint32_t a = p & 0x1fffffffu;
   return a < Memory::RAM_SIZE && n <= Memory::RAM_SIZE - a;
+}
+uint64_t sourceFaceId(uint32_t instance, uint32_t corner) {
+  return uint64_t(instance & 0x1fffffffu) << 32 | corner;
+}
+// Clip in homogeneous camera space. This never observes the native SXY,
+// NCLIP area, bound_mode or packet allocation when deciding visibility.
+bool sourceFaceVisible(const std::array<Point, 4> &eye,
+                       const SceneSnapshot &scene, bool bothSides) {
+  const auto &a = eye[0], &b = eye[1], &c = eye[2];
+  const double determinant = a[0] * (b[1] * c[2] - b[2] * c[1]) -
+                             a[1] * (b[0] * c[2] - b[2] * c[0]) +
+                             a[2] * (b[0] * c[1] - b[1] * c[0]);
+  if ((!bothSides && determinant <= 0) || determinant == 0)
+    return false;
+  std::vector<Point> polygon{eye[0], eye[1], eye[3], eye[2]};
+  const double left = scene.clip[0], top = scene.clip[1];
+  const double right = left + scene.clip[2], bottom = top + scene.clip[3];
+  for (unsigned plane = 0; plane < 5; ++plane) {
+    const auto distance = [&](const Point &p) {
+      switch (plane) {
+      case 0:
+        return p[2] - 1;
+      case 1:
+        return p[0] * scene.projection - left * p[2];
+      case 2:
+        return right * p[2] - p[0] * scene.projection;
+      case 3:
+        return p[1] * scene.projection - top * p[2];
+      default:
+        return bottom * p[2] - p[1] * scene.projection;
+      }
+    };
+    if (polygon.empty())
+      return false;
+    std::vector<Point> clipped;
+    Point previous = polygon.back();
+    double before = distance(previous);
+    for (const auto &point : polygon) {
+      const double after = distance(point);
+      if ((before < 0) != (after < 0)) {
+        Point intersection{};
+        const double t = before / (before - after);
+        for (unsigned axis = 0; axis < 3; ++axis)
+          intersection[axis] =
+              previous[axis] + t * (point[axis] - previous[axis]);
+        clipped.push_back(intersection);
+      }
+      if (after >= 0)
+        clipped.push_back(point);
+      previous = point;
+      before = after;
+    }
+    polygon = std::move(clipped);
+  }
+  return polygon.size() >= 3;
+}
+// The sole packet producer for indexed models, skinned/deformed models,
+// procedural effects and source faces without a native command. Materials
+// and ordering are adapters; geometry/projection/depth policy are shared.
+void applySourceGeometry(gpu::replay::DrawPacket &packet, const Face &face) {
+  packet.originalMesh = face.geometry;
+  packet.originalMesh->projection = {
+      float(face.projection), float(packet.state.drawOffset.x),
+      float(packet.state.drawOffset.y), face.procedural ? 2.0f : 1.0f};
+  for (unsigned k = 0; k < 4; ++k) {
+    auto &v = packet.vertices[k];
+    v.w = std::max(1.0, face.view[k][2]);
+    v.x = face.view[k][0] * face.projection / v.w + packet.state.drawOffset.x;
+    v.y = face.view[k][1] * face.projection / v.w + packet.state.drawOffset.y;
+    v.rawDepth = face.view[k][2];
+    v.qx = v.x * v.w;
+    v.qy = v.y * v.w;
+    v.nearDepth = 1;
+    v.preciseUV = packet.textured;
+    v.preciseXY = v.preciseX = v.preciseY = v.rawDepthValid = v.homogeneousQ =
+        true;
+    v.inventedW = v.reconciledX = v.reconciledY = false;
+    v.nearSaturated = v.rawDepth < v.nearDepth;
+    keepTransportProvenance(v);
+  }
+  packet.route = gpu::replay::PacketRoute::Projected3D;
+  packet.validMask = 15;
+  packet.fallbackReason = gpu::replay::PacketFallbackReason::None;
+  packet.state.depth.testEnabled = false;
+  packet.state.depth.writeEnabled = !packet.state.blend.enabled;
+  packet.state.depth.compare = gpu::replay::DepthCompare::Always;
+  packet.state.depth.invalidateOnAccepted = packet.state.blend.enabled;
+}
+void prepareRecoverySources(const SceneSnapshot &scene, const Memory &memory,
+                            RecoverySource &out) {
+  if (!recoveryEnabled || scene.bufferIndex > 1 || scene.projection <= 0 ||
+      scene.clip[2] <= 0 || scene.clip[3] <= 0 || !range(scene.channel, 100))
+    return;
+  const auto ptr = [&](uint32_t p) {
+    return memory.ramPtr() + (p & 0x1fffffffu);
+  };
+  // USA DG_Chanls[1] uses a 257-entry reverse ordering table. Keep that
+  // composition boundary while removing geometric rejection/allocation limits.
+  const uint32_t table = u32(ptr(scene.channel + scene.bufferIndex * 4));
+  if (u16(ptr(scene.channel + 8)) != 8 || !table || !range(table, 257 * 4))
+    return;
+  out.capture = scene.sequence;
+  out.orderingTable = table & 0x1fffffffu;
+  const auto texture = [&](uint16_t id) -> const uint8_t * {
+    if (!id)
+      return nullptr;
+    // USA FindTexture (0x8001E254): TexSets, 512 DG_TEX records, stride 12.
+    for (uint32_t probe = 0; probe < 512; ++probe) {
+      const auto *entry = ptr(0x800B46C8u + ((id + probe) & 511u) * 12);
+      if (!u16(entry))
+        return nullptr;
+      if (u16(entry) == id)
+        return entry;
+    }
+    return nullptr;
+  };
+  constexpr uint32_t order[] = {0, 1, 3, 2};
+  for (const auto &instance : scene.instances) {
+    if (!instance.visible || instance.asset == ~0u ||
+        (instance.flags & 0x07u) != 0x07u || (instance.flags & 0x608u) ||
+        !range(instance.guestAddress, 72))
+      continue;
+    const uint32_t first = cache->word(AssetCache::Assets, instance.asset, 9);
+    const uint32_t total = instance.models.size();
+    if (instance.primaryModels > total)
+      continue;
+    std::vector<uint32_t> owners(total, ~0u), packets(total, 0);
+    bool valid = true;
+    for (uint32_t root = 0; root < instance.primaryModels && valid; ++root) {
+      uint32_t packet = u32(
+          ptr(instance.models[root].guestAddress + 84 + scene.bufferIndex * 4));
+      for (uint32_t model = root; model != ~0u;) {
+        if (model >= total || owners[model] != ~0u) {
+          valid = false;
+          break;
+        }
+        owners[model] = root;
+        packets[model] = packet;
+        if (packet)
+          packet += cache->word(AssetCache::Models, first + model, 4) / 4 * 52;
+        const uint32_t next = cache->word(AssetCache::Models, first + model, 2);
+        model = next == ~0u ? ~0u : next - first;
+      }
+    }
+    if (!valid)
+      continue;
+    for (uint32_t m = 0; m < total; ++m) {
+      if (owners[m] == ~0u)
+        continue;
+      const uint32_t object = instance.models[m].guestAddress;
+      const uint32_t root = instance.models[owners[m]].guestAddress;
+      const uint32_t descriptor = instance.definition + 32 + m * 88;
+      if (!range(descriptor, 88) || !range(object, 92))
+        continue;
+      const uint32_t flags = u32(ptr(descriptor));
+      if (flags & (2u | 0x10000u))
+        continue; // transparent/indirect require their own source path
+      const uint32_t global = first + m;
+      const uint32_t begin = cache->word(AssetCache::Models, global, 3);
+      const uint32_t count = cache->word(AssetCache::Models, global, 4) / 4;
+      const uint32_t colors = u32(ptr(object + 68));
+      const uint32_t uv = u32(ptr(descriptor + 76)),
+                     ids = u32(ptr(descriptor + 80));
+      if (!colors || !uv || !ids || !range(colors, uint64_t(count) * 16) ||
+          !range(uv, uint64_t(count) * 8) || !range(ids, uint64_t(count) * 2))
+        continue;
+      for (uint32_t f = 0; f < count; ++f) {
+        const uint32_t packet = packets[m] ? packets[m] + f * 52 : 0;
+        if (packet && !range(packet, 52))
+          continue;
+        // An accepted native face may have visible subdivision children. Leave
+        // the whole face to that existing path; never cover its children twice.
+        const bool nativeBound =
+            u16(ptr(instance.guestAddress + 50)) && u16(ptr(root + 76));
+        if (nativeBound && packet && (u32(ptr(packet)) & 0xffffu))
+          continue;
+        const uint16_t id = u16(ptr(ids + f * 2));
+        const auto *tex = texture(id);
+        if (!tex || ((u16(tex + 4) >> 7) & 3) > 1)
+          continue;
+        RecoveryFace face;
+        face.sourceFace = sourceFaceId(instance.guestAddress, begin + f * 4);
+        face.nativePacket = packet & 0x1fffffffu;
+        auto &draw = face.draw;
+        draw.opcode = 0x3c;
+        draw.textured = draw.gouraud = true;
+        draw.vertexCount = 4;
+        draw.indexCount = 6;
+        draw.validMask = 15;
+        draw.triangleIndices = {0, 1, 2, 1, 2, 3};
+        const auto source = sceneFaces[scene.bufferIndex].find(face.sourceFace);
+        if (source == sceneFaces[scene.bufferIndex].end())
+          continue;
+        draw.originalMesh = source->second.geometry;
+        draw.originalMesh->textureId = id;
+        draw.originalMesh->sourceRecovery = true;
+        const uint16_t page = u16(tex + 4), clut = u16(tex + 6);
+        draw.state.texturePage = {page, uint16_t((page & 15) * 64),
+                                  uint16_t((page & 16) * 16),
+                                  gpu::replay::TextureDepth((page >> 7) & 3)};
+        draw.state.clut = {clut, uint16_t((clut & 63) * 16),
+                           uint16_t(clut >> 6)};
+        const auto &eye = source->second.view;
+        bool complete = true;
+        for (uint32_t k = 0; k < 4 && complete; ++k) {
+          auto &v = draw.vertices[k];
+          const uint32_t color = u32(ptr(colors + (f * 4 + order[k]) * 4));
+          if (color >> 24 != 0x3c) {
+            complete = false;
+            break;
+          }
+          v.color = {uint8_t(color), uint8_t(color >> 8), uint8_t(color >> 16)};
+          v.u = uint8_t(ptr(uv + f * 8)[order[k] * 2] *
+                            (uint32_t(tex[10]) + 1) / 256 +
+                        tex[8]);
+          v.v = uint8_t(ptr(uv + f * 8)[order[k] * 2 + 1] *
+                            (uint32_t(tex[11]) + 1) / 256 +
+                        tex[9]);
+          // Present allocated packets must agree with the persistent material.
+          // Actor-authored packet overrides require a dedicated source path.
+          if (packet && (u32(ptr(packet + 4 + k * 12)) != color ||
+                         u16(ptr(packet + 12 + k * 12)) !=
+                             uint16_t(uint16_t(v.v) << 8 | uint16_t(v.u)) ||
+                         u16(ptr(packet + 14)) != clut ||
+                         u16(ptr(packet + 26)) != page)) {
+            complete = false;
+            break;
+          }
+        }
+        if (!complete || !sourceFaceVisible(eye, scene, flags & 0x400))
+          continue;
+        applySourceGeometry(draw, source->second);
+        draw.originalMesh->textureId = id;
+        draw.originalMesh->sourceRecovery = true;
+        // Match the channel's coarse compositing slot, not its geometric
+        // clipping. Sorting/transparent composition remain native for now.
+        const int32_t depth = int32_t((std::clamp(eye[0][2], 0.0, 65535.0) +
+                                       std::clamp(eye[3][2], 0.0, 65535.0)) *
+                                      .5);
+        face.bucket = uint16_t(depth - int16_t(u16(ptr(root + 80)))) >> 8;
+        out.faces.push_back(std::move(face));
+      }
+    }
+  }
+  metrics::count("mgs.scene.source_candidates", out.faces.size());
+  metrics::setState("mgs.scene.source_candidates", out.faces.size());
 }
 // Read original indexed positions once. ZMD offsets are relative to its shared
 // vertex area; ordinary KMD offsets are relative to the definition itself.
@@ -157,6 +420,115 @@ std::array<double, 2> referenceProjection(const Point &p, double h) {
       std::clamp(std::clamp(p[0], -32768.0, 32767.0) * ratio, -1024.0, 1023.0),
       std::clamp(std::clamp(p[1], -32768.0, 32767.0) * ratio, -1024.0, 1023.0)};
 }
+bool buildSourceFace(const SceneSnapshot &scene, const SceneInstance &instance,
+                     const Memory &memory, uint32_t first, uint32_t m,
+                     std::span<const uint32_t> owners, uint32_t f, Face &face) {
+  const auto ptr = [&](uint32_t address) {
+    return memory.ramPtr() + (address & 0x1fffffffu);
+  };
+  const uint32_t global = first + m, total = instance.models.size();
+  const uint32_t begin = cache->word(AssetCache::Models, global, 3);
+  face.sequence = scene.sequence;
+  face.assetModel = global;
+  face.sourceFace = sourceFaceId(instance.guestAddress, begin + f * 4);
+  face.precisePose = instance.pose.source == ScenePoseSource::Rotations ||
+                     instance.pose.source == ScenePoseSource::Movements ||
+                     instance.pose.inheritedRoot;
+  face.projection = scene.projection;
+  bool complete = true;
+  constexpr unsigned order[] = {0, 1, 3, 2};
+  for (unsigned k = 0; k < 4; ++k) {
+    const uint32_t corner = begin + f * 4 + order[k];
+    Point position{};
+    for (unsigned axis = 0; axis < 3; ++axis)
+      position[axis] =
+          std::bit_cast<float>(cache->word(AssetCache::Vertices, corner, axis));
+    int32_t seam = int32_t(
+        std::bit_cast<float>(cache->word(AssetCache::Vertices, corner, 3)));
+    uint32_t model = m;
+    if (f * 4 + order[k] >= sourceCorners[global].size()) {
+      complete = false;
+      break;
+    }
+    uint32_t indexedVertex = sourceCorners[global][f * 4 + order[k]];
+    uint32_t pointByte =
+        cache->section(AssetCache::Vertices).offset + corner * 48;
+    for (uint32_t step = 0; seam >= 0 && step <= total; ++step) {
+      const uint32_t parent = cache->word(AssetCache::Models, first + model, 1);
+      if (parent < first || parent - first >= total ||
+          uint32_t(seam) >= sourceVertices[parent].size()) {
+        complete = false;
+        break;
+      }
+      model = parent - first;
+      indexedVertex = seam;
+      const auto &v = sourceVertices[parent][seam];
+      position = v.p;
+      seam = v.seam;
+      pointByte = v.pointByte;
+    }
+    if (!complete || seam >= 0 || owners[model] == ~0u) {
+      complete = false;
+      break;
+    }
+    Point displacement{};
+    if (instance.deformed) {
+      const uint32_t descriptor = instance.definition + 32 + model * 88;
+      if (!range(descriptor, 88)) {
+        complete = false;
+        break;
+      }
+      const uint32_t liveVertices = u32(ptr(descriptor + 56));
+      const uint32_t count = u32(ptr(descriptor + 52));
+      if (indexedVertex >= count || !range(liveVertices, uint64_t(count) * 8)) {
+        complete = false;
+        break;
+      }
+      for (unsigned axis = 0; axis < 3; ++axis) {
+        const double live =
+            int16_t(u16(ptr(liveVertices + indexedVertex * 8 + axis * 2)));
+        displacement[axis] = live - position[axis];
+      }
+    }
+    face.geometry.pointBytes[k] = pointByte;
+    const auto &world = instance.models[owners[model]].presentationWorld;
+    for (unsigned row = 0; row < 3; ++row) {
+      auto &out = face.geometry.viewRows[k * 3 + row];
+      for (unsigned col = 0; col < 4; ++col) {
+        double value = col == 3 ? scene.view[12 + row] : 0;
+        for (unsigned axis = 0; axis < 3; ++axis)
+          value += double(scene.view[axis * 4 + row]) * world[col * 4 + axis];
+        // USA DG_AdjustOverscan scales the entire Y row by 58/64.
+        // Preserve its framing in float, alongside the 16:9 X scale.
+        const double scale = row == 1
+                                 ? 58.0 / 64.0
+                                 : (row == 0 && scene.widescreen ? 0.75 : 1.0);
+        out[col] = float(value * scale);
+      }
+    }
+    // Dynamic deformation is a per-corner displacement of the cached
+    // original, transformed as a vector. No reference screen positions
+    // are uploaded as replacement geometry.
+    for (unsigned row = 0; row < 3; ++row)
+      for (unsigned axis = 0; axis < 3; ++axis)
+        face.geometry.viewRows[k * 3 + row][3] +=
+            face.geometry.viewRows[k * 3 + row][axis] * displacement[axis];
+    for (unsigned axis = 0; axis < 3; ++axis)
+      position[axis] += displacement[axis];
+    face.view[k] = transform(scene.view, transform(world, position));
+    face.nativeView[k] = transform(
+        scene.view, transform(instance.models[owners[model]].world, position));
+    if (scene.widescreen) {
+      face.view[k][0] *= 0.75;
+      face.nativeView[k][0] *= 0.75;
+    }
+    face.view[k][1] *= 58.0 / 64.0;
+    face.nativeView[k][1] *= 58.0 / 64.0;
+    face.reference[k] =
+        referenceProjection(face.nativeView[k], face.projection);
+  }
+  return complete;
+}
 void preparePrimitiveFaces(const SceneSnapshot &scene, const Memory &memory,
                            std::unordered_map<uint32_t, Face> &output) {
   if (cache->section(AssetCache::Templates).count != 4)
@@ -210,6 +582,7 @@ void preparePrimitiveFaces(const SceneSnapshot &scene, const Memory &memory,
         continue;
       Face face;
       face.assetModel = ~0u;
+      face.sourceFace = sourceFaceId(address, n | 0x80000000u);
       face.procedural = true;
       face.step = step;
       face.sequence = scene.sequence;
@@ -273,6 +646,7 @@ void preparePrimitiveFaces(const SceneSnapshot &scene, const Memory &memory,
                       face.view[1][axis] + face.view[0][axis];
         }
       }
+      sceneFaces[scene.bufferIndex].emplace(face.sourceFace, face);
       if (output.emplace(packet & 0x1fffffffu, face).second)
         ++prepared;
     }
@@ -344,11 +718,17 @@ void resetMeshReplay() {
     buffer.clear();
   for (auto &buffer : faces)
     buffer.clear();
+  for (auto &source : recoverySources)
+    source = {};
+  for (auto &source : sceneFaces)
+    source.clear();
 }
 void setMeshReplayCache(const AssetCache *value) {
   cache = value;
   const char *mode = std::getenv("PS1_MGS_MESH_REPLAY");
   enabled = cache && mode && std::string_view(mode) == "1";
+  const char *recovery = std::getenv("PS1_MGS_SCENE_RECOVERY");
+  recoveryEnabled = enabled && (!recovery || std::string_view(recovery) != "0");
   resetMeshReplay();
   indexSourceVertices();
   indexTextures();
@@ -436,6 +816,8 @@ void prepareMeshReplay(recomp_context *ctx) {
   }
   auto &output = faces[buffer];
   output.clear();
+  recoverySources[buffer] = {};
+  sceneFaces[buffer].clear();
   std::unordered_set<uint32_t> ambiguous;
   if (!scene || scene->channel != ctx->r4 || scene->bufferIndex != buffer)
     return;
@@ -477,26 +859,26 @@ void prepareMeshReplay(recomp_context *ctx) {
       if (!range(object, 92))
         continue;
       uint32_t packet = u32(ptr(object + 84 + buffer * 4));
-      if (!packet)
-        continue;
       for (uint32_t m = root; m != ~0u;) {
         const uint32_t global = first + m;
         const uint32_t corners = cache->word(AssetCache::Models, global, 4);
         const uint32_t begin = cache->word(AssetCache::Models, global, 3);
         const uint32_t obj = instance.models[m].guestAddress;
         if (!range(obj, 92) || u16(ptr(obj + 82)) != corners / 4 ||
-            !range(packet, uint64_t(corners / 4) * 52))
+            (packet && !range(packet, uint64_t(corners / 4) * 52)))
           break;
-        for (uint32_t f = 0; f < corners / 4; ++f, packet += 52) {
+        for (uint32_t f = 0; f < corners / 4;
+             ++f, packet = packet ? packet + 52 : 0) {
+          Face face{};
+          if (!buildSourceFace(*scene, instance, *ctx->mem, first, m, owners, f,
+                               face))
+            continue;
+          sceneFaces[buffer].emplace(face.sourceFace, face);
+          if (!packet)
+            continue;
           const auto *p = ptr(packet);
           if ((p[7] & 0xfcu) != 0x3cu)
             continue;
-          Face face;
-          face.sequence = scene->sequence;
-          face.assetModel = global;
-          face.precisePose = instance.pose.source == ScenePoseSource::Rotations ||
-                             instance.pose.source == ScenePoseSource::Movements ||
-                             instance.pose.inheritedRoot;
           face.opcode = p[7];
           face.projection = scene->projection;
           face.clut = u16(p + 14);
@@ -507,106 +889,13 @@ void prepareMeshReplay(recomp_context *ctx) {
             if (texids && range(texids, uint64_t(corners / 4) * 2))
               face.geometry.textureId = u16(ptr(texids + f * 2));
           }
-          bool complete = true;
           for (unsigned k = 0; k < 4; ++k) {
-            const uint32_t corner = begin + f * 4 + order[k];
-            Point position{};
-            for (unsigned axis = 0; axis < 3; ++axis)
-              position[axis] = std::bit_cast<float>(
-                  cache->word(AssetCache::Vertices, corner, axis));
-            int32_t seam = int32_t(std::bit_cast<float>(
-                cache->word(AssetCache::Vertices, corner, 3)));
-            uint32_t model = m;
-            if (f * 4 + order[k] >= sourceCorners[global].size()) {
-              complete = false;
-              break;
-            }
-            uint32_t indexedVertex = sourceCorners[global][f * 4 + order[k]];
-            uint32_t pointByte =
-                cache->section(AssetCache::Vertices).offset + corner * 48;
-            for (uint32_t step = 0; seam >= 0 && step <= total; ++step) {
-              const uint32_t parent =
-                  cache->word(AssetCache::Models, first + model, 1);
-              if (parent < first || parent - first >= total ||
-                  uint32_t(seam) >= sourceVertices[parent].size()) {
-                complete = false;
-                break;
-              }
-              model = parent - first;
-              indexedVertex = seam;
-              const auto &v = sourceVertices[parent][seam];
-              position = v.p;
-              seam = v.seam;
-              pointByte = v.pointByte;
-            }
-            if (!complete || seam >= 0 || owners[model] == ~0u) {
-              complete = false;
-              break;
-            }
-            Point displacement{};
-            if (instance.deformed) {
-              const uint32_t descriptor = instance.definition + 32 + model * 88;
-              if (!range(descriptor, 88)) {
-                complete = false;
-                break;
-              }
-              const uint32_t liveVertices = u32(ptr(descriptor + 56));
-              const uint32_t count = u32(ptr(descriptor + 52));
-              if (indexedVertex >= count ||
-                  !range(liveVertices, uint64_t(count) * 8)) {
-                complete = false;
-                break;
-              }
-              for (unsigned axis = 0; axis < 3; ++axis) {
-                const double live = int16_t(
-                    u16(ptr(liveVertices + indexedVertex * 8 + axis * 2)));
-                displacement[axis] = live - position[axis];
-              }
-            }
-            face.geometry.pointBytes[k] = pointByte;
-            const auto &world = instance.models[owners[model]].presentationWorld;
-            for (unsigned row = 0; row < 3; ++row) {
-              auto &out = face.geometry.viewRows[k * 3 + row];
-              for (unsigned col = 0; col < 4; ++col) {
-                double value = col == 3 ? scene->view[12 + row] : 0;
-                for (unsigned axis = 0; axis < 3; ++axis)
-                  value += double(scene->view[axis * 4 + row]) *
-                           world[col * 4 + axis];
-                // USA DG_AdjustOverscan scales the entire Y row by 58/64.
-                // Preserve its framing in float, alongside the 16:9 X scale.
-                const double scale =
-                    row == 1 ? 58.0 / 64.0
-                             : (row == 0 && scene->widescreen ? 0.75 : 1.0);
-                out[col] = float(value * scale);
-              }
-            }
-            // Dynamic deformation is a per-corner displacement of the cached
-            // original, transformed as a vector. No reference screen positions
-            // are uploaded as replacement geometry.
-            for (unsigned row = 0; row < 3; ++row)
-              for (unsigned axis = 0; axis < 3; ++axis)
-                face.geometry.viewRows[k * 3 + row][3] +=
-                    face.geometry.viewRows[k * 3 + row][axis] *
-                    displacement[axis];
-            for (unsigned axis = 0; axis < 3; ++axis)
-              position[axis] += displacement[axis];
-            face.view[k] = transform(scene->view, transform(world, position));
-            face.nativeView[k] = transform(
-                scene->view, transform(instance.models[owners[model]].world, position));
-            if (scene->widescreen) {
-              face.view[k][0] *= 0.75;
-              face.nativeView[k][0] *= 0.75;
-            }
-            face.view[k][1] *= 58.0 / 64.0;
-            face.nativeView[k][1] *= 58.0 / 64.0;
-            face.reference[k] =
-                referenceProjection(face.nativeView[k], face.projection);
             face.xy[k] = {int16_t(u16(p + 8 + k * 12)),
                           int16_t(u16(p + 10 + k * 12))};
             face.colors[k] = u32(p + 4 + k * 12) & 0xffffffu;
             face.uv[k] = u16(p + 12 + k * 12);
           }
-          if (complete) {
+          {
             const uint32_t key = packet & 0x1fffffffu;
             if (ambiguous.contains(key))
               continue;
@@ -655,6 +944,129 @@ void prepareMeshReplay(recomp_context *ctx) {
   metrics::setState("mgs.mesh.subdivided_faces", derived);
   metrics::count("mgs.mesh.prepared_frames");
   metrics::setState("mgs.mesh.prepared_faces", output.size());
+  metrics::setState("mgs.scene.source_geometry_faces",
+                    sceneFaces[buffer].size());
+  prepareRecoverySources(*scene, *ctx->mem, recoverySources[buffer]);
+}
+std::unique_ptr<SceneRecoveryReplay>
+recoverSceneReplay(uint32_t listStart, std::span<const uint8_t> ram) {
+  if (!recoveryEnabled || !active() || ram.size() != Memory::RAM_SIZE ||
+      (recoverySources[0].faces.empty() && recoverySources[1].faces.empty()))
+    return {};
+  metrics::count("mgs.scene.recovery_list_attempts");
+  std::unordered_set<uint32_t> nodes;
+  uint32_t address = listStart & 0x1fffffffu;
+  bool complete = false;
+  for (uint32_t n = 0; n < 65536; ++n) {
+    if (address & 3 || !range(address, 4) || !nodes.insert(address).second) {
+      metrics::count("mgs.scene.recovery_invalid_list");
+      return {};
+    }
+    const uint32_t tag = u32(ram.data() + address);
+    if (!range(address, (uint64_t(tag >> 24) + 1) * 4)) {
+      metrics::count("mgs.scene.recovery_invalid_list");
+      return {};
+    }
+    address = tag & 0xffffffu;
+    if (address == 0xffffffu) {
+      complete = true;
+      break;
+    }
+  }
+  if (!complete)
+    return {};
+  uint32_t selected = 2;
+  for (uint32_t buffer = 0; buffer < 2; ++buffer) {
+    const auto &source = recoverySources[buffer];
+    if (!source.capture || source.faces.empty())
+      continue;
+    bool found = true;
+    for (uint32_t slot = 0; slot <= 256; ++slot) {
+      const uint32_t node = source.orderingTable + slot * 4;
+      if (!nodes.contains(node) || u32(ram.data() + node) >> 24) {
+        metrics::trace("mgs.scene.recovery_ot_mismatch",
+                       {{"table", source.orderingTable},
+                        {"slot", slot},
+                        {"present", nodes.contains(node)},
+                        {"header", u32(ram.data() + node)},
+                        {"start", listStart},
+                        {"capture", int64_t(source.capture)}});
+        found = false;
+        break;
+      }
+    }
+    if (found) {
+      if (selected != 2)
+        return {}; // ambiguous channel/buffer identity
+      selected = buffer;
+    }
+  }
+  if (selected == 2)
+    return {};
+  const auto &source = recoverySources[selected];
+  std::unordered_set<uint64_t> represented;
+  for (uint32_t node : nodes) {
+    const auto face = faces[selected].find(node);
+    if (face != faces[selected].end())
+      represented.insert(face->second.sourceFace);
+  }
+  auto result = std::make_unique<SceneRecoveryReplay>();
+  result->capture = source.capture;
+  result->orderingTable = source.orderingTable;
+  uint32_t recovered = 0;
+  for (const auto &face : source.faces) {
+    if (represented.contains(face.sourceFace) ||
+        (face.nativePacket && nodes.contains(face.nativePacket))) {
+      metrics::count("mgs.scene.recovery_duplicate_prevented");
+      continue;
+    }
+    result->buckets[face.bucket].push_back(face.draw);
+    ++recovered;
+  }
+  metrics::count("mgs.scene.recovery_lists");
+  metrics::setState("mgs.scene.recovery_faces", recovered);
+  return recovered ? std::move(result) : nullptr;
+}
+bool bindRecoveredSceneDraw(gpu::replay::DrawPacket &packet,
+                            const gpu::replay::BakedDrawState &environment,
+                            std::span<const gpu::Color16> vram) {
+  if (!packet.originalMesh || environment.texturePage.textureDisable ||
+      environment.mask.checkMaskBit || environment.mask.forceMaskBit ||
+      environment.textureWindow.raw || environment.textureWindow.maskX ||
+      environment.textureWindow.maskY || environment.depth.epoch == 0)
+    return false;
+  auto &state = packet.state;
+  state.drawArea = environment.drawArea;
+  state.drawOffset = environment.drawOffset;
+  state.dither = environment.dither;
+  state.drawToDisplayArea = environment.drawToDisplayArea;
+  state.texturePage.raw = (state.texturePage.raw & ~0x600u) |
+                          (state.dither ? 0x200u : 0u) |
+                          (state.drawToDisplayArea ? 0x400u : 0u);
+  state.depth = {false, true, gpu::replay::DepthCompare::Always,
+                 environment.depth.epoch, false};
+  state.textureUvDomain.enabled = true;
+  double minU = 255, maxU = 0, minV = 255, maxV = 0;
+  for (auto &v : packet.vertices) {
+    v.x += state.drawOffset.x;
+    v.y += state.drawOffset.y;
+    v.qx = v.x * v.w;
+    v.qy = v.y * v.w;
+    v.nativeX = int16_t(std::clamp(v.x, -32768.0, 32767.0));
+    v.nativeY = int16_t(std::clamp(v.y, -32768.0, 32767.0));
+    minU = std::min(minU, v.u);
+    maxU = std::max(maxU, v.u);
+    minV = std::min(minV, v.v);
+    maxV = std::max(maxV, v.v);
+  }
+  state.textureUvDomain.minU = minU;
+  state.textureUvDomain.maxU = maxU;
+  state.textureUvDomain.minV = minV;
+  state.textureUvDomain.maxV = maxV;
+  packet.originalMesh->projection[1] = state.drawOffset.x;
+  packet.originalMesh->projection[2] = state.drawOffset.y;
+  bindOriginalTexture(packet, vram);
+  return packet.originalTexture.has_value();
 }
 void adaptMeshReplayPacket(gpu::replay::DrawPacket &packet) {
   if (!enabled || !active())
@@ -926,33 +1338,7 @@ bool replaceMeshReplayPacket(gpu::replay::DrawPacket &packet) {
                       {"z", int64_t(face->view[k][2])}});
     return false;
   }
-  packet.originalMesh = face->geometry;
-  packet.originalMesh->projection = {
-      float(face->projection), float(packet.state.drawOffset.x),
-      float(packet.state.drawOffset.y), face->procedural ? 2.0f : 1.0f};
-  for (unsigned k = 0; k < 4; ++k) {
-    auto &v = packet.vertices[k];
-    v.x = projected[k][0];
-    v.y = projected[k][1];
-    v.w = projected[k][2];
-    v.rawDepth = face->view[k][2];
-    v.qx = v.x * v.w;
-    v.qy = v.y * v.w;
-    v.nearDepth = 1;
-    v.preciseUV = packet.textured;
-    v.preciseXY = v.preciseX = v.preciseY = v.rawDepthValid = v.homogeneousQ =
-        true;
-    v.inventedW = v.reconciledX = v.reconciledY = false;
-    v.nearSaturated = v.rawDepth < v.nearDepth;
-    keepTransportProvenance(v);
-  }
-  packet.route = gpu::replay::PacketRoute::Projected3D;
-  packet.validMask = 15;
-  packet.fallbackReason = gpu::replay::PacketFallbackReason::None;
-  packet.state.depth.testEnabled = false;
-  packet.state.depth.writeEnabled = !packet.state.blend.enabled;
-  packet.state.depth.compare = gpu::replay::DepthCompare::Always;
-  packet.state.depth.invalidateOnAccepted = packet.state.blend.enabled;
+  applySourceGeometry(packet, *face);
   metrics::count("mgs.mesh.replaced_packets");
   if (face->precisePose)
     metrics::count("mgs.mesh.precise_pose_packets");

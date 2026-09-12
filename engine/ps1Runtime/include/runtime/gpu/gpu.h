@@ -17,6 +17,7 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <mutex>
 #include <optional>
 #include <runtime/gpu/enhanced_surface.h>
@@ -337,6 +338,9 @@ public:
       PGXPSubmissionPath submissionPath = PGXPSubmissionPath::DirectMmio,
       GP0DmaWordProvenance dmaProvenance = {});
   uint64_t activeSubmissionId() const;
+  // Shared by DMA and HLE list traversal; caller holds the command batch.
+  std::function<void(uint32_t)> observePresentationList(uint32_t start,
+                                                        const uint8_t *ram);
 
   // Check if display is enabled (GP1(0x03), GPUSTAT bit 23)
   bool isDisplayEnabled() const { return !(gpuStat_ & (1u << 23)); }

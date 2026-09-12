@@ -46,7 +46,11 @@ continuano sotto al cofano. HUD e Codec sono composti come grafica 2D runtime.
 Le [pose articolate](docs/mgs-modern-pose.md) sono ora ricostruite dagli operandi
 originali in virgola mobile, inclusi gli agganci fra modelli; le matrici PS1
 restano l'oracolo separato per verificare i pacchetti.
-Il percorso resta sperimentale: altre scene, culling indipendente, famiglie LOD,
+La [scena sorgente unificata](docs/mgs-unified-source-scene.md) prepara la
+geometria anche senza pacchetti PS1; modelli ed effetti riconosciuti condividono
+proiezione, profondità e binding della cache. Il recupero delle facce interamente
+assenti è attivo per i materiali opachi con colori persistenti verificabili.
+Il percorso resta sperimentale: altre scene, culling completamente indipendente, famiglie LOD,
 interpolazione e prestazioni richiedono ulteriori verifiche e sviluppo.
 
 ## Base riutilizzata

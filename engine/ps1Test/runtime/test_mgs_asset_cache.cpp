@@ -3,6 +3,7 @@
 #include "runtime/games/mgs_mesh_replay.h"
 #include "runtime/games/mgs_profile.h"
 #include "runtime/games/mgs_scene.h"
+#include "runtime/gpu/gpu.h"
 #include "runtime/gpu/modern_replay.h"
 #include "runtime/memory.h"
 #include <algorithm>
@@ -25,7 +26,7 @@ void checksum(std::vector<uint8_t> &b) {
   }
   put(b, 12, ~crc);
 }
-std::vector<uint8_t> sourceModel() {
+std::vector<uint8_t> sourceModel(bool quad = false) {
   std::vector<uint8_t> b(178);
   put(b, 0, 1); put(b, 4, 1);
   put(b, 36, 1); put(b, 76, ~0u); put(b, 80, ~0u);
@@ -33,7 +34,8 @@ std::vector<uint8_t> sourceModel() {
   put(b, 96, 1); put(b, 100, 156); put(b, 104, 164);
   put(b, 108, 168); put(b, 112, 176);
   for (unsigned v = 0; v < 4; ++v) {
-    b[120 + v*8] = v*10;
+    b[120 + v * 8] = quad ? (v == 1 || v == 2) : v * 10;
+    b[122 + v * 8] = quad && v >= 2;
     b[126 + v*8] = b[127 + v*8] = 255;
     b[152 + v] = v;
   }
@@ -60,7 +62,8 @@ packFixture(const std::array<std::vector<uint8_t>, 9> &sections, bool names) {
   checksum(b);
   return b;
 }
-std::vector<uint8_t> fixture(bool names = false) {
+std::vector<uint8_t> fixture(bool names = false, bool quad = false,
+                             bool texture = false) {
   std::array<std::vector<uint8_t>, 9> sections;
   sections[0].resize(64);
   put(sections[0],32,'k'); put(sections[0],40,1); put(sections[0],44,~0u);
@@ -70,10 +73,30 @@ std::vector<uint8_t> fixture(bool names = false) {
   put(sections[1],20,4); put(sections[1],28,1);
   sections[2].resize(4*48);
   for (unsigned v = 0; v < 4; ++v) {
-    put(sections[2], v * 48, std::bit_cast<uint32_t>(float(v * 10)));
+    put(sections[2], v * 48,
+        std::bit_cast<uint32_t>(float(quad ? (v == 1 || v == 2) : v * 10)));
+    put(sections[2], v * 48 + 4,
+        std::bit_cast<uint32_t>(float(quad && v >= 2)));
     put(sections[2], v * 48 + 12, std::bit_cast<uint32_t>(-1.0f));
   }
-  sections[6] = sourceModel();
+  sections[6] = sourceModel(quad);
+  if (texture) {
+    sections[0].resize(128);
+    put(sections[0], 64 + 32, 'p');
+    put(sections[0], 64 + 48, 178);
+    put(sections[0], 64 + 52, 128);
+    sections[6].resize(178 + 128);
+    put(sections[6], 178 + 82, 512 | (400u << 16));
+    sections[3].resize(32);
+    put(sections[3], 0, 4);
+    put(sections[3], 4, 4);
+    put(sections[3], 12, 16);
+    put(sections[3], 20, 16);
+    put(sections[3], 28, 1);
+    sections[4].assign(16, 1);
+    sections[5].resize(16 * 4);
+    put(sections[5], 4, 0x7fff);
+  }
   if (names) {
     sections[7].resize(8);
     put(sections[7], 0, 0x1234);
@@ -86,8 +109,8 @@ std::vector<uint8_t> fixture(bool names = false) {
   }
   return packFixture(sections, names);
 }
-void loadModel(Memory &memory, uint32_t address) {
-  auto b=sourceModel();
+void loadModel(Memory &memory, uint32_t address, bool quad = false) {
+  auto b = sourceModel(quad);
   for (unsigned field : {56u,60u,68u,72u,76u,80u}) {
     const auto p=32+field;
     uint32_t v = uint32_t(b[p]) | uint32_t(b[p+1])<<8;
@@ -95,6 +118,316 @@ void loadModel(Memory &memory, uint32_t address) {
   }
   for (size_t i=0;i<b.size();++i) memory.write8(address+i,b[i]);
 }
+
+class MgsSceneRecoveryTest : public ::testing::Test {
+protected:
+  static constexpr uint32_t channel = 0x80010000, queue = 0x80010100,
+                            object = 0x80010200, definition = 0x80011000,
+                            packs = 0x80013000, colors = 0x80014000,
+                            table = 0x80015000,
+                            tex = 0x800B46C8 + (0x1234 & 511) * 12;
+  AssetCache cache = AssetCache::decode(fixture(false, true));
+  Memory memory;
+  recomp_context ctx{};
+  std::array<std::string, 2> previous;
+  std::array<bool, 2> existed{};
+  static constexpr const char *vars[] = {"PS1_MGS_MESH_REPLAY",
+                                         "PS1_MGS_SCENE_RECOVERY"};
+  void SetUp() override {
+    for (unsigned i = 0; i < 2; ++i) {
+      existed[i] = std::getenv(vars[i]) != nullptr;
+      if (existed[i])
+        previous[i] = std::getenv(vars[i]);
+      setenv(vars[i], "1", 1);
+    }
+    configure(true, false);
+    setSceneAssetCache(&cache);
+    loadModel(memory, definition, true);
+    memory.write32(channel, table);
+    memory.write16(channel + 8, 8);
+    memory.write16(channel + 80, 320);
+    memory.write16(channel + 86, 1);
+    memory.write32(channel + 88, queue);
+    memory.write16(channel + 92, -160);
+    memory.write16(channel + 94, -112);
+    memory.write16(channel + 96, 320);
+    memory.write16(channel + 98, 224);
+    memory.write32(queue, object);
+    memory.write32(object + 36, definition);
+    memory.write32(object + 40, 0x57); // static, painted, opaque, one piece
+    memory.write16(object + 46, 1);
+    memory.write32(object + 72 + 64, definition + 32);
+    memory.write32(object + 72 + 68, colors);
+    memory.write16(object + 72 + 82, 1);
+    for (uint32_t offset : {0u, 8u, 16u}) {
+      memory.write16(channel + 16 + offset, 4096);
+      memory.write16(object + offset, 4096);
+      memory.write16(object + 72 + offset, 4096);
+    }
+    // All four projected SXY coordinates truncate to zero; the source quad
+    // still covers a nonzero area. No native packet has ever been allocated.
+    memory.write32(object + 28, 10000);
+    memory.write32(object + 72 + 28, 10000);
+    for (unsigned k = 0; k < 4; ++k)
+      memory.write32(colors + k * 4, 0x3c808080);
+    memory.write16(definition + 176, 0x1234);
+    memory.write16(tex, 0x1234);
+    memory.write16(tex + 6, 400 * 64 + 32);
+    memory.write8(tex + 10, 15);
+    memory.write8(tex + 11, 15);
+    for (uint32_t i = 0; i <= 256; ++i)
+      memory.write32(table + i * 4,
+                     i ? ((table + (i - 1) * 4) & 0xffffff) : 0xffffff);
+    ctx.mem = &memory;
+    ctx.r4 = channel;
+    ctx.r5 = 0;
+  }
+  void TearDown() override {
+    setSceneAssetCache(nullptr);
+    configure(false, false);
+    for (unsigned i = 0; i < 2; ++i) {
+      if (existed[i])
+        setenv(vars[i], previous[i].c_str(), 1);
+      else
+        unsetenv(vars[i]);
+    }
+  }
+  std::unique_ptr<SceneRecoveryReplay> recover(bool prepare = true) {
+    if (prepare) {
+      captureSceneBeforeBounds(&ctx);
+      prepareMeshReplay(&ctx);
+    }
+    return recoverSceneReplay(table + 256 * 4,
+                              {memory.ramPtr(), Memory::RAM_SIZE});
+  }
+};
+} // namespace
+
+TEST_F(MgsSceneRecoveryTest,
+       RecoversSubpixelSourceWithoutNativePacketsOrMutation) {
+  const std::vector<uint8_t> before(memory.ramPtr(),
+                                    memory.ramPtr() + Memory::RAM_SIZE);
+  const auto registers = std::to_array(ctx.r);
+  auto result = recover();
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result->orderingTable, table & 0xffffff);
+  ASSERT_EQ(result->buckets[39].size(), 1u);
+  const auto &draw = result->buckets[39].front();
+  ASSERT_TRUE(draw.originalMesh);
+  EXPECT_TRUE(draw.originalMesh->sourceRecovery);
+  EXPECT_EQ(draw.originalMesh->textureId, 0x1234u);
+  EXPECT_DOUBLE_EQ(draw.vertices[1].x, .032);
+  EXPECT_GT(draw.vertices[2].y, 0);
+  for (const auto &v : draw.vertices) {
+    EXPECT_EQ(v.provenance, gpu::replay::ReplayVertexProvenance{});
+    EXPECT_EQ(v.rawDepth, 10000);
+  }
+  EXPECT_EQ(std::memcmp(before.data(), memory.ramPtr(), before.size()), 0);
+  EXPECT_EQ(std::to_array(ctx.r), registers);
+  resetMeshReplay();
+  EXPECT_FALSE(recover(false));
+}
+
+TEST_F(MgsSceneRecoveryTest, RespectsSemanticVisibilityAndSupportedMaterials) {
+  ASSERT_TRUE(recover());
+  for (uint32_t flags : {0xd7u, 0x5fu, 0x257u, 0x457u, 0x55u}) {
+    memory.write32(object + 40, flags);
+    EXPECT_FALSE(recover()) << flags;
+  }
+  memory.write32(object + 40, 0x57);
+  memory.write16(object + 44, 2);
+  memory.write32(0x800AE0E0, 1);
+  EXPECT_FALSE(recover());
+  memory.write16(object + 44, 0);
+  memory.write32(definition + 32, 2); // semitransparent model
+  EXPECT_FALSE(recover());
+  memory.write32(definition + 32, 0);
+  memory.write32(colors, 0x3e808080);
+  EXPECT_FALSE(recover());
+  memory.write32(colors, 0x3c808080);
+  memory.write16(tex, 0);
+  EXPECT_FALSE(recover());
+  memory.write16(tex, 0x1234);
+  memory.write32(object + 72 + 68, 0);
+  EXPECT_FALSE(recover());
+}
+
+TEST_F(MgsSceneRecoveryTest, ArticulatedPaintUsesSameSourceProducerAsOnePiece) {
+  const auto single = recover();
+  ASSERT_TRUE(single);
+  memory.write32(object + 40, 0x17); // articulated rather than ONEPIECE
+  const auto articulated = recover();
+  ASSERT_TRUE(articulated);
+  EXPECT_EQ(single->buckets[39].front(), articulated->buckets[39].front());
+}
+
+TEST_F(MgsSceneRecoveryTest, NativeMaterialAdapterUsesIdenticalSourceGeometry) {
+  const auto direct = recover();
+  ASSERT_TRUE(direct);
+  memory.write32(object + 72 + 84, packs);
+  gpu::replay::DrawPacket packet;
+  packet.opcode = 0x3c;
+  packet.vertexCount = 4;
+  packet.indexCount = 6;
+  packet.textured = packet.gouraud = true;
+  packet.triangleIndices = {0, 1, 2, 1, 2, 3};
+  packet.state.clut.raw = 400 * 64 + 32;
+  for (unsigned k = 0; k < 4; ++k) {
+    memory.write32(packs + 4 + k * 12, 0x3c808080);
+    auto &v = packet.vertices[k];
+    v.color = {128, 128, 128};
+    v.provenance.dmaNodeSource = (packs & 0xffffff) + 1;
+    v.provenance.gp0WordSource = (packs & 0xffffff) + 9 + k * 12;
+    v.provenance.evidence = gpu::replay::ReplayVertexDmaTraversalExact |
+                            gpu::replay::ReplayVertexGp0WordSourceExact;
+  }
+  memory.write16(packs + 14, packet.state.clut.raw);
+  captureSceneBeforeBounds(&ctx);
+  prepareMeshReplay(&ctx);
+  ASSERT_TRUE(replaceMeshReplayPacket(packet));
+  auto expected = direct->buckets[39].front();
+  expected.originalMesh->sourceRecovery = false;
+  EXPECT_EQ(packet.originalMesh, expected.originalMesh);
+  for (unsigned k = 0; k < 4; ++k) {
+    EXPECT_EQ(packet.vertices[k].x, expected.vertices[k].x);
+    EXPECT_EQ(packet.vertices[k].y, expected.vertices[k].y);
+    EXPECT_EQ(packet.vertices[k].rawDepth, expected.vertices[k].rawDepth);
+  }
+}
+
+TEST_F(MgsSceneRecoveryTest,
+       DmaAndHleObserverProduceSourceDrawWithoutTouchingNativeVram) {
+  using namespace gpu::replay;
+  cache = AssetCache::decode(fixture(false, true, true));
+  setSceneAssetCache(&cache);
+  for (const bool hle : {false, true}) {
+    gpu::GPU gpu;
+    gpu::GPU::ReplayConfig config;
+    config.enabled = true;
+    config.pgxp = true;
+    config.internalScale = 12;
+    config.trueDepthMode = ReplayDepthMode::Hybrid;
+    gpu.configureReplay(config);
+    gpu.writeGP0(0xe3000000);
+    gpu.writeGP0(0xe4000000 | 319 | (223u << 10));
+    gpu.writeGP0(0xe5000000 | 160 | (112u << 11));
+    const auto upload = [&](uint32_t position, uint32_t extent,
+                            std::span<const uint32_t> words) {
+      gpu.writeGP0(0xa0000000);
+      gpu.writeGP0(position);
+      gpu.writeGP0(extent);
+      for (auto word : words)
+        gpu.writeGP0(word);
+    };
+    const std::array<uint32_t, 2> pixels{0x11111111, 0x11111111};
+    upload(0, 1 | (4u << 16), pixels);
+    const std::array<uint32_t, 8> palette{0x7fff0000};
+    upload(512 | (400u << 16), 16 | (1u << 16), palette);
+    // Seed the capture before the empty native list, then isolate its frame.
+    gpu.snapshotDisplayBuffer(1);
+    ASSERT_TRUE(gpu.tryConsumeReplay());
+    const std::vector<gpu::Color16> before(gpu.getVRAM(),
+                                           gpu.getVRAM() + 1024 * 512);
+    captureSceneBeforeBounds(&ctx);
+    prepareMeshReplay(&ctx);
+    if (hle) {
+      gpu.beginCommandBatch();
+      auto observer =
+          gpu.observePresentationList(table + 256 * 4, memory.ramPtr());
+      ASSERT_TRUE(observer);
+      for (int slot = 256; slot >= 0; --slot)
+        observer((table & 0xffffff) + slot * 4);
+      gpu.endCommandBatch();
+    } else {
+      gpu.processLinkedList(table + 256 * 4, memory.ramPtr(), &memory);
+    }
+    EXPECT_EQ(std::memcmp(before.data(), gpu.getVRAM(),
+                          before.size() * sizeof(gpu::Color16)),
+              0);
+    gpu.snapshotDisplayBuffer(2);
+    const auto frame = gpu.tryConsumeReplay();
+    ASSERT_TRUE(frame);
+    EXPECT_TRUE(frame->latch().complete);
+    uint32_t draws = 0;
+    for (const auto &operation : frame->operations()) {
+      if (const auto *draw = std::get_if<DrawPacket>(&operation)) {
+        ++draws;
+        ASSERT_TRUE(draw->originalMesh);
+        EXPECT_TRUE(draw->originalMesh->sourceRecovery);
+        ASSERT_TRUE(draw->originalTexture);
+        EXPECT_EQ(draw->originalTexture->data[2], 4u);
+        EXPECT_NEAR(draw->vertices[1].x, 160.032, 1e-8);
+        EXPECT_GT(draw->submissionId, 0u);
+        EXPECT_EQ(draw->vertices[0].provenance, ReplayVertexProvenance{});
+      }
+    }
+    EXPECT_EQ(draws, 1u) << "HLE observer: " << hle;
+  }
+}
+
+TEST_F(MgsSceneRecoveryTest, UsesFloatingFrustumAndWinding) {
+  ASSERT_TRUE(recover());
+  memory.write32(object + 20, 100000);
+  memory.write32(object + 72 + 20, 100000);
+  EXPECT_FALSE(recover());
+  memory.write32(object + 20, 0);
+  memory.write32(object + 72 + 20, 0);
+  memory.write32(object + 28, -10000);
+  memory.write32(object + 72 + 28, -10000);
+  EXPECT_FALSE(recover());
+  memory.write32(object + 28, 10000);
+  memory.write32(object + 72 + 28, 10000);
+  memory.write16(channel + 16, -4096);
+  EXPECT_FALSE(recover());
+  memory.write32(definition + 32, 0x400); // explicit double-sided model
+  auto bytes = fixture(false, true);
+  put(bytes, cache.section(AssetCache::Source).offset + 32, 0x400);
+  checksum(bytes);
+  cache = AssetCache::decode(bytes);
+  setSceneAssetCache(&cache);
+  EXPECT_TRUE(recover());
+}
+
+TEST_F(MgsSceneRecoveryTest,
+       RequiresCompleteAcyclicOrderingTableAndFreshCapture) {
+  ASSERT_TRUE(recover());
+  memory.write32(table + 7 * 4, (table + 5 * 4) & 0xffffff); // bypass a bucket
+  EXPECT_FALSE(recover(false));
+  memory.write32(table + 7 * 4, (table + 7 * 4) & 0xffffff); // cycle
+  EXPECT_FALSE(recover(false));
+  memory.write32(table + 7 * 4, (table + 6 * 4) & 0xffffff);
+  ASSERT_TRUE(recover(false));
+  memory.write16(channel + 86, 0);
+  EXPECT_FALSE(recover());
+  memory.write16(channel + 86, 1);
+  ASSERT_TRUE(recover());
+  ctx.r5 = 2;
+  EXPECT_FALSE(recover());
+}
+
+TEST_F(MgsSceneRecoveryTest,
+       RejectsAllocatedMaterialOverridesAndNativeDuplicates) {
+  memory.write32(object + 72 + 84, packs);
+  for (unsigned k = 0; k < 4; ++k)
+    memory.write32(packs + 4 + k * 12, 0x3c808080);
+  memory.write16(packs + 14, 400 * 64 + 32);
+  ASSERT_TRUE(recover());
+  memory.write32(packs + 4, 0x3c707070);
+  EXPECT_FALSE(recover());
+  memory.write32(packs + 4, 0x3c808080);
+  ASSERT_TRUE(recover());
+  // The entire actual list is checked before insertion, even if the native
+  // packet comes later in the same bucket than the recovered source would.
+  memory.write32(packs, 0x0c000000 | ((table + 39 * 4) & 0xffffff));
+  memory.write32(table + 40 * 4, packs & 0xffffff);
+  EXPECT_FALSE(recover(false));
+  memory.write32(table + 40 * 4, (table + 39 * 4) & 0xffffff);
+  memory.write16(object + 50, 2);
+  memory.write16(object + 72 + 76, 2);
+  // Accepted originals may have subdivision children: never redraw their
+  // parent merely because the parent's own packet is absent from the list.
+  memory.write32(packs, 10000);
+  EXPECT_FALSE(recover());
 }
 TEST(MgsAssetCacheTest, RejectsCorruptionAndOverlappingSections) {
   auto b=fixture();

@@ -801,6 +801,9 @@ int main(int argc, char *argv[]) {
     hleCfg.activeGP0SubmissionId = [&gpu]() {
       return gpu.activeSubmissionId();
     };
+    hleCfg.observeGP0List = [&gpu](uint32_t start, const ps1::Memory &memory) {
+      return gpu.observePresentationList(start, memory.ramPtr());
+    };
     hleCfg.writeGP1 = [&gpu](uint32_t w) { gpu.writeGP1(w); };
     hleCfg.deliverVBlankEvent = [&bios]() {
       // VSync runs on the game thread. Queue the emulated IRQ-chain work and

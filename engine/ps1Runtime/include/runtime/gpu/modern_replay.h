@@ -480,6 +480,8 @@ struct OriginalTexture {
 };
 struct OriginalMeshGeometry {
   uint32_t textureId = ~0u; // live logical KMD material ID, for PCX provenance
+  bool sourceRecovery =
+      false; // host-only draw without a native GP0 counterpart
   std::array<std::array<float, 4>, 4> weights{
       {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}};
   std::array<uint32_t, 4> pointBytes{};

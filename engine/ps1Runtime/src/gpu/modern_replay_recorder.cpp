@@ -505,6 +505,30 @@ void CrashReplayRecorder::recordNoOp(uint8_t opcode) {
   markPacketRecorded(opcode);
 }
 
+void CrashReplayRecorder::recordPresentationDraw(
+    DrawPacket packet, std::span<const Color16> nativeVram) {
+  requireEnabled();
+  if (!surfaceSeeded_ || cpuUpload_.active)
+    throw std::logic_error(
+        "presentation draw requires an idle seeded timeline");
+  if (!packet.originalMesh || !packet.originalTexture ||
+      packet.vertexCount != 4 || packet.indexCount != 6 || !packet.textured ||
+      packet.route != PacketRoute::Projected3D || packet.validMask != 15 ||
+      packet.fallbackReason != PacketFallbackReason::None)
+    throw std::invalid_argument(
+        "presentation draw requires original source geometry and material");
+  for (unsigned k = 0; k < packet.vertexCount; ++k)
+    if (packet.vertices[k].provenance != ReplayVertexProvenance{})
+      throw std::invalid_argument(
+          "presentation draw cannot claim native command provenance");
+  packet.packetSequence = nextPacketSequence_;
+  packet.nativeRead = prepareNativeRead(packet.state.texturePage,
+                                        packet.state.clut, nativeVram);
+  builder_.record(std::move(packet));
+  ++nextPacketSequence_;
+  metrics::count("gpu.replay.presentation_draws");
+}
+
 void CrashReplayRecorder::recordFill(uint8_t opcode, FillRect operation) {
   requireEnabled();
   if (!surfaceSeeded_)

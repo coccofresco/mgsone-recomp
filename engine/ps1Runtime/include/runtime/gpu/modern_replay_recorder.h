@@ -114,6 +114,10 @@ public:
   NativeReadDependency prepareNativeRectRead(NativeRect source,
                                              std::span<const Color16> nativeVram);
   void recordDraw(DrawPacket packet, std::span<const Color16> nativeVram);
+  // Host-owned source geometry has its own sequence slot, but must not alter
+  // observed/required/recorded GP0 coverage or the authoritative native raster.
+  void recordPresentationDraw(DrawPacket packet,
+                              std::span<const Color16> nativeVram);
 
   // Resolve a decoded command whose native semantics deliberately produce no
   // mutation (for example GP0(02) with a zero dimension or a clipped GP0(68)).

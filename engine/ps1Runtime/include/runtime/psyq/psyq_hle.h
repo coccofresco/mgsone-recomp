@@ -60,6 +60,11 @@ struct HleConfig {
   /// command semantics.
   std::function<uint64_t()> activeGP0SubmissionId;
 
+  /// Optional presentation observer for a complete list. The returned closure
+  /// sees zero-word OT anchors while the batch owns the GPU timeline.
+  std::function<std::function<void(uint32_t)>(uint32_t, const Memory &)>
+      observeGP0List;
+
   /// GPU control port (GP1) write -- used by PutDispEnv.
   std::function<void(uint32_t)> writeGP1;
 

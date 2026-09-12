@@ -1206,6 +1206,8 @@ VulkanReplayBakedDraw bakeDraw(const DrawPacket &packet, uint32_t internalScale,
   baked.scissor = scaledDrawArea(packet.state.drawArea, internalScale);
   baked.depthEpoch = packet.state.depth.epoch;
   baked.route = packet.route;
+  baked.sourceRecovery =
+      packet.originalMesh && packet.originalMesh->sourceRecovery;
   baked.depthPath = drawDepthPath(packet);
   baked.feedbackPlanes = drawFeedbackPlanes(packet);
   baked.visibilityOwnerCount = packet.indexCount / 3u;

@@ -1738,6 +1738,50 @@ void GPU::writeGP1(uint32_t val) {
   }
 }
 
+std::function<void(uint32_t)> GPU::observePresentationList(uint32_t start,
+                                                           const uint8_t *ram) {
+  if (!replayRecorder_.enabled())
+    return {};
+  std::shared_ptr<games::mgs::SceneRecoveryReplay> sceneRecovery =
+      games::mgs::recoverSceneReplay(start, {ram, ps1::Memory::RAM_SIZE});
+  if (!sceneRecovery)
+    return {};
+  return
+      [this, sceneRecovery = std::move(sceneRecovery)](uint32_t currentAddr) {
+        if (sceneRecovery && currentAddr > sceneRecovery->orderingTable &&
+            currentAddr <= sceneRecovery->orderingTable + 256 * 4) {
+          const uint32_t slot =
+              (currentAddr - sceneRecovery->orderingTable) / 4 - 1;
+          replay::BakedDrawState environment;
+          environment.drawArea = {drawAreaX1_, drawAreaY1_, drawAreaX2_,
+                                  drawAreaY2_};
+          environment.drawOffset = {drawOffsetX_, drawOffsetY_};
+          environment.texturePage.textureDisable = textureDisable_;
+          environment.textureWindow.maskX = texWindowMaskX_;
+          environment.textureWindow.maskY = texWindowMaskY_;
+          environment.mask = {setMaskWhileDrawing_, checkMaskBeforeDraw_};
+          environment.depth.epoch = replayDepthEpoch_;
+          environment.dither = ditherEnable_;
+          environment.drawToDisplayArea = (gpuStat_ & (1u << 10)) != 0;
+          for (auto draw : sceneRecovery->buckets[slot]) {
+            if (!games::mgs::bindRecoveredSceneDraw(draw, environment,
+                                                    replayNativeVram())) {
+              ps1::metrics::count("mgs.scene.recovery_material_rejected");
+              continue;
+            }
+            draw.submissionId = activeSubmissionId_;
+            replayRecorder_.recordPresentationDraw(std::move(draw),
+                                                   replayNativeVram());
+            ps1::metrics::count("mgs.scene.recovered_draws");
+            ps1::metrics::trace("mgs.scene.recover",
+                                {{"capture", int64_t(sceneRecovery->capture)},
+                                 {"bucket", slot},
+                                 {"ot", currentAddr}});
+          }
+        }
+      };
+}
+
 void GPU::processLinkedList(uint32_t startAddr, const uint8_t *ram,
                             const ps1::Memory *memory) {
   const ScopedGpuMetricTimer linkedListTimer("host.gpu.process_linked_list_us");
@@ -1746,6 +1790,7 @@ void GPU::processLinkedList(uint32_t startAddr, const uint8_t *ram,
     explicit BatchGuard(GPU &owner) : gpu(owner) { gpu.beginCommandBatch(); }
     ~BatchGuard() { gpu.endCommandBatch(); }
   } batch(*this);
+  const auto observeList = observePresentationList(startAddr, ram);
   uint32_t currentAddr = startAddr & 0x1FFFFC;
   uint32_t maxNodes = 0x10000; // safety net to prevent infinite loops
   static int llCallCount = 0;
@@ -1769,6 +1814,8 @@ void GPU::processLinkedList(uint32_t startAddr, const uint8_t *ram,
     if (numWords == 0) {
       orderingTableAnchorAddress = currentAddr;
       orderingTableAnchorExact = true;
+      if (observeList)
+        observeList(currentAddr);
     }
 
     if (ps1::metrics::gpuWordTraceEnabled()) {
