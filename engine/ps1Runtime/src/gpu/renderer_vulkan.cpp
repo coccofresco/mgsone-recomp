@@ -1,7 +1,8 @@
 #include "runtime/gpu/renderer_vulkan.h"
-#include "runtime/gpu/mgs_asset_cache_vulkan.h"
 #include "runtime/games/mgs_profile.h"
 #include "runtime/games/mgs_scene.h"
+#include "runtime/games/mgs_screen_effects.h"
+#include "runtime/gpu/mgs_asset_cache_vulkan.h"
 
 #include "runtime/games/crash3_object_presenter.h"
 #include "runtime/games/crash3_profile.h"
@@ -1073,11 +1074,14 @@ struct RendererVulkan::Impl {
     std::array<BufferResource, kFramesInFlight> uploads{};
     std::array<Crash3RawSceneDeviceCache, kFramesInFlight> crash3RawScenes{};
     std::array<VkDescriptorSet, kFramesInFlight> uniformDescriptorSets{};
+    ImageResource screenColorScratch;
+    ImageResource screenMaskScratch;
     ImageResource destinationColorScratch;
     ImageResource destinationMaskScratch;
     ImageResource copyDestinationMaskScratch;
     ImageResource crash3SceneryDepth;
     VkSampler feedbackSampler = VK_NULL_HANDLE;
+    VkSampler screenSampler = VK_NULL_HANDLE;
     VkDescriptorSetLayout feedbackSetLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout uniformSetLayout = VK_NULL_HANDLE;
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
@@ -1252,9 +1256,11 @@ struct RendererVulkan::Impl {
              std::all_of(
                  uniformDescriptorSets.begin(), uniformDescriptorSets.end(),
                  [](VkDescriptorSet set) { return set != VK_NULL_HANDLE; }) &&
+             screenColorScratch.complete() && screenMaskScratch.complete() &&
              destinationColorScratch.complete() &&
              destinationMaskScratch.complete() &&
              copyDestinationMaskScratch.complete() &&
+             screenSampler != VK_NULL_HANDLE &&
              feedbackSampler != VK_NULL_HANDLE &&
              feedbackSetLayout != VK_NULL_HANDLE &&
              uniformSetLayout != VK_NULL_HANDLE &&
@@ -1298,9 +1304,11 @@ struct RendererVulkan::Impl {
              std::all_of(
                  uniformDescriptorSets.begin(), uniformDescriptorSets.end(),
                  [](VkDescriptorSet set) { return set == VK_NULL_HANDLE; }) &&
+             screenColorScratch.empty() && screenMaskScratch.empty() &&
              destinationColorScratch.empty() &&
              destinationMaskScratch.empty() &&
              copyDestinationMaskScratch.empty() && crash3SceneryDepth.empty() &&
+             screenSampler == VK_NULL_HANDLE &&
              feedbackSampler == VK_NULL_HANDLE &&
              feedbackSetLayout == VK_NULL_HANDLE &&
              uniformSetLayout == VK_NULL_HANDLE &&
@@ -2624,7 +2632,9 @@ struct RendererVulkan::Impl {
       return value != nullptr && *value != '\0' && *value != '0';
     }();
     crash3IndependentBlendEnabled =
-        games::crash3::active() && !crash3ExactTransparency &&
+        ((games::crash3::active() && !crash3ExactTransparency) ||
+         (games::mgs::active() &&
+          !environmentSwitchEnabled("PS1_MGS_EXACT_TRANSPARENCY"))) &&
         availableFeatures.independentBlend == VK_TRUE;
     VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT interlockFeatures{
         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT};
@@ -5885,6 +5895,12 @@ struct RendererVulkan::Impl {
       destroyBufferResource(upload);
     for (Crash3RawSceneDeviceCache &cache : resources.crash3RawScenes)
       destroyDeviceBufferResource(cache.storage);
+    if (resources.screenSampler != VK_NULL_HANDLE) {
+      vkDestroySampler(device, resources.screenSampler, nullptr);
+      resources.screenSampler = VK_NULL_HANDLE;
+    }
+    destroyImageResource(resources.screenColorScratch);
+    destroyImageResource(resources.screenMaskScratch);
     destroyImageResource(resources.copyDestinationMaskScratch);
     destroyImageResource(resources.destinationMaskScratch);
     destroyImageResource(resources.destinationColorScratch);
@@ -6227,7 +6243,22 @@ struct RendererVulkan::Impl {
                           kReplayDepthFormat, kReplayDepthUsage,
                           kReplayDepthFeatures, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
+    const VkExtent2D screenExtent =
+        games::mgs::active() ? VkExtent2D{games::mgs::SCREEN_TEXTURE_WIDTH *
+                                              resources.internalScale,
+                                          games::mgs::SCREEN_TEXTURE_HEIGHT *
+                                              resources.internalScale}
+                             : VkExtent2D{1, 1};
+    createImageResource(
+        resources.screenColorScratch, "modern screen color", screenExtent,
+        kReplayColorFormat, kReplayFeedbackScratchUsage,
+        kReplayFeedbackScratchFeatures, VK_IMAGE_ASPECT_COLOR_BIT);
+    createImageResource(
+        resources.screenMaskScratch, "modern screen mask", screenExtent,
+        kReplayMaskFormat, kReplayFeedbackScratchUsage,
+        kReplayFeedbackScratchFeatures, VK_IMAGE_ASPECT_COLOR_BIT);
     resources.feedbackSampler = createSampler(VK_FILTER_NEAREST);
+    resources.screenSampler = createSampler(VK_FILTER_LINEAR);
 
     std::vector<VkDescriptorSetLayoutBinding> feedbackBindings(
         crash3SemiInterlockEnabled ? 8u : 4u);
@@ -6245,6 +6276,14 @@ struct RendererVulkan::Impl {
                       : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
       feedbackBindings[index].descriptorCount = 1;
       feedbackBindings[index].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    }
+    for (uint32_t binding : {8u, 9u}) {
+      VkDescriptorSetLayoutBinding item{};
+      item.binding = binding;
+      item.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      item.descriptorCount = 1;
+      item.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+      feedbackBindings.push_back(item);
     }
     VkDescriptorSetLayoutCreateInfo feedbackLayoutInfo{
         VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
@@ -6285,7 +6324,7 @@ struct RendererVulkan::Impl {
 
     std::vector<VkDescriptorPoolSize> poolSizes{
         VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                             crash3SemiInterlockEnabled ? 5u : 4u},
+                             crash3SemiInterlockEnabled ? 7u : 6u},
         VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
                              kFramesInFlight},
         VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -6371,6 +6410,20 @@ struct RendererVulkan::Impl {
       write.descriptorCount = 1u;
       write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       write.pImageInfo = &sceneDepthImage;
+    }
+    const std::array<VkDescriptorImageInfo, 2> screenImages{
+        {{resources.screenSampler, resources.screenColorScratch.view,
+          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
+         {resources.feedbackSampler, resources.screenMaskScratch.view,
+          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}}};
+    for (uint32_t i = 0; i < 2; ++i) {
+      VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      write.dstSet = resources.feedbackDescriptorSet;
+      write.dstBinding = 8 + i;
+      write.descriptorCount = 1;
+      write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      write.pImageInfo = &screenImages[i];
+      feedbackWrites.push_back(write);
     }
     vkUpdateDescriptorSets(device, static_cast<uint32_t>(feedbackWrites.size()),
                            feedbackWrites.data(), 0, nullptr);
@@ -6943,8 +6996,10 @@ struct RendererVulkan::Impl {
       if (candidate.crash3SemiFastPath) {
         createReplayGeometryPipeline(
             candidate, "replay_precise.vert.spv",
-            "crash3_semi_textured.frag.spv", true, VK_TRUE, VK_TRUE,
-            VK_COMPARE_OP_ALWAYS, candidate.crash3SemiTexturedOpaquePipeline,
+            (games::mgs::active() ? "replay_semi_textured.frag.spv"
+                                  : "crash3_semi_textured.frag.spv"),
+            true, VK_TRUE, VK_TRUE, VK_COMPARE_OP_ALWAYS,
+            candidate.crash3SemiTexturedOpaquePipeline,
             "vkCreateGraphicsPipelines(Crash 3 semi textured non-STP)",
             std::nullopt, false, 1u);
         constexpr std::array<const char *, 4> untexturedOperations{
@@ -6966,8 +7021,9 @@ struct RendererVulkan::Impl {
               untexturedOperations[abr], abr);
           createReplayGeometryPipeline(
               candidate, "replay_precise.vert.spv",
-              "crash3_semi_textured.frag.spv", true, VK_TRUE, VK_TRUE,
-              VK_COMPARE_OP_ALWAYS,
+              (games::mgs::active() ? "replay_semi_textured.frag.spv"
+                                    : "crash3_semi_textured.frag.spv"),
+              true, VK_TRUE, VK_TRUE, VK_COMPARE_OP_ALWAYS,
               candidate.crash3SemiTexturedBlendPipelines[abr],
               texturedOperations[abr], abr, abr == 1u || abr == 3u,
               abr == 0u || abr == 2u ? 2u : 0u);
@@ -6975,8 +7031,9 @@ struct RendererVulkan::Impl {
         if (candidate.crash3SceneryOcclusion) {
           createReplayGeometryPipeline(
               candidate, "replay_precise.vert.spv",
-              "crash3_semi_textured.frag.spv", true, VK_TRUE, VK_FALSE,
-              VK_COMPARE_OP_LESS_OR_EQUAL,
+              (games::mgs::active() ? "replay_semi_textured.frag.spv"
+                                    : "crash3_semi_textured.frag.spv"),
+              true, VK_TRUE, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL,
               candidate.crash3ScenerySemiTexturedOpaquePipeline,
               "vkCreateGraphicsPipelines(Crash 3 scenery semi textured "
               "non-STP)",
@@ -7004,8 +7061,9 @@ struct RendererVulkan::Impl {
                 sceneryUntexturedOperations[abr], abr);
             createReplayGeometryPipeline(
                 candidate, "replay_precise.vert.spv",
-                "crash3_semi_textured.frag.spv", true, VK_TRUE, VK_FALSE,
-                VK_COMPARE_OP_LESS_OR_EQUAL,
+                (games::mgs::active() ? "replay_semi_textured.frag.spv"
+                                      : "crash3_semi_textured.frag.spv"),
+                true, VK_TRUE, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL,
                 candidate.crash3ScenerySemiTexturedBlendPipelines[abr],
                 sceneryTexturedOperations[abr], abr, abr == 1u || abr == 3u,
                 abr == 0u || abr == 2u ? 2u : 0u);
@@ -7588,9 +7646,14 @@ struct RendererVulkan::Impl {
         replay::replayDrawFlagBit(replay::ReplayDrawFlag::LimitUvDomain);
     constexpr uint32_t surfaceDepthValid =
         replay::replayDrawFlagBit(replay::ReplayDrawFlag::SurfaceDepthValid);
-    constexpr uint32_t supportedFlags = textured | rawTexture |
-                                        semiTransparent | forceMask |
-                                        checkMask | limitUv | surfaceDepthValid;
+    const uint32_t supportedFlags =
+        textured | rawTexture | semiTransparent | forceMask | checkMask |
+        limitUv | surfaceDepthValid |
+        (games::mgs::active() ? replay::replayDrawFlagBit(
+                                    replay::ReplayDrawFlag::ScreenTexture) |
+                                    replay::replayDrawFlagBit(
+                                        replay::ReplayDrawFlag::WaterRefraction)
+                              : 0u);
     constexpr auto colorFeedback = replay::vulkanReplayFeedbackPlaneBit(
         replay::VulkanReplayFeedbackPlane::Color);
     constexpr auto maskFeedback = replay::vulkanReplayFeedbackPlaneBit(
@@ -23556,7 +23619,7 @@ struct RendererVulkan::Impl {
       if (feedbackScratchReady)
         return;
       endRenderPass();
-      std::array<VkImageMemoryBarrier, 3> barriers{};
+      std::array<VkImageMemoryBarrier, 5> barriers{};
       const auto initialize = [](VkImageMemoryBarrier &barrier, VkImage image) {
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.srcAccessMask = 0;
@@ -23576,6 +23639,8 @@ struct RendererVulkan::Impl {
                  replayGeometryResources.destinationMaskScratch.image);
       initialize(barriers[2],
                  replayGeometryResources.copyDestinationMaskScratch.image);
+      initialize(barriers[3], replayGeometryResources.screenColorScratch.image);
+      initialize(barriers[4], replayGeometryResources.screenMaskScratch.image);
       vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr,
                            0, nullptr, static_cast<uint32_t>(barriers.size()),
@@ -23817,9 +23882,12 @@ struct RendererVulkan::Impl {
     if (visibilityAudit)
       initializeFeedbackScratch();
 
-    const auto recordDestinationSnapshot = [&](const auto &segment,
-                                               auto feedbackPlanes) {
-      const replay::VulkanReplayBakedRect &area = segment.destinationSnapshot;
+    const auto recordColorMaskSnapshot = [&](const replay::VulkanReplayBakedRect
+                                                 &area,
+                                             auto feedbackPlanes,
+                                             VkImage colorScratch,
+                                             VkImage maskScratch,
+                                             bool screenSource) {
       if (area.width == 0 || area.height == 0)
         return false;
       endRenderPass();
@@ -23837,17 +23905,19 @@ struct RendererVulkan::Impl {
                                 replay::VulkanReplayFeedbackPlane::Color)) !=
           0u) {
         copies[copyCount++] = {
-            replayResources.color.image,
-            replayGeometryResources.destinationColorScratch.image, 4,
-            "host.renderer.vulkan_replay_feedback_color_snapshot"};
+            replayResources.color.image, colorScratch, 4,
+            screenSource
+                ? "host.renderer.mgs_screen.color_snapshot"
+                : "host.renderer.vulkan_replay_feedback_color_snapshot"};
       }
       if ((feedbackPlanes & replay::vulkanReplayFeedbackPlaneBit(
                                 replay::VulkanReplayFeedbackPlane::Mask)) !=
           0u) {
         copies[copyCount++] = {
-            replayResources.mask.image,
-            replayGeometryResources.destinationMaskScratch.image, 1,
-            "host.renderer.vulkan_replay_feedback_mask_snapshot"};
+            replayResources.mask.image, maskScratch, 1,
+            screenSource
+                ? "host.renderer.mgs_screen.mask_snapshot"
+                : "host.renderer.vulkan_replay_feedback_mask_snapshot"};
       }
       if (copyCount == 0)
         throw std::runtime_error(
@@ -23899,9 +23969,14 @@ struct RendererVulkan::Impl {
         ps1::metrics::count(copies[index].metric);
         const uint64_t pixels = static_cast<uint64_t>(area.width) * area.height;
         ps1::metrics::count(
-            "host.renderer.vulkan_replay_feedback_snapshot_pixels", pixels);
+            screenSource
+                ? "host.renderer.mgs_screen.snapshot_pixels"
+                : "host.renderer.vulkan_replay_feedback_snapshot_pixels",
+            pixels);
         ps1::metrics::count(
-            "host.renderer.vulkan_replay_feedback_snapshot_bytes",
+            screenSource
+                ? "host.renderer.mgs_screen.snapshot_bytes"
+                : "host.renderer.vulkan_replay_feedback_snapshot_bytes",
             pixels * copies[index].bytesPerPixel);
       }
 
@@ -23927,8 +24002,18 @@ struct RendererVulkan::Impl {
                                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                            0, 0, nullptr, 0, nullptr, copyCount * 2u,
                            toUse.data());
-      ps1::metrics::count("host.renderer.vulkan_replay_feedback_snapshot");
+      ps1::metrics::count(
+          screenSource ? "host.renderer.mgs_screen.snapshot"
+                       : "host.renderer.vulkan_replay_feedback_snapshot");
       return true;
+    };
+
+    const auto recordDestinationSnapshot = [&](const auto &segment,
+                                               auto planes) {
+      return recordColorMaskSnapshot(
+          segment.destinationSnapshot, planes,
+          replayGeometryResources.destinationColorScratch.image,
+          replayGeometryResources.destinationMaskScratch.image, false);
     };
 
     const auto recordDirectCopy = [&](const replay::VulkanReplayBakedCopyRect
@@ -25329,6 +25414,10 @@ struct RendererVulkan::Impl {
                                  std::numeric_limits<int64_t>::max())));
     };
 
+    // All statically used sampler bindings need a defined layout even when
+    // the current packet takes the original-texture branch in the shader.
+    initializeFeedbackScratch();
+    games::mgs::ScreenReadTracker screenReads;
     uint32_t drawIndex = 0;
     for (std::size_t commandIndex = 0; commandIndex < batch.commands.size();
          ++commandIndex) {
@@ -25344,6 +25433,36 @@ struct RendererVulkan::Impl {
               command.payload)) {
         nativeWritesPending = true;
         continue;
+      }
+      const auto *screenDraw =
+          std::get_if<replay::VulkanReplayBakedDraw>(&command.payload);
+      const bool modernScreen =
+          screenDraw && screenDraw->segmentCount != 0 &&
+          (screenDraw->segments[0].uniforms.textureState[2] &
+           replay::replayDrawFlagBit(replay::ReplayDrawFlag::ScreenTexture));
+      if (modernScreen) {
+        const auto read = games::mgs::screenRead(*screenDraw, batch);
+        if (!read)
+          throw std::runtime_error("invalid modern screen texture read");
+        ps1::metrics::count("host.renderer.mgs_screen.draw");
+        if (screenReads.needsSnapshot(*read)) {
+          const auto extent = replayGeometryResources.screenColorScratch.extent;
+          recordColorMaskSnapshot(
+              {0, 0, extent.width, extent.height},
+              replay::vulkanReplayFeedbackPlaneBit(
+                  replay::VulkanReplayFeedbackPlane::Color) |
+                  replay::vulkanReplayFeedbackPlaneBit(
+                      replay::VulkanReplayFeedbackPlane::Mask),
+              replayGeometryResources.screenColorScratch.image,
+              replayGeometryResources.screenMaskScratch.image, true);
+        } else {
+          ps1::metrics::count("host.renderer.mgs_screen.snapshot_reused");
+        }
+      } else if (!std::holds_alternative<replay::VulkanReplayBakedDepthClear>(
+                     command.payload) &&
+                 !std::holds_alternative<replay::VulkanReplayBakedLatch>(
+                     command.payload)) {
+        screenReads.invalidate();
       }
       if (const auto *cpuUpload =
               std::get_if<replay::VulkanReplayBakedCpuUpload>(
@@ -25540,7 +25659,8 @@ struct RendererVulkan::Impl {
       const uint32_t abr = draw->segments[0].uniforms.textureState[3] & 3u;
       const bool crash3SemiFastPath =
           replayGeometryResources.crash3SemiFastPath &&
-          games::crash3::active() && draw->feedbackPlanes == colorFeedback &&
+          (games::crash3::active() || games::mgs::active()) &&
+          draw->feedbackPlanes == colorFeedback &&
           (flags & semiTransparent) != 0u &&
           draw->depthPath ==
               replay::VulkanReplayDrawDepthPath::InvalidateAcceptedFar;
@@ -25584,7 +25704,10 @@ struct RendererVulkan::Impl {
                                            "semi_textured_single_pass_draw")
                                   : "host.renderer.crash3_profile."
                                     "semi_untextured_draw";
-        ps1::metrics::count("host.renderer.crash3_profile.semi_fast_packet");
+        ps1::metrics::count(
+            games::mgs::active()
+                ? "host.renderer.mgs_blend.fast_packet"
+                : "host.renderer.crash3_profile.semi_fast_packet");
         if (abr == 0u) {
           ps1::metrics::count(
               "host.renderer.crash3_profile.abr0_floor_bias_packet");
@@ -26254,7 +26377,9 @@ struct RendererVulkan::Impl {
           }
           if (crash3SemiFastPath) {
             ps1::metrics::count(
-                "host.renderer.crash3_profile.semi_snapshot_elided");
+                games::mgs::active()
+                    ? "host.renderer.mgs_blend.snapshot_elided"
+                    : "host.renderer.crash3_profile.semi_snapshot_elided");
           }
           if (plan.corrected) {
             ps1::metrics::count(
@@ -26940,6 +27065,9 @@ struct RendererVulkan::Impl {
           } else if (!liveReplayBatchSupported(baked.batch)) {
             downgrade("unsupported_batch");
           } else {
+            if (games::mgs::active() &&
+                !environmentSwitchEnabled("PS1_MGS_NATIVE_SCREEN_TEXTURES"))
+              games::mgs::prepareScreenReads(baked.batch);
             if (environmentSwitchEnabled("PS1_TRACE_CRASH3_OBJECT_PRESENTER")) {
               auditCrash3ObjectPresentation(replaySnapshot->frameNumber,
                                             baked.batch);
@@ -28348,7 +28476,10 @@ bool RendererVulkan::init(const std::string &windowTitle, int width, int height,
     }
     uint32_t flags =
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-    if (fullscreen)
+    const bool hidden = environmentSwitchEnabled("PS1_VULKAN_HIDDEN_WINDOW");
+    if (hidden)
+      flags |= SDL_WINDOW_HIDDEN;
+    if (fullscreen && !hidden)
       flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     window_ = SDL_CreateWindow(windowTitle.c_str(), SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED, width, height, flags);

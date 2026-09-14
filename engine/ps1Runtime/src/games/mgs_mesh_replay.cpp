@@ -374,7 +374,8 @@ void indexSourceVertices() {
 // The oracle retains GTE divide/IR/SXY saturation; the cache projection does
 // not. Billboard rectangles perform two projections in DG_MakePrimsRectangle.
 std::array<double, 2> referenceProjection(const Point &p, double h) {
-  const double ratio = std::min(131071.0 / 65536.0, h / std::max(1.0, p[2]));
+  const double ratio =
+      std::min(131071.0 / 65536.0, h / std::clamp(p[2], 1.0, 65535.0));
   return {
       std::clamp(std::clamp(p[0], -32768.0, 32767.0) * ratio, -1024.0, 1023.0),
       std::clamp(std::clamp(p[1], -32768.0, 32767.0) * ratio, -1024.0, 1023.0)};
@@ -483,6 +484,20 @@ bool buildSourceFace(const SceneSnapshot &scene, const SceneInstance &instance,
     }
     face.view[k][1] *= 58.0 / 64.0;
     face.nativeView[k][1] *= 58.0 / 64.0;
+    // DG_TransChanl projects the already composed DG_OBJ.screen matrix.
+    // Re-composing eye/world in float is not its oracle: overscan and every
+    // matrix product truncate to Q12, magnifying the difference near camera.
+    // Unbounded source-only faces have no current native projection to check.
+    const uint32_t owner = instance.models[owners[model]].guestAddress;
+    if (range(owner, 92) && u16(ptr(owner + 76)) != 0) {
+      const auto *screen = ptr(owner + 32);
+      for (unsigned row = 0; row < 3; ++row) {
+        double value = double(int32_t(u32(screen + 20 + row * 4))) * 4096;
+        for (unsigned axis = 0; axis < 3; ++axis)
+          value += int16_t(u16(screen + (row * 3 + axis) * 2)) * position[axis];
+        face.nativeView[k][row] = std::floor(value / 4096.0);
+      }
+    }
     face.reference[k] =
         referenceProjection(face.nativeView[k], face.projection);
   }
@@ -1002,6 +1017,10 @@ bool bindRecoveredSceneDraw(gpu::replay::DrawPacket &packet,
   state.texturePage.raw = (state.texturePage.raw & ~0x600u) |
                           (state.dither ? 0x200u : 0u) |
                           (state.drawToDisplayArea ? 0x400u : 0u);
+  // Even an opaque material retains its page's ABR selector. Keeping the
+  // default mode here disagrees with raw tpage and rejects the entire frame
+  // when a recovered face uses one of MGS's nonzero-ABR material pages.
+  state.blend.mode = gpu::replay::BlendMode((state.texturePage.raw >> 5) & 3);
   state.depth = {false, true, gpu::replay::DepthCompare::Always,
                  environment.depth.epoch, false};
   state.textureUvDomain.enabled = true;
@@ -1282,19 +1301,26 @@ bool replaceMeshReplayPacket(gpu::replay::DrawPacket &packet) {
   if (!std::isfinite(maxError) || maxError > 4.0) {
     metrics::count("mgs.mesh.pose_rejected");
     for (uint32_t k = 0; k < 4; ++k)
-      metrics::trace("mgs.mesh.reject",
-                     {{"packet", address},
-                      {"model", face->assetModel},
-                      {"procedural", face->procedural},
-                      {"reason", 5},
-                      {"corner", k},
-                      {"x_milli", int64_t(projected[k][0] * 1000)},
-                      {"y_milli", int64_t(projected[k][1] * 1000)},
-                      {"nx", packet.vertices[k].nativeX},
-                      {"ny", packet.vertices[k].nativeY},
-                      {"offset_x", packet.state.drawOffset.x},
-                      {"offset_y", packet.state.drawOffset.y},
-                      {"z", int64_t(face->view[k][2])}});
+      metrics::trace(
+          "mgs.mesh.reject",
+          {{"packet", address},
+           {"model", face->assetModel},
+           {"procedural", face->procedural},
+           {"reason", 5},
+           {"corner", k},
+           {"x_milli", int64_t(projected[k][0] * 1000)},
+           {"y_milli", int64_t(projected[k][1] * 1000)},
+           {"nx", packet.vertices[k].nativeX},
+           {"ny", packet.vertices[k].nativeY},
+           {"reference_x_milli",
+            int64_t((face->reference[k][0] + packet.state.drawOffset.x) *
+                    1000)},
+           {"reference_y_milli",
+            int64_t((face->reference[k][1] + packet.state.drawOffset.y) *
+                    1000)},
+           {"offset_x", packet.state.drawOffset.x},
+           {"offset_y", packet.state.drawOffset.y},
+           {"z", int64_t(face->view[k][2])}});
     return false;
   }
   applySourceGeometry(packet, *face);

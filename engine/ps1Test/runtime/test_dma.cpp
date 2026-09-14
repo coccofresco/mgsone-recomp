@@ -176,6 +176,39 @@ TEST_F(DmaTest, GpuBlockTransferIsOneClosedSubmission) {
       << "GPU block DMA left the command batch open";
 }
 
+TEST_F(DmaTest, GpuReadDmaSharesCpuCursorAndPreservesPaletteBits) {
+  gpu::GPU gpuDevice;
+  dma.setGPU(&gpuDevice);
+  gpuDevice.writeGP0(0xa0000000);
+  gpuDevice.writeGP0((226u << 16) | 768u);
+  gpuDevice.writeGP0((2u << 16) | 3u);
+  gpuDevice.writeGP0(0x83e0001fu);
+  gpuDevice.writeGP0(0x7c000000u);
+  gpuDevice.writeGP0(0x8000ffffu);
+  gpuDevice.writeGP0(0xc0000000);
+  gpuDevice.writeGP0((226u << 16) | 768u);
+  gpuDevice.writeGP0((2u << 16) | 3u);
+  ASSERT_TRUE(gpuDevice.readGPUSTAT() & (1u << 27));
+  ASSERT_EQ(gpuDevice.readGPUREAD(), 0x83e0001fu);
+  mem.write32(0x1000, 0x7c000000u);
+  PGXPValue precision;
+  precision.value = 0x7c000000u;
+  precision.flags = PGXPValue::VALID_XY;
+  precision.x = 12.5f;
+  precision.y = 13.5f;
+  mem.storePrecision(0x1000, precision.value, precision);
+  dma.writeRegister(0x1f8010f0, 1u << 11);
+  dma.writeRegister(0x1f8010a0, 0x1000);
+  dma.writeRegister(0x1f8010a4, 0x00010002);
+  dma.writeRegister(0x1f8010a8, (1u << 24) | (1u << 9));
+  EXPECT_EQ(mem.read32(0x1000), 0x7c000000u);
+  EXPECT_EQ(mem.read32(0x1004), 0x8000ffffu);
+  EXPECT_FALSE(mem.lookupPrecision(0x1000, 0x7c000000u, precision));
+  EXPECT_FALSE(gpuDevice.readGPUSTAT() & (1u << 27));
+  EXPECT_EQ(dma.completionGeneration(DMA::GPU_CH), 1u);
+  EXPECT_FALSE(dma.readRegister(0x1f8010a8) & (1u << 24));
+}
+
 TEST_F(DmaTest, SpuTransferUsesAndAdvancesTransferAddress) {
   spu::SPU spu;
   dma.setSPU(&spu);

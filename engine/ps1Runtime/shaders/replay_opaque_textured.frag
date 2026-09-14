@@ -24,6 +24,7 @@ layout(set = 1, binding = 0, std140) uniform CrashReplayDrawState {
   vec4 mgs_weights[4];
 } u_draw;
 #include "games/mgs_original_texture.glsl"
+#include "games/mgs_screen_texture.glsl"
 
 layout(location = 0) in vec2 v_uv;
 layout(location = 1) noperspective in vec3 v_color_255;
@@ -105,23 +106,20 @@ uvec3 shadeColor() {
 }
 
 void main() {
-  const uint texel = samplePs1Texel(v_uv);
-  // 0x0000 alone is transparent; 0x8000 is visible black carrying STP.
-  if (texel == 0u)
-    discard;
-
-  const uvec3 rgb5 = texelRgb5(texel);
   uvec3 color;
-  if ((u_draw.texture_state.z & DRAW_RAW_TEXTURE) != 0u) {
-    color = expandRgb5(rgb5);
+  bool sourceStp, visible;
+  if (mgs_screen_texel(v_uv, v_color_255, color, sourceStp, visible)) {
+    if (!visible) discard;
   } else {
-    // 0x80 is the PS1 modulation identity. Preserve the exact generated
-    // 8-bit result instead of quantizing it back through RGB555/dithering.
-    color = min(uvec3(255u), (rgb5 * shadeColor()) >> 4u);
+    const uint texel = samplePs1Texel(v_uv);
+    if (texel == 0u) discard;
+    sourceStp = (texel & 0x8000u) != 0u;
+    const uvec3 rgb5 = texelRgb5(texel);
+    color = (u_draw.texture_state.z & DRAW_RAW_TEXTURE) != 0u
+                ? expandRgb5(rgb5)
+                : min(uvec3(255u), (rgb5 * shadeColor()) >> 4u);
   }
-
   o_color = vec4(vec3(color) * (1.0 / 255.0), 1.0);
-  const bool sourceStp = (texel & 0x8000u) != 0u;
   const bool forceMask =
       (u_draw.texture_state.z & DRAW_FORCE_MASK) != 0u;
   o_mask = (sourceStp || forceMask) ? 1u : 0u;

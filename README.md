@@ -4,8 +4,8 @@ Repository locale per sviluppare la ricompilazione nativa di Metal Gear Solid
 PSX. Riferimento attuale: **USA v1.0**, CD1 **SLUS-00594** e CD2 **SLUS-00776**.
 Le immagini italiane e il relativo audit restano disponibili come confronto.
 
-Stato: **avvio nativo USA verificato**, dai loghi Konami all’inizio della
-sequenza subacquea, con presentazione Vulkan e temporizzazione NTSC.
+Stato: **avvio nativo USA verificato**, dai loghi Konami attraverso l’intro
+fino al menu iniziale, con presentazione Vulkan e temporizzazione NTSC.
 È verificato anche il **gameplay nel molo iniziale**, con movimento di Snake
 e apertura del Codec. Sono ricompilati `title`, `opening`, `d00a`, `s00a` e
 `s01a`; il passaggio all’eliporto e i salvataggi dal gioco restano da validare.
@@ -21,6 +21,7 @@ un modello di budget CPU nativo equivalente esattamente al 165%.
 - [Controlli e memory card persistenti](docs/mgs-input-memory-card.md)
 - [Savestate nativi: tasti, formato e verifiche](docs/mgs-savestates.md)
 - [Migrazione ai moduli C della decompilazione e stream originali](docs/mgs-decomp-native-core.md)
+- [Intro Vulkan, rifrazione continua e verifiche del dettaglio UHD](docs/mgs-intro-presentation.md)
 - [Aggiornamenti PSXRecomp](docs/psxrecomp-upstream-2026-09-10.md)
 - [Valutazione RecompOne](docs/recompone-review-2026-09-10.md)
 - [Valutazione OpenGTPS1: input e memory card](docs/opengtps1-review-2026-09-10.md)

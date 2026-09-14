@@ -2,6 +2,8 @@
 #include "runtime/games/crash3_profile.h"
 #include "runtime/games/crash3_screen_composition.h"
 #include "runtime/games/mgs_mesh_replay.h"
+#include "runtime/games/mgs_profile.h"
+#include "runtime/games/mgs_screen_effects.h"
 #include "runtime/gpu/display_geometry.h"
 #include "runtime/memory.h"
 #include "runtime/metrics.h"
@@ -1057,7 +1059,11 @@ GPU::DisplayCopyStatus GPU::copyDisplayRGBA8IfChanged(
 
 uint32_t GPU::readGPUSTAT() const {
   std::lock_guard<std::recursive_mutex> lock(gpuTimelineMutex_);
-  return gpuStat_;
+  // The transfer cursor is shared by CPU GPUREAD and DMA2. PsyQ _drs
+  // waits for this bit before starting a VRAM read; a permanently clear
+  // bit times out StoreImage2 before DMA can even start.
+  return (gpuStat_ & ~(1u << 27)) |
+         (vramTransfer_.isReadingFromVRAM ? (1u << 27) : 0u);
 }
 
 uint32_t GPU::readGPUREAD() {
@@ -1742,6 +1748,7 @@ std::function<void(uint32_t)> GPU::observePresentationList(uint32_t start,
                                                            const uint8_t *ram) {
   if (!replayRecorder_.enabled())
     return {};
+  games::mgs::captureWaterEffects({ram, ps1::Memory::RAM_SIZE});
   std::shared_ptr<games::mgs::SceneRecoveryReplay> sceneRecovery =
       games::mgs::recoverSceneReplay(start, {ram, ps1::Memory::RAM_SIZE});
   if (!sceneRecovery)
@@ -3357,6 +3364,36 @@ bool GPU::capturePolygonPacket(const Vertex *vertices,
     }
   }
 
+  if (effectiveTextured && (packet.opcode & 0xe0u) == 0x60u &&
+      packet.route == replay::PacketRoute::Screen2D) {
+    // SPRT endpoints are half-open and may cross the 8-bit UV boundary.
+    // Keep them as floats instead of truncating the far edge through TexCoord.
+    const double u = commandQueue_[2] & 255u;
+    const double v = (commandQueue_[2] >> 8) & 255u;
+    const double width = vertices[1].x - vertices[0].x;
+    const double height = vertices[2].y - vertices[0].y;
+    const double u0 = u + (textureRectFlipX_ ? 1 : 0);
+    const double v0 = v + (textureRectFlipY_ ? 1 : 0);
+    const double u1 = u0 + (textureRectFlipX_ ? -width : width);
+    const double v1 = v0 + (textureRectFlipY_ ? -height : height);
+    // Equivalent positive UV periods keep a flipped sprite crossing zero
+    // correct with the polygon shader's truncate-toward-zero conversion.
+    const double shiftU =
+        -std::min(0.0, std::floor(std::min(u0, u1) / 256)) * 256;
+    const double shiftV =
+        -std::min(0.0, std::floor(std::min(v0, v1) / 256)) * 256;
+    for (uint32_t i = 0; i < 4; ++i) {
+      packet.vertices[i].u = ((i & 1) ? u1 : u0) + shiftU;
+      packet.vertices[i].v = ((i & 2) ? v1 : v0) + shiftV;
+    }
+    uvDomain.minU = std::min(u0, u1) + shiftU;
+    uvDomain.maxU = std::max(u0, u1) - 1 + shiftU;
+    uvDomain.minV = std::min(v0, v1) + shiftV;
+    uvDomain.maxV = std::max(v0, v1) - 1 + shiftV;
+    uvDomain.offsetU = uvDomain.offsetV = 0;
+    uvDomain.enabled = true;
+  }
+
   packet.state.drawArea = {drawAreaX1_, drawAreaY1_, drawAreaX2_, drawAreaY2_};
   packet.state.drawOffset = {drawOffsetX_, drawOffsetY_};
   const uint16_t effectiveTpage = static_cast<uint16_t>(
@@ -3424,6 +3461,9 @@ bool GPU::capturePolygonPacket(const Vertex *vertices,
 
   games::mgs::adaptMeshReplayPacket(packet);
   games::mgs::bindOriginalTexture(packet, replayNativeVram());
+  games::mgs::bindWaterEffect(packet, commandSourceQueue_.empty()
+                                          ? UINT32_MAX
+                                          : commandSourceQueue_.front());
   replayRecorder_.recordDraw(std::move(packet), replayNativeVram());
   return true;
 }
@@ -5098,7 +5138,24 @@ void GPU::executeRect() {
     }
   }
 
-  const bool capturePixels = replayRecorder_.enabled() && opcode != 0x68;
+  bool modernRectangle = false;
+  if (games::mgs::active() && replayRecorder_.enabled() && opcode != 0x68 &&
+      w > 0 && h > 0) {
+    std::array<Vertex, 4> corners{v, v, v, v};
+    const std::array<TexCoord, 4> uv{};
+    for (uint32_t i = 0; i < 4; ++i) {
+      corners[i].x += (i & 1) ? w : 0;
+      corners[i].y += (i & 2) ? h : 0;
+    }
+    modernRectangle = capturePolygonPacket(
+        corners.data(), isTextured ? uv.data() : nullptr, &commandColor, 4,
+        clut, currentTexpage_, PGXPSemanticDecision::intrinsicScreen2D(), 0,
+        isTextured, false, isRaw, isBlend);
+    if (modernRectangle)
+      metrics::count("mgs.presentation.rectangle_draw");
+  }
+  const bool capturePixels =
+      replayRecorder_.enabled() && opcode != 0x68 && !modernRectangle;
   if (capturePixels)
     beginReplayPaintCapture();
 
@@ -5170,6 +5227,8 @@ void GPU::executeRect() {
   }
   if (capturePixels)
     finishReplayPaintCapture(static_cast<uint8_t>(opcode));
+  if (modernRectangle)
+    replayRecorder_.markNativeWrite({v.x, v.y, uint32_t(w), uint32_t(h)});
 }
 
 // Samples a single 16-bit texel from VRAM for the given texture page and CLUT,

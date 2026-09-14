@@ -69,10 +69,12 @@ void validate(const DrawPacket &operation) {
   if (operation.packetSequence == UNASSIGNED_PACKET_SEQUENCE) {
     throw std::invalid_argument("DrawPacket packet sequence is unassigned");
   }
-  const bool projectedPoint = operation.opcode == 0x68u;
+  const bool screenRectangle = (operation.opcode & 0xe0u) == 0x60u &&
+                               operation.route == PacketRoute::Screen2D;
+  const bool projectedPoint = operation.opcode == 0x68u && !screenRectangle;
   const bool projectedLine = (operation.opcode & 0xecu) == 0x40u;
   if ((operation.opcode & 0xE0u) != 0x20u && !projectedPoint &&
-      !projectedLine) {
+      !projectedLine && !screenRectangle) {
     throw std::invalid_argument("DrawPacket opcode is not a polygon command");
   }
   // Authenticated points and fixed lines lower to camera-facing quads.
@@ -121,8 +123,10 @@ void validate(const DrawPacket &operation) {
         "DrawPacket indices must encode one or two triangles");
   }
   const bool opcodeTextured = (operation.opcode & 0x04u) != 0;
-  const bool opcodeQuad = (operation.opcode & 0x08u) != 0 || projectedLine;
-  const bool opcodeGouraud = (operation.opcode & 0x10u) != 0;
+  const bool opcodeQuad =
+      (operation.opcode & 0x08u) != 0 || projectedLine || screenRectangle;
+  const bool opcodeGouraud =
+      (operation.opcode & 0x10u) != 0 && !screenRectangle;
   const bool opcodeBlended = (operation.opcode & 0x02u) != 0;
   const bool effectiveTextureDisable =
       opcodeTextured && operation.state.texturePage.textureDisable;

@@ -1217,7 +1217,7 @@ TEST(GpuModernReplayVulkanBakeTest,
       VulkanReplayBakeReason::CopyRectOrderedOverlapUnproven, 1);
   expectAtomicFailure(
       bakeModernReplayVulkan(
-          makePlan(upload, copyRect({1000, 500}, {900, 450}, 200, 100)), 4,
+          makePlan(upload, copyRect({1000, 500}, {900, 510}, 200, 100)), 4,
           copyRectScratchFeatures()),
       VulkanReplayBakeReason::CopyRectOrderedOverlapUnproven, 1);
   expectAtomicFailure(
@@ -1901,4 +1901,19 @@ TEST(GpuModernReplayVulkanBakeTest, PaintRunsKeepHolesRowsAndNativeWords) {
   EXPECT_EQ(result.batch.vertices.size(), 9u);
   EXPECT_EQ(result.batch.nativeUploadPixels[0], 0x1fu);
   EXPECT_EQ(result.batch.nativeUploadPixels[1], 0x03e0u);
+}
+
+TEST(GpuModernReplayVulkanBakeTest, MgsUpwardTextureScrollHasNoReadAfterWrite) {
+  for (const auto copy : {copyRect({64, 398}, {64, 391}, 32, 56),
+                          copyRect({64, 270}, {64, 263}, 32, 56),
+                          copyRect({1000, 500}, {900, 450}, 200, 100)}) {
+    const auto baked =
+        bakeModernReplayVulkan(makePlan(copy), 4, copyRectScratchFeatures());
+    ASSERT_TRUE(baked.accepted());
+    const auto &result = std::get<VulkanReplayBakedCopyRect>(
+        baked.batch.commands.front().payload);
+    EXPECT_EQ(result.path, VulkanReplayCopyPath::ScratchSnapshot);
+    EXPECT_TRUE(result.snapshotSourceColorRgba8);
+    EXPECT_TRUE(result.snapshotSourceMaskR8);
+  }
 }

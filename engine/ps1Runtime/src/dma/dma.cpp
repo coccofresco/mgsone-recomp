@@ -257,6 +257,10 @@ void DMA::executeBlockTransfer(uint32_t ch) {
   }
   bool fromRam = isFromRam(ch);
   int32_t step = ((channels_[ch].channelControl >> 1) & 1) ? -4 : 4;
+  if (ch == GPU_CH && !fromRam) {
+    ps1::metrics::count("dma.gpu_read_transfer");
+    ps1::metrics::count("dma.gpu_read_word", totalWords);
+  }
 
   struct GpuBlockBatchGuard {
     gpu::GPU *gpu = nullptr;
@@ -313,6 +317,12 @@ void DMA::executeBlockTransfer(uint32_t ch) {
       uint32_t word = 0;
 
       switch (ch) {
+      case GPU_CH:
+        // Native PsyQ StoreImage2 uses DMA2, sharing the GPUREAD cursor with
+        // CPU reads. Returning zero also leaves the GPU readback unfinished.
+        if (gpu_)
+          word = gpu_->readGPUREAD();
+        break;
       case CDROM_CH:
         if (cdrom_) word = cdrom_->readDataWord();
         break;

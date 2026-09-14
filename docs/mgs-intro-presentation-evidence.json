@@ -1,0 +1,257 @@
+{
+  "branch": "presentation/intro",
+  "base_commit": "e148c5e",
+  "decomp_source_commit": "217509eae471629b1a53633b816c61adfef9ed5c",
+  "local_assets_only": true,
+  "tests": {
+    "passed": 209,
+    "failed": 0,
+    "skipped": 0,
+    "log": ".local/intro-2d-tests.log",
+    "vulkan_integration": true,
+    "usa_instruction_oracle": true,
+    "source_asset_cache": true,
+    "subpixel_screen_texture_gpu_hash_verified": true,
+    "mirrored_sprite_uv_wrap_gpu_hash_verified": true
+  },
+  "cold_boot": {
+    "directory": "data/native/intro-verified",
+    "vblanks": 15600,
+    "input": "Start during VBlank 14500..14502",
+    "observed_end": "title menu with VR Training / New Game / Load Game at VBlank 15600",
+    "presentation": [
+      3840,
+      2160
+    ],
+    "aspect_ratio": "16:9 fixed",
+    "internal_scale": 12,
+    "software_scale": 1,
+    "native_executable_boot": true,
+    "diagnostic_vblank_period_us": 1000,
+    "hidden_vulkan_window": true,
+    "counters": {
+      "timing.vblank": 15600,
+      "dma.gpu_read_transfer": 180,
+      "dma.gpu_read_word": 46080,
+      "host.renderer.vulkan_replay_route.m0_reanchor": 1,
+      "host.renderer.vulkan_replay_route.m1_geometry": 7683,
+      "host.renderer.vulkan_replay_route.m1_latch": 7916,
+      "host.renderer.vulkan_replay_route.m0_present_only": 0,
+      "host.renderer.vulkan_replay_executor_downgrade": 0,
+      "mgs.mesh.seen_packets": 2898573,
+      "mgs.mesh.mapped_packets": 2874865,
+      "mgs.mesh.replaced_packets": 2855470,
+      "mgs.mesh.pose_rejected": 19395,
+      "mgs.water.bound_strips": 780044,
+      "mgs.water.modern_pass": 3463,
+      "mgs.water.replaced_strips": 776581,
+      "mgs.presentation.rectangle_draw": 915531,
+      "host.renderer.mgs_screen.snapshot": 6324,
+      "host.renderer.mgs_screen.snapshot_reused": 5792,
+      "host.renderer.mgs_blend.snapshot_elided": 964310
+    },
+    "captures": [
+      {
+        "vblank": 1200,
+        "path": "data/native/intro-verified/gpu/frame-1200-present-1-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "2d02539a60a0d952d92b30e455ac5aeb2ab13510993224e7c94cdd4e29fbb581"
+      },
+      {
+        "vblank": 2400,
+        "path": "data/native/intro-verified/gpu/frame-2400-present-2-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "b38016102fe617450b6c2ed44b5599e138e932b5f69d9332abac94f41d0b1b09"
+      },
+      {
+        "vblank": 3600,
+        "path": "data/native/intro-verified/gpu/frame-3600-present-3-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "dd2afe1e124b53a925b007fbd51c6f567c02d04e954c7e69b1f9285d71e0b770"
+      },
+      {
+        "vblank": 4800,
+        "path": "data/native/intro-verified/gpu/frame-4800-present-4-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "7639081e8fd30a59bd3ac2cbb6433ce2de15fb9f7931398b6dd11c39b95c34dc"
+      },
+      {
+        "vblank": 6000,
+        "path": "data/native/intro-verified/gpu/frame-6000-present-5-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "f43a88523c6c14a194ea0d7bfa428840d6b3c4450ba858824e385d381401eb65"
+      },
+      {
+        "vblank": 7200,
+        "path": "data/native/intro-verified/gpu/frame-7200-present-6-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "bad7512d2e217c000918d416d967f13c3fa0cb9eaef009d1e3b7eaa72bb1c32a"
+      },
+      {
+        "vblank": 8400,
+        "path": "data/native/intro-verified/gpu/frame-8400-present-7-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "da20567cd82a540d184b7e0b1030e9f931e0aeb3953ececfbafae408ef690a8a"
+      },
+      {
+        "vblank": 9600,
+        "path": "data/native/intro-verified/gpu/frame-9600-present-8-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "69d894de888433bdd7ff15b59121caa69e5a2608d4129f47a73e9d1d8619a4d6"
+      },
+      {
+        "vblank": 10800,
+        "path": "data/native/intro-verified/gpu/frame-10800-present-9-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "881d13e7d510c025cdb18836a0dc48fb8f40b1df2e6e1abb998fd2ac10c7cb3c"
+      },
+      {
+        "vblank": 12000,
+        "path": "data/native/intro-verified/gpu/frame-12000-present-10-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "9fe63fdac5909fa83007ec38b9afca0c7f09226236a25e71efcdd34207ee1b69"
+      },
+      {
+        "vblank": 13200,
+        "path": "data/native/intro-verified/gpu/frame-13200-present-11-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "bc3846f6c80ab5e8a65614efcbf462307db3100bce372ec1b2c822ea0f04cc28"
+      },
+      {
+        "vblank": 14400,
+        "path": "data/native/intro-verified/gpu/frame-14400-present-12-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "090fe5fa94d0af6631119c535b9c5c3199d8d6e7c10506f5e3b065bb29375407"
+      },
+      {
+        "vblank": 15600,
+        "path": "data/native/intro-verified/gpu/frame-15600-present-13-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "ec5f847245046fd77a3590bbdc76e6e08e19852870e16a5054366a08b085564a"
+      }
+    ],
+    "capture_stage": "Continuous modern pass; captured before final two-dimensional wave modulation and mirrored UV boundary fix, subsequently checked by the underwater run and GPU tests."
+  },
+  "underwater_benchmark": {
+    "device": "NVIDIA GeForce RTX 4060",
+    "vblanks_after_load": 600,
+    "guest_vblank_interval": [
+      9200,
+      9800
+    ],
+    "native_vblank_period": "normal NTSC",
+    "gpu_submissions": 600,
+    "readback_enabled": true,
+    "before_gpu_ms_mean": 39.961,
+    "after_gpu_ms_mean": 9.348,
+    "before_log": "data/native/intro-water-modern/runtime.log",
+    "after_log": "data/native/intro-water-2d/runtime.log",
+    "native_strips": 67580,
+    "modern_passes": 300,
+    "state": "data/native/intro-water-checkpoint/quick_slot_0.ps1s",
+    "after_shader": "Final field varies with both X and Y, using actor-derived phase.",
+    "executor_downgrades": 0,
+    "m0_reanchors": 2,
+    "m0_reanchor_reason": "Initial seed and diagnostic savestate restore.",
+    "captures": [
+      {
+        "path": "data/native/intro-water-2d/gpu/frame-9320-present-1-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "83d70118d9d11b9b1d2c8805f3fa6c981b8bb8e0a18cc79e85566ebf938d5021"
+      },
+      {
+        "path": "data/native/intro-water-2d/gpu/frame-9440-present-2-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "c6c27c85bf7917a84b840b7263d169ea5e0e4ea0829bf0c31580eb80c5b5934a"
+      },
+      {
+        "path": "data/native/intro-water-2d/gpu/frame-9560-present-3-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "226ebda08ad35a3d7547cce1d5adc4c2c6e3e64f6b454cf95aa8d17b315118c3"
+      },
+      {
+        "path": "data/native/intro-water-2d/gpu/frame-9680-present-4-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "8b4d18d1b83f410059b8df6bf4108907b7dc03bf1d838e28cb9ba6d29ee2853e"
+      },
+      {
+        "path": "data/native/intro-water-2d/gpu/frame-9800-present-5-ordinary-scanout.ppm",
+        "dimensions": [
+          3840,
+          2160
+        ],
+        "sha256": "a7ee8f1cbff6f4ef41486e147a2f138e133af97c90debbebba9781fc6a53a913"
+      }
+    ]
+  },
+  "references": {
+    "normal_cadence_complete_intro": "data/native/intro-complete",
+    "donor_full_intro": "data/oracle/intro-baseline",
+    "donor_frames": 18000,
+    "donor_bios": "HLE: isolated run logged no BIOS file"
+  },
+  "protected_files": {
+    "savestates/quick_slot_0.ps1s": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+    "data/assets/usa/disc1/SLUS_005.94": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32",
+    "data/presentation/usa-source/assets.mgsc": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+  },
+  "limits": [
+    "Full intro screenshots are visual checkpoints, not pixel-equality comparisons; water intentionally uses a different continuous field.",
+    "Readback logs marked captured-without-oracle do not establish zero differences from the donor.",
+    "The accelerated complete run is a coverage check, not a realtime FPS measurement.",
+    "Original bitmap text and texture resolution are retained.",
+    "Some source packets still use native projection coordinates as geometry fallback; all accepted presentation geometry rasterizes on the modern target.",
+    "Most gameplay logic remains static recompilation; the complete C actor port is not claimed."
+  ]
+}

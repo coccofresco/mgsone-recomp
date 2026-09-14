@@ -461,6 +461,10 @@ enum class ReplayDrawFlag : uint32_t {
   // vertex. The Vulkan surface-depth color plane may therefore record it even
   // when painter composition deliberately invalidates the occlusion D32.
   SurfaceDepthValid = 1u << 6,
+  // Renderer-only: sample a certified modern framebuffer texture. Never
+  // changes native texture dependencies or the software GPU output.
+  ScreenTexture = 1u << 7,
+  WaterRefraction = 1u << 8,
 };
 
 constexpr uint32_t replayDrawFlagBit(ReplayDrawFlag flag) {
@@ -518,6 +522,9 @@ struct DrawPacket {
   bool rawTexture = false;
   std::optional<OriginalMeshGeometry> originalMesh;
   std::optional<OriginalTexture> originalTexture;
+  // Live wt_view.c actor identity/phase. Retained across the producer queue;
+  // the modern presenter combines its strips into a continuous water pass.
+  std::array<uint32_t, 2> waterEffect{};
 
   bool operator==(const DrawPacket &) const = default;
 };

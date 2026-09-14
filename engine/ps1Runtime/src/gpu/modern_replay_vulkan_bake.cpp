@@ -521,15 +521,17 @@ bool copyRectHasUnprovenOrderedOverlap(const CopyRect &copy) noexcept {
   if (sourceY == destinationY)
     return horizontalCopyReadsPriorWrite(copy);
 
-  // The native oracle, SwanStation software donor and Beetle's cached-copy
-  // path all execute rows top-to-bottom. A full immutable snapshot changes
-  // the result when a written row can later be read as a source row. The
-  // exact hardware direction is not donor-proven for every wrap, so reject
-  // every physical 2D overlap with distinct row origins. On a shared row,
-  // also reject circular horizontal copies where the native execution order
-  // demonstrably reads an earlier write.
-  return wrappedAxisRangesOverlap(copy.source.y, copy.destination.y,
-                                  copy.height, NATIVE_HEIGHT);
+  // Native and SwanStation software execute rows top-to-bottom. Prove the
+  // actual wrapped read/write order instead of rejecting every vertical
+  // overlap: MGS texture scrolling moves rows upward and never reads a row
+  // it has already overwritten. Downward feedback remains rejected.
+  std::array<bool, NATIVE_HEIGHT> written{};
+  for (uint32_t row = 0; row < copy.height; ++row) {
+    if (written[(sourceY + row) % NATIVE_HEIGHT])
+      return true;
+    written[(destinationY + row) % NATIVE_HEIGHT] = true;
+  }
+  return false;
 }
 
 bool copyRectNeedsScratch(const CopyRect &copy) noexcept {
@@ -1122,6 +1124,13 @@ vulkan_abi::DrawUniforms drawUniforms(const DrawPacket &packet) noexcept {
     uniforms.mgsTextureData = packet.originalTexture->data;
     uniforms.mgsTextureOrigin = packet.originalTexture->origin;
     uniforms.mgsPalette = packet.originalTexture->palette;
+  }
+  if (packet.waterEffect[0] != 0) {
+    uniforms.mgsProjection = {float(packet.waterEffect[1] & 63),
+                              float(packet.waterEffect[0]),
+                              float(packet.submissionId & 0xffffffu), 0};
+    uniforms.textureState[2] |=
+        replayDrawFlagBit(ReplayDrawFlag::WaterRefraction);
   }
   return uniforms;
 }

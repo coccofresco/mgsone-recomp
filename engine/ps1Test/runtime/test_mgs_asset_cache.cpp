@@ -336,6 +336,50 @@ TEST_F(MgsSceneRecoveryTest, RespectsSemanticVisibilityAndSupportedMaterials) {
   EXPECT_FALSE(recover());
 }
 
+TEST_F(MgsSceneRecoveryTest, NativeScreenMatrixIsOnlyTheProjectionOracle) {
+  const auto baseline = recover();
+  ASSERT_TRUE(baseline);
+  auto packet = baseline->buckets[39].front();
+  packet.originalMesh.reset();
+  const uint32_t model = object + 72;
+  memory.write16(model + 76, 1);
+  memory.write32(model + 84, packs);
+  for (uint32_t offset : {0u, 8u, 16u})
+    memory.write16(model + 32 + offset, 4096);
+  // Deliberately distinguish the oracle from the original float scene. This
+  // matrix must validate native SXY without becoming Vulkan's world matrix.
+  memory.write32(model + 32 + 20, 1000);
+  memory.write32(model + 32 + 28, 10000);
+  for (unsigned k = 0; k < 4; ++k) {
+    memory.write32(packs + 4 + k * 12, 0x3c808080);
+    memory.write32(packs + 8 + k * 12, 32);
+    memory.write16(packs + 12 + k * 12, 0);
+    auto &v = packet.vertices[k];
+    v.nativeX = packet.state.drawOffset.x + 32;
+    v.nativeY = packet.state.drawOffset.y;
+    v.u = v.v = 0;
+    v.provenance.dmaNodeSource = (packs & 0x1fffffff) + 1;
+    v.provenance.gp0WordSource = (packs & 0x1fffffff) + 8 + k * 12 + 1;
+    v.provenance.evidence = gpu::replay::ReplayVertexDmaTraversalExact |
+                            gpu::replay::ReplayVertexGp0WordSourceExact;
+  }
+  memory.write16(packs + 14, packet.state.clut.raw);
+  memory.write16(packs + 26, packet.state.texturePage.raw);
+  captureSceneBeforeBounds(&ctx);
+  prepareMeshReplay(&ctx);
+  const auto before = packet;
+  ASSERT_TRUE(replaceMeshReplayPacket(packet));
+  EXPECT_EQ(packet.vertices[0].nativeX, before.vertices[0].nativeX);
+  EXPECT_EQ(packet.vertices[0].x, baseline->buckets[39][0].vertices[0].x);
+  EXPECT_EQ(packet.originalMesh->viewRows,
+            baseline->buckets[39][0].originalMesh->viewRows);
+  memory.write32(model + 32 + 20, 8000);
+  prepareMeshReplay(&ctx);
+  packet = before;
+  EXPECT_FALSE(replaceMeshReplayPacket(packet));
+  EXPECT_EQ(packet, before);
+}
+
 TEST_F(MgsSceneRecoveryTest, ArticulatedPaintUsesSameSourceProducerAsOnePiece) {
   const auto single = recover();
   ASSERT_TRUE(single);
@@ -1026,4 +1070,21 @@ TEST(MgsAssetCacheTest,
   vram[260 * 1024 + 768].raw = 0xbeef;
   bindOriginalTexture(packet, vram);
   EXPECT_FALSE(packet.originalTexture);
+}
+
+TEST_F(MgsSceneRecoveryTest, OpaqueRecoveredMaterialRetainsRawAbrSelector) {
+  for (uint32_t abr = 0; abr < 4; ++abr) {
+    gpu::replay::DrawPacket packet;
+    packet.originalMesh.emplace();
+    packet.originalTexture.emplace();
+    packet.state.texturePage.raw = uint16_t(abr << 5);
+    gpu::replay::BakedDrawState environment;
+    environment.depth.epoch = 1;
+    environment.dither = true;
+    environment.drawToDisplayArea = true;
+    (void)bindRecoveredSceneDraw(packet, environment, {});
+    EXPECT_EQ(packet.state.blend.mode, gpu::replay::BlendMode(abr));
+    EXPECT_FALSE(packet.state.blend.enabled);
+    EXPECT_EQ(packet.state.texturePage.raw, uint16_t(0x600 | (abr << 5)));
+  }
 }

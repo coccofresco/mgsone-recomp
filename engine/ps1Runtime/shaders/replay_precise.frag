@@ -56,6 +56,7 @@ layout(set = 1, binding = 0, std140) uniform CrashReplayDrawState {
   vec4 mgs_weights[4];
 } u_draw;
 #include "games/mgs_original_texture.glsl"
+#include "games/mgs_screen_texture.glsl"
 
 layout(location = 0) in vec2 v_uv;
 layout(location = 1) noperspective in vec3 v_color_255;
@@ -176,21 +177,26 @@ void main() {
   bool source_stp = false;
   uvec3 foreground;
   if (textured) {
-    texel = samplePs1Texel(v_uv);
-    // Only raw zero is transparent.  0x8000 is visible black with STP/mask.
-    if (texel == 0u)
-      discard;
-
-    source_stp = (texel & 0x8000u) != 0u;
-    const uvec3 rgb5 = texelRgb5(texel);
-    if (raw_texture) {
-      foreground = expandRgb5(rgb5);
+    bool visible;
+    if (mgs_screen_texel(v_uv, v_color_255, foreground, source_stp, visible)) {
+      if (!visible) discard;
     } else {
-      // PS1 modulation uses 0x80 as identity in the eventual RGB555 target:
-      // min(255, (texel5 * shade8) >> 4).  CrashReplayV1 retains that exact
-      // generated 8-bit value instead of dithering/quantizing it back to 5-bit.
-      foreground =
-          min(uvec3(255u), (rgb5 * shadeColor()) >> 4u);
+      texel = samplePs1Texel(v_uv);
+      // Only raw zero is transparent.  0x8000 is visible black with STP/mask.
+      if (texel == 0u)
+        discard;
+
+      source_stp = (texel & 0x8000u) != 0u;
+      const uvec3 rgb5 = texelRgb5(texel);
+      if (raw_texture) {
+        foreground = expandRgb5(rgb5);
+      } else {
+        // PS1 modulation uses 0x80 as identity in the eventual RGB555 target:
+        // min(255, (texel5 * shade8) >> 4).  CrashReplayV1 retains that exact
+        // generated 8-bit value instead of dithering/quantizing it back to 5-bit.
+        foreground =
+            min(uvec3(255u), (rgb5 * shadeColor()) >> 4u);
+      }
     }
   } else {
     foreground = shadeColor();

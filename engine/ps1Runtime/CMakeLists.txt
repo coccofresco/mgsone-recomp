@@ -104,6 +104,7 @@ set(PS1RECOMP_VULKAN_SHADER_SOURCES
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_precise.frag"
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_opaque_untextured.frag"
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_opaque_textured.frag"
+    "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_semi_textured.frag"
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/crash3_semi_untextured.frag"
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/crash3_semi_textured.frag"
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/crash3_sidecar.vert"
@@ -133,6 +134,7 @@ foreach(shader_source IN LISTS PS1RECOMP_VULKAN_SHADER_SOURCES)
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_original_mesh.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_asset_storage.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_original_texture.glsl"
+        "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_screen_texture.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_depth_vertex.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_depth_fragment.glsl")
     if(shader_name STREQUAL "replay_precise.vert" OR
@@ -221,6 +223,7 @@ add_library(ps1Runtime_lib STATIC
     src/gpu/modern_replay.cpp
     src/gpu/modern_replay_execution_plan.cpp
     src/gpu/modern_replay_vulkan_bake.cpp
+    src/games/mgs_screen_effects.cpp
     src/gpu/modern_replay_vulkan_copy.cpp
     src/gpu/modern_replay_vulkan_diagnostics.cpp
     src/gpu/modern_replay_depth_family.cpp

@@ -1589,3 +1589,100 @@ TEST(GpuModernReplayVulkanDepthTest,
   metrics::reset();
   metrics::setEnabledForTesting(false);
 }
+
+TEST(MgsScreenEffectsTest, OptInGpuScreenTexturePreservesSubpixelSceneAndRgb8) {
+  if (!std::getenv("PS1_RUN_VULKAN_INTEGRATION"))
+    GTEST_SKIP();
+  ScopedEnvironment readback("PS1_VULKAN_REPLAY_READBACK", "all");
+  ScopedEnvironment from("PS1_VULKAN_REPLAY_READBACK_FRAME_FROM", "2");
+  ScopedEnvironment to("PS1_VULKAN_REPLAY_READBACK_FRAME_TO", "3");
+  ScopedEnvironment region("PS1_VULKAN_REPLAY_READBACK_REGION", "160,32,2,1");
+  struct Profile {
+    Profile() { games::mgs::configure(true, false); }
+    ~Profile() { games::mgs::configure(false, false); }
+  } profile;
+  metrics::reset();
+  metrics::setEnabledForTesting(true);
+  GPU gpu;
+  configureVulkanNativeOracle(gpu, true);
+  RendererOptions options;
+  options.internalScale = 4;
+  options.pgxp = true;
+  options.trueDepth = true;
+  options.trueDepthMode = "hybrid";
+  options.trueColor = true;
+  RendererVulkan renderer(gpu, options);
+  ASSERT_TRUE(
+      renderer.init("MGS screen subpixel test", 320, 224, false, false));
+  gpu.writeGP1(0x03000000);
+  gpu.writeGP1(0x05000000);
+  gpu.snapshotDisplayBuffer(1);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  gpu.writeGP0(0xe3000000);
+  gpu.writeGP0(0xe4000000 | 319 | (223 << 10));
+  constexpr Color32 blue{13, 37, 91, 255}, red{217, 19, 27, 255};
+  submitFill(gpu, blue.r, blue.g, blue.b, 0, 0, 320, 224);
+  // A one-native-pixel-wide quad starts a quarter-pixel after the native edge.
+  // Its four high-resolution samples cannot be reconstructed from RGB555 VRAM.
+  constexpr std::array<uint32_t, 4> packed{
+      packedVertex(32, 32), packedVertex(33, 32), packedVertex(32, 33),
+      packedVertex(33, 33)};
+  gpu.writeGP0(0x28000000 | red.r | (red.g << 8) | (red.b << 16));
+  for (uint32_t i = 0; i < 4; ++i) {
+    const auto value = projectedVertex(packed[i], 32.25f + float(i & 1),
+                                       32.f + float(i >> 1), i + 1);
+    gpu.writeGP0(packed[i], UINT32_MAX, &value);
+  }
+  gpu.writeGP0(0xe1000100); // Direct RGB555 framebuffer addressing.
+  gpu.writeGP0(0x65808080);
+  gpu.writeGP0(packedVertex(160, 32));
+  gpu.writeGP0(32 | (32 << 8));
+  gpu.writeGP0(2 | (1 << 16));
+  gpu.snapshotDisplayBuffer(2);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  std::array<Color32, 32> colors;
+  for (uint32_t y = 0; y < 4; ++y)
+    for (uint32_t x = 0; x < 8; ++x)
+      colors[y * 8 + x] = x >= 1 && x < 5 ? red : blue;
+  std::array<uint8_t, 32> mask{};
+  std::array<float, 32> depth;
+  depth.fill(1);
+  const VulkanReplayDiagnosticPlanes planes{
+      {colors.data(), sizeof(colors), 8 * sizeof(Color32)},
+      {mask.data(), mask.size(), 8},
+      {depth.data(), sizeof(depth), 8 * sizeof(float)}};
+  const auto expected = captureVulkanReplayReadback({160, 32, 2, 1, 4}, planes);
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_rgba8_hash"),
+            metricHash(expected.actual.rgba8));
+  EXPECT_EQ(metrics::get("host.renderer.mgs_screen.draw"), 1u);
+  EXPECT_EQ(metrics::get("host.renderer.mgs_screen.snapshot"), 1u);
+  EXPECT_EQ(metrics::get("host.renderer.vulkan_replay_executor_downgrade"), 0u);
+  EXPECT_EQ(gpu.internalResolutionScale(), 1u);
+  // Mirrored U=0 must continue with texel 255, rather than repeating texel 0
+  // because a negative fractional coordinate was truncated toward zero.
+  submitCpuUpload(gpu, 0, 32, 1, 1, {0x001f});
+  submitCpuUpload(gpu, 255, 32, 1, 1, {0x03e0});
+  gpu.writeGP0(0xe1001100);
+  gpu.writeGP0(0x65808080);
+  gpu.writeGP0(packedVertex(160, 32));
+  gpu.writeGP0(32u << 8);
+  gpu.writeGP0(2 | (1 << 16));
+  gpu.snapshotDisplayBuffer(3);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  for (uint32_t y = 0; y < 4; ++y)
+    for (uint32_t x = 0; x < 8; ++x)
+      colors[y * 8 + x] =
+          x < 4 ? Color32{255, 0, 0, 255} : Color32{0, 255, 0, 255};
+  const auto flipped = captureVulkanReplayReadback({160, 32, 2, 1, 4}, planes);
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_rgba8_hash"),
+            metricHash(flipped.actual.rgba8));
+  EXPECT_EQ(metrics::get("host.renderer.vulkan_replay_executor_downgrade"), 0u);
+  renderer.destroy();
+  metrics::reset();
+  metrics::setEnabledForTesting(false);
+}
