@@ -1751,7 +1751,7 @@ std::function<void(uint32_t)> GPU::observePresentationList(uint32_t start,
   replaySourceMeshCommand_ = UINT32_MAX;
   if (!replayRecorder_.enabled())
     return {};
-  games::mgs::captureWaterEffects({ram, ps1::Memory::RAM_SIZE});
+  games::mgs::captureScreenEffects({ram, ps1::Memory::RAM_SIZE});
   std::shared_ptr<games::mgs::SceneRecoveryReplay> sceneRecovery =
       games::mgs::recoverSceneReplay(start, {ram, ps1::Memory::RAM_SIZE});
   if (!sceneRecovery)
@@ -3520,6 +3520,9 @@ bool GPU::capturePolygonPacket(const Vertex *vertices,
   games::mgs::bindWaterEffect(packet, commandSourceQueue_.empty()
                                           ? UINT32_MAX
                                           : commandSourceQueue_.front());
+  games::mgs::bindScreenEffect(packet, commandSourceQueue_.empty()
+                                           ? UINT32_MAX
+                                           : commandSourceQueue_.front());
   replayRecorder_.recordDraw(std::move(packet), replayNativeVram());
   return true;
 }

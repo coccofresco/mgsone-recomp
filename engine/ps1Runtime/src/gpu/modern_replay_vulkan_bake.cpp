@@ -1132,6 +1132,16 @@ vulkan_abi::DrawUniforms drawUniforms(const DrawPacket &packet) noexcept {
     uniforms.textureState[2] |=
         replayDrawFlagBit(ReplayDrawFlag::WaterRefraction);
   }
+  if (packet.screenEffect.kind != MgsScreenEffectKind::None) {
+    const auto &effect = packet.screenEffect;
+    uniforms.mgsProjection = {float(effect.part), float(effect.actor),
+                              float(packet.submissionId & 0xffffffu), 0};
+    for (unsigned i = 0; i < effect.parameters.size(); ++i)
+      uniforms.mgsViewRows[i] = effect.parameters[i];
+    uniforms.mgsViewRows[3] = {float(effect.parts), float(effect.kind), 0, 0};
+    // This is metadata only. The render-only ScreenEffect flag is set after
+    // the presenter proves that the complete actor pass can be replaced.
+  }
   return uniforms;
 }
 

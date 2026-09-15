@@ -465,6 +465,7 @@ enum class ReplayDrawFlag : uint32_t {
   // changes native texture dependencies or the software GPU output.
   ScreenTexture = 1u << 7,
   WaterRefraction = 1u << 8,
+  ScreenEffect = 1u << 9,
 };
 
 constexpr uint32_t replayDrawFlagBit(ReplayDrawFlag flag) {
@@ -499,6 +500,24 @@ struct OriginalMeshGeometry {
   bool operator==(const OriginalMeshGeometry &) const = default;
 };
 
+// Semantic screen actors, authenticated against the live MGS USA actor lists.
+// Values are also consumed by games/mgs_screen_texture.glsl.
+enum class MgsScreenEffectKind : uint32_t {
+  None,
+  NightVision,
+  ThermalVision,
+  FadeBlack,
+  FadeWhite,
+  TemporalBlur,
+  GasHaze
+};
+struct MgsScreenEffect {
+  MgsScreenEffectKind kind = MgsScreenEffectKind::None;
+  uint32_t actor = 0, part = 0, parts = 1;
+  std::array<std::array<float, 4>, 3> parameters{};
+  bool operator==(const MgsScreenEffect &) const = default;
+};
+
 struct DrawPacket {
   static constexpr std::size_t MAX_VERTICES = 4;
   static constexpr std::size_t MAX_INDICES = 6;
@@ -530,6 +549,7 @@ struct DrawPacket {
   // Live wt_view.c actor identity/phase. Retained across the producer queue;
   // the modern presenter combines its strips into a continuous water pass.
   std::array<uint32_t, 2> waterEffect{};
+  MgsScreenEffect screenEffect{};
 
   bool operator==(const DrawPacket &) const = default;
 };

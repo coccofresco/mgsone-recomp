@@ -15,9 +15,14 @@ struct ScreenRead {
 std::optional<ScreenRead>
 screenRead(const gpu::replay::VulkanReplayBakedDraw &draw,
            const gpu::replay::VulkanReplayBakedBatch &batch);
-void prepareScreenReads(gpu::replay::VulkanReplayBakedBatch &batch);
+void prepareScreenReads(gpu::replay::VulkanReplayBakedBatch &batch,
+                        bool replaceActorEffects = true);
 void captureWaterEffects(std::span<const uint8_t> ram);
 void bindWaterEffect(gpu::replay::DrawPacket &packet, uint32_t commandAddress);
+// Snapshot read-only actor ownership at each ordering-table submission. No
+// pointers into RAM survive the producer queue or savestate restoration.
+void captureScreenEffects(std::span<const uint8_t> ram);
+void bindScreenEffect(gpu::replay::DrawPacket &packet, uint32_t commandAddress);
 
 // A snapshot can serve successive strips only while none of their source
 // pixels have been written since the snapshot. This preserves deliberate

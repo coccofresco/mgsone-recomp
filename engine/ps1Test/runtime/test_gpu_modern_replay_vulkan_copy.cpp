@@ -1,6 +1,7 @@
 #include "runtime/games/crash3_profile.h"
 #include "runtime/games/mgs_asset_cache.h"
 #include "runtime/games/mgs_profile.h"
+#include "runtime/games/mgs_screen_effects.h"
 #include "runtime/gpu/modern_replay_preflight.h"
 #include "runtime/gpu/modern_replay_visibility_stack.h"
 #include "runtime/gpu/modern_replay_vulkan_abi.h"
@@ -11,6 +12,9 @@
 #include "runtime/gpu/renderer_vulkan.h"
 #include "runtime/metrics.h"
 #include "runtime/pgxp.h"
+#include <cstring>
+#include <filesystem>
+#include <fstream>
 
 #include <gtest/gtest.h>
 #include <SDL2/SDL.h>
@@ -1696,4 +1700,235 @@ TEST(MgsScreenEffectsTest, OptInGpuScreenTexturePreservesSubpixelSceneAndRgb8) {
   renderer.destroy();
   metrics::reset();
   metrics::setEnabledForTesting(false);
+}
+
+TEST(MgsScreenEffectsTest, OptInGpuVisorRetainsSubpixelEdgesAndNativeVram) {
+  if (!std::getenv("PS1_RUN_VULKAN_INTEGRATION"))
+    GTEST_SKIP();
+  const auto directory =
+      std::filesystem::temp_directory_path() /
+      ("mgs-visor-test-" + std::to_string(SDL_GetPerformanceCounter()));
+  struct Cleanup {
+    std::filesystem::path directory;
+    ~Cleanup() {
+      std::filesystem::remove_all(directory);
+      games::mgs::configure(false, false);
+      games::mgs::captureScreenEffects({});
+      metrics::reset();
+      metrics::setEnabledForTesting(false);
+    }
+  } cleanup{directory};
+  ScopedEnvironment dump("PS1_VULKAN_REPLAY_READBACK_DUMP_DIRECTORY",
+                         directory.c_str());
+  ScopedEnvironment readback("PS1_VULKAN_REPLAY_READBACK", "all");
+  ScopedEnvironment from("PS1_VULKAN_REPLAY_READBACK_FRAME_FROM", "2");
+  ScopedEnvironment to("PS1_VULKAN_REPLAY_READBACK_FRAME_TO", "2");
+  ScopedEnvironment region("PS1_VULKAN_REPLAY_READBACK_REGION", "32,32,2,1");
+  games::mgs::configure(true, false);
+  metrics::reset();
+  metrics::setEnabledForTesting(true);
+  GPU gpu, native;
+  configureVulkanNativeOracle(gpu, true);
+  RendererOptions options;
+  options.internalScale = 4;
+  options.pgxp = true;
+  options.trueDepth = true;
+  options.trueDepthMode = "hybrid";
+  options.trueColor = true;
+  RendererVulkan renderer(gpu, options);
+  ASSERT_TRUE(renderer.init("MGS visor subpixel test", 320, 224, false, false));
+  gpu.writeGP1(0x03000000);
+  gpu.writeGP1(0x05000000);
+  gpu.snapshotDisplayBuffer(1);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  std::vector<uint8_t> ram(2 * 1024 * 1024);
+  const auto word = [&](uint32_t a, uint32_t v) {
+    for (unsigned i = 0; i < 4; ++i)
+      ram[(a & 0x1fffff) + i] = v >> (8 * i);
+  };
+  constexpr uint32_t head = 0x800af418, actor = 0x80100000, prims = 0x80110000;
+  word(head + 4, actor);
+  word(actor, head);
+  word(actor + 4, head + 32);
+  word(head + 32, actor);
+  word(actor + 8, 0x8007af88);
+  word(actor + 20, 0x80120000);
+  word(actor + 32, prims);
+  std::memcpy(ram.data() + 0x120000, "scn_mask.c", 11);
+  word(prims + 20, 0x62287838);
+  word(prims + 24, 0xff90ff60);
+  word(prims + 28, 0x00e00140);
+  for (unsigned i = 0; i < 112; ++i) {
+    word(prims + 68 + i * 16, 0x62404040);
+    word(prims + 72 + i * 16, packedVertex(-160, -112 + int(i) * 2));
+    word(prims + 76 + i * 16, 0x00010140);
+  }
+  games::mgs::captureScreenEffects(ram);
+  const auto send = [&](uint32_t value, uint32_t address = UINT32_MAX) {
+    gpu.writeGP0(value, address);
+    native.writeGP0(value, address);
+  };
+  send(0xe3000000);
+  send(0xe4000000 | 319 | (223 << 10));
+  send(0x02000000 | 13 | (37 << 8) | (91 << 16));
+  send(0);
+  send(320 | (224 << 16));
+  constexpr Color32 red{217, 19, 27, 255};
+  send(0x28000000 | red.r | (red.g << 8) | (red.b << 16));
+  for (uint32_t i = 0; i < 4; ++i) {
+    const auto xy = packedVertex(32 + int(i & 1), 32 + int(i >> 1));
+    auto value =
+        projectedVertex(xy, 32.25f + float(i & 1), 32.f + float(i >> 1), i + 1);
+    gpu.writeGP0(xy, UINT32_MAX, &value);
+    native.writeGP0(xy);
+  }
+  send(0xe5000000 | 160 | (112 << 11));
+  send(0xe1000220);
+  send(0x62287838, prims + 20);
+  send(packedVertex(-160, -112));
+  send(320 | (224 << 16));
+  send(0xe1000240);
+  for (unsigned i = 0; i < 112; ++i) {
+    send(0x62404040, prims + 68 + i * 16);
+    send(packedVertex(-160, -112 + int(i) * 2));
+    send(320 | (1 << 16));
+  }
+  gpu.snapshotDisplayBuffer(2);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  EXPECT_EQ(metrics::get("mgs.screen_effect.pass.night_vision"), 1u);
+  EXPECT_EQ(metrics::get("mgs.screen_effect.replaced_packets"), 113u);
+  EXPECT_EQ(metrics::get("host.renderer.mgs_screen.snapshot"), 1u);
+  EXPECT_EQ(metrics::get("host.renderer.vulkan_replay_executor_downgrade"), 0u);
+  EXPECT_EQ(gpu.internalResolutionScale(), 1u);
+  for (uint32_t i = 0; i < GPU::VRAM_WIDTH * GPU::VRAM_HEIGHT; ++i)
+    ASSERT_EQ(gpu.getVRAM()[i].raw, native.getVRAM()[i].raw) << i;
+  std::ifstream ppm(directory / "frame-2.ppm", std::ios::binary);
+  ASSERT_TRUE(ppm);
+  std::string magic;
+  unsigned width, height, max;
+  ppm >> magic >> width >> height >> max;
+  ppm.get();
+  ASSERT_EQ(width, 8u);
+  ASSERT_EQ(height, 4u);
+  ASSERT_EQ(max, 255u);
+  std::array<uint8_t, 8 * 4 * 3> pixels{};
+  ppm.read(reinterpret_cast<char *>(pixels.data()), pixels.size());
+  ASSERT_TRUE(ppm);
+  // The edge stays at column one (a quarter native pixel), never at column
+  // zero/four. Sensor noise may change a channel by two levels, not this edge.
+  for (unsigned y = 0; y < 4; ++y) {
+    const auto green = [&](unsigned x) {
+      return int(pixels[(y * 8 + x) * 3 + 1]);
+    };
+    for (unsigned x = 1; x < 5; ++x)
+      EXPECT_GT(green(x), green(0) + 12);
+    for (unsigned x = 5; x < 8; ++x)
+      EXPECT_LE(std::abs(green(x) - green(0)), 3);
+  }
+  renderer.destroy();
+}
+
+TEST(MgsScreenEffectsTest, OptInGpuFadeEndpointsAndEnvelopeUseTrueColor) {
+  if (!std::getenv("PS1_RUN_VULKAN_INTEGRATION"))
+    GTEST_SKIP();
+  struct Cleanup {
+    ~Cleanup() {
+      games::mgs::configure(false, false);
+      games::mgs::captureScreenEffects({});
+      metrics::reset();
+      metrics::setEnabledForTesting(false);
+    }
+  } cleanup;
+  ScopedEnvironment readback("PS1_VULKAN_REPLAY_READBACK", "all");
+  ScopedEnvironment from("PS1_VULKAN_REPLAY_READBACK_FRAME_FROM", "2");
+  ScopedEnvironment to("PS1_VULKAN_REPLAY_READBACK_FRAME_TO", "7");
+  ScopedEnvironment region("PS1_VULKAN_REPLAY_READBACK_REGION", "32,32,2,1");
+  games::mgs::configure(true, false);
+  metrics::reset();
+  metrics::setEnabledForTesting(true);
+  GPU gpu, native;
+  configureVulkanNativeOracle(gpu, true);
+  RendererOptions options;
+  options.internalScale = 4;
+  options.pgxp = true;
+  options.trueDepth = true;
+  options.trueDepthMode = "hybrid";
+  options.trueColor = true;
+  RendererVulkan renderer(gpu, options);
+  ASSERT_TRUE(renderer.init("MGS fade color test", 320, 224, false, false));
+  gpu.writeGP1(0x03000000);
+  gpu.writeGP1(0x05000000);
+  gpu.snapshotDisplayBuffer(1);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  std::vector<uint8_t> ram(2 * 1024 * 1024);
+  const auto word = [&](uint32_t a, uint32_t v) {
+    for (unsigned i = 0; i < 4; ++i)
+      ram[(a & 0x1fffff) + i] = v >> (8 * i);
+  };
+  constexpr uint32_t head = 0x800af45c, actor = 0x80100000, prims = 0x80110000;
+  word(head + 4, actor);
+  word(actor, head);
+  word(actor + 4, head + 32);
+  word(head + 32, actor);
+  word(actor + 8, 0x80070000);
+  word(actor + 20, 0x80120000);
+  word(actor + 36, prims);
+  std::memcpy(ram.data() + 0x120000, "fadeio.c", 9);
+  const auto send = [&](uint32_t v, uint32_t a = UINT32_MAX) {
+    gpu.writeGP0(v, a);
+    native.writeGP0(v, a);
+  };
+  send(0xe3000000);
+  send(0xe4000000 | 319 | (223 << 10));
+  const Color32 base{101, 53, 211, 255};
+  uint64_t frame = 2;
+  for (bool white : {false, true})
+    for (uint32_t shade : {0u, 128u, 255u}) {
+      word(actor + 52, white ? 2 : 0);
+      games::mgs::captureScreenEffects(ram);
+      send(0x02000000 | base.r | (base.g << 8) | (base.b << 16));
+      send(0);
+      send(320 | (224 << 16));
+      send(white ? 0xe1000220 : 0xe1000240);
+      send(0x62000000 | shade | (shade << 8) | (shade << 16), prims + 20);
+      send(0);
+      send(320 | (224 << 16));
+      gpu.snapshotDisplayBuffer(frame++);
+      renderer.renderFrame();
+      renderer.drainReplayDiagnostics();
+      const auto channel = [&](uint8_t value) {
+        return uint8_t(std::lround(float(value) * (1.f - float(shade) / 255.f) +
+                                   (white ? float(shade) : 0.f)));
+      };
+      std::array<Color32, 32> color;
+      color.fill(
+          Color32{channel(base.r), channel(base.g), channel(base.b), 255});
+      std::array<uint8_t, 32> mask{};
+      std::array<float, 32> depth;
+      depth.fill(1);
+      const VulkanReplayDiagnosticPlanes planes{
+          {color.data(), sizeof(color), 8 * sizeof(Color32)},
+          {mask.data(), mask.size(), 8},
+          {depth.data(), sizeof(depth), 8 * sizeof(float)}};
+      const auto expected =
+          captureVulkanReplayReadback({32, 32, 2, 1, 4}, planes);
+      EXPECT_EQ(
+          metrics::getState(
+              "host.renderer.vulkan_replay_readback.last.actual_rgba8_hash"),
+          metricHash(expected.actual.rgba8))
+          << white << " " << shade;
+      EXPECT_EQ(
+          metrics::getState(
+              "host.renderer.vulkan_replay_readback.last.actual_mask_hash"),
+          metricHash(expected.actual.maskR8));
+      for (uint32_t i = 0; i < GPU::VRAM_WIDTH * GPU::VRAM_HEIGHT; ++i)
+        ASSERT_EQ(gpu.getVRAM()[i].raw, native.getVRAM()[i].raw) << i;
+    }
+  EXPECT_EQ(metrics::get("mgs.screen_effect.pass.fade_white"), 3u);
+  EXPECT_EQ(metrics::get("mgs.screen_effect.pass.fade_black"), 3u);
+  EXPECT_EQ(metrics::get("host.renderer.vulkan_replay_executor_downgrade"), 0u);
+  renderer.destroy();
 }

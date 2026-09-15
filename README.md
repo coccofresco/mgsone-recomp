@@ -22,6 +22,7 @@ un modello di budget CPU nativo equivalente esattamente al 165%.
 - [Savestate nativi: tasti, formato e verifiche](docs/mgs-savestates.md)
 - [Migrazione ai moduli C della decompilazione e stream originali](docs/mgs-decomp-native-core.md)
 - [Intro Vulkan, rifrazione continua e verifiche del dettaglio UHD](docs/mgs-intro-presentation.md)
+- [Visori, dissolvenze, scie e aloni nativi Vulkan](docs/mgs-screen-effects.md)
 - [Mesh complete dai formati originali, animazione e materiali](docs/mgs-source-meshes.md)
 - [Aggiornamenti PSXRecomp](docs/psxrecomp-upstream-2026-09-10.md)
 - [Valutazione RecompOne](docs/recompone-review-2026-09-10.md)

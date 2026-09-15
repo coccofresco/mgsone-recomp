@@ -1,0 +1,297 @@
+{
+  "date": "2026-09-15",
+  "base_commit": "da33cb17413cce914e5c9712fcd6eaf876d9ca6a",
+  "branch": "presentation/source-meshes",
+  "reference_revision": "217509eae471629b1a53633b816c61adfef9ed5c",
+  "runtime_sha256": "320d154f0ba46dd426cf5ff41bfa4d293ddde0c2351c3a57b94467f5192c8287",
+  "changed_source_sha256": {
+    "engine/ps1Runtime/include/runtime/games/mgs_screen_effects.h": "bc670de295a2e61212f9b637426229e8324d4119ce75d58c8ec767422696b903",
+    "engine/ps1Runtime/include/runtime/gpu/modern_replay.h": "2ed694b680d67f422d808cc0a70329d70d1b0e4f329f77a76ea90e7d13941ea2",
+    "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl": "3606e2aeaddcf1b243e2d457dc97c4c7c24661084c55082a50e6c30ea6a2f657",
+    "engine/ps1Runtime/src/games/mgs_screen_effects.cpp": "5c976d30fbf79d06398a24f144f195ccc41b897fc9a6cb5e0db8c824c2de743e",
+    "engine/ps1Runtime/src/gpu/gpu.cpp": "91cacbf1f3eb2dc12184f88d195b2835edc35c0e5eebd293d3cfc33d3a9ef0c9",
+    "engine/ps1Runtime/src/gpu/modern_replay_vulkan_bake.cpp": "189d657069edf381207ec0979e973b20b6b5bcacc47d43a87da9f7961698caed",
+    "engine/ps1Runtime/src/gpu/renderer_vulkan.cpp": "2e449e9c2ac1f51cb9af05c23727d228ff8ee40351fb6e535cccf02d11bdb587",
+    "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp": "93d579298b932adbcddfaf24e1f8ec12b5eef1d7eff903b058324bffb3cbcc63",
+    "engine/ps1Test/runtime/test_mgs_screen_effects.cpp": "5139df66a16d62aedfaf9a519c13e1faea030a09a7b0f0c5100d21f475ea5b3e"
+  },
+  "protected_files_unchanged": {
+    "savestates/quick_slot_0.ps1s": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+    "data/assets/usa/disc1/SLUS_005.94": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32",
+    "data/presentation/usa-source/assets.mgsc": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+  },
+  "tests": {
+    "passed": 271,
+    "suites": 18,
+    "log_path": ".local/screen-effects-final-tests.log",
+    "log_sha256": "f6c1a8be907cb0d8c48ebd0e2abecb0414d242968e4da8ad10bff6791c8fbacf",
+    "vulkan_integration": true,
+    "usa_original_cache": true,
+    "usa_instruction_oracle": true
+  },
+  "runs": {
+    "effects-release-intro": {
+      "metrics_path": "data/native/effects-release-intro/metrics.json",
+      "metrics_sha256": "64918712d97779fd92f91cd5b372ff822f3edc4b8303481f2ac297bf869f0049",
+      "log_path": "data/native/effects-release-intro/runtime.log",
+      "counts": {
+        "mgs.screen_effect.actor.gas_haze": 922,
+        "mgs.screen_effect.actor.visor": 726,
+        "mgs.screen_effect.bound_packets": 98140,
+        "mgs.screen_effect.gpu_submitted": 3301,
+        "mgs.screen_effect.layout.visor": 1452,
+        "mgs.screen_effect.pass.fade_black": 465,
+        "mgs.screen_effect.pass.fade_white": 153,
+        "mgs.screen_effect.pass.gas_haze": 874,
+        "mgs.screen_effect.pass.night_vision": 268,
+        "mgs.screen_effect.pass.temporal_blur": 1089,
+        "mgs.screen_effect.pass.thermal_vision": 452,
+        "mgs.screen_effect.replaced_packets": 98140,
+        "mgs.water.bound_strips": 777114,
+        "mgs.water.modern_pass": 3450,
+        "mgs.water.replaced_strips": 773664,
+        "timing.vblank": 15600,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor": 1,
+        "host.renderer.vulkan_replay_route.m1_geometry": 7123,
+        "mgs.source.gpu_full_faces": 1659220,
+        "mgs.source.gpu_original_format_packets": 1659220,
+        "mgs.scene.recovery_gpu_submitted": 1659220
+      },
+      "gpu_timing": null,
+      "scanouts": [
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-1200-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "2d02539a60a0d952d92b30e455ac5aeb2ab13510993224e7c94cdd4e29fbb581"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-2400-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "f04b0e8ef3d90f84b50f44a069a6a249fbaa5d940de325a0df14aa2908a55904"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-3600-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "77f01c207a1daf55e75318b998bd2e3a9d1b212aec7dc3d69297f2569382632e"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-4800-present-4-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "5fcc0395cd1bf4b7a925da9d39eb345be22167c3142655d313ff5d91cccd94c4"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-6000-present-5-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "8bbf354865a291513c7f7a362f5c5255f3a408a503b362f3946b243d2d9bd750"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-7200-present-6-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "5d8e0e135e27ba1f232d42ceb33490acde3a74f4b619ec6cc0defffaaf6ab5d7"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-8400-present-7-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "002636cf81638bd7f00d5b195e9d68b112115916a37a9324da7dd67002c6b170"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-9600-present-8-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "491325209a59e11ffb7fc37bbf470bbe1407c0c9d86e2fec2a42abcabb9c4a56"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-10800-present-9-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "1ad6c12a325fdd08ea9f05b4f70eb43e0ccf3ee80debece56f451c6217bf2e83"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-12000-present-10-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "87ae823dc44a4e8b1d9f7f0a1d9dc30cecf2a7629fb86cdcda653949801d0309"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-13200-present-11-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "187c36f8f09fc2f3a1da1d3529b31df50a8cfb51718623826602c5180d3ee31d"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-14400-present-12-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "276656cd9f72f5c35ccfeafa307734f06d0bb80a2f481a054b15ffca3d70e78e"
+        },
+        {
+          "path": "data/native/effects-release-intro/gpu/frame-15600-present-13-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "80bc5ac1727a8d1f3c6f0ffac0337764865ff189d4c430dfb73e2b4ae5ce76cd"
+        }
+      ]
+    },
+    "effects-modern-cadence": {
+      "metrics_path": "data/native/effects-modern-cadence/metrics.json",
+      "metrics_sha256": "e3c88fae0251c74887f25e28da450b70e770cdd54dcafff3cf7c07b33a028b66",
+      "log_path": "data/native/effects-modern-cadence/runtime.log",
+      "counts": {
+        "mgs.screen_effect.actor.visor": 257,
+        "mgs.screen_effect.bound_packets": 28845,
+        "mgs.screen_effect.gpu_submitted": 284,
+        "mgs.screen_effect.layout.visor": 514,
+        "mgs.screen_effect.pass.fade_black": 30,
+        "mgs.screen_effect.pass.night_vision": 136,
+        "mgs.screen_effect.pass.thermal_vision": 118,
+        "mgs.screen_effect.replaced_packets": 28732,
+        "mgs.water.bound_strips": 40540,
+        "mgs.water.modern_pass": 178,
+        "mgs.water.replaced_strips": 39914,
+        "timing.vblank": 602,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor": 2,
+        "host.renderer.vulkan_replay_route.m1_geometry": 302,
+        "mgs.source.gpu_full_faces": 87349,
+        "mgs.source.gpu_original_format_packets": 87349,
+        "mgs.scene.recovery_gpu_submitted": 87349
+      },
+      "gpu_timing": {
+        "samples": 602,
+        "total_ns": 4850909952,
+        "mean_ms": 8.057989953488372
+      },
+      "scanouts": [
+        {
+          "path": "data/native/effects-modern-cadence/gpu/frame-9600-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "45b419413cfdf2f596ffc12f2759747064bd7be5c1e14c8f9ca6eb7f570c763f"
+        },
+        {
+          "path": "data/native/effects-modern-cadence/gpu/frame-9780-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "a46cebd1442fe51dccae9ff3fb70ab8b32e1108980aa4d2af433efb159c7994e"
+        },
+        {
+          "path": "data/native/effects-modern-cadence/gpu/frame-9960-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "afeccc1c451312b92d4a5065be26ed2b5d6a4a05295f226c29227a788fde64e7"
+        },
+        {
+          "path": "data/native/effects-modern-cadence/gpu/frame-10140-present-4-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "1798af046ec1d538cb23ccb3942bbb069be2cfff0e924e1bd5c173fe3f20f7aa"
+        }
+      ]
+    },
+    "effects-reference-cadence": {
+      "metrics_path": "data/native/effects-reference-cadence/metrics.json",
+      "metrics_sha256": "02a4fc5996b6a9122880e358cbb48b0a59419ec551355740e9b9a2a57462245a",
+      "log_path": "data/native/effects-reference-cadence/runtime.log",
+      "counts": {
+        "mgs.screen_effect.actor.visor": 257,
+        "mgs.screen_effect.bound_packets": 28845,
+        "mgs.screen_effect.gpu_submitted": 0,
+        "mgs.screen_effect.layout.visor": 514,
+        "mgs.water.bound_strips": 40540,
+        "mgs.water.modern_pass": 178,
+        "mgs.water.replaced_strips": 39914,
+        "timing.vblank": 602,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor": 2,
+        "host.renderer.vulkan_replay_route.m1_geometry": 302,
+        "mgs.source.gpu_full_faces": 87349,
+        "mgs.source.gpu_original_format_packets": 87349,
+        "mgs.scene.recovery_gpu_submitted": 87349
+      },
+      "gpu_timing": {
+        "samples": 602,
+        "total_ns": 4885701120,
+        "mean_ms": 8.115782591362127
+      },
+      "scanouts": [
+        {
+          "path": "data/native/effects-reference-cadence/gpu/frame-9600-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "45b419413cfdf2f596ffc12f2759747064bd7be5c1e14c8f9ca6eb7f570c763f"
+        },
+        {
+          "path": "data/native/effects-reference-cadence/gpu/frame-9780-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "d9263e2c8f87de55c036d47225f23ee0b8e908ccff7e59fd266e56d3cd591633"
+        },
+        {
+          "path": "data/native/effects-reference-cadence/gpu/frame-9960-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "bfabb9d6f8cd00d1f159aa58b51d0447ca22d42ed6804d985ae7be1141db1b87"
+        },
+        {
+          "path": "data/native/effects-reference-cadence/gpu/frame-10140-present-4-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "6a85c91849bc2e9c276387b00854d7f47a393846a1bfb77e3102166d50690a08"
+        }
+      ]
+    },
+    "effects-gameplay-check": {
+      "metrics_path": "data/native/effects-gameplay-check/metrics.json",
+      "metrics_sha256": "02d7ff29a3ef4c900af45a4087cc6c05189efb9c18e3377325abfc242b6c57e6",
+      "log_path": "data/native/effects-gameplay-check/runtime.log",
+      "counts": {
+        "mgs.screen_effect.gpu_submitted": 0,
+        "timing.vblank": 685,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor": 2,
+        "host.renderer.vulkan_replay_route.m1_geometry": 337,
+        "mgs.source.gpu_full_faces": 63973,
+        "mgs.source.gpu_original_format_packets": 63973,
+        "mgs.scene.recovery_gpu_submitted": 63973
+      },
+      "gpu_timing": null,
+      "scanouts": [
+        {
+          "path": "data/native/effects-gameplay-check/gpu/frame-97200-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "2cf9726e857544cca7d642d34c0914cd979a67555f668e1de8d6a7e08d72ba13"
+        },
+        {
+          "path": "data/native/effects-gameplay-check/gpu/frame-97500-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "80187bfe55735573b30adff6466067c98259ab76c09c28d85e1f3decf409d5b0"
+        },
+        {
+          "path": "data/native/effects-gameplay-check/gpu/frame-97800-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "11dd082d9e8ead42540f2501a5466cb6f264b9f1731222735d8ead8c40bb8ae7"
+        }
+      ]
+    }
+  },
+  "comparison_image": "data/native/effects-modern-cadence/comparison.png",
+  "limits": [
+    "Modern effects intentionally differ visually from PSX primitives.",
+    "Full cold intro uses accelerated VBlank for coverage, not benchmarking.",
+    "Cadence comparison uses the same checkpoint, normal NTSC, four GPU readbacks each, RTX 4060; includes startup/load and 600 subsequent VBlanks.",
+    "Thermal optics port does not certify every thermal material/overlay in the game.",
+    "blur.c, focus.c, mosaic.c and boss-specific effects retain their existing paths.",
+    "Native 1x logic/framebuffer and user savestate are unchanged; no new 2x interpolation."
+  ]
+}

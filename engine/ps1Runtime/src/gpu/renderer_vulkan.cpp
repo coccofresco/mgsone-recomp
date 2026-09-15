@@ -7649,11 +7649,14 @@ struct RendererVulkan::Impl {
     const uint32_t supportedFlags =
         textured | rawTexture | semiTransparent | forceMask | checkMask |
         limitUv | surfaceDepthValid |
-        (games::mgs::active() ? replay::replayDrawFlagBit(
-                                    replay::ReplayDrawFlag::ScreenTexture) |
-                                    replay::replayDrawFlagBit(
-                                        replay::ReplayDrawFlag::WaterRefraction)
-                              : 0u);
+        (games::mgs::active()
+             ? replay::replayDrawFlagBit(
+                   replay::ReplayDrawFlag::ScreenTexture) |
+                   replay::replayDrawFlagBit(
+                       replay::ReplayDrawFlag::WaterRefraction) |
+                   replay::replayDrawFlagBit(
+                       replay::ReplayDrawFlag::ScreenEffect)
+             : 0u);
     constexpr auto colorFeedback = replay::vulkanReplayFeedbackPlaneBit(
         replay::VulkanReplayFeedbackPlane::Color);
     constexpr auto maskFeedback = replay::vulkanReplayFeedbackPlaneBit(
@@ -27067,7 +27070,9 @@ struct RendererVulkan::Impl {
           } else {
             if (games::mgs::active() &&
                 !environmentSwitchEnabled("PS1_MGS_NATIVE_SCREEN_TEXTURES"))
-              games::mgs::prepareScreenReads(baked.batch);
+              games::mgs::prepareScreenReads(
+                  baked.batch,
+                  !environmentSwitchEnabled("PS1_MGS_NATIVE_SCREEN_EFFECTS"));
             if (environmentSwitchEnabled("PS1_TRACE_CRASH3_OBJECT_PRESENTER")) {
               auditCrash3ObjectPresentation(replaySnapshot->frameNumber,
                                             baked.batch);
@@ -28112,7 +28117,7 @@ struct RendererVulkan::Impl {
     if (preparedReplayGeometry.has_value() && replayBatch.has_value()) {
       if (games::mgs::active()) {
         uint64_t originals = 0, cachedTextures = 0, recovered = 0,
-                 rawModels = 0, fullFaces = 0;
+                 rawModels = 0, fullFaces = 0, screenEffects = 0;
         for (const auto &command : replayBatch->commands) {
           const auto *draw =
               std::get_if<replay::VulkanReplayBakedDraw>(&command.payload);
@@ -28127,6 +28132,10 @@ struct RendererVulkan::Impl {
           if (draw && draw->segmentCount && draw->sourceTopology)
             ++fullFaces;
           if (draw && draw->segmentCount &&
+              (draw->uniforms.textureState[2] &
+               replay::replayDrawFlagBit(replay::ReplayDrawFlag::ScreenEffect)))
+            ++screenEffects;
+          if (draw && draw->segmentCount &&
               draw->segments[0].uniforms.mgsProjection[3] == 1.0f &&
               std::all_of(draw->segments[0].uniforms.mgsPointBytes.begin(),
                           draw->segments[0].uniforms.mgsPointBytes.end(),
@@ -28140,6 +28149,7 @@ struct RendererVulkan::Impl {
         ps1::metrics::count("mgs.source.gpu_original_format_packets",
                             rawModels);
         ps1::metrics::count("mgs.source.gpu_full_faces", fullFaces);
+        ps1::metrics::count("mgs.screen_effect.gpu_submitted", screenEffects);
       }
       commitCrash3RawSceneUpload(*preparedReplayGeometry, currentFrame);
     }

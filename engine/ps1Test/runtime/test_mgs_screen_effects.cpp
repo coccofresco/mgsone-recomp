@@ -138,3 +138,190 @@ TEST(MgsScreenEffectsTest, SpriteCaptureRetainsWrappedUvAndNativePixels) {
   EXPECT_EQ(sprite->vertices[1].u, 258);
   EXPECT_EQ(sprite->state.textureUvDomain.maxU, 257);
 }
+
+namespace {
+struct ScreenActorFixture {
+  std::vector<uint8_t> ram = std::vector<uint8_t>(2 * 1024 * 1024);
+  static constexpr uint32_t actor = 0x80100000, prims = 0x80110000;
+  ScreenActorFixture() { configure(true, false); }
+  ~ScreenActorFixture() {
+    configure(false, false);
+    captureScreenEffects({});
+  }
+  void word(uint32_t a, uint32_t v) {
+    for (unsigned i = 0; i < 4; ++i)
+      ram[(a & 0x1fffff) + i] = v >> (8 * i);
+  }
+  void install(uint32_t level, const char *name) {
+    uint32_t head = 0x800af390 + 68 * level;
+    word(head + 4, actor);
+    word(actor, head);
+    word(actor + 4, head + 32);
+    word(head + 32, actor);
+    word(actor + 8, 0x80070000);
+    word(actor + 20, 0x80120000);
+    std::memcpy(ram.data() + 0x120000, name, std::strlen(name) + 1);
+    word(actor + 32, prims);
+  }
+  void visor(uint32_t color = 0x62287838) {
+    install(2, "scn_mask.c");
+    for (unsigned b = 0; b < 2; ++b) {
+      word(prims + 20 + b * 16, color);
+      word(prims + 24 + b * 16, 0xff90ff60);
+      word(prims + 28 + b * 16, 0x00e00140);
+      for (unsigned i = 0; i < 112; ++i) {
+        auto p = prims + 64 + (112 * b + i) * 16;
+        word(p + 4, 0x62404040);
+        word(p + 8, 0xff60u | (uint32_t(uint16_t(-112 + 2 * int(i))) << 16));
+        word(p + 12, 0x00010140);
+      }
+    }
+    captureScreenEffects(ram);
+  }
+  DrawPacket tile(BlendMode mode) {
+    DrawPacket p;
+    p.opcode = 0x62;
+    p.vertexCount = 4;
+    p.route = PacketRoute::Screen2D;
+    p.state.blend.enabled = true;
+    p.state.blend.mode = mode;
+    p.vertices[1].x = 320;
+    p.vertices[2].y = 224;
+    return p;
+  }
+};
+VulkanReplayBakedBatch effectBatch(MgsScreenEffectKind kind, uint32_t count) {
+  VulkanReplayBakedBatch b;
+  b.internalScale = 4;
+  b.vertices.resize(6);
+  for (uint32_t part = 0; part < count; ++part) {
+    VulkanReplayBakedDraw d;
+    d.vertexCount = 6;
+    d.segmentCount = 2;
+    auto &s = d.segments[0];
+    s.scissor = {1280, 0, 1280, 896};
+    s.uniforms.mgsProjection = {float(part), 1048576, 77, 0};
+    s.uniforms.mgsViewRows[3] = {float(count), float(kind), 0, 0};
+    s.uniforms.textureState[2] =
+        replayDrawFlagBit(ReplayDrawFlag::SemiTransparent);
+    d.feedbackPlanes =
+        vulkanReplayFeedbackPlaneBit(VulkanReplayFeedbackPlane::Color);
+    b.commands.push_back({part, d});
+  }
+  return b;
+}
+} // namespace
+
+TEST(MgsScreenEffectsTest,
+     VisorOwnershipRequiresCompleteUsaLayoutAndLiveLinks) {
+  ScreenActorFixture f;
+  f.visor();
+  auto tile = f.tile(BlendMode::BackgroundPlusForeground);
+  bindScreenEffect(tile, f.prims + 20);
+  EXPECT_EQ(tile.screenEffect.kind, MgsScreenEffectKind::NightVision);
+  EXPECT_EQ(tile.screenEffect.parts, 113u);
+  auto line = f.tile(BlendMode::BackgroundMinusForeground);
+  bindScreenEffect(line, f.prims + 68 + 111 * 16);
+  EXPECT_EQ(line.screenEffect.part, 112u);
+  tile.screenEffect = {};
+  bindScreenEffect(tile, f.prims + 21);
+  EXPECT_EQ(tile.screenEffect.kind, MgsScreenEffectKind::None);
+  f.word(f.actor, 0);
+  captureScreenEffects(f.ram);
+  bindScreenEffect(tile, f.prims + 20);
+  EXPECT_EQ(tile.screenEffect.kind, MgsScreenEffectKind::None);
+  f.visor(0x62000050);
+  bindScreenEffect(tile, f.prims + 20);
+  EXPECT_EQ(tile.screenEffect.kind, MgsScreenEffectKind::ThermalVision);
+  tile.screenEffect = {};
+  f.word(f.prims + 68 + 80 * 16, 0x62404041);
+  captureScreenEffects(f.ram);
+  bindScreenEffect(tile, f.prims + 20);
+  EXPECT_EQ(tile.screenEffect.kind, MgsScreenEffectKind::None);
+  f.visor();
+  tile.state.mask.checkMaskBit = true;
+  bindScreenEffect(tile, f.prims + 20);
+  EXPECT_EQ(tile.screenEffect.kind, MgsScreenEffectKind::None);
+  tile.state.mask.checkMaskBit = false;
+  captureScreenEffects({});
+  bindScreenEffect(tile, f.prims + 20);
+  EXPECT_EQ(tile.screenEffect.kind, MgsScreenEffectKind::None);
+}
+
+TEST(MgsScreenEffectsTest,
+     FullVisorPassReplaces113PacketsAndReadsOnlyItsBuffer) {
+  auto b = effectBatch(MgsScreenEffectKind::NightVision, 113);
+  prepareScreenReads(b);
+  ASSERT_EQ(b.commands.size(), 1u);
+  const auto &d = std::get<VulkanReplayBakedDraw>(b.commands[0].payload);
+  EXPECT_EQ(d.segmentCount, 1u);
+  EXPECT_EQ(d.feedbackPlanes, 0u);
+  EXPECT_EQ(d.route, PacketRoute::Screen2D);
+  EXPECT_EQ(d.segments[0].snapshotAction,
+            VulkanReplayDestinationSnapshotAction::None);
+  EXPECT_EQ(d.uniforms.destinationState, (std::array<uint32_t, 4>{}));
+  EXPECT_TRUE(d.uniforms.textureState[2] &
+              replayDrawFlagBit(ReplayDrawFlag::ScreenEffect));
+  auto read = screenRead(d, b);
+  ASSERT_TRUE(read);
+  EXPECT_EQ(read->source, (VulkanReplayBakedRect{320, 0, 320, 224}));
+  EXPECT_EQ(b.vertices[d.firstVertex + 4].positionNative,
+            (std::array<float, 2>{640, 224}));
+}
+
+TEST(MgsScreenEffectsTest,
+     IncompleteDuplicateOrInterleavedActorPassStaysAtomic) {
+  for (unsigned defect = 0; defect < 4; ++defect) {
+    auto b = effectBatch(MgsScreenEffectKind::NightVision, 113);
+    if (defect == 0)
+      b.commands.pop_back();
+    if (defect == 1)
+      std::get<VulkanReplayBakedDraw>(b.commands.back().payload)
+          .segments[0]
+          .uniforms.mgsProjection[0] = 0;
+    if (defect == 2)
+      b.commands.insert(b.commands.begin() + 50,
+                        {999, VulkanReplayBakedFillRect{}});
+    if (defect == 3)
+      std::get<VulkanReplayBakedDraw>(b.commands.back().payload)
+          .segments[0]
+          .uniforms.mgsProjection[2] = 78;
+    auto size = b.commands.size();
+    prepareScreenReads(b);
+    EXPECT_EQ(b.commands.size(), size);
+    for (const auto &c : b.commands)
+      if (auto *d = std::get_if<VulkanReplayBakedDraw>(&c.payload))
+        EXPECT_FALSE(d->uniforms.textureState[2] &
+                     replayDrawFlagBit(ReplayDrawFlag::ScreenEffect));
+  }
+}
+
+TEST(MgsScreenEffectsTest,
+     TemporalHistoryReadsBothBuffersAndRespectsCinematicCrop) {
+  auto b = effectBatch(MgsScreenEffectKind::TemporalBlur, 2);
+  prepareScreenReads(b);
+  ASSERT_EQ(b.commands.size(), 1u);
+  const auto &d = std::get<VulkanReplayBakedDraw>(b.commands[0].payload);
+  auto read = screenRead(d, b);
+  ASSERT_TRUE(read);
+  EXPECT_EQ(read->source, (VulkanReplayBakedRect{0, 0, 640, 224}));
+  EXPECT_EQ(read->destination, (VulkanReplayBakedRect{320, 24, 320, 160}));
+}
+
+TEST(MgsScreenEffectsTest, FadeUsesRenderedTileEnvelopeAndRejectsWrongBlend) {
+  ScreenActorFixture f;
+  f.install(3, "fadeio.c");
+  f.word(f.actor + 36, f.prims);
+  f.word(f.actor + 52, 2);
+  captureScreenEffects(f.ram);
+  auto p = f.tile(BlendMode::BackgroundPlusForeground);
+  p.vertices[0].color = {128, 128, 128};
+  bindScreenEffect(p, f.prims + 36);
+  EXPECT_EQ(p.screenEffect.kind, MgsScreenEffectKind::FadeWhite);
+  EXPECT_EQ(p.screenEffect.part, 0u);
+  EXPECT_FLOAT_EQ(p.screenEffect.parameters[0][0], 128.f / 255);
+  p.screenEffect = {};
+  p.state.blend.mode = BlendMode::BackgroundMinusForeground;
+  bindScreenEffect(p, f.prims + 36);
+  EXPECT_EQ(p.screenEffect.kind, MgsScreenEffectKind::None);
+}
