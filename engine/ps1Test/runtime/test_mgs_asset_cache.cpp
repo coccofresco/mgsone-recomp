@@ -5,6 +5,8 @@
 #include "runtime/games/mgs_scene.h"
 #include "runtime/gpu/gpu.h"
 #include "runtime/gpu/modern_replay.h"
+#include "runtime/gpu/modern_replay_execution_plan.h"
+#include "runtime/gpu/modern_replay_vulkan_bake.h"
 #include "runtime/memory.h"
 #include <algorithm>
 #include <bit>
@@ -129,16 +131,16 @@ protected:
   AssetCache cache = AssetCache::decode(fixture(false, true));
   Memory memory;
   recomp_context ctx{};
-  std::array<std::string, 2> previous;
-  std::array<bool, 2> existed{};
-  static constexpr const char *vars[] = {"PS1_MGS_MESH_REPLAY",
-                                         "PS1_MGS_SCENE_RECOVERY"};
+  std::array<std::string, 3> previous;
+  std::array<bool, 3> existed{};
+  static constexpr const char *vars[] = {
+      "PS1_MGS_MESH_REPLAY", "PS1_MGS_SCENE_RECOVERY", "PS1_MGS_SOURCE_MESHES"};
   void SetUp() override {
-    for (unsigned i = 0; i < 2; ++i) {
+    for (unsigned i = 0; i < 3; ++i) {
       existed[i] = std::getenv(vars[i]) != nullptr;
       if (existed[i])
         previous[i] = std::getenv(vars[i]);
-      setenv(vars[i], "1", 1);
+      setenv(vars[i], i == 2 ? "0" : "1", 1);
     }
     configure(true, false);
     setSceneAssetCache(&cache);
@@ -185,7 +187,7 @@ protected:
   void TearDown() override {
     setSceneAssetCache(nullptr);
     configure(false, false);
-    for (unsigned i = 0; i < 2; ++i) {
+    for (unsigned i = 0; i < 3; ++i) {
       if (existed[i])
         setenv(vars[i], previous[i].c_str(), 1);
       else
@@ -1087,4 +1089,376 @@ TEST_F(MgsSceneRecoveryTest, OpaqueRecoveredMaterialRetainsRawAbrSelector) {
     EXPECT_FALSE(packet.state.blend.enabled);
     EXPECT_EQ(packet.state.texturePage.raw, uint16_t(0x600 | (abr << 5)));
   }
+}
+
+class MgsSourceMeshTest : public MgsSceneRecoveryTest {
+protected:
+  void SetUp() override {
+    MgsSceneRecoveryTest::SetUp();
+    setenv("PS1_MGS_SOURCE_MESHES", "1", 1);
+    cache = AssetCache::decode(fixture(false, true, true));
+    setSceneAssetCache(&cache);
+  }
+  void packet(uint32_t address, uint32_t next, uint8_t opcode = 0x3c) {
+    memory.write32(address, 0x0c000000 | (next & 0xffffff));
+    for (unsigned k = 0; k < 4; ++k) {
+      memory.write32(address + 4 + k * 12, uint32_t(opcode) << 24 | 0x808080);
+      // Deliberately unrelated SXY: source identity, not GTE projection, owns
+      // the modern geometry. The native oracle still draws these coordinates.
+      memory.write32(address + 8 + k * 12,
+                     (20u + (k & 1) * 8) | ((20u + (k >> 1) * 8) << 16));
+      memory.write16(address + 12 + k * 12, 0);
+    }
+    memory.write16(address + 14, 400 * 64 + 32);
+    memory.write16(address + 26, 0);
+  }
+  void link() {
+    memory.write32(object + 72 + 84, packs);
+    packet(packs, table + 39 * 4);
+    memory.write32(table + 40 * 4, packs & 0xffffff);
+  }
+  void configureGpu(gpu::GPU &gpu, bool replay) {
+    gpu::GPU::ReplayConfig config;
+    config.enabled = replay;
+    config.pgxp = true;
+    config.internalScale = 4;
+    config.trueDepthMode = gpu::replay::ReplayDepthMode::Hybrid;
+    gpu.configureReplay(config);
+    for (uint32_t w :
+         {0xe3000000u, 0xe4000000u | 319u | (223u << 10),
+          0xe5000000u | 160u | (112u << 11), 0xa0000000u, 0u, 1u | (4u << 16),
+          0x11111111u, 0x11111111u, 0xa0000000u, 512u | (400u << 16),
+          16u | (1u << 16), 0x7fff0000u, 0u, 0u, 0u, 0u, 0u, 0u, 0u})
+      gpu.writeGP0(w);
+    gpu.snapshotDisplayBuffer(1);
+    if (replay)
+      (void)gpu.tryConsumeReplay();
+  }
+};
+
+TEST_F(MgsSourceMeshTest, CompleteFaceUsesSourceWithoutNativeProjectionGate) {
+  link();
+  auto result = recover();
+  ASSERT_TRUE(result);
+  ASSERT_EQ(result->meshes.size(), 1u);
+  ASSERT_EQ(result->meshNodes.size(), 1u);
+  const auto &draw = result->meshes.front().draw;
+  ASSERT_TRUE(draw.originalMesh);
+  EXPECT_TRUE(draw.originalMesh->sourceTopology);
+  EXPECT_DOUBLE_EQ(draw.vertices[1].x, .032);
+  EXPECT_EQ(draw.originalMesh->weights,
+            gpu::replay::OriginalMeshGeometry{}.weights);
+  EXPECT_TRUE(result->meshes.front().visible);
+  // Moving the source behind the camera culls it independently of native SXY.
+  memory.write32(object + 28, uint32_t(-10000));
+  memory.write32(object + 72 + 28, uint32_t(-10000));
+  result = recover();
+  ASSERT_TRUE(result);
+  ASSERT_EQ(result->meshes.size(), 1u);
+  EXPECT_FALSE(result->meshes.front().visible);
+}
+
+TEST_F(MgsSourceMeshTest, SubdivisionChildrenShareOneOriginalFace) {
+  link();
+  captureSceneBeforeBounds(&ctx);
+  beginMeshDivide(&ctx);
+  memory.write32(0x1f800034, 0x1f800038);
+  meshDivideGrid(&ctx);
+  memory.write32(0x1f80001c, packs);
+  ctx.r16 = 0x1f800038;
+  constexpr uint32_t a = 0x80016000, b = 0x80016040;
+  ctx.r7 = a;
+  meshDividePacket(&ctx);
+  ctx.r7 = b;
+  meshDividePacket(&ctx);
+  packet(a, b);
+  packet(b, table + 39 * 4);
+  memory.write32(table + 40 * 4, a & 0xffffff);
+  auto result = recover();
+  ASSERT_TRUE(result);
+  ASSERT_EQ(result->meshes.size(), 1u);
+  EXPECT_EQ(result->meshNodes.at(a & 0xffffff),
+            result->meshNodes.at(b & 0xffffff));
+  EXPECT_EQ(result->meshes.front().draw.originalMesh->weights,
+            gpu::replay::OriginalMeshGeometry{}.weights);
+  EXPECT_DOUBLE_EQ(result->meshes.front().draw.vertices[1].x, .032);
+  // A late mutation of either child invalidates the whole replacement. Do not
+  // emit a full face alongside a native child whose material is now different.
+  memory.write32(b + 4, 0x3c404040);
+  EXPECT_FALSE(recover(false));
+  result = recover();
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result->meshes.size(), 1u);
+}
+
+TEST_F(MgsSourceMeshTest, LatePacketMutationRequiresFreshSceneCapture) {
+  link();
+  ASSERT_TRUE(recover());
+  memory.write16(packs + 12, 0x0101);
+  EXPECT_FALSE(recover(false));
+  const auto fresh = recover();
+  ASSERT_TRUE(fresh);
+  ASSERT_EQ(fresh->meshes.size(), 1u);
+  EXPECT_TRUE(fresh->meshes.front().draw.originalMesh->sourceTopology);
+}
+
+TEST_F(MgsSourceMeshTest, AnimatedLightingUsesOriginalNormalsWithoutPackets) {
+  constexpr uint32_t light = 0x80017000, angles = 0x80017100;
+  memory.write32(object + 40, 0x1d); // TEXT, TRANS, SHADE, BOUND; articulated
+  memory.write32(object + 52, light);
+  memory.write32(object + 56, angles);
+  memory.write16(light + 4, 4096);  // first light points down Z
+  memory.write16(light + 32, 1024); // R=64, G=32, B=16 at normal incidence
+  memory.write16(light + 38, 512);
+  memory.write16(light + 44, 256);
+  const std::vector<uint8_t> before(memory.ramPtr(),
+                                    memory.ramPtr() + Memory::RAM_SIZE);
+  const auto result = recover();
+  ASSERT_TRUE(result);
+  ASSERT_EQ(result->buckets[39].size(), 1u);
+  const auto &draw = result->buckets[39].front();
+  EXPECT_TRUE(draw.originalMesh->sourceTopology);
+  EXPECT_EQ(draw.vertices[0].color, (gpu::replay::Rgb8{64, 32, 16}));
+  EXPECT_EQ(std::memcmp(before.data(), memory.ramPtr(), before.size()), 0);
+  // A quarter turn changes the normal with the bone, without creating packs.
+  memory.write16(angles + 2, 1024);
+  captureSceneBeforeBounds(&ctx);
+  const auto scene = latestSceneSnapshot();
+  ASSERT_TRUE(scene);
+  const auto material =
+      sourceMeshMaterial(cache, memory, *scene, scene->instances[0], 0,
+                         std::array<uint32_t, 1>{0}, 0, 0);
+  ASSERT_TRUE(material);
+  EXPECT_EQ(material->vertices[0].color, (gpu::replay::Rgb8{0, 0, 0}));
+}
+
+TEST_F(MgsSourceMeshTest, TransparencyDoesNotRequireNativePacketAllocation) {
+  memory.write32(definition + 32, 2);
+  for (unsigned k = 0; k < 4; ++k)
+    memory.write32(colors + k * 4, 0x3e808080);
+  const auto result = recover();
+  ASSERT_TRUE(result);
+  const auto &draw = result->buckets[39].front();
+  EXPECT_EQ(draw.opcode, 0x3e);
+  EXPECT_TRUE(draw.state.blend.enabled);
+  EXPECT_TRUE(draw.state.blend.texturedStpOnly);
+  EXPECT_TRUE(draw.originalMesh->sourceTopology);
+}
+
+TEST_F(MgsSourceMeshTest,
+       ReusedOrderingTableDoesNotRestoreAbsentMeshesOverCodec) {
+  ASSERT_TRUE(recover());
+  EXPECT_FALSE(recover(false));
+  EXPECT_TRUE(recover());
+}
+
+TEST_F(MgsSourceMeshTest, ThermalEligibilityDoesNotRequireNativePackets) {
+  memory.write32(object + 40, 0x257); // thermal eligible, ordinary painted mesh
+  const auto result = recover();
+  ASSERT_TRUE(result);
+  ASSERT_EQ(result->buckets[39].size(), 1u);
+  EXPECT_TRUE(result->buckets[39].front().originalMesh->sourceTopology);
+  EXPECT_EQ(result->buckets[39].front().vertices[0].color,
+            (gpu::replay::Rgb8{128, 128, 128}));
+}
+
+TEST_F(MgsSourceMeshTest, NullMaterialIsDefinedWithoutNativePackets) {
+  auto bytes = fixture(true, true, true);
+  const auto original = AssetCache::decode(bytes);
+  const auto ids = original.sourceModel(0)->textureIdsByte;
+  bytes[ids] = bytes[ids + 1] = 0;
+  checksum(bytes);
+  cache = AssetCache::decode(bytes);
+  setSceneAssetCache(&cache);
+  memory.write16(definition + 176, 0);
+  const auto result = recover();
+  ASSERT_TRUE(result);
+  auto draw = result->buckets[39].front();
+  ASSERT_TRUE(draw.originalMesh);
+  EXPECT_TRUE(draw.originalMesh->sourceTopology);
+  EXPECT_TRUE(draw.originalMesh->runtimeTexture);
+  EXPECT_EQ(draw.state.texturePage.raw, 0);
+  EXPECT_EQ(draw.state.clut.raw, 0);
+  gpu::replay::BakedDrawState environment;
+  environment.depth.epoch = 1;
+  EXPECT_FALSE(bindRecoveredSceneDraw(draw, environment, {}));
+  std::vector<gpu::Color16> vram(1024 * 512);
+  EXPECT_TRUE(bindRecoveredSceneDraw(draw, environment, vram));
+  EXPECT_FALSE(draw.originalTexture);
+}
+
+TEST_F(MgsSourceMeshTest, ReplacesDrawAtomicallyAndPreservesNativeVram) {
+  link();
+  gpu::GPU native, modern;
+  configureGpu(native, false);
+  configureGpu(modern, true);
+  // MGS uses forced STP throughout the intro. Preserve it without vetoing
+  // source geometry or losing the independent mask plane used by refraction.
+  native.writeGP0(0xe6000001);
+  modern.writeGP0(0xe6000001);
+  captureSceneBeforeBounds(&ctx);
+  prepareMeshReplay(&ctx);
+  native.processLinkedList(table + 256 * 4, memory.ramPtr(), &memory);
+  modern.processLinkedList(table + 256 * 4, memory.ramPtr(), &memory);
+  EXPECT_EQ(std::memcmp(native.getVRAM(), modern.getVRAM(),
+                        1024 * 512 * sizeof(gpu::Color16)),
+            0);
+  modern.snapshotDisplayBuffer(2);
+  const auto frame = modern.tryConsumeReplay();
+  ASSERT_TRUE(frame);
+  EXPECT_TRUE(frame->latch().complete);
+  unsigned count = 0;
+  for (const auto &op : frame->operations()) {
+    if (const auto *draw = std::get_if<gpu::replay::DrawPacket>(&op)) {
+      ++count;
+      ASSERT_TRUE(draw->originalMesh);
+      EXPECT_TRUE(draw->originalMesh->sourceTopology);
+      EXPECT_TRUE(draw->state.depth.testEnabled);
+      EXPECT_TRUE(draw->state.mask.forceMaskBit);
+      EXPECT_NEAR(draw->vertices[1].x, 160.032, 1e-8);
+      EXPECT_EQ(draw->vertices[0].provenance,
+                gpu::replay::ReplayVertexProvenance{});
+    }
+  }
+  EXPECT_EQ(count, 1u);
+  const std::array<gpu::replay::CrashReplayFramePtr, 1> batch{frame};
+  const auto execution = gpu::replay::planModernReplayExecution(batch);
+  ASSERT_TRUE(execution.accepted()) << int(execution.reason);
+  gpu::replay::VulkanReplayBakeFeatures features;
+  features.allowTextured = features.allowDestinationMaskRead = true;
+  const auto baked =
+      gpu::replay::bakeModernReplayVulkan(execution.plan, 4, features);
+  EXPECT_TRUE(baked.accepted()) << int(baked.reason);
+}
+
+TEST_F(MgsSourceMeshTest,
+       ScrollingTextureSamplesOriginalPcxWithExactPhaseProof) {
+  auto bytes = fixture(true, true, true);
+  auto original = AssetCache::decode(bytes);
+  // Logical name 0x1234 identifies the PCX; rows have distinguishable indices.
+  put(bytes, original.section(AssetCache::Names).offset + 4, 1);
+  for (unsigned y = 0; y < 4; ++y)
+    for (unsigned x = 0; x < 4; ++x)
+      bytes[original.section(AssetCache::Indices).offset + y * 4 + x] = y + 1;
+  checksum(bytes);
+  cache = AssetCache::decode(bytes);
+  setSceneAssetCache(&cache);
+  const auto source = recover();
+  ASSERT_TRUE(source);
+  auto draw = source->buckets[39].front();
+  std::vector<gpu::Color16> vram(1024 * 512);
+  vram[400 * 1024 + 513].raw = 0x7fff;
+  vram[0].raw = 0x2222;
+  vram[1024].raw = 0x3333;
+  vram[2048].raw = 0x1111;
+  vram[3072].raw = 0x4444;
+  bindOriginalTexture(draw, vram);
+  ASSERT_TRUE(draw.originalTexture);
+  EXPECT_EQ(draw.originalTexture->origin[3], (3 << 16) | 1);
+  EXPECT_EQ(draw.originalTexture->data[0],
+            cache.section(AssetCache::Indices).offset);
+  // tex_scrl rotates height-1 rows. The border and every interior texel must
+  // still match; arbitrary texture writes do not authorize a cached substitute.
+  vram[3072].raw = 0x5555;
+  bindOriginalTexture(draw, vram);
+  EXPECT_FALSE(draw.originalTexture);
+  vram[3072].raw = 0x4444;
+  vram[1024].raw ^= 1;
+  bindOriginalTexture(draw, vram);
+  EXPECT_FALSE(draw.originalTexture);
+  vram[1024].raw ^= 1;
+  draw.originalMesh->textureId = 0x5678;
+  bindOriginalTexture(draw, vram);
+  EXPECT_FALSE(draw.originalTexture);
+}
+
+TEST_F(MgsSourceMeshTest,
+       AnimatedPaletteSupportsPcxWithFewerThanSixteenColors) {
+  for (uint32_t colors : {1u, 11u, 15u}) {
+    SCOPED_TRACE(colors);
+    auto bytes = fixture(true, true, true);
+    auto original = AssetCache::decode(bytes);
+    put(bytes, original.section(AssetCache::Textures).offset + 20, colors);
+    for (unsigned i = 0; i < 16; ++i)
+      bytes[original.section(AssetCache::Indices).offset + i] = 0;
+    checksum(bytes);
+    cache = AssetCache::decode(bytes);
+    setSceneAssetCache(&cache);
+    const auto source = recover();
+    ASSERT_TRUE(source);
+    auto draw = source->buckets[39].front();
+    std::vector<gpu::Color16> vram(1024 * 512);
+    for (unsigned i = 0; i < 16; ++i)
+      vram[400 * 1024 + 512 + i].raw = 0x1000 + i;
+    bindOriginalTexture(draw, vram);
+    ASSERT_TRUE(draw.originalTexture);
+    EXPECT_EQ(draw.originalTexture->origin[2], 2);
+    EXPECT_EQ(draw.originalTexture->palette[0], 0x10011000u);
+    EXPECT_EQ(draw.originalTexture->palette[7], 0x100f100eu);
+    // A palette animation does not permit changing the original index stream.
+    vram[0].raw = 0x1111;
+    bindOriginalTexture(draw, vram);
+    EXPECT_FALSE(draw.originalTexture);
+  }
+}
+
+TEST_F(MgsSourceMeshTest, TextScreenUsesSourceMeshWithVerifiedActorSurface) {
+  auto bytes = fixture(true, true, true);
+  auto original = AssetCache::decode(bytes);
+  const auto ids = original.sourceModel(0)->textureIdsByte;
+  bytes[ids] = 0x1d;
+  bytes[ids + 1] = 0xa9;
+  checksum(bytes);
+  cache = AssetCache::decode(bytes);
+  setSceneAssetCache(&cache);
+  memory.write16(definition + 176, 0xa91d);
+  const auto texture = [&](uint16_t id, uint16_t page, uint16_t clut, uint8_t w,
+                           uint8_t h) {
+    const uint32_t address = 0x800b46c8 + (id & 511) * 12;
+    memory.write16(address, id);
+    memory.write16(address + 4, page);
+    memory.write16(address + 6, clut);
+    memory.write8(address + 10, w);
+    memory.write8(address + 11, h);
+    return address;
+  };
+  texture(0xcc22, 17, 0, 255, 255);
+  const auto font = texture(0xef71, 18, 15160, 111, 6);
+  texture(0xa91d, 49, 15160, 127, 69);
+  link();
+  memory.write16(packs + 14, 15160);
+  memory.write16(packs + 26, 49);
+  gpu::GPU modern;
+  configureGpu(modern, true);
+  ASSERT_TRUE(recover());
+  modern.processLinkedList(table + 256 * 4, memory.ramPtr(), &memory);
+  modern.snapshotDisplayBuffer(2);
+  const auto frame = modern.tryConsumeReplay();
+  ASSERT_TRUE(frame);
+  ASSERT_TRUE(frame->latch().complete);
+  unsigned count = 0;
+  for (const auto &op : frame->operations()) {
+    const auto *draw = std::get_if<gpu::replay::DrawPacket>(&op);
+    if (!draw)
+      continue;
+    ++count;
+    ASSERT_TRUE(draw->originalMesh);
+    EXPECT_TRUE(draw->originalMesh->sourceTopology);
+    EXPECT_TRUE(draw->originalMesh->runtimeTexture);
+    EXPECT_FALSE(draw->originalTexture);
+    EXPECT_NEAR(draw->vertices[1].x, 160.032, 1e-8);
+  }
+  EXPECT_EQ(count, 1u);
+  const std::array<gpu::replay::CrashReplayFramePtr, 1> batch{frame};
+  const auto execution = gpu::replay::planModernReplayExecution(batch);
+  ASSERT_TRUE(execution.accepted()) << int(execution.reason);
+  gpu::replay::VulkanReplayBakeFeatures features;
+  features.allowTextured = features.allowDestinationMaskRead = true;
+  EXPECT_TRUE(gpu::replay::bakeModernReplayVulkan(execution.plan, 4, features)
+                  .accepted());
+  // A matching name alone cannot turn a material miss into a runtime surface.
+  memory.write16(font + 6, 15161);
+  const auto invalid = recover();
+  ASSERT_TRUE(invalid);
+  EXPECT_FALSE(invalid->meshes.front().draw.originalMesh->runtimeTexture);
 }

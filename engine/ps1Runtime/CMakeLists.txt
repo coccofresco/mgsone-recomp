@@ -193,6 +193,7 @@ add_library(ps1Runtime_lib STATIC
     src/games/mgs_scene.cpp
     src/games/mgs_pose.cpp
     src/games/mgs_mesh_replay.cpp
+    src/games/mgs_source_material.cpp
     src/memory_access.cpp
     src/mips_interpreter.cpp
     src/mips_construction_lineage.cpp

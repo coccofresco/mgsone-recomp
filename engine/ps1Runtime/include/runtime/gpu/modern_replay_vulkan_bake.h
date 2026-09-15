@@ -292,6 +292,7 @@ struct VulkanReplayBakedDraw {
   // when both use the same fixed-function ALWAYS+far-write pipeline.
   PacketRoute route = PacketRoute::Projected3D;
   bool sourceRecovery = false;
+  bool sourceTopology = false;
   VulkanReplayDrawDepthPath depthPath =
       VulkanReplayDrawDepthPath::LessEqualWrite;
   VulkanReplayFeedbackPlaneMask feedbackPlanes = 0;

@@ -477,8 +477,9 @@ constexpr uint32_t replayDrawFlagBit(ReplayDrawFlag flag) {
 struct OriginalTexture {
   std::array<uint32_t, 4>
       data{}; // index byte offset, palette byte offset, width, height
-  std::array<int32_t, 4> origin{};   // page-relative UV origin, mode (1=static,
-                                     // 2=dynamic palette), reserved
+  std::array<int32_t, 4>
+      origin{}; // page-relative UV origin, mode (1=static,
+                // 2=inline palette, 3=live CLUT), Y scroll (period<<16|phase)
   std::array<uint32_t, 8> palette{}; // 16 live palette words, two per uint
   bool operator==(const OriginalTexture &) const = default;
 };
@@ -486,6 +487,10 @@ struct OriginalMeshGeometry {
   uint32_t textureId = ~0u; // live logical KMD material ID, for PCX provenance
   bool sourceRecovery =
       false; // host-only draw without a native GP0 counterpart
+  bool sourceTopology =
+      false; // complete original face, independent of PSX subdivision
+  bool runtimeTexture =
+      false; // verified actor-owned surface, composed in the mutable atlas
   std::array<std::array<float, 4>, 4> weights{
       {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}};
   std::array<uint32_t, 4> pointBytes{};

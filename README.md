@@ -22,6 +22,7 @@ un modello di budget CPU nativo equivalente esattamente al 165%.
 - [Savestate nativi: tasti, formato e verifiche](docs/mgs-savestates.md)
 - [Migrazione ai moduli C della decompilazione e stream originali](docs/mgs-decomp-native-core.md)
 - [Intro Vulkan, rifrazione continua e verifiche del dettaglio UHD](docs/mgs-intro-presentation.md)
+- [Mesh complete dai formati originali, animazione e materiali](docs/mgs-source-meshes.md)
 - [Aggiornamenti PSXRecomp](docs/psxrecomp-upstream-2026-09-10.md)
 - [Valutazione RecompOne](docs/recompone-review-2026-09-10.md)
 - [Valutazione OpenGTPS1: input e memory card](docs/opengtps1-review-2026-09-10.md)
@@ -51,10 +52,12 @@ originali in virgola mobile, inclusi gli agganci fra modelli; le matrici PS1
 restano l'oracolo separato per verificare i pacchetti.
 La [scena sorgente unificata](docs/mgs-unified-source-scene.md) prepara la
 geometria anche senza pacchetti PS1; modelli ed effetti riconosciuti condividono
-proiezione, profondità e binding della cache. Il recupero delle facce interamente
-assenti è attivo per i materiali opachi con colori persistenti verificabili.
-Il percorso resta sperimentale: altre scene, culling completamente indipendente, famiglie LOD,
-interpolazione e prestazioni richiedono ulteriori verifiche e sviluppo.
+proiezione, profondità e binding della cache. Le [mesh complete](docs/mgs-source-meshes.md)
+usano ora le facce originali, il culling in virgola mobile e la profondità Vulkan
+per gli opachi, senza ereditare la suddivisione PS1. Il percorso include le mesh
+articolate, l'illuminazione dalle normali originali, le palette animate e i
+monitor composti a runtime. Altre scene, famiglie LOD e interpolazione richiedono
+ulteriori verifiche e sviluppo.
 
 ## Base riutilizzata
 

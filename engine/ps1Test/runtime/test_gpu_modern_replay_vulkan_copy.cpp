@@ -1378,8 +1378,7 @@ TEST(GpuModernReplayVulkanDepthTest,
   metrics::setEnabledForTesting(false);
 }
 
-TEST(GpuModernReplayVulkanDepthTest,
-     OptInMgsOriginalPcxMatchesGpuAndTracksRuntimePalette) {
+static void checkOriginalPcxGpuPalette(uint32_t requestedDepth) {
   const char *path = std::getenv("PS1_TEST_MGS_ASSET_CACHE");
   if (!std::getenv("PS1_RUN_VULKAN_INTEGRATION") || !path)
     GTEST_SKIP();
@@ -1395,8 +1394,8 @@ TEST(GpuModernReplayVulkanDepthTest,
     const auto *pcx = cache.bytes().data() +
                       cache.section(Cache::Source).offset +
                       cache.word(Cache::Assets, a, 12);
-    if ((cache.word(Cache::Textures, t, 6) & 1) || word16(pcx + 78) < 512 ||
-        cache.word(Cache::Textures, t, 0) > 128 ||
+    if ((cache.word(Cache::Textures, t, 6) & 1) != requestedDepth ||
+        word16(pcx + 78) < 512 || cache.word(Cache::Textures, t, 0) > 128 ||
         cache.word(Cache::Textures, t, 1) > 128)
       continue;
     for (uint32_t i = 0; i < cache.word(Cache::Textures, t, 3); ++i) {
@@ -1497,9 +1496,21 @@ TEST(GpuModernReplayVulkanDepthTest,
             metricHash(expected.actual.rgba8));
   EXPECT_EQ(metrics::get("mgs.texture.gpu_submitted_packets"), 2u);
   EXPECT_EQ(metrics::get("mgs.texture.dynamic_palette_packets"), 1u);
+  EXPECT_EQ(metrics::get("mgs.texture.dynamic_palette_8bit_packets"),
+            requestedDepth);
   renderer.destroy();
   metrics::reset();
   metrics::setEnabledForTesting(false);
+}
+
+TEST(GpuModernReplayVulkanDepthTest,
+     OptInMgsOriginalPcxMatchesGpuAndTracksRuntimePalette) {
+  checkOriginalPcxGpuPalette(0);
+}
+
+TEST(GpuModernReplayVulkanDepthTest,
+     OptInMgsOriginal8BitPcxKeepsIndicesAndTracksRuntimePalette) {
+  checkOriginalPcxGpuPalette(1);
 }
 
 TEST(GpuModernReplayVulkanDepthTest,

@@ -511,7 +511,10 @@ void CrashReplayRecorder::recordPresentationDraw(
   if (!surfaceSeeded_ || cpuUpload_.active)
     throw std::logic_error(
         "presentation draw requires an idle seeded timeline");
-  if (!packet.originalMesh || !packet.originalTexture ||
+  const bool runtimeMaterial = packet.originalMesh &&
+                               packet.originalMesh->sourceTopology &&
+                               packet.originalMesh->runtimeTexture;
+  if (!packet.originalMesh || (!packet.originalTexture && !runtimeMaterial) ||
       packet.vertexCount != 4 || packet.indexCount != 6 || !packet.textured ||
       packet.route != PacketRoute::Projected3D || packet.validMask != 15 ||
       packet.fallbackReason != PacketFallbackReason::None)

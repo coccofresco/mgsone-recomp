@@ -407,9 +407,9 @@ void hle_DrawOTag(recomp_context *ctx) {
     if (wordCount == 0) {
       orderingTableAnchorAddress = ptr & 0x1FFFFCu;
       orderingTableAnchorExact = true;
-      if (observeList)
-        observeList(orderingTableAnchorAddress);
     }
+    if (observeList)
+      observeList(ptr & 0x1FFFFCu);
     if (ps1::metrics::gpuWordTraceEnabled()) {
       const uint64_t submission =
           g_cfg.activeGP0SubmissionId ? g_cfg.activeGP0SubmissionId() : 0;

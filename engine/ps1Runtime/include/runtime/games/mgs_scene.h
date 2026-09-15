@@ -37,6 +37,7 @@ struct SceneSnapshot {
   int32_t projection = 0;
   std::array<int16_t, 4> clip{};
   std::array<float, 16> view{};
+  std::array<float, 3> ambient{};
   bool widescreen = false;
   std::vector<SceneInstance> instances;
 };

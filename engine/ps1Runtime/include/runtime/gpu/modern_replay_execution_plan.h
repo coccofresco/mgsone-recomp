@@ -93,6 +93,7 @@ struct ReplayDepthExecution {
   // Eligibility is packet-atomic. Only an opaque, fully valid Projected3D
   // packet with no fallback reason may publish authentic W. Hybrid stores it
   // with ALWAYS so GP0/OT remains authoritative; Strict also tests LEQUAL.
+  // Complete original source meshes own visibility and use LEQUAL in Hybrid.
   // Screen2D and Hybrid semi-transparent packets can instead write the far
   // sentinel only for accepted fragments. Opaque invalid-W fallbacks never
   // publish fabricated depth.

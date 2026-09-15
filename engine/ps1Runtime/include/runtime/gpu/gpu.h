@@ -524,6 +524,7 @@ private:
   bool replayDepthHasMean_ = false;
   double replayDepthLastMean_ = 0.0;
   uint64_t replayDepthEpoch_ = 1;
+  uint32_t replaySourceMeshCommand_ = UINT32_MAX;
   // Every GP0/GP1 write advances this serial, including writes outside an
   // explicit DMA/OT batch. Consecutive VBlanks with no mutation can reuse the
   // already-latched native and 4x buffers instead of copying tens of MiB

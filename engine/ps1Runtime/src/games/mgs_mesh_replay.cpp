@@ -19,6 +19,7 @@ namespace {
 const AssetCache *cache = nullptr;
 bool enabled = false;
 bool recoveryEnabled = false;
+bool sourceTopologyEnabled = true;
 using Point = std::array<double, 3>;
 struct SourcePoint {
   Point p;
@@ -33,6 +34,36 @@ struct CachedTexture {
   std::vector<uint32_t> names;
 };
 std::unordered_map<uint32_t, std::vector<CachedTexture>> textures;
+// tex_scrl.c rotates exactly DG_TEX.h rows, leaving the last PCX row fixed.
+// Recover its phase only for an identified logical material and an exact
+// byte-for-byte permutation of the original. No wall clock or guessed image
+// similarity: the same proof also reconstructs phase after a savestate load.
+uint32_t originalTextureScroll(const CachedTexture &tex,
+                               std::span<const gpu::Color16> vram) {
+  if (tex.height < 2 || tex.height > 65535)
+    return 0;
+  const uint32_t period = tex.height - 1;
+  const auto sameRow = [&](uint32_t liveRow, uint32_t sourceRow) {
+    return !std::memcmp(vram.data() + (tex.py + liveRow) * 1024 + tex.px,
+                        tex.pixels.data() + sourceRow * tex.rowWords,
+                        tex.rowWords * sizeof(gpu::Color16));
+  };
+  if (!sameRow(period, period))
+    return 0;
+  for (uint32_t shift = 1; shift < period; ++shift) {
+    if (!sameRow(0, shift))
+      continue;
+    bool exact = true;
+    for (uint32_t row = 1; row < period; ++row)
+      if (!sameRow(row, (row + shift) % period)) {
+        exact = false;
+        break;
+      }
+    if (exact)
+      return (period << 16) | shift;
+  }
+  return 0;
+}
 struct Face {
   uint64_t sequence = 0;
   uint32_t assetModel = 0;
@@ -58,6 +89,7 @@ struct RecoveryFace {
   uint64_t sourceFace = 0;
   uint32_t nativePacket = 0;
   uint8_t bucket = 0;
+  bool visible = true;
   gpu::replay::DrawPacket draw;
 };
 struct RecoverySource {
@@ -66,6 +98,7 @@ struct RecoverySource {
   std::vector<RecoveryFace> faces;
 };
 std::array<RecoverySource, 2> recoverySources;
+std::array<uint64_t, 2> recoveredCaptures{};
 using Weights = std::array<float, 4>;
 struct SubdividedFace {
   uint32_t parent;
@@ -190,11 +223,130 @@ void applySourceGeometry(gpu::replay::DrawPacket &packet, const Face &face) {
   packet.state.depth.compare = gpu::replay::DepthCompare::Always;
   packet.state.depth.invalidateOnAccepted = packet.state.blend.enabled;
 }
+void prepareFullSourceMeshes(const SceneSnapshot &scene, const Memory &memory,
+                             RecoverySource &out) {
+  if (scene.bufferIndex > 1 || scene.projection <= 0 || scene.clip[2] <= 0 ||
+      scene.clip[3] <= 0 || !range(scene.channel, 100))
+    return;
+  const auto ptr = [&](uint32_t p) {
+    return memory.ramPtr() + (p & 0x1fffffffu);
+  };
+  const uint32_t table = u32(ptr(scene.channel + scene.bufferIndex * 4));
+  if (u16(ptr(scene.channel + 8)) != 8 || !table || !range(table, 257 * 4))
+    return;
+  out.capture = scene.sequence;
+  out.orderingTable = table & 0x1fffffffu;
+  uint32_t completeInstances = 0, visibleInstances = 0, visibleFaces = 0;
+  for (const auto &instance : scene.instances) {
+    if (!instance.visible)
+      continue;
+    ++visibleInstances;
+    if (instance.asset == ~0u) {
+      metrics::count("mgs.source.unmapped_instances");
+      continue;
+    }
+    const uint32_t total = instance.models.size();
+    const uint32_t first = cache->word(AssetCache::Assets, instance.asset, 9);
+    if (!total || instance.primaryModels > total)
+      continue;
+    std::vector<uint32_t> owners(total, ~0u), packets(total, 0);
+    bool valid = true;
+    for (uint32_t root = 0; root < instance.primaryModels && valid; ++root) {
+      uint32_t packet =
+          instance.models[root].originalPackets[scene.bufferIndex];
+      // Allocation can occur after the pre-bounds snapshot. This pointer is
+      // an optional material/order adapter, never a prerequisite for geometry.
+      packet = u32(
+          ptr(instance.models[root].guestAddress + 84 + scene.bufferIndex * 4));
+      for (uint32_t model = root; model != ~0u;) {
+        if (model >= total || owners[model] != ~0u) {
+          valid = false;
+          break;
+        }
+        owners[model] = root;
+        packets[model] = packet;
+        if (packet)
+          packet += cache->word(AssetCache::Models, first + model, 4) / 4 * 52;
+        const uint32_t next = cache->word(AssetCache::Models, first + model, 2);
+        model = next == ~0u ? ~0u : next - first;
+      }
+    }
+    if (!valid) {
+      metrics::count("mgs.source.invalid_ownership");
+      continue;
+    }
+    bool complete = true;
+    for (uint32_t model = 0; model < total; ++model) {
+      if (owners[model] == ~0u) {
+        complete = false;
+        continue;
+      }
+      const uint32_t begin = cache->word(AssetCache::Models, first + model, 3);
+      const uint32_t count =
+          cache->word(AssetCache::Models, first + model, 4) / 4;
+      const uint32_t owner = instance.models[owners[model]].guestAddress;
+      for (uint32_t f = 0; f < count; ++f) {
+        const uint64_t id = sourceFaceId(instance.guestAddress, begin + f * 4);
+        const auto source = sceneFaces[scene.bufferIndex].find(id);
+        if (source == sceneFaces[scene.bufferIndex].end()) {
+          complete = false;
+          metrics::count("mgs.source.missing_geometry");
+          continue;
+        }
+        const uint32_t packet = packets[model] ? packets[model] + f * 52 : 0;
+        auto material = sourceMeshMaterial(*cache, memory, scene, instance,
+                                           model, owners, f, packet);
+        if (!material) {
+          complete = false;
+          metrics::count("mgs.source.missing_material");
+          metrics::trace("mgs.source.material_missing",
+                         {{"instance", instance.guestAddress},
+                          {"asset", instance.asset},
+                          {"model", model},
+                          {"flags", instance.flags}});
+          continue;
+        }
+        RecoveryFace face;
+        face.sourceFace = id;
+        face.nativePacket = packet & 0x1fffffffu;
+        face.draw = std::move(*material);
+        const uint32_t texture = face.draw.originalMesh->textureId;
+        const bool runtimeTexture = face.draw.originalMesh->runtimeTexture;
+        applySourceGeometry(face.draw, source->second);
+        face.draw.originalMesh->textureId = texture;
+        face.draw.originalMesh->runtimeTexture = runtimeTexture;
+        face.draw.originalMesh->sourceTopology =
+            face.draw.originalMesh->sourceRecovery = true;
+        face.visible = sourceFaceVisible(source->second.view, scene,
+                                         instance.models[model].flags & 0x400u);
+        visibleFaces += face.visible;
+        const auto &eye = source->second.view;
+        const double depth = (std::clamp(eye[0][2], 0.0, 65535.0) +
+                              std::clamp(eye[3][2], 0.0, 65535.0)) *
+                             .5;
+        face.bucket =
+            uint16_t(int32_t(depth) - int16_t(u16(ptr(owner + 80)))) >> 8;
+        out.faces.push_back(std::move(face));
+      }
+    }
+    completeInstances += complete;
+  }
+  metrics::setState("mgs.source.complete_instances", completeInstances);
+  metrics::count("mgs.source.visible_instance_captures", visibleInstances);
+  metrics::count("mgs.source.complete_instance_captures", completeInstances);
+  metrics::setState("mgs.source.faces", out.faces.size());
+  metrics::setState("mgs.source.visible_faces", visibleFaces);
+  metrics::count("mgs.source.prepared_faces", out.faces.size());
+}
 void prepareRecoverySources(const SceneSnapshot &scene, const Memory &memory,
                             RecoverySource &out) {
   if (!recoveryEnabled || scene.bufferIndex > 1 || scene.projection <= 0 ||
       scene.clip[2] <= 0 || scene.clip[3] <= 0 || !range(scene.channel, 100))
     return;
+  if (sourceTopologyEnabled) {
+    prepareFullSourceMeshes(scene, memory, out);
+    return;
+  }
   const auto ptr = [&](uint32_t p) {
     return memory.ramPtr() + (p & 0x1fffffffu);
   };
@@ -687,6 +839,7 @@ void indexTextures() {
 } // namespace
 void resetMeshReplay() {
   divideBuffer = 2;
+  recoveredCaptures = {};
   vectorWeights.clear();
   for (auto &buffer : subdivided)
     buffer.clear();
@@ -703,6 +856,8 @@ void setMeshReplayCache(const AssetCache *value) {
   enabled = cache && mode && std::string_view(mode) == "1";
   const char *recovery = std::getenv("PS1_MGS_SCENE_RECOVERY");
   recoveryEnabled = enabled && (!recovery || std::string_view(recovery) != "0");
+  const char *topology = std::getenv("PS1_MGS_SOURCE_MESHES");
+  sourceTopologyEnabled = !topology || std::string_view(topology) != "0";
   resetMeshReplay();
   indexSourceVertices();
   indexTextures();
@@ -838,9 +993,11 @@ void prepareMeshReplay(recomp_context *ctx) {
         const uint32_t corners = cache->word(AssetCache::Models, global, 4);
         const uint32_t begin = cache->word(AssetCache::Models, global, 3);
         const uint32_t obj = instance.models[m].guestAddress;
-        if (!range(obj, 92) || u16(ptr(obj + 82)) != corners / 4 ||
-            (packet && !range(packet, uint64_t(corners / 4) * 52)))
+        if (!range(obj, 92))
           break;
+        const bool materialPackets = packet &&
+                                     u16(ptr(obj + 82)) == corners / 4 &&
+                                     range(packet, uint64_t(corners / 4) * 52);
         for (uint32_t f = 0; f < corners / 4;
              ++f, packet = packet ? packet + 52 : 0) {
           Face face{};
@@ -848,7 +1005,7 @@ void prepareMeshReplay(recomp_context *ctx) {
                                face))
             continue;
           sceneFaces[buffer].emplace(face.sourceFace, face);
-          if (!packet)
+          if (!materialPackets)
             continue;
           const auto *p = ptr(packet);
           if ((p[7] & 0xfcu) != 0x3cu)
@@ -929,6 +1086,7 @@ recoverSceneReplay(uint32_t listStart, std::span<const uint8_t> ram) {
     return {};
   metrics::count("mgs.scene.recovery_list_attempts");
   std::unordered_set<uint32_t> nodes;
+  std::vector<uint32_t> traversal;
   uint32_t address = listStart & 0x1fffffffu;
   bool complete = false;
   for (uint32_t n = 0; n < 65536; ++n) {
@@ -941,6 +1099,7 @@ recoverSceneReplay(uint32_t listStart, std::span<const uint8_t> ram) {
       metrics::count("mgs.scene.recovery_invalid_list");
       return {};
     }
+    traversal.push_back(address);
     address = tag & 0xffffffu;
     if (address == 0xffffffu) {
       complete = true;
@@ -988,6 +1147,60 @@ recoverSceneReplay(uint32_t listStart, std::span<const uint8_t> ram) {
   result->capture = source.capture;
   result->orderingTable = source.orderingTable;
   uint32_t recovered = 0;
+  if (sourceTopologyEnabled) {
+    // Paused Codec frames reuse the ordering table after its mesh nodes have
+    // been removed. Reinsert absent faces only for a new DG scene preparation;
+    // replaying the old snapshot would paint the world over the Codec.
+    const bool freshCapture = recoveredCaptures[selected] != source.capture;
+    recoveredCaptures[selected] = source.capture;
+    if (!freshCapture)
+      metrics::count("mgs.source.reused_scene_submissions");
+    std::unordered_map<uint64_t, std::vector<uint32_t>> nativeFaces;
+    std::unordered_set<uint64_t> changedFaces;
+    for (uint32_t node : traversal) {
+      const auto it = faces[selected].find(node);
+      if (it == faces[selected].end() || it->second.procedural)
+        continue;
+      const auto &face = it->second;
+      const auto *p = ram.data() + node;
+      bool same = (u32(p) >> 24) == 12 && p[7] == face.opcode &&
+                  u16(p + 14) == face.clut && u16(p + 26) == face.tpage;
+      for (unsigned k = 0; k < 4 && same; ++k)
+        same = (u32(p + 4 + k * 12) & 0xffffffu) == face.colors[k] &&
+               u16(p + 12 + k * 12) == face.uv[k] &&
+               int16_t(u16(p + 8 + k * 12)) == face.xy[k][0] &&
+               int16_t(u16(p + 10 + k * 12)) == face.xy[k][1];
+      if (!same)
+        changedFaces.insert(face.sourceFace);
+      nativeFaces[face.sourceFace].push_back(node);
+    }
+    for (const auto &face : source.faces) {
+      if (changedFaces.contains(face.sourceFace)) {
+        metrics::count("mgs.source.changed_packet_faces");
+        continue;
+      }
+      const auto native = nativeFaces.find(face.sourceFace);
+      if (native == nativeFaces.end()) {
+        if (face.nativePacket && nodes.contains(face.nativePacket)) {
+          metrics::count("mgs.source.unknown_packet_faces");
+          continue;
+        }
+        if (freshCapture && face.visible) {
+          result->buckets[face.bucket].push_back(face.draw);
+          ++recovered;
+        }
+        continue;
+      }
+      const uint32_t index = result->meshes.size();
+      result->meshes.push_back({face.draw, face.visible});
+      for (uint32_t node : native->second)
+        result->meshNodes.emplace(node, index);
+    }
+    metrics::setState("mgs.source.native_faces", result->meshes.size());
+    metrics::setState("mgs.source.native_children", result->meshNodes.size());
+    metrics::setState("mgs.source.absent_faces", recovered);
+    return !result->meshes.empty() || recovered ? std::move(result) : nullptr;
+  }
   for (const auto &face : source.faces) {
     if (represented.contains(face.sourceFace) ||
         (face.nativePacket && nodes.contains(face.nativePacket))) {
@@ -1005,13 +1218,18 @@ bool bindRecoveredSceneDraw(gpu::replay::DrawPacket &packet,
                             const gpu::replay::BakedDrawState &environment,
                             std::span<const gpu::Color16> vram) {
   if (!packet.originalMesh || environment.texturePage.textureDisable ||
-      environment.mask.checkMaskBit || environment.mask.forceMaskBit ||
-      environment.textureWindow.raw || environment.textureWindow.maskX ||
-      environment.textureWindow.maskY || environment.depth.epoch == 0)
+      environment.depth.epoch == 0)
+    return false;
+  if (!packet.originalMesh->sourceTopology &&
+      (environment.mask.checkMaskBit || environment.mask.forceMaskBit ||
+       environment.textureWindow.raw || environment.textureWindow.maskX ||
+       environment.textureWindow.maskY))
     return false;
   auto &state = packet.state;
   state.drawArea = environment.drawArea;
   state.drawOffset = environment.drawOffset;
+  state.mask = environment.mask;
+  state.textureWindow = environment.textureWindow;
   state.dither = environment.dither;
   state.drawToDisplayArea = environment.drawToDisplayArea;
   state.texturePage.raw = (state.texturePage.raw & ~0x600u) |
@@ -1021,8 +1239,12 @@ bool bindRecoveredSceneDraw(gpu::replay::DrawPacket &packet,
   // default mode here disagrees with raw tpage and rejects the entire frame
   // when a recovered face uses one of MGS's nonzero-ABR material pages.
   state.blend.mode = gpu::replay::BlendMode((state.texturePage.raw >> 5) & 3);
-  state.depth = {false, true, gpu::replay::DepthCompare::Always,
-                 environment.depth.epoch, false};
+  const bool opaque = !state.blend.enabled;
+  const bool depthTest = packet.originalMesh->sourceTopology && opaque;
+  state.depth = {depthTest, opaque,
+                 depthTest ? gpu::replay::DepthCompare::LessOrEqual
+                           : gpu::replay::DepthCompare::Always,
+                 environment.depth.epoch, !opaque};
   state.textureUvDomain.enabled = true;
   double minU = 255, maxU = 0, minV = 255, maxV = 0;
   for (auto &v : packet.vertices) {
@@ -1044,6 +1266,11 @@ bool bindRecoveredSceneDraw(gpu::replay::DrawPacket &packet,
   packet.originalMesh->projection[1] = state.drawOffset.x;
   packet.originalMesh->projection[2] = state.drawOffset.y;
   bindOriginalTexture(packet, vram);
+  if (!packet.originalTexture && packet.originalMesh->sourceTopology &&
+      packet.originalMesh->runtimeTexture && vram.size() == 1024u * 512u) {
+    metrics::count("mgs.source.runtime_surface_material_draws");
+    return true;
+  }
   return packet.originalTexture.has_value();
 }
 void adaptMeshReplayPacket(gpu::replay::DrawPacket &packet) {
@@ -1135,8 +1362,6 @@ void bindOriginalTexture(gpu::replay::DrawPacket &packet,
     const bool samePalette =
         !std::memcmp(vram.data() + tex.cy * 1024 + tex.cx, tex.palette.data(),
                      tex.palette.size() * sizeof(gpu::Color16));
-    if (!samePalette && (depth != 0 || tex.palette.size() != 16))
-      continue;
     bool matches = true, borrowed = false;
     const auto codecScratch = [](uint32_t x, uint32_t y) {
       return (x >= 768 && x < 1024 && y >= 256 && y < 260) ||
@@ -1172,20 +1397,31 @@ void bindOriginalTexture(gpu::replay::DrawPacket &packet,
         borrowed = true;
       }
     }
-    if (!matches || (borrowed && !intact))
+    uint32_t scroll = 0;
+    if (!matches && logicalMaterial)
+      scroll = originalTextureScroll(tex, vram);
+    if ((!matches && !scroll) || (borrowed && !intact && !scroll))
       continue;
+    if (scroll)
+      borrowed = false;
     gpu::replay::OriginalTexture binding;
     binding.data = {cache->section(AssetCache::Indices).offset +
                         cache->word(AssetCache::Textures, tex.index, 2),
                     cache->section(AssetCache::Palettes).offset +
                         4 * cache->word(AssetCache::Textures, tex.index, 4),
                     tex.width, tex.height};
-    binding.origin = {origin[0], origin[1], 1, 0};
+    binding.origin = {origin[0], origin[1], 1, int32_t(scroll)};
+    if (scroll)
+      metrics::count("mgs.texture.source_scroll_packets");
     if (!samePalette) {
-      binding.origin[2] = 2;
-      for (uint32_t c = 0; c < 16; ++c)
-        binding.palette[c / 2] |= uint32_t(vram[tex.cy * 1024 + tex.cx + c].raw)
-                                  << ((c & 1) * 16);
+      // The recorder already synchronizes the current CLUT before this draw.
+      // Larger palettes use that immutable submission dependency; their PCX
+      // index stream remains in the original asset buffer.
+      binding.origin[2] = depth ? 3 : 2;
+      if (!depth)
+        for (uint32_t c = 0; c < 16; ++c)
+          binding.palette[c / 2] |=
+              uint32_t(vram[tex.cy * 1024 + tex.cx + c].raw) << ((c & 1) * 16);
     }
     if (borrowed) {
       if (recoveredSource && (recoveredSource->pixels != tex.pixels ||
@@ -1212,6 +1448,8 @@ void bindOriginalTexture(gpu::replay::DrawPacket &packet,
     packet.originalTexture = *dynamicPalette;
     metrics::count("mgs.texture.cached_packets");
     metrics::count("mgs.texture.dynamic_palette_packets");
+    if (dynamicPalette->origin[2] == 3)
+      metrics::count("mgs.texture.dynamic_palette_8bit_packets");
     return;
   }
   if (recovered && !recoveryAmbiguous) {

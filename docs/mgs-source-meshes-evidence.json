@@ -1,0 +1,349 @@
+{
+  "schema": "mgs-source-meshes-evidence/v1",
+  "date": "2026-09-15",
+  "branch": "presentation/source-meshes",
+  "base_commit": "fc6fdc5f3e20682bdd9adc96a5490450511bda19",
+  "binary": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "sha256": "52d810989bfb6eb0e406f29e737e304b983b4f4198fda000ddb2b5611dc690b8"
+  },
+  "implementation_sha256": {
+    "engine/ps1Runtime/CMakeLists.txt": "a66b021f7cc0d4765c084aca3e4dc6a50638581a10fb2c6feaeb08e6e7f19ac9",
+    "engine/ps1Runtime/include/runtime/games/mgs_mesh_replay.h": "c73c02ecf85003e7d6acf576590eb2e9fbe12b3bc0c75807381629c0eee7f195",
+    "engine/ps1Runtime/include/runtime/games/mgs_scene.h": "4a6a7ea185a25c7a379260287f3ec8fcff29dca12c65c2ad271dc779ad01a258",
+    "engine/ps1Runtime/include/runtime/gpu/gpu.h": "f68dfe8aa787f845b1bf99184499e434dc51fe68bec348def34697e1aa53f529",
+    "engine/ps1Runtime/include/runtime/gpu/modern_replay.h": "8385a239da27c9bc51a51dc6757bc800a8b07aee2e18a4e83ce6734730acab00",
+    "engine/ps1Runtime/include/runtime/gpu/modern_replay_execution_plan.h": "05b0f70c37f62485d7b8e5721ab4681a15170f3c697afb1e162f07073360f3e1",
+    "engine/ps1Runtime/include/runtime/gpu/modern_replay_vulkan_bake.h": "2c4b96f9cff96012787a5b5133bd0c64fc0f1e6280fb08e57b12fc8ca1cd7a0a",
+    "engine/ps1Runtime/shaders/games/mgs_original_texture.glsl": "be90fe269d4144f96997bdb5fd5d593d53a55290bec76c3938a774150b1cda12",
+    "engine/ps1Runtime/src/games/mgs_mesh_replay.cpp": "4e81409beeba913b7ffcafa51e2f478ee344db45e09f740385bc47dede1cf650",
+    "engine/ps1Runtime/src/games/mgs_pose.cpp": "8fd55a1fca36f8078c999b19d7b7711fadca7166ec09741da43816fd81b4604e",
+    "engine/ps1Runtime/src/games/mgs_scene.cpp": "2cc335dc26c8deb0b11089b852b91d19cd8de208decbedfe821cc3d39d02c6e7",
+    "engine/ps1Runtime/src/games/mgs_source_material.cpp": "e1c13f21107fe8c363d374b829c849552afcb7da9a23a906770da92912c9209f",
+    "engine/ps1Runtime/src/gpu/gpu.cpp": "3cba7f156e26f14ecf23f1895085a984f9be077ec91bb7fe00cfc2de16dc110d",
+    "engine/ps1Runtime/src/gpu/modern_replay_execution_plan.cpp": "58293a90d284171ece643de2ac4d9530873097859ac48927c5c39afedc6951a6",
+    "engine/ps1Runtime/src/gpu/modern_replay_recorder.cpp": "548983d845db5544ce8e8d69929b7da4d1b6c52024aefc717e61c861713fcc37",
+    "engine/ps1Runtime/src/gpu/modern_replay_vulkan_bake.cpp": "7815146f014f3e16f44b81bf5da852c06b0fdd9f1159458695fd39de3f7cf15b",
+    "engine/ps1Runtime/src/gpu/renderer_vulkan.cpp": "547b242fcbf178679a0e950854d7dfe6522f065ac93362d8ee330be60195d398",
+    "engine/ps1Runtime/src/psyq/psyq_hle.cpp": "4b8662096970ff1b2a275cf9b3dd52bf984d1c855efccf49a17e29309ae903ba",
+    "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp": "95e8bfa167ddb127ec1a01fc9958cf0f2bbbdb00db5ce13faf44a5fb8f917f81",
+    "engine/ps1Test/runtime/test_mgs_asset_cache.cpp": "c46f1d236d5b4e18100250d48bb83f249cc9bfad574a2c59222d86298a6db58e",
+    "engine/ps1Test/runtime/test_mgs_pose.cpp": "ea53d6545e0a97bd6a15d7cc9b7da782c8d398a87c512a5e2db513aeea355ec3"
+  },
+  "tests": {
+    "passed": 264,
+    "suites": 18,
+    "vulkan": true,
+    "original_usa_cache": true,
+    "usa_instruction_oracle": true,
+    "log": ".local/source-final-tests.log",
+    "log_sha256": "20c88cd3ed6b7a6ab476579df6812b1312993c1b46d868606a2954b8125c8fc1"
+  },
+  "gameplay": {
+    "directory": "data/native/source-release-gameplay",
+    "vblanks": 1400,
+    "cadence": "normal NTSC",
+    "state_load": "savestates/quick_slot_0.ps1s, F9 at first VBlank; no save",
+    "input_script": {
+      "path": "scripts/fixtures/mgs-dock-cache.input",
+      "sha256": "63eac9d76469576ba372fc87cad44e3c0df25143c85679ac8ba5b6a3455324d5"
+    },
+    "metrics": {
+      "path": "data/native/source-release-gameplay/metrics.json",
+      "sha256": "8ce13f8bd2917a9e2baa70ce81aa1ccb53b70dbbac62271789b874d88defd0b0"
+    },
+    "log": {
+      "path": "data/native/source-release-gameplay/runtime.log",
+      "sha256": "95ba25e09af33af976778d6b11ac4ffdbc367ebc9d8a495221aba0cb69407ee5"
+    },
+    "source_counters": {
+      "mgs.pose.articulated_instances": 1108,
+      "mgs.pose.articulated_models": 17728,
+      "mgs.pose.inherited_roots": 831,
+      "mgs.scene.captures": 277,
+      "mgs.scene.recovered_draws": 18279,
+      "mgs.scene.recovery_gpu_submitted": 125248,
+      "mgs.scene.recovery_list_attempts": 666,
+      "mgs.source.complete_instance_captures": 6094,
+      "mgs.source.culled_faces": 44387,
+      "mgs.source.full_face_draws": 107711,
+      "mgs.source.gpu_full_faces": 125248,
+      "mgs.source.gpu_original_format_packets": 125248,
+      "mgs.source.native_children_suppressed": 161261,
+      "mgs.source.prepared_faces": 751906,
+      "mgs.source.reused_scene_submissions": 392,
+      "mgs.source.shaded_faces": 283222,
+      "mgs.source.visible_instance_captures": 6094,
+      "mgs.texture.cached_packets": 190540,
+      "mgs.texture.codec_borrow_recovered_packets": 10156,
+      "mgs.texture.gpu_submitted_packets": 145320,
+      "mgs.texture.seen_packets": 217630
+    },
+    "final_scene": {
+      "mgs.pose.articulated_instances": 4,
+      "mgs.pose.articulated_models": 64,
+      "mgs.pose.inherited_roots": 3,
+      "mgs.pose.invalid_inputs": 0,
+      "mgs.scene.instances": 27,
+      "mgs.scene.matched_instances": 27,
+      "mgs.scene.models": 295,
+      "mgs.scene.source_geometry_faces": 2785,
+      "mgs.scene.visible_instances": 22,
+      "mgs.source.absent_faces": 100,
+      "mgs.source.complete_instances": 22,
+      "mgs.source.faces": 2698,
+      "mgs.source.native_children": 836,
+      "mgs.source.native_faces": 813,
+      "mgs.source.original_format_models": 6695,
+      "mgs.source.visible_faces": 747
+    },
+    "guard_counts": {
+      "mgs.source.unmapped_instances": 0,
+      "mgs.source.invalid_ownership": 0,
+      "mgs.source.missing_geometry": 0,
+      "mgs.source.missing_material": 0,
+      "mgs.source.changed_packet_faces": 0,
+      "mgs.source.unknown_packet_faces": 0,
+      "mgs.source.material_bind_rejected": 0,
+      "mgs.scene.recovery_material_rejected": 0,
+      "mgs.scene.recovery_invalid_list": 0
+    },
+    "downgrade_counts": {},
+    "reanchors": 2,
+    "captures": [
+      {
+        "frame": 97200,
+        "path": "data/native/source-release-gameplay/gpu/frame-97200-present-1-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "b25617755e47d4e0f247025da33f078fcc6ff2dba9cd927510ad98c2cf1ffba8"
+      },
+      {
+        "frame": 97500,
+        "path": "data/native/source-release-gameplay/gpu/frame-97500-present-2-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "a007352a030655d93a300623763f94c43a2a40e8c594361b401560a6d10c6841"
+      },
+      {
+        "frame": 97800,
+        "path": "data/native/source-release-gameplay/gpu/frame-97800-present-3-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "079c6c14ba351ac6815fc5d43af02ba0e7d6113b8464ec2b77dd59287b1e88b9"
+      },
+      {
+        "frame": 98100,
+        "path": "data/native/source-release-gameplay/gpu/frame-98100-present-4-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "15642b2562378bf855a8d58f59852e945a70b96f755460e838a3e0c027099571"
+      },
+      {
+        "frame": 98400,
+        "path": "data/native/source-release-gameplay/gpu/frame-98400-present-5-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "f1f06476c17372c203c9c7d41d970dfc04a7905d18edca35f2e119a4b0e49234"
+      }
+    ],
+    "contact_sheet": "data/native/source-release-gameplay/contact.png",
+    "exit_code": 0
+  },
+  "intro": {
+    "directory": "data/native/source-release-intro",
+    "vblanks": 15600,
+    "cadence": "PS1_VBLANK_PERIOD_US=1000; coverage, not an FPS benchmark",
+    "state_load": null,
+    "input_script": {
+      "path": "data/native/intro-modern-final/input.txt",
+      "sha256": "fe04cf9ecec09980b3948e19dd06bd6873f3c4646fee8211d492226115354e88"
+    },
+    "metrics": {
+      "path": "data/native/source-release-intro/metrics.json",
+      "sha256": "6d6197e05f8098d8b537220d72356470d820e52d5777897124f775389e0ed6b5"
+    },
+    "log": {
+      "path": "data/native/source-release-intro/runtime.log",
+      "sha256": "b13505aa0889390a53f0e7d71d893846b25cc148bcce7ac76da81e05f064084e"
+    },
+    "source_counters": {
+      "mgs.pose.articulated_instances": 91692,
+      "mgs.pose.articulated_models": 659996,
+      "mgs.scene.captures": 7806,
+      "mgs.scene.recovered_draws": 178429,
+      "mgs.scene.recovery_gpu_submitted": 1669714,
+      "mgs.scene.recovery_list_attempts": 7045,
+      "mgs.source.complete_instance_captures": 32629,
+      "mgs.source.culled_faces": 770918,
+      "mgs.source.full_face_draws": 1491285,
+      "mgs.source.gpu_full_faces": 1669714,
+      "mgs.source.gpu_original_format_packets": 1669714,
+      "mgs.source.native_children_suppressed": 2639292,
+      "mgs.source.prepared_faces": 7048478,
+      "mgs.source.runtime_surface_material_draws": 802,
+      "mgs.source.shaded_faces": 5656944,
+      "mgs.source.visible_instance_captures": 32629,
+      "mgs.texture.cached_packets": 2667886,
+      "mgs.texture.dynamic_palette_8bit_packets": 164,
+      "mgs.texture.dynamic_palette_packets": 279933,
+      "mgs.texture.gpu_submitted_packets": 1896968,
+      "mgs.texture.seen_packets": 3475297,
+      "mgs.texture.source_scroll_packets": 165017
+    },
+    "final_scene": {
+      "mgs.pose.articulated_instances": 0,
+      "mgs.pose.articulated_models": 0,
+      "mgs.pose.inherited_roots": 0,
+      "mgs.pose.invalid_inputs": 0,
+      "mgs.scene.instances": 1,
+      "mgs.scene.matched_instances": 1,
+      "mgs.scene.models": 1,
+      "mgs.scene.source_geometry_faces": 1,
+      "mgs.scene.visible_instances": 1,
+      "mgs.source.absent_faces": 0,
+      "mgs.source.complete_instances": 1,
+      "mgs.source.faces": 1,
+      "mgs.source.native_children": 0,
+      "mgs.source.native_faces": 0,
+      "mgs.source.original_format_models": 6695,
+      "mgs.source.visible_faces": 0
+    },
+    "guard_counts": {
+      "mgs.source.unmapped_instances": 0,
+      "mgs.source.invalid_ownership": 0,
+      "mgs.source.missing_geometry": 0,
+      "mgs.source.missing_material": 0,
+      "mgs.source.changed_packet_faces": 0,
+      "mgs.source.unknown_packet_faces": 0,
+      "mgs.source.material_bind_rejected": 0,
+      "mgs.scene.recovery_material_rejected": 0,
+      "mgs.scene.recovery_invalid_list": 0
+    },
+    "downgrade_counts": {},
+    "reanchors": 1,
+    "captures": [
+      {
+        "frame": 1200,
+        "path": "data/native/source-release-intro/gpu/frame-1200-present-1-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "2d02539a60a0d952d92b30e455ac5aeb2ab13510993224e7c94cdd4e29fbb581"
+      },
+      {
+        "frame": 2400,
+        "path": "data/native/source-release-intro/gpu/frame-2400-present-2-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "e50b39f22dc99f4c8d70363a4aa2d3f61a0bb8eb35085e51c1064476256e1b3a"
+      },
+      {
+        "frame": 3600,
+        "path": "data/native/source-release-intro/gpu/frame-3600-present-3-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "92133d3b91e685c7e8c12e399aed1336e5777da97ef17c8c943a940b10c20199"
+      },
+      {
+        "frame": 4800,
+        "path": "data/native/source-release-intro/gpu/frame-4800-present-4-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "63619dd657890374aea57e730424ab8be18b5f85918c84635e9a8c12be81de60"
+      },
+      {
+        "frame": 6000,
+        "path": "data/native/source-release-intro/gpu/frame-6000-present-5-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "823fe600d5cec181f204cea28d027c4cb1359be0b2330ea1ed2f29ffb7e6abfa"
+      },
+      {
+        "frame": 7200,
+        "path": "data/native/source-release-intro/gpu/frame-7200-present-6-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "dfcb1188f23a5c0796d8b25e064f2f7f5157fdb0550b36ff976bef960436ee9f"
+      },
+      {
+        "frame": 8400,
+        "path": "data/native/source-release-intro/gpu/frame-8400-present-7-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "303c6212b9ac183f5e6d88a049d028f7dee9fc65cb360d709754708a925c88c8"
+      },
+      {
+        "frame": 9600,
+        "path": "data/native/source-release-intro/gpu/frame-9600-present-8-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "de269982ccc232f08d38eae46bb9371628896ea8b6178ea7e7f884f531bcda4e"
+      },
+      {
+        "frame": 10800,
+        "path": "data/native/source-release-intro/gpu/frame-10800-present-9-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "ef5ebe5f92162373ce0f86a1d453626ed42c6171d78b59fbad400cdca767b710"
+      },
+      {
+        "frame": 12000,
+        "path": "data/native/source-release-intro/gpu/frame-12000-present-10-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "9e81487a9f3dc6647c021d541d51e1a5acbf6cc7b00eb6c92ce349f1ada14c44"
+      },
+      {
+        "frame": 13200,
+        "path": "data/native/source-release-intro/gpu/frame-13200-present-11-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "87ce17c83d82fcb4b487de3f91fbbee938fde64af6afe67e4c1293841a651393"
+      },
+      {
+        "frame": 14400,
+        "path": "data/native/source-release-intro/gpu/frame-14400-present-12-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "cbe2be1a35c98a70bc5377362bd3ddba77a06e29a22975082eb30ca3da7010ce"
+      },
+      {
+        "frame": 15600,
+        "path": "data/native/source-release-intro/gpu/frame-15600-present-13-ordinary-scanout.ppm",
+        "width": 3840,
+        "height": 2160,
+        "sha256": "b5abdde084e9689a37daa69440090d2d7f4d877b33e7f3fd0573a7e2d5d480df"
+      }
+    ],
+    "contact_sheet": "data/native/source-release-intro/contact.png",
+    "exit_code": 0
+  },
+  "protected_files": {
+    "savestates/quick_slot_0.ps1s": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+    "data/assets/usa/disc1/SLUS_005.94": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32",
+    "data/presentation/usa-source/assets.mgsc": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+  },
+  "references": {
+    "foxdie_commit": "217509eae471629b1a53633b816c61adfef9ed5c",
+    "inspected_sources": [
+      "source/libdg/screen.c",
+      "source/libdg/trans.c",
+      "source/libdg/opack.c",
+      "source/libdg/shade.c",
+      "source/libdg/loader.c",
+      "source/libdg/bound.c",
+      "source/takabe/tex_scrl.c",
+      "source/takabe/optxtscn.c"
+    ]
+  },
+  "limits": [
+    "GPU face counts are draw occurrences across submissions, not unique assets or a pixel coverage percentage.",
+    "The final scene is one snapshot; complete_instance_captures checks every prepared visible instance in the run.",
+    "Readbacks marked captured-without-oracle are visual evidence, not a new pixel-equality comparison to SwanStation.",
+    "Palette tests compare GPU output with expected colors; the native VRAM isolation test compares complete native buffers.",
+    "Intro and dock do not certify every game overlay or active thermal/environment material.",
+    "OAR decode/timing, root/camera inputs and some special material operands remain native game outputs.",
+    "Original bitmap detail, native transparent composition, LOD selection and missing 2x interpolation are not upgraded here.",
+    "No user state, original executable, disc image or asset cache was modified."
+  ]
+}

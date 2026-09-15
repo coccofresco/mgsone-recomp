@@ -52,7 +52,11 @@ bool donorDepthStateMatches(const DrawPacket &packet,
     return isPainterOrderedDepthState(depth);
   }
 
-  if (policy.trueDepthMode == ReplayDepthMode::Hybrid)
+  // A full source mesh owns its topology and opaque visibility. It uses the
+  // modern depth test even while native effects retain Hybrid composition.
+  const bool sourceTopology =
+      packet.originalMesh && packet.originalMesh->sourceTopology;
+  if (policy.trueDepthMode == ReplayDepthMode::Hybrid && !sourceTopology)
     return isPainterWriteDepthState(depth);
   return depth.testEnabled && depth.writeEnabled &&
          depth.compare == DepthCompare::LessOrEqual &&

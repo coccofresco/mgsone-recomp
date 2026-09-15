@@ -294,6 +294,8 @@ void captureSceneBeforeBounds(recomp_context *ctx) {
   snap->vblank = psyq::psyq_state().vsyncCounter.load();
   snap->channel = channel; snap->bufferIndex = ctx->r5;
   snap->view = matrix(m, channel + 16);
+  for (unsigned k = 0; k < 3; ++k)
+    snap->ambient[k] = int32_t(ctx->cop2c[13 + k]) / 16.0f;
   snap->projection = int16_t(u16(c + 80));
   snap->widescreen = widescreen16x9();
   snap->currentGroup = u32(ram(m, 0x800AE0E0));

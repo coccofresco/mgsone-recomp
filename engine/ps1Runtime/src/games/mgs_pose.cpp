@@ -83,8 +83,7 @@ reconstructScenePose(const Memory &memory, SceneInstance &instance,
   if (!single && !rots && !movs)
     return result; // DG_ScreenModels can consume precomposed scratchpad data.
   if (!single &&
-      (primaryModels > 24 ||
-       !range(rots ? rots : movs, uint64_t(primaryModels) * 8) ||
+      (!range(rots ? rots : movs, uint64_t(primaryModels) * 8) ||
        (rots && adjust && !range(adjust, uint64_t(primaryModels) * 8)) ||
        (rots && waist && !range(waist, 8))))
     return invalid();

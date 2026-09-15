@@ -292,6 +292,7 @@ void GPU::configureReplay(ReplayConfig config) {
   replayDepthHasMean_ = false;
   replayDepthLastMean_ = 0.0;
   replayDepthEpoch_ = 1;
+  replaySourceMeshCommand_ = UINT32_MAX;
   if (replayRecorder_.enabled())
     replayRecorder_.recordSurfaceSeed(replayNativeVram(), replayDepthEpoch_);
 }
@@ -537,6 +538,7 @@ GPU::GuestState GPU::guestState() const {
 
 void GPU::loadGuestState(const GuestState &state) {
   std::lock_guard<std::recursive_mutex> timelineLock(gpuTimelineMutex_);
+  replaySourceMeshCommand_ = UINT32_MAX;
   ++mutationSerial_;
   gpuStat_ = state.gpuStat;
   gpuRead_ = state.gpuRead;
@@ -1746,6 +1748,7 @@ void GPU::writeGP1(uint32_t val) {
 
 std::function<void(uint32_t)> GPU::observePresentationList(uint32_t start,
                                                            const uint8_t *ram) {
+  replaySourceMeshCommand_ = UINT32_MAX;
   if (!replayRecorder_.enabled())
     return {};
   games::mgs::captureWaterEffects({ram, ps1::Memory::RAM_SIZE});
@@ -1755,21 +1758,65 @@ std::function<void(uint32_t)> GPU::observePresentationList(uint32_t start,
     return {};
   return
       [this, sceneRecovery = std::move(sceneRecovery)](uint32_t currentAddr) {
-        if (sceneRecovery && currentAddr > sceneRecovery->orderingTable &&
-            currentAddr <= sceneRecovery->orderingTable + 256 * 4) {
-          const uint32_t slot =
-              (currentAddr - sceneRecovery->orderingTable) / 4 - 1;
+        replaySourceMeshCommand_ = UINT32_MAX;
+        if (sceneRecovery) {
           replay::BakedDrawState environment;
           environment.drawArea = {drawAreaX1_, drawAreaY1_, drawAreaX2_,
                                   drawAreaY2_};
           environment.drawOffset = {drawOffsetX_, drawOffsetY_};
           environment.texturePage.textureDisable = textureDisable_;
-          environment.textureWindow.maskX = texWindowMaskX_;
-          environment.textureWindow.maskY = texWindowMaskY_;
+          environment.textureWindow = {
+              uint32_t((texWindowMaskX_ / 8u) | ((texWindowMaskY_ / 8u) << 5) |
+                       ((texWindowOffsetX_ / 8u) << 10) |
+                       ((texWindowOffsetY_ / 8u) << 15)),
+              texWindowMaskX_, texWindowMaskY_, texWindowOffsetX_,
+              texWindowOffsetY_};
           environment.mask = {setMaskWhileDrawing_, checkMaskBeforeDraw_};
           environment.depth.epoch = replayDepthEpoch_;
           environment.dither = ditherEnable_;
           environment.drawToDisplayArea = (gpuStat_ & (1u << 10)) != 0;
+          const auto meshNode = sceneRecovery->meshNodes.find(currentAddr);
+          if (meshNode != sceneRecovery->meshNodes.end()) {
+            auto &mesh = sceneRecovery->meshes[meshNode->second];
+            if (!mesh.attempted) {
+              mesh.attempted = true;
+              auto draw = mesh.draw;
+              // Complete material binding succeeds before suppressing any
+              // native child. A failed binding retains the existing adapter.
+              mesh.accepted = games::mgs::bindRecoveredSceneDraw(
+                  draw, environment, replayNativeVram());
+              if (mesh.accepted && mesh.visible) {
+                draw.submissionId = activeSubmissionId_;
+                replayRecorder_.recordPresentationDraw(std::move(draw),
+                                                       replayNativeVram());
+                ps1::metrics::count("mgs.source.full_face_draws");
+              } else if (!mesh.accepted) {
+                ps1::metrics::count("mgs.source.material_bind_rejected");
+                ps1::metrics::trace(
+                    "mgs.source.bind_rejected",
+                    {{"packet", currentAddr},
+                     {"texture_disabled",
+                      environment.texturePage.textureDisable},
+                     {"mask_check", environment.mask.checkMaskBit},
+                     {"mask_force", environment.mask.forceMaskBit},
+                     {"window_x", environment.textureWindow.maskX},
+                     {"window_y", environment.textureWindow.maskY},
+                     {"texture", mesh.draw.originalMesh->textureId},
+                     {"page", mesh.draw.state.texturePage.raw},
+                     {"clut", mesh.draw.state.clut.raw}});
+              } else {
+                ps1::metrics::count("mgs.source.culled_faces");
+              }
+            }
+            if (mesh.accepted)
+              replaySourceMeshCommand_ = currentAddr + 4;
+            return;
+          }
+          if (currentAddr <= sceneRecovery->orderingTable ||
+              currentAddr > sceneRecovery->orderingTable + 256 * 4)
+            return;
+          const uint32_t slot =
+              (currentAddr - sceneRecovery->orderingTable) / 4 - 1;
           for (auto draw : sceneRecovery->buckets[slot]) {
             if (!games::mgs::bindRecoveredSceneDraw(draw, environment,
                                                     replayNativeVram())) {
@@ -1821,9 +1868,9 @@ void GPU::processLinkedList(uint32_t startAddr, const uint8_t *ram,
     if (numWords == 0) {
       orderingTableAnchorAddress = currentAddr;
       orderingTableAnchorExact = true;
-      if (observeList)
-        observeList(currentAddr);
     }
+    if (observeList)
+      observeList(currentAddr);
 
     if (ps1::metrics::gpuWordTraceEnabled()) {
       ps1::metrics::trace(
@@ -3147,6 +3194,15 @@ bool GPU::capturePolygonPacket(const Vertex *vertices,
       vertexCount < 3 || vertexCount > 4 ||
       activeReplayPacketSequence_ == replay::UNASSIGNED_PACKET_SEQUENCE)
     return false;
+
+  if (!commandSourceQueue_.empty() &&
+      (commandSourceQueue_.front() & 0x1fffffffu) == replaySourceMeshCommand_ &&
+      replaySourceMeshCommand_ != UINT32_MAX && vertexCount == 4) {
+    replaySourceMeshCommand_ = UINT32_MAX;
+    replayRecorder_.recordNoOp(uint8_t(commandQueue_.front() >> 24));
+    ps1::metrics::count("mgs.source.native_children_suppressed");
+    return true; // The software executor still draws and updates native VRAM.
+  }
 
   // Textured polygon executors latch their embedded tpage before capture, so
   // this is already the GP1(09)-gated, packet-effective state.

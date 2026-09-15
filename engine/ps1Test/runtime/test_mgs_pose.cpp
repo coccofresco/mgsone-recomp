@@ -262,3 +262,17 @@ TEST_F(MgsPoseTest,
                  std::to_string(maximumTranslation));
 }
 } // namespace
+
+TEST_F(MgsPoseTest, PresentationSkeletonIsNotLimitedToPsxScratchpadCapacity) {
+  setup(32);
+  for (unsigned j = 1; j < 32; ++j)
+    memory.write32(definition + 32 + j * 88 + 32, 100);
+  const std::vector<uint8_t> before(memory.ramPtr(),
+                                    memory.ramPtr() + Memory::RAM_SIZE);
+  const auto pose = reconstructScenePose(memory, instance, 32);
+  ASSERT_FALSE(pose.invalidInput);
+  EXPECT_EQ(pose.models, 32u);
+  EXPECT_EQ(pose.source, ScenePoseSource::Rotations);
+  EXPECT_FLOAT_EQ(instance.models.back().presentationWorld[12], 3100.f);
+  EXPECT_EQ(std::memcmp(before.data(), memory.ramPtr(), before.size()), 0);
+}
