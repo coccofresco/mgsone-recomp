@@ -38,6 +38,14 @@ void captureScreenEffects(std::span<const uint8_t> ram) {
            uint32_t(ram[p + 2]) << 16 | uint32_t(ram[p + 3]) << 24;
   };
   using Kind = r::MgsScreenEffectKind;
+  // USA gvd.c Act (0x80014c30): GV_Time is gp+76, gp=0x800ad9fc.
+  // Capture guest time, never presentation/submission IDs or a host clock.
+  // Paused sensors use a deterministic stationary pattern. Restoring a state
+  // restores the phase too, without maintaining a second host-side timeline.
+  const float sensorFrame =
+      valid(0x800ada48, 4) && valid(0x800ae0a0, 4) && word(0x800ae0a0) == 0
+          ? float(word(0x800ada48) & 0xffffu)
+          : 0.f;
   // USA ActorList, verified from GV_InitActorSystem and live intro RAM.
   // Each level has start/end GV_ACT sentinels plus two i16 level masks.
   for (uint32_t level = 0; level < 9; ++level) {
@@ -59,6 +67,7 @@ void captureScreenEffects(std::span<const uint8_t> ram) {
       const auto add = [&](uint32_t p, uint32_t stride, uint32_t count,
                            uint32_t firstPart, r::MgsScreenEffect effect) {
         effect.actor = actor & 0x1fffffff;
+        effect.parameters[2][3] = sensorFrame;
         ranges.push_back({p & 0x1fffffff, stride, count, firstPart, effect});
       };
       if (level == 2 && named("scn_mask.c") && valid(actor, 44)) {
@@ -288,8 +297,17 @@ std::optional<ScreenRead> screenRead(const r::VulkanReplayBakedDraw &draw,
     minY = std::min(minY, v.positionNative[1]);
     maxY = std::max(maxY, v.positionNative[1]);
   }
-  if (minU < 0 || minV < 0 || maxU > 256 || maxV > 256 || minX < 0 ||
-      minY < 0 || maxX > 640 || maxY > 224 || maxX <= minX || maxY <= minY)
+  if (minU < 0 || minV < 0 || maxU > 256 || maxV > 256)
+    return {};
+  // A screen-read sprite may straddle the viewport. The intro's two 160px
+  // feedback halves start at X=-2/158. Rejecting the first half mixed native
+  // RGB555 with the modern scene, visibly cutting bodies/effects at X=158.
+  // Track only rasterized destinations; source bounds retain the full UV span.
+  minX = std::max(minX, float(scissor.x) / scale);
+  minY = std::max(minY, float(scissor.y) / scale);
+  maxX = std::min(maxX, float(scissor.x + scissor.width) / scale);
+  maxY = std::min(maxY, float(scissor.y + scissor.height) / scale);
+  if (maxX <= minX || maxY <= minY)
     return {};
   const uint32_t pageX = (u.textureState[0] & 15) * 64;
   const uint32_t pageY = ((u.textureState[0] >> 4) & 1) * 256;

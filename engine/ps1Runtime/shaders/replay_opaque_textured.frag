@@ -119,6 +119,7 @@ void main() {
                 ? expandRgb5(rgb5)
                 : min(uvec3(255u), (rgb5 * shadeColor()) >> 4u);
   }
+  color = mgs_thermal_emission(color, v_color_255);
   o_color = vec4(vec3(color) * (1.0 / 255.0), 1.0);
   const bool forceMask =
       (u_draw.texture_state.z & DRAW_FORCE_MASK) != 0u;

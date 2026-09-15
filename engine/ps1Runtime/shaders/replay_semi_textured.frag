@@ -121,6 +121,7 @@ void main() {
                 ? expandRgb5(rgb5)
                 : min(uvec3(255u), (rgb5 * shadeColor()) >> 4u);
   }
+  color = mgs_thermal_emission(color, v_color_255);
   if ((TEXEL_FILTER == 1u && sourceStp) ||
       (TEXEL_FILTER == 2u && !sourceStp)) discard;
   // ABR3 is B + (F >> 2), not B + floor(float(F) / 4). Perform the

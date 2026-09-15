@@ -1,0 +1,531 @@
+{
+  "date": "2026-09-15",
+  "base_commit": "5971c26768373bcb3b12abfb5212a1930f9fe665",
+  "branch": "presentation/source-meshes",
+  "reference_revision": "217509eae471629b1a53633b816c61adfef9ed5c",
+  "runtime_sha256": "1834c335ef220a3d08b8298c7f32b09203f1a6a362b0ba54a929833d1237a6a0",
+  "changed_source_sha256": {
+    "engine/ps1Runtime/include/runtime/gpu/modern_replay.h": "17025fa7b78e8d04ffe6dd8a507aafb4a423e3db1e3cda85f28a4e45d9dd4f80",
+    "engine/ps1Runtime/shaders/games/mgs_original_texture.glsl": "df67df0c08d755b45fab93e46dc222ea5b74cd25eca23db422a947845a0fa02a",
+    "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl": "2ce036b84f28bf0cca2c28f71e47910036a7788e15bca33a1b949ee689c7d718",
+    "engine/ps1Runtime/shaders/replay_opaque_textured.frag": "d11690bee7d1a95861e8e57dc025cf17f24b7d935139ec27057723808edd7c56",
+    "engine/ps1Runtime/shaders/replay_precise.frag": "53a95e851f7e50e257539587ce990147c42f3f96b6c3d7b64fee3994859af111",
+    "engine/ps1Runtime/shaders/replay_semi_textured.frag": "0b4b916cd3e9527935136f179c26b47daa8da3318e83412ee6bf2ffa73d9f171",
+    "engine/ps1Runtime/src/games/mgs_mesh_replay.cpp": "c05b017eceb87e590d3a2c4019e144f539ce113ba75ea3f80b5abd94d9a24aa7",
+    "engine/ps1Runtime/src/games/mgs_screen_effects.cpp": "af809fb1e0b106f52fa75a8724fc7dc6c4e4db7a5d9383a26704cc2e8f251383",
+    "engine/ps1Runtime/src/games/mgs_source_material.cpp": "6e7e232c3bb30f28e729597295375f6bc436f151693bdf6b9047da89c8d07e73",
+    "engine/ps1Runtime/src/gpu/modern_replay_vulkan_bake.cpp": "ff14736877347c61fde85f68d82e5436ae859c7ddda7d27c3a296e080c59724b",
+    "engine/ps1Runtime/src/gpu/renderer_vulkan.cpp": "6952079194e152fef49746e6f754abf1a5bc55d2eb001e6aa19d52b968b1b64b",
+    "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_bake.cpp": "ea94b85efd262130d9471ceaea3fbea5c593901e6a0515fb988809b81c33a542",
+    "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp": "78623cb321ad63710bb6f45c7f9c333060befca490c865de65383c54dd6aca7e",
+    "engine/ps1Test/runtime/test_mgs_asset_cache.cpp": "0505cd5f86bff6bd393c6a81b01abe6ca2fe6e95ec5ed7ee07c9d9ba1b03e24e",
+    "engine/ps1Test/runtime/test_mgs_screen_effects.cpp": "2542ac897688ae4066b33a1776c9873f90bcd33c64811ccb3200bf20b4143b7a"
+  },
+  "runtime_shader_sha256": {
+    "build/ps1Runtime/shaders/crash3_semi_textured.frag.spv": "80523433a104c63fe16ba34ba40b196686c2925a08a21d8cd005de7763a82d75",
+    "build/ps1Runtime/shaders/crash3_semi_untextured.frag.spv": "86b3d895a31caedc3d8a5792204570ad080e94e9db0116be7829359df1eda8f7",
+    "build/ps1Runtime/shaders/crash3_sidecar.vert.spv": "fc3e657161228d4c4727f9e7321de3616d15d29d2119ba23cdb30538665a0f28",
+    "build/ps1Runtime/shaders/crash3_sidecar_midpoint.comp.spv": "057c63e6f77128188fc31315e7c7d85d2ce784156e155493f36848324e2fd24e",
+    "build/ps1Runtime/shaders/crash3_sidecar_midpoint_fp32.comp.spv": "4c89786f7b30d8e36934e11f9524830cf0a8fd9617adfb98a66954f7730d3db6",
+    "build/ps1Runtime/shaders/crash3_sidecar_model_pulled.vert.spv": "869ccb090b473ce142019fb3db8745f180791a97385850c2c69b202bca182363",
+    "build/ps1Runtime/shaders/crash3_sidecar_opaque.frag.spv": "df5d5014a3e68b395e967386392e8886bf3ecb6d1004ad18e38b2942dbe762c7",
+    "build/ps1Runtime/shaders/crash3_sidecar_pulled.vert.spv": "1797000ac54cb5a2b5909e71eb753513efbdbba7a2287ce6fa0b5d50eecdb9c9",
+    "build/ps1Runtime/shaders/crash3_sidecar_pulled_interpolated.vert.spv": "f490b4fe3766b3ff46fd2d0ce9ed834ed839b81fb774cd7137c31597ae22119a",
+    "build/ps1Runtime/shaders/crash3_sidecar_raw_pulled.vert.spv": "2a90c29328b2bc594135bbd90d503601d92d0023062758b9cdd32ea4f5de41b4",
+    "build/ps1Runtime/shaders/crash3_sidecar_semi_interlock.frag.spv": "184b23ff49259ab02c8b28faaca8778ebf0a7b462a6030b11b5ca9211ea271ae",
+    "build/ps1Runtime/shaders/crash3_sidecar_semi_textured.frag.spv": "2e62e333ae1b835e5395963f0d5ada82e4339fe5c3bb3155dbc85ecbadba6cdb",
+    "build/ps1Runtime/shaders/crash3_sidecar_semi_untextured.frag.spv": "a164427920290aa8f0159c18960d09d5416d2db27e44fdb667dc3aaa8a44e794",
+    "build/ps1Runtime/shaders/present_fullscreen.vert.spv": "b07e8466fb11e9dc18c71f0839d211f30bf5a12d6973d79b4f0b864cc700bf3d",
+    "build/ps1Runtime/shaders/present_native.frag.spv": "66a0ec8e54a941db47279aa4050a03c19e9740af8c5f389762a48383ca47d6e6",
+    "build/ps1Runtime/shaders/present_replay.frag.spv": "582f2958d5a1ad31cb4d411d9aa1110be14e8001db87c4117e40e159d5001b41",
+    "build/ps1Runtime/shaders/present_replay_depth.frag.spv": "a507331efe81866cb5b6a362d27d3174d6634d12767d6c17499020e7b131abd5",
+    "build/ps1Runtime/shaders/present_replay_temporal.frag.spv": "8f46ffe6ac971910d174fdd47e91f2a0496e701a5655e34fc27f8a2baa64041b",
+    "build/ps1Runtime/shaders/present_rgba.frag.spv": "1bdbb621042e22ea51c58b9357d99043b1519510f9e3b15fd7a394fca4e073cf",
+    "build/ps1Runtime/shaders/replay_copy_scratch.frag.spv": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07",
+    "build/ps1Runtime/shaders/replay_native_expand.frag.spv": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870",
+    "build/ps1Runtime/shaders/replay_opaque_textured.frag.spv": "193b47e5f494dcaa3cdf1220128e173d6dacd3d8a31c204ed57f288c07ce25d4",
+    "build/ps1Runtime/shaders/replay_opaque_untextured.frag.spv": "936c9a2ac6150e3e2f79e3929a02024451a75206f271a6d7d85a7286c360f02a",
+    "build/ps1Runtime/shaders/replay_precise.frag.spv": "ce655589e4344a740762af0ba1bb2253a2facc297715873d4c32bae8ee2ea34f",
+    "build/ps1Runtime/shaders/replay_precise.vert.spv": "d068247bc8bf67442039674d2666b9efe89334acd6c182a52fa1349132fee440",
+    "build/ps1Runtime/shaders/replay_seed.frag.spv": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d",
+    "build/ps1Runtime/shaders/replay_semi_textured.frag.spv": "b0222e6cfddb67a38885b6c894af28f44996901f4a2ef86830f1983273abda45",
+    "build/ps1Runtime/shaders/replay_visibility_owner.frag.spv": "eef1065efb7be6f50b36b14e4acba7b556427fd895bfc9c9bfa01af2d2837b08",
+    "build/ps1Runtime/shaders/replay_visibility_precise.vert.spv": "b20442258489d2f08a3c87c2e30a5c7256088766a5fd5becb4846a6f5fa607f6",
+    "build/ps1Runtime/shaders/replay_visibility_stack.frag.spv": "c319ff1c9726b925b0a0aefb69c0ca9081897af78bbfcdb5d4568fdc32a1bbed"
+  },
+  "tests": {
+    "passed": 277,
+    "suites": 18,
+    "log_path": ".local/expressive-effects-final-tests.log",
+    "log_sha256": "0bfac468492637c88f6cc3bff1e7e6f7f2665a023249fc65922f3eebbda83d3d",
+    "vulkan_integration": true,
+    "usa_original_cache": true,
+    "usa_instruction_oracle": true
+  },
+  "runs": {
+    "expressive-final-sensors": {
+      "metrics_path": "data/native/expressive-final-sensors/metrics.json",
+      "metrics_sha256": "bda7e8caf6a29692a1ad05eefa987b594e4e7f7ce911ca632143c04d0efd1e35",
+      "log_path": "data/native/expressive-final-sensors/runtime.log",
+      "log_sha256": "59a353857082309ce857c3b9a4cc0d7f35a3f66dc0b52caa4ec160dd39c90618",
+      "configuration": {
+        "PS1_VULKAN_HIDDEN_WINDOW": "1",
+        "PS1_PRESENT_WINDOWED": "1",
+        "PS1_METRICS": "/home/xander/mgs_recomp/data/native/expressive-final-sensors/metrics.json",
+        "PS1_METRICS_FLUSH_VBLANKS": "180",
+        "PS1_VULKAN_GPU_TIMINGS": "1",
+        "PS1_VULKAN_REPLAY_READBACK": "all",
+        "PS1_VULKAN_REPLAY_READBACK_FRAME_FROM": "9600",
+        "PS1_VULKAN_REPLAY_READBACK_FRAME_TO": "10140",
+        "PS1_VULKAN_REPLAY_READBACK_INTERVAL": "180",
+        "PS1_VULKAN_REPLAY_READBACK_DUMP_DIRECTORY": "/home/xander/mgs_recomp/data/native/expressive-final-sensors/gpu",
+        "PS1_DIAGNOSTIC_SAVESTATE_DIR": "data/native/effects-checkpoint",
+        "PS1_AUTOLOAD_VBLANK": "1",
+        "PS1_EXIT_AFTER_LOAD_VBLANKS": "600",
+        "PS1_EXIT_VBLANK": "10240"
+      },
+      "coverage_only": false,
+      "counts": {
+        "host.renderer.mgs_screen.draw": 860,
+        "host.renderer.mgs_screen.snapshot": 622,
+        "host.renderer.vulkan_replay_route.m0_reanchor": 2,
+        "host.renderer.vulkan_replay_route.m1_geometry": 301,
+        "mgs.scene.recovery_gpu_submitted": 87349,
+        "mgs.screen_effect.actor.visor": 257,
+        "mgs.screen_effect.bound_packets": 28845,
+        "mgs.screen_effect.gpu_submitted": 284,
+        "mgs.screen_effect.layout.visor": 514,
+        "mgs.screen_effect.pass.fade_black": 30,
+        "mgs.screen_effect.pass.night_vision": 136,
+        "mgs.screen_effect.pass.thermal_vision": 118,
+        "mgs.screen_effect.replaced_packets": 28732,
+        "mgs.source.gpu_full_faces": 87349,
+        "mgs.source.gpu_original_format_packets": 87349,
+        "mgs.source.thermal_emissive_faces": 42008,
+        "mgs.water.bound_strips": 40540,
+        "mgs.water.modern_pass": 178,
+        "mgs.water.replaced_strips": 39914,
+        "timing.vblank": 602,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.pose.invalid_inputs": 0
+      },
+      "gpu_timing": {
+        "samples": 602,
+        "total_ns": 4279484096,
+        "mean_ms": 7.108777568106312
+      },
+      "scanouts": [
+        {
+          "path": "data/native/expressive-final-sensors/gpu/frame-9600-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "872273364a5ad65f1f189d9b7641f5c901cbf05ffa4abbb0902373e5d8e31af5"
+        },
+        {
+          "path": "data/native/expressive-final-sensors/gpu/frame-9780-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "30a9c6045912178936e729290d9dc964ee318a5e53ef92af1afbcdb86237a8aa"
+        },
+        {
+          "path": "data/native/expressive-final-sensors/gpu/frame-9960-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "fe7c71248cc3ca0260b0bb133a9860151fab446bd8d255e1b331e2d6353144fc"
+        },
+        {
+          "path": "data/native/expressive-final-sensors/gpu/frame-10140-present-4-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "c0bb460da2297b9dd0fcff47b3cb7d5a4e198ba7b94816c0faf02ccd8b9ff2a6"
+        }
+      ]
+    },
+    "expressive-final-water": {
+      "metrics_path": "data/native/expressive-final-water/metrics.json",
+      "metrics_sha256": "ee799db3d4ec7fc8f96d876388a3376a5e0a19a43094918a53cb99cbf60c829a",
+      "log_path": "data/native/expressive-final-water/runtime.log",
+      "log_sha256": "6991e325c9a2e4b38f0ce6e373af5fd016452d30080a661772ca56a9b9ee8044",
+      "configuration": {
+        "PS1_VULKAN_HIDDEN_WINDOW": "1",
+        "PS1_PRESENT_WINDOWED": "1",
+        "PS1_METRICS": "/home/xander/mgs_recomp/data/native/expressive-final-water/metrics.json",
+        "PS1_METRICS_FLUSH_VBLANKS": "180",
+        "PS1_VULKAN_GPU_TIMINGS": "1",
+        "PS1_VULKAN_REPLAY_READBACK": "all",
+        "PS1_VULKAN_REPLAY_READBACK_FRAME_FROM": "9320",
+        "PS1_VULKAN_REPLAY_READBACK_FRAME_TO": "9800",
+        "PS1_VULKAN_REPLAY_READBACK_INTERVAL": "120",
+        "PS1_VULKAN_REPLAY_READBACK_DUMP_DIRECTORY": "/home/xander/mgs_recomp/data/native/expressive-final-water/gpu",
+        "PS1_DIAGNOSTIC_SAVESTATE_DIR": "data/native/intro-water-checkpoint",
+        "PS1_AUTOLOAD_VBLANK": "1",
+        "PS1_EXIT_AFTER_LOAD_VBLANKS": "600",
+        "PS1_EXIT_VBLANK": "9900"
+      },
+      "coverage_only": false,
+      "counts": {
+        "host.renderer.mgs_screen.draw": 1382,
+        "host.renderer.mgs_screen.snapshot": 599,
+        "host.renderer.vulkan_replay_route.m0_reanchor": 2,
+        "host.renderer.vulkan_replay_route.m1_geometry": 302,
+        "mgs.scene.recovery_gpu_submitted": 55734,
+        "mgs.screen_effect.actor.visor": 32,
+        "mgs.screen_effect.bound_packets": 3622,
+        "mgs.screen_effect.gpu_submitted": 38,
+        "mgs.screen_effect.layout.visor": 64,
+        "mgs.screen_effect.pass.fade_black": 6,
+        "mgs.screen_effect.pass.night_vision": 32,
+        "mgs.screen_effect.replaced_packets": 3622,
+        "mgs.source.gpu_full_faces": 55734,
+        "mgs.source.gpu_original_format_packets": 55734,
+        "mgs.water.bound_strips": 67580,
+        "mgs.water.modern_pass": 300,
+        "mgs.water.replaced_strips": 67280,
+        "timing.vblank": 602,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.pose.invalid_inputs": 0
+      },
+      "gpu_timing": {
+        "samples": 602,
+        "total_ns": 5911565376,
+        "mean_ms": 9.819876039867111
+      },
+      "scanouts": [
+        {
+          "path": "data/native/expressive-final-water/gpu/frame-9320-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "ad12a8f1b5b6431fb820b9aff54a39bfc33d4ff58cc27e206b9de2525755b04e"
+        },
+        {
+          "path": "data/native/expressive-final-water/gpu/frame-9440-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "ea0910b56411f61d6abd216ec298b0a1a480a5f511219bb838d2270d0d53543a"
+        },
+        {
+          "path": "data/native/expressive-final-water/gpu/frame-9560-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "56c2d401d786c509356e709bf139348c33d0491b1fbd96de032e5bd2454ff50f"
+        },
+        {
+          "path": "data/native/expressive-final-water/gpu/frame-9680-present-4-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "fb86e2580eec992caa2bbeed040672f2978863265cf9916aa9ee08cc31bc90fc"
+        },
+        {
+          "path": "data/native/expressive-final-water/gpu/frame-9800-present-5-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "d4477b4c9c398892393bac0f9868b347024829703db19cace6344a4a1b64fbf6"
+        }
+      ]
+    },
+    "expressive-final-trails": {
+      "metrics_path": "data/native/expressive-final-trails/metrics.json",
+      "metrics_sha256": "53520e7b67d48b6b517fd6186a3d76c8558df67104bfd1a9600a94e85965d16f",
+      "log_path": "data/native/expressive-final-trails/runtime.log",
+      "log_sha256": "69719c11ea22719bcdc89860d7a73527331f6822ef5867c4bbd46e6842fae310",
+      "configuration": {
+        "PS1_VULKAN_HIDDEN_WINDOW": "1",
+        "PS1_PRESENT_WINDOWED": "1",
+        "PS1_METRICS": "/home/xander/mgs_recomp/data/native/expressive-final-trails/metrics.json",
+        "PS1_METRICS_FLUSH_VBLANKS": "180",
+        "PS1_VULKAN_GPU_TIMINGS": "1",
+        "PS1_VULKAN_REPLAY_READBACK": "all",
+        "PS1_VULKAN_REPLAY_READBACK_FRAME_FROM": "7320",
+        "PS1_VULKAN_REPLAY_READBACK_FRAME_TO": "7680",
+        "PS1_VULKAN_REPLAY_READBACK_INTERVAL": "120",
+        "PS1_VULKAN_REPLAY_READBACK_DUMP_DIRECTORY": "/home/xander/mgs_recomp/data/native/expressive-final-trails/gpu",
+        "PS1_DIAGNOSTIC_SAVESTATE_DIR": "data/native/effects-authority-7200",
+        "PS1_AUTOLOAD_VBLANK": "1",
+        "PS1_EXIT_AFTER_LOAD_VBLANKS": "480",
+        "PS1_EXIT_VBLANK": "7780"
+      },
+      "coverage_only": false,
+      "counts": {
+        "host.renderer.mgs_screen.draw": 413,
+        "host.renderer.mgs_screen.snapshot": 413,
+        "host.renderer.vulkan_replay_route.m0_reanchor": 2,
+        "host.renderer.vulkan_replay_route.m1_geometry": 227,
+        "mgs.scene.recovery_gpu_submitted": 94861,
+        "mgs.screen_effect.actor.gas_haze": 155,
+        "mgs.screen_effect.actor.visor": 74,
+        "mgs.screen_effect.bound_packets": 10858,
+        "mgs.screen_effect.gpu_submitted": 413,
+        "mgs.screen_effect.layout.visor": 148,
+        "mgs.screen_effect.pass.fade_black": 59,
+        "mgs.screen_effect.pass.gas_haze": 142,
+        "mgs.screen_effect.pass.temporal_blur": 139,
+        "mgs.screen_effect.pass.thermal_vision": 73,
+        "mgs.screen_effect.replaced_packets": 10858,
+        "mgs.source.gpu_full_faces": 94861,
+        "mgs.source.gpu_original_format_packets": 94861,
+        "mgs.source.thermal_emissive_faces": 31328,
+        "timing.vblank": 482,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.pose.invalid_inputs": 0
+      },
+      "gpu_timing": {
+        "samples": 482,
+        "total_ns": 2034916096,
+        "mean_ms": 4.221817626556017
+      },
+      "scanouts": [
+        {
+          "path": "data/native/expressive-final-trails/gpu/frame-7320-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "7bed4a7106d1a3fd5cf624264398eea4b816babb45d16d4ccb15c14c2a1574f1"
+        },
+        {
+          "path": "data/native/expressive-final-trails/gpu/frame-7440-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "2601a57c9bbce49da610a53996712d4d337fdea71ec7c4402abef12049d4004f"
+        },
+        {
+          "path": "data/native/expressive-final-trails/gpu/frame-7560-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "2d1d82e0b1de70c09a60d8e0d7db6edc5d5a32dafb1a05a6afef595c36c350d4"
+        },
+        {
+          "path": "data/native/expressive-final-trails/gpu/frame-7680-present-4-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "86afcf0e4a15fb89e27c3adad0dfcd467bd8791f18b86b177cacc0ae29bdec4a"
+        }
+      ]
+    },
+    "expressive-final-intro": {
+      "metrics_path": "data/native/expressive-final-intro/metrics.json",
+      "metrics_sha256": "107c8536abec43b973c1bb68f6c1d20c750f86cd3f493f721ce50081b16c76e7",
+      "log_path": "data/native/expressive-final-intro/runtime.log",
+      "log_sha256": "5e7436ca0d83c25620abf916510e0a37c83d44e94d212c9c52cd4021e71259dd",
+      "configuration": {
+        "PS1_VULKAN_HIDDEN_WINDOW": "1",
+        "PS1_PRESENT_WINDOWED": "1",
+        "PS1_METRICS": "/home/xander/mgs_recomp/data/native/expressive-final-intro/metrics.json",
+        "PS1_METRICS_FLUSH_VBLANKS": "180",
+        "PS1_VULKAN_GPU_TIMINGS": "1",
+        "PS1_VULKAN_REPLAY_READBACK": "all",
+        "PS1_VULKAN_REPLAY_READBACK_FRAME_FROM": "1200",
+        "PS1_VULKAN_REPLAY_READBACK_FRAME_TO": "15600",
+        "PS1_VULKAN_REPLAY_READBACK_INTERVAL": "1200",
+        "PS1_VULKAN_REPLAY_READBACK_DUMP_DIRECTORY": "/home/xander/mgs_recomp/data/native/expressive-final-intro/gpu",
+        "PS1_EXIT_VBLANK": "15600",
+        "PS1_VBLANK_PERIOD_US": "1000",
+        "PS1_INPUT_SCRIPT": "data/native/intro-modern-final/input.txt"
+      },
+      "coverage_only": true,
+      "counts": {
+        "host.renderer.mgs_screen.draw": 13210,
+        "host.renderer.mgs_screen.snapshot": 8465,
+        "host.renderer.vulkan_replay_route.m0_reanchor": 1,
+        "host.renderer.vulkan_replay_route.m1_geometry": 7187,
+        "mgs.scene.recovery_gpu_submitted": 1649657,
+        "mgs.screen_effect.actor.gas_haze": 922,
+        "mgs.screen_effect.actor.visor": 707,
+        "mgs.screen_effect.bound_packets": 96013,
+        "mgs.screen_effect.gpu_submitted": 3291,
+        "mgs.screen_effect.layout.visor": 1414,
+        "mgs.screen_effect.pass.fade_black": 455,
+        "mgs.screen_effect.pass.fade_white": 161,
+        "mgs.screen_effect.pass.gas_haze": 874,
+        "mgs.screen_effect.pass.night_vision": 267,
+        "mgs.screen_effect.pass.temporal_blur": 1100,
+        "mgs.screen_effect.pass.thermal_vision": 434,
+        "mgs.screen_effect.replaced_packets": 96013,
+        "mgs.source.gpu_full_faces": 1649657,
+        "mgs.source.gpu_original_format_packets": 1649657,
+        "mgs.source.thermal_emissive_faces": 160912,
+        "mgs.water.bound_strips": 775980,
+        "mgs.water.modern_pass": 3445,
+        "mgs.water.replaced_strips": 772535,
+        "timing.vblank": 15600,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.pose.invalid_inputs": 0
+      },
+      "gpu_timing": {
+        "samples": 15600,
+        "total_ns": 78566577792,
+        "mean_ms": 5.036319089230769
+      },
+      "scanouts": [
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-1200-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "2d02539a60a0d952d92b30e455ac5aeb2ab13510993224e7c94cdd4e29fbb581"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-2400-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "e9aa99d74639c99a69972a0c06f6b698cd9415dea8e021dfebae75069ef8bb54"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-3600-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "bd457fbb4c243091985688f86fa6b7938f0accfb0c03f5a0a773aaa327861ebe"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-4800-present-4-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "4fd53c23749ccbc2f67c3dab9a5e4e289d8b1857945a3b54cfab8334731b2d24"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-6000-present-5-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "a683ca2b34991a5679b4a17bbc0709a5cf81b9ab536de7b257aff4c51e836b79"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-7200-present-6-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "eaa1b67de5a4053e0765883e2111bd4fd26a95b5ebcdfd847f073f516d13676a"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-8400-present-7-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "88f5bedc2328a940fac514fe376ea48577e8166139dfbeb8b226e38f82d81447"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-9600-present-8-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "5facd32771f6abf524ea4ea15b33a250bacb1eda1b3cd69e68f9de0c5db861a9"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-10800-present-9-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "bb0beb003cfab523030b94b2fffb1ae92ff14f1873488574c2f975119ff03588"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-12000-present-10-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "597baebdfef273104f16416060072ebddb8a50596eca1f758a5026ab43ada610"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-13200-present-11-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "7f0b5af50c77ef8801f18ec42c3542f10a4115ed4484a491453808481c50c395"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-14400-present-12-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "6b4b599f5431449b9aa01a6bb14fe732d73ce3653cdcb75f0d812dc1f000127e"
+        },
+        {
+          "path": "data/native/expressive-final-intro/gpu/frame-15600-present-13-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "sha256": "0ae49991f7d94924e0f2392448972fdb11c78e2c8afe56aa96a2da9d6a530288"
+        }
+      ]
+    }
+  },
+  "protected_files_unchanged": {
+    "savestates/quick_slot_0.ps1s": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+    "data/assets/usa/disc1/SLUS_005.94": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32",
+    "data/presentation/usa-source/assets.mgsc": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+  },
+  "cinematic_rig_witness": {
+    "ram_path": "data/native/thermal-mode-debug/ram.bin",
+    "ram_sha256": "386d8ddd413fad54850fbb07f80954d1ff503e920c6fc2831fcc0239e9b70584",
+    "game_status": "0x80000028",
+    "body": {
+      "instance": "0x8015e878",
+      "definition": "0x801391b4",
+      "primary_models": 16,
+      "original_kmd_parents": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        1,
+        5,
+        1,
+        7,
+        8,
+        0,
+        10,
+        11,
+        0,
+        13,
+        14
+      ]
+    },
+    "submarine": {
+      "instance": "0x80162cd8",
+      "definition": "0x8012e5d8",
+      "primary_models": 13,
+      "original_kmd_parents": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ]
+    }
+  },
+  "comparison_image": "data/native/expressive-final-sensors/comparison.png",
+  "limits": [
+    "Optical interpretation intentionally differs from PSX rendering.",
+    "Thermal cinematic bodies are classified by connected original skeletons; these are authored response profiles, not measured temperatures or exhaustive character recognition.",
+    "Paused sensor noise uses a fixed seed; entering pause may change the pattern once.",
+    "Motion trails estimate direction from image gradients; no geometric motion vectors or 2x interpolation yet.",
+    "Checkpoint GPU timings use normal NTSC on RTX 4060 with diagnostic readbacks and include startup/load. No matched performance comparison to the previous shader revision is claimed.",
+    "Cold intro uses accelerated VBlank for coverage, not benchmarking.",
+    "Native 1x logic/framebuffer, audio code and protected user savestate are unchanged.",
+    "Other level-specific screen effects still require their own adapters and verification."
+  ]
+}

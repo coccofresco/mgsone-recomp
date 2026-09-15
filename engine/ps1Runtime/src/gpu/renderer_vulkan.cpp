@@ -28136,7 +28136,7 @@ struct RendererVulkan::Impl {
                replay::replayDrawFlagBit(replay::ReplayDrawFlag::ScreenEffect)))
             ++screenEffects;
           if (draw && draw->segmentCount &&
-              draw->segments[0].uniforms.mgsProjection[3] == 1.0f &&
+              draw->segments[0].uniforms.mgsProjection[3] != 0.0f &&
               std::all_of(draw->segments[0].uniforms.mgsPointBytes.begin(),
                           draw->segments[0].uniforms.mgsPointBytes.end(),
                           [](uint32_t p) { return (p & 0x80000000u) != 0; }))

@@ -17,6 +17,23 @@ bool range(uint32_t p, uint64_t n) {
   p &= 0x1fffffffu;
   return p < Memory::RAM_SIZE && n <= Memory::RAM_SIZE - p;
 }
+bool cinematicBodyRig(const AssetCache &assets, const SceneInstance &instance) {
+  if (instance.pose.source != ScenePoseSource::Rotations ||
+      instance.pose.invalidInput || instance.primaryModels < 10 ||
+      instance.primaryModels > instance.models.size())
+    return false;
+  // Cinematic scenery also carries rotation arrays: the intro submarine is
+  // a 13-part rig with independent roots. A body needs a connected skeleton,
+  // not merely many animated parts. Original KMD parent indices establish it.
+  for (uint32_t bone = 0; bone < instance.primaryModels; ++bone) {
+    const auto source = assets.sourceModel(instance.models[bone].assetModel);
+    if (!source ||
+        (bone == 0 ? source->parent != -1
+                   : source->parent < 0 || uint32_t(source->parent) >= bone))
+      return false;
+  }
+  return true;
+}
 // optxtscn.c replaces its two placeholder PCXs with text assembled from the
 // EF71 font by DR_MOVE commands in CC22. The KMD surface is still immutable;
 // its material is a render target, not another static image to guess by pixels.
@@ -204,6 +221,18 @@ sourceMeshMaterial(const AssetCache &assets, const Memory &memory,
     }
   }
   draw.originalMesh.emplace();
+  // USA goggleir.c Act sets STATE_THERMG at 0x800adb3c. Cinematic actors are
+  // created without the gameplay IRTEXTURE flag. Give connected body rigs an
+  // authored warm response during demos; independently animated scenery is
+  // excluded even when it has a rotation array and many parts.
+  // This is an artistic rig classification, not simulated temperatures.
+  const uint32_t gameStatus = u32(ptr(0x800adb3c));
+  draw.originalMesh->thermalEmission =
+      (gameStatus & 8u) &&
+      ((instance.flags & 0x200u) ||
+       ((gameStatus & 0x80000000u) && cinematicBodyRig(assets, instance)));
+  if (draw.originalMesh->thermalEmission)
+    metrics::count("mgs.source.thermal_emissive_faces");
   draw.originalMesh->textureId = id;
   draw.originalMesh->sourceTopology = draw.originalMesh->sourceRecovery = true;
   draw.originalMesh->runtimeTexture =

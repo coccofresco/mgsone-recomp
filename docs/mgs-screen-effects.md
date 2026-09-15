@@ -9,29 +9,58 @@ Questi effetti sono attivi per impostazione predefinita nel profilo MGS USA.
 
 | Origine | Resa Vulkan | Dati conservati dal gioco |
 | --- | --- | --- |
-| `wt_view.c` | Rifrazione bidimensionale continua, già presente | Attivazione, fase, area subacquea |
-| `scn_mask.c`, visore notturno | Risposta verde del sensore, guadagno, vignettatura morbida e rumore fine; 113 primitive diventano un passaggio | Attore attivo, modalità e posizione nell'ordine di disegno |
-| `scn_mask.c`, visore termico | Ottica rossa continua senza le 112 righe scure | Identità termiche e palette degli oggetti restano quelle del gioco |
+| `wt_view.c` | Correnti bidimensionali a più scale, rifrazione con dispersione cromatica, caustiche animate e assorbimento azzurro | Attivazione, fase completa, area subacquea |
+| `scn_mask.c`, visore notturno | Amplificazione del segnale, fosforo verde con alte luci gialle, diffusione luminosa a due scale, grana grossa animata e vignettatura; 113 primitive diventano un passaggio | Attore attivo, modalità e posizione nell'ordine di disegno |
+| `scn_mask.c`, visore termico | Palette dal blu freddo al magenta, giallo e bianco; emissione dei corpi anche nelle zone buie | Modalità attiva e materiali IR, con classificazione artistica dei corpi nelle cinematiche |
 | `fadeio.c` | Dissolvenza verso nero o bianco che conserva i rapporti fra i canali, senza saturarli uno alla volta | Intensità del TILE effettivamente disegnato, direzione, durata, pausa |
-| `blurpure.c` | Accumulo temporale dell'immagine moderna, con cinque campioni per ammorbidire la scia | Peso della scia, doppio buffer, ritaglio cinematografico 320×160 |
+| `blurpure.c` | Scie direzionali con decadimento esponenziale, persistenza sensibile al movimento e lieve separazione cromatica delle code | Peso della scia, doppio buffer, ritaglio cinematografico 320×160 |
 | `gas_efct.c` | Alone ellittico con gradiente continuo, senza i sedici settori poligonali | Raggio, proporzioni, colori animati interni/esterni, composizione additiva/sottrattiva |
 
-La grana del sensore è un pattern stabile calcolato per pixel Vulkan: non
-avanza con l'orologio host durante pausa o caricamento di un salvataggio.
-La sfocatura usa la superficie moderna del fotogramma precedente; non copia
-la versione RGB555 a 320×224. Non introduce ancora interpolazione temporale 2×.
+La revisione espressiva interpreta liberamente l'ottica, mantenendo attivazione
+ed evoluzione degli attori originali. La grana del notturno ha celle di circa
+sei pixel UHD e un'ampiezza oltre dieci volte superiore alla prima versione,
+più aggregati morbidi a scala maggiore. Avanza con `GV_Time`, non con un timer
+host. Durante la pausa viene scelto un seme fisso: può cambiare pattern quando
+si entra in pausa, poi resta fermo. Ricaricare lo stesso istante riproduce la
+stessa grana. La risoluzione dell'effetto segue l'immagine moderna.
+
+L'acqua combina correnti e vortici lenti, tre campi di onde, tre campioni RGB
+per la dispersione e caustiche mobili. Usa il contatore completo di `wt_view`,
+eliminando il salto periodico causato dal precedente mascheramento a 63.
+È un trattamento ottico della scena: non simula il volume dell'acqua.
+
+Le scie leggono l'immagine moderna del buffer precedente. Una stima limitata
+del movimento dai gradienti d'immagine orienta sei campioni con decadimento,
+conservando il centro nitido quando la scena è ferma. I riflessi persistono
+nelle zone scure e la coda vira leggermente verso l'azzurro. Non si tratta
+ancora di vettori di movimento derivati dalla geometria né di interpolazione
+2×. L'intensità originale resta il comando della persistenza.
+
+Il termico rimappa la risposta dei materiali in falsi colori. Gli oggetti con
+`DG_FLAG_IRTEXTURE` ricevono un minimo emissivo quando `STATE_THERMG` è attivo.
+Per le cinematiche si aggiunge un profilo caldo ai rig con almeno dieci ossa,
+rotazioni valide e una gerarchia KMD collegata a un'unica radice. Il controllo
+dei genitori è necessario: il sottomarino dell'intro ha 13 parti con rotazioni,
+ma tutte indipendenti; Snake ha 16 ossa collegate. Il solo numero di parti
+scaldava erroneamente anche lo scenario. Questa classificazione è una scelta
+artistica, non una misura fisica della temperatura o un riconoscimento di ogni
+personaggio del gioco. I profili di altri rig possono richiedere affinamento.
 
 ## Collegamento alla versione USA
 
 Riferimento logico: FoxdieTeam/mgs_reversing, revisione locale
 `217509eae471629b1a53633b816c61adfef9ed5c`, file `libgv/actor.c`,
 `takabe/scn_mask.c`, `takabe/fadeio.c`, `okajima/blurpure.c`,
-`takabe/gas_efct.c`. Le strutture sono confrontate con la RAM USA dell'intro,
+`takabe/gas_efct.c`, `libdg/bound.c`, `takabe/goggleir.c`. Le strutture sono confrontate con la RAM USA dell'intro,
 non con gli indirizzi delle funzioni Integral.
 
 - `ActorList` USA parte da `0x800af390`: nove liste da 68 byte, con sentinelle
   `GV_ACT` da 32 byte. Ogni visita verifica collegamenti all'indietro, termine
   corretto e assenza di cicli prima di pubblicare le appartenenze.
+- Tempo USA: `GV_Time` a `0x800ada48`, `GV_PauseLevel` a `0x800ae0a0`;
+  `GM_GameStatus` a `0x800adb3c`, bit termico `0x8`, bit demo `0x80000000`.
+  Le istruzioni dell'eseguibile USA verificano gli indirizzi del tempo e dello
+  stato; le semantiche dei flag provengono dalla decompilazione.
 - Visore: livello ASSIST, puntatore primitive a `Work+32`, due TILE filtro a
   `prims+16`, 224 TILE di scansione a `prims+64`, dimensione totale 3648 byte.
   Si verificano anche opcodes, colori, dimensioni e posizione di ogni riga.
@@ -50,6 +79,14 @@ nella stessa submission e nello stesso buffer, senza duplicati o scritture
 interposte. Se la prova manca conserva l'intero percorso precedente. I dati
 pubblicati sono copie dei parametri: nessun puntatore RAM attraversa la coda.
 
+Le copie dello schermo che superano un bordo usano il ritaglio della viewport.
+Nell'intro due SPRT da 160 pixel iniziano a X=-2 e X=158: la prima metà veniva
+respinta perché parzialmente fuori schermo, mescolando un'immagine RGB555 con
+la metà moderna. Ora entrambe campionano la stessa scena moderna; la dipendenza
+sorgente conserva l'intero intervallo UV e quella di destinazione considera
+solo i pixel effettivamente disegnati. Un test Vulkan verifica il bordo
+subpixel attraverso una copia che inizia a X=-2.
+
 L'immagine sorgente è una copia ordinata degli attachment Vulkan, con il
 tracking delle scritture già usato dalla rifrazione. Il risultato può essere
 nero visibile; non eredita il significato PSX di texel zero trasparente.
@@ -62,26 +99,34 @@ Test GPU specifici verificano un bordo spostato di un quarto di pixel
 originale attraverso il visore, i valori RGB8 delle dissolvenze a intensità
 0/128/255, il piano mask e l'identità di tutta la VRAM software rispetto
 all'esecuzione degli stessi comandi senza presentazione moderna. Altri test
-coprono liste corrotte, primitive disallineate, reset delle appartenenze,
+coprono grana visibile su fondo uniforme, animazione/pausa/riavvolgimento del
+sensore, emissione subordinata alla modalità termica, esclusione degli scenari
+con molte radici, separazione dai modi delle geometrie procedurali, liste corrotte, primitive disallineate, reset delle appartenenze,
 gruppi incompleti/duplicati/intercalati e dipendenze fra i due buffer.
 
-La verifica del 15 settembre 2026 passa **271 test in 18 suite**, con Vulkan,
-cache originale e istruzioni USA come oracolo abilitati. L'avvio completo
-di 15.600 VBlank arriva al menu: 13 acquisizioni 3840×2160, **98.140 primitive
-sostituite da 3.301 passaggi**, tutte e sei le nuove varianti osservate,
-nessun gruppo incompleto e nessun rifiuto dell'esecuzione Vulkan.
-L'unica inizializzazione dalla superficie nativa è quella dell'avvio.
-
-Il confronto separato dallo stesso salvataggio, con 600 VBlank dopo il
-caricamento e cadenza NTSC normale, misura **8,058 ms medi GPU** con gli effetti
-moderni e **8,116 ms** con i precedenti, su RTX 4060 (602 submission ciascuno).
-È sostanziale parità di costo nel tratto dei due visori, con quattro letture
-diagnostiche per esecuzione; non misura tutti gli effetti o tutto il gioco.
-Le acquisizioni accelerate dell'intro servono invece alla copertura.
-
-Le evidenze della sequenza USA e i contatori sono registrati in
+La prima implementazione degli attori (`5971c26`) aveva superato 271 test e
+l'intro completa. Il relativo confronto GPU di 8,058 / 8,116 ms riguarda quella
+versione, non i nuovi shader più espressivi; le evidenze storiche rimangono in
 [mgs-screen-effects-evidence.json](mgs-screen-effects-evidence.json).
-Le acquisizioni e le istantanee diagnostiche sono locali, sotto `data/native`.
+
+La revisione espressiva passa **277 test in 18 suite**. L'avvio completo di
+15.600 VBlank raggiunge il menu, con 13 acquisizioni 3840×2160 e 3.291
+passaggi degli effetti. Nessun gruppo incompleto, materiale mancante o
+rifiuto del percorso Vulkan; una sola inizializzazione nativa all'avvio.
+
+Nei tre tratti a cadenza NTSC normale si misurano mediamente **9,820 ms GPU**
+per l'acqua, **7,109 ms** per i visori e **4,222 ms** per le scie/transizioni,
+su RTX 4060. Sono rispettivamente 602, 602 e 482 submission, incluse
+inizializzazione/caricamento e letture diagnostiche. Sono medie di ciascun
+tratto, non tempi massimi del singolo effetto né una garanzia per tutto il
+gioco; non costituiscono un confronto controllato con la versione precedente.
+
+La verifica della revisione espressiva è registrata separatamente in
+[mgs-expressive-effects-evidence.json](mgs-expressive-effects-evidence.json),
+con hash dei sorgenti, eseguibile, shader SPIR-V, test e acquisizioni UHD.
+I tre tratti da savestate usano la cadenza NTSC normale; l'avvio completo
+accelerato serve alla copertura e non al confronto delle prestazioni.
+Le immagini e le istantanee diagnostiche restano locali sotto `data/native`.
 
 ```bash
 scripts/run_native.sh

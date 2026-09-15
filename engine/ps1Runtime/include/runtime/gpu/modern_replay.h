@@ -492,6 +492,7 @@ struct OriginalMeshGeometry {
       false; // complete original face, independent of PSX subdivision
   bool runtimeTexture =
       false; // verified actor-owned surface, composed in the mutable atlas
+  bool thermalEmission = false; // live STATE_THERMG plus DG_FLAG_IRTEXTURE
   std::array<std::array<float, 4>, 4> weights{
       {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}};
   std::array<uint32_t, 4> pointBytes{};

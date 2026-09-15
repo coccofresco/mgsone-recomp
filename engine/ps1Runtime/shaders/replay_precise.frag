@@ -202,6 +202,7 @@ void main() {
     foreground = shadeColor();
   }
 
+  foreground = mgs_thermal_emission(foreground, v_color_255);
   // Textured semi-transparency is selected per texel by STP.  Non-STP texels
   // remain opaque in color, while the whole packet stays painter ordered in
   // color and writes a far visibility-boundary depth. Untextured

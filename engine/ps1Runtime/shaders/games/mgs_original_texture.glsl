@@ -1,6 +1,15 @@
 // Original PCX indices and native palette words, resident for the session.
 #include "mgs_asset_storage.glsl"
 uint nativeWord(uint x, uint y);
+uvec3 mgs_thermal_emission(uvec3 color, vec3 shade) {
+  if (u_draw.mgs_projection.w < 3.0) return color;
+  // Reserve a saturated red response for source-mesh IR emitters.
+  // The screen sensor remaps this signal to yellow/white heat.
+  // Keep modest form shading above an emissive floor, even in darkness.
+  float form = dot(clamp(shade,vec3(0),vec3(255)),vec3(0.2126,0.7152,0.0722));
+  float detail = dot(vec3(color),vec3(0.2126,0.7152,0.0722))/255.0;
+  return uvec3(uint(96.0+min(110.0,65.0*sqrt(detail)+form*0.20)),5u,2u);
+}
 bool mgs_original_texel(uvec2 uv, out uint texel) {
   if (u_draw.mgs_texture_origin.z == 0) return false;
   ivec2 local = ivec2(uv) - u_draw.mgs_texture_origin.xy;

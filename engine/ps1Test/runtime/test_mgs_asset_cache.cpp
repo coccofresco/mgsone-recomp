@@ -1262,6 +1262,43 @@ TEST_F(MgsSourceMeshTest, ThermalEligibilityDoesNotRequireNativePackets) {
             (gpu::replay::Rgb8{128, 128, 128}));
 }
 
+TEST_F(MgsSourceMeshTest, ThermalEmissionRequiresBothLiveModeAndEligibility) {
+  memory.write32(object + 40, 0x257);
+  memory.write32(0x800adb3c, 0);
+  auto result = recover();
+  ASSERT_TRUE(result);
+  EXPECT_FALSE(result->buckets[39].front().originalMesh->thermalEmission);
+  memory.write32(0x800adb3c, 8);
+  result = recover();
+  ASSERT_TRUE(result);
+  EXPECT_TRUE(result->buckets[39].front().originalMesh->thermalEmission);
+  memory.write32(object + 40, 0x57);
+  result = recover();
+  ASSERT_TRUE(result);
+  EXPECT_FALSE(result->buckets[39].front().originalMesh->thermalEmission);
+  memory.write32(object + 40, 0x257);
+  memory.write32(0x800adb3c, 0);
+  result = recover();
+  ASSERT_TRUE(result);
+  EXPECT_FALSE(result->buckets[39].front().originalMesh->thermalEmission);
+}
+
+TEST_F(MgsSourceMeshTest, AnimatedSceneryIsNotAConnectedThermalBody) {
+  captureSceneBeforeBounds(&ctx);
+  const auto scene = latestSceneSnapshot();
+  ASSERT_TRUE(scene);
+  auto instance = scene->instances[0];
+  instance.pose.source = ScenePoseSource::Rotations;
+  instance.pose.invalidInput = false;
+  instance.primaryModels = 13;
+  instance.models.resize(13, instance.models[0]); // independent roots
+  memory.write32(0x800adb3c, 0x80000008u);        // demo + thermal
+  const auto material = sourceMeshMaterial(cache, memory, *scene, instance, 0,
+                                           std::array<uint32_t, 1>{0}, 0, 0);
+  ASSERT_TRUE(material);
+  EXPECT_FALSE(material->originalMesh->thermalEmission);
+}
+
 TEST_F(MgsSourceMeshTest, NullMaterialIsDefinedWithoutNativePackets) {
   auto bytes = fixture(true, true, true);
   const auto original = AssetCache::decode(bytes);

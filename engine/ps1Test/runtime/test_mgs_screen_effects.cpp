@@ -2,6 +2,7 @@
 #include "runtime/games/mgs_screen_effects.h"
 #include "runtime/gpu/gpu.h"
 #include <cstring>
+#include <fstream>
 #include <gtest/gtest.h>
 
 using namespace ps1;
@@ -324,4 +325,50 @@ TEST(MgsScreenEffectsTest, FadeUsesRenderedTileEnvelopeAndRejectsWrongBlend) {
   p.state.blend.mode = BlendMode::BackgroundMinusForeground;
   bindScreenEffect(p, f.prims + 36);
   EXPECT_EQ(p.screenEffect.kind, MgsScreenEffectKind::None);
+}
+
+TEST(MgsScreenEffectsTest, SensorTimeTracksGuestClockPauseAndRewind) {
+  ScreenActorFixture f;
+  f.visor();
+  const auto phase = [&](uint32_t time, uint32_t pause) {
+    f.word(0x800ada48, time);
+    f.word(0x800ae0a0, pause);
+    captureScreenEffects(f.ram);
+    auto p = f.tile(BlendMode::BackgroundPlusForeground);
+    bindScreenEffect(p, f.prims + 20);
+    EXPECT_EQ(p.screenEffect.kind, MgsScreenEffectKind::NightVision);
+    return p.screenEffect.parameters[2][3];
+  };
+  EXPECT_EQ(phase(1337, 0), 1337);
+  EXPECT_EQ(phase(1338, 0), 1338);
+  EXPECT_EQ(phase(1340, 1), 0);
+  EXPECT_EQ(phase(2000, 1), 0);
+  EXPECT_EQ(phase(1337, 0), 1337);
+}
+
+TEST(MgsScreenEffectsTest, UsaExecutableProvesClockPauseAndThermalAddresses) {
+  const char *path = std::getenv("PS1_TEST_MGS_USA_EXE");
+  if (!path)
+    GTEST_SKIP();
+  std::ifstream file(path, std::ios::binary);
+  ASSERT_TRUE(file);
+  std::vector<uint8_t> exe((std::istreambuf_iterator<char>(file)), {});
+  ASSERT_GE(exe.size(), 2048u);
+  ASSERT_EQ(std::memcmp(exe.data(), "PS-X EXE", 8), 0);
+  const auto word = [&](uint32_t offset) {
+    return uint32_t(exe.at(offset)) | uint32_t(exe.at(offset + 1)) << 8 |
+           uint32_t(exe.at(offset + 2)) << 16 |
+           uint32_t(exe.at(offset + 3)) << 24;
+  };
+  const auto instruction = [&](uint32_t address) {
+    return word(2048 + address - word(0x18));
+  };
+  EXPECT_EQ(instruction(0x8009ba24), 0x3c1c800bu); // gp = 0x800ad9fc
+  EXPECT_EQ(instruction(0x8009ba28), 0x279cd9fcu);
+  EXPECT_EQ(instruction(0x80014c30), 0x8f82004cu); // GV_Time = gp+76
+  EXPECT_EQ(instruction(0x80014c40), 0xaf82004cu);
+  EXPECT_EQ(instruction(0x80014c80), 0x8c42e0a0u); // GV_PauseLevel
+  EXPECT_EQ(instruction(0x8007b604), 0x8c42db3cu); // GM_GameStatus
+  EXPECT_EQ(instruction(0x8007b614), 0x34420008u); // STATE_THERMG
+  EXPECT_EQ(instruction(0x8007b61c), 0xac22db3cu);
 }

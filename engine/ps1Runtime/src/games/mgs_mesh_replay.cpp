@@ -312,9 +312,11 @@ void prepareFullSourceMeshes(const SceneSnapshot &scene, const Memory &memory,
         face.draw = std::move(*material);
         const uint32_t texture = face.draw.originalMesh->textureId;
         const bool runtimeTexture = face.draw.originalMesh->runtimeTexture;
+        const bool thermalEmission = face.draw.originalMesh->thermalEmission;
         applySourceGeometry(face.draw, source->second);
         face.draw.originalMesh->textureId = texture;
         face.draw.originalMesh->runtimeTexture = runtimeTexture;
+        face.draw.originalMesh->thermalEmission = thermalEmission;
         face.draw.originalMesh->sourceTopology =
             face.draw.originalMesh->sourceRecovery = true;
         face.visible = sourceFaceVisible(source->second.view, scene,

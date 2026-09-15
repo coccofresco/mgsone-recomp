@@ -1118,6 +1118,10 @@ vulkan_abi::DrawUniforms drawUniforms(const DrawPacket &packet) noexcept {
     uniforms.mgsViewRows = packet.originalMesh->viewRows;
     uniforms.mgsPointBytes = packet.originalMesh->pointBytes;
     uniforms.mgsProjection = packet.originalMesh->projection;
+    // Modes 1/2 distinguish indexed/procedural source geometry. Modes 3/4
+    // retain those sources and add thermal emission; zero stays Screen2D.
+    if (packet.originalMesh->thermalEmission && uniforms.mgsProjection[3] != 0)
+      uniforms.mgsProjection[3] += 2;
     uniforms.mgsWeights = packet.originalMesh->weights;
   }
   if (packet.originalTexture) {
@@ -1126,7 +1130,7 @@ vulkan_abi::DrawUniforms drawUniforms(const DrawPacket &packet) noexcept {
     uniforms.mgsPalette = packet.originalTexture->palette;
   }
   if (packet.waterEffect[0] != 0) {
-    uniforms.mgsProjection = {float(packet.waterEffect[1] & 63),
+    uniforms.mgsProjection = {float(packet.waterEffect[1]),
                               float(packet.waterEffect[0]),
                               float(packet.submissionId & 0xffffffu), 0};
     uniforms.textureState[2] |=

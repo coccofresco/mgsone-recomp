@@ -1844,6 +1844,30 @@ TEST(GpuModernReplayVulkanBakeTest,
 }
 
 TEST(GpuModernReplayVulkanBakeTest,
+     ThermalEmissionDoesNotAliasOrdinaryProceduralGeometry) {
+  // A procedural source already uses mode 2. Its ordinary material must
+  // remain distinct from the IR marker, including after geometry binding.
+  for (unsigned mode = 0; mode <= 2; ++mode) {
+    for (bool thermal : {false, true}) {
+      SCOPED_TRACE(::testing::Message()
+                   << "mode=" << mode << " thermal=" << thermal);
+      auto packet = precisePacket(1, true);
+      packet.originalMesh.emplace();
+      packet.originalMesh->projection = {320, 160, 112, float(mode)};
+      packet.originalMesh->thermalEmission = thermal;
+      const auto result =
+          bakeModernReplayVulkan(makePlan(packet), 4, feedbackFeatures());
+      ASSERT_TRUE(result.accepted());
+      const auto &draw =
+          std::get<VulkanReplayBakedDraw>(result.batch.commands[0].payload);
+      const float gpuMode = draw.segments[0].uniforms.mgsProjection[3];
+      EXPECT_EQ(gpuMode, float(mode + ((thermal && mode) ? 2 : 0)));
+      EXPECT_EQ(gpuMode >= 3, thermal && mode != 0);
+    }
+  }
+}
+
+TEST(GpuModernReplayVulkanBakeTest,
      CachedEyePlaneCrossingKeepsFullFeedbackScissor) {
   auto packet = precisePacket(1, true, true);
   packet.originalMesh.emplace();

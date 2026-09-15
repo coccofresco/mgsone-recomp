@@ -1605,6 +1605,82 @@ TEST(GpuModernReplayVulkanDepthTest,
   metrics::setEnabledForTesting(false);
 }
 
+TEST(MgsScreenEffectsTest, OptInGpuClippedScreenCopyPreservesSubpixelScene) {
+  if (!std::getenv("PS1_RUN_VULKAN_INTEGRATION"))
+    GTEST_SKIP();
+  ScopedEnvironment readback("PS1_VULKAN_REPLAY_READBACK", "all");
+  ScopedEnvironment from("PS1_VULKAN_REPLAY_READBACK_FRAME_FROM", "2");
+  ScopedEnvironment to("PS1_VULKAN_REPLAY_READBACK_FRAME_TO", "2");
+  ScopedEnvironment region("PS1_VULKAN_REPLAY_READBACK_REGION", "0,32,2,1");
+  struct Profile {
+    Profile() { games::mgs::configure(true, false); }
+    ~Profile() { games::mgs::configure(false, false); }
+  } profile;
+  metrics::reset();
+  metrics::setEnabledForTesting(true);
+  GPU gpu;
+  configureVulkanNativeOracle(gpu, true);
+  RendererOptions options;
+  options.internalScale = 4;
+  options.pgxp = true;
+  options.trueDepth = true;
+  options.trueDepthMode = "hybrid";
+  options.trueColor = true;
+  RendererVulkan renderer(gpu, options);
+  ASSERT_TRUE(
+      renderer.init("MGS screen subpixel test", 320, 224, false, false));
+  gpu.writeGP1(0x03000000);
+  gpu.writeGP1(0x05000000);
+  gpu.snapshotDisplayBuffer(1);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  gpu.writeGP0(0xe3000000);
+  gpu.writeGP0(0xe4000000 | 319 | (223 << 10));
+  constexpr Color32 blue{13, 37, 91, 255}, red{217, 19, 27, 255};
+  submitFill(gpu, blue.r, blue.g, blue.b, 0, 0, 320, 224);
+  // A one-native-pixel-wide quad starts a quarter-pixel after the native edge.
+  // Its four high-resolution samples cannot be reconstructed from RGB555 VRAM.
+  constexpr std::array<uint32_t, 4> packed{
+      packedVertex(32, 32), packedVertex(33, 32), packedVertex(32, 33),
+      packedVertex(33, 33)};
+  gpu.writeGP0(0x28000000 | red.r | (red.g << 8) | (red.b << 16));
+  for (uint32_t i = 0; i < 4; ++i) {
+    const auto value = projectedVertex(packed[i], 32.25f + float(i & 1),
+                                       32.f + float(i >> 1), i + 1);
+    gpu.writeGP0(packed[i], UINT32_MAX, &value);
+  }
+  gpu.writeGP0(0xe1000100); // Direct RGB555 framebuffer addressing.
+  gpu.writeGP0(0x65808080);
+  gpu.writeGP0(packedVertex(-2, 32));
+  gpu.writeGP0(30 | (32 << 8));
+  gpu.writeGP0(4 | (1 << 16));
+  gpu.snapshotDisplayBuffer(2);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  std::array<Color32, 32> colors;
+  for (uint32_t y = 0; y < 4; ++y)
+    for (uint32_t x = 0; x < 8; ++x)
+      colors[y * 8 + x] = x >= 1 && x < 5 ? red : blue;
+  std::array<uint8_t, 32> mask{};
+  std::array<float, 32> depth;
+  depth.fill(1);
+  const VulkanReplayDiagnosticPlanes planes{
+      {colors.data(), sizeof(colors), 8 * sizeof(Color32)},
+      {mask.data(), mask.size(), 8},
+      {depth.data(), sizeof(depth), 8 * sizeof(float)}};
+  const auto expected = captureVulkanReplayReadback({0, 32, 2, 1, 4}, planes);
+  EXPECT_EQ(metrics::getState(
+                "host.renderer.vulkan_replay_readback.last.actual_rgba8_hash"),
+            metricHash(expected.actual.rgba8));
+  EXPECT_EQ(metrics::get("host.renderer.mgs_screen.draw"), 1u);
+  EXPECT_EQ(metrics::get("host.renderer.mgs_screen.snapshot"), 1u);
+  EXPECT_EQ(metrics::get("host.renderer.vulkan_replay_executor_downgrade"), 0u);
+  EXPECT_EQ(gpu.internalResolutionScale(), 1u);
+  renderer.destroy();
+  metrics::reset();
+  metrics::setEnabledForTesting(false);
+}
+
 TEST(MgsScreenEffectsTest, OptInGpuScreenTexturePreservesSubpixelSceneAndRgb8) {
   if (!std::getenv("PS1_RUN_VULKAN_INTEGRATION"))
     GTEST_SKIP();
@@ -1722,8 +1798,8 @@ TEST(MgsScreenEffectsTest, OptInGpuVisorRetainsSubpixelEdgesAndNativeVram) {
                          directory.c_str());
   ScopedEnvironment readback("PS1_VULKAN_REPLAY_READBACK", "all");
   ScopedEnvironment from("PS1_VULKAN_REPLAY_READBACK_FRAME_FROM", "2");
-  ScopedEnvironment to("PS1_VULKAN_REPLAY_READBACK_FRAME_TO", "2");
-  ScopedEnvironment region("PS1_VULKAN_REPLAY_READBACK_REGION", "32,32,2,1");
+  ScopedEnvironment to("PS1_VULKAN_REPLAY_READBACK_FRAME_TO", "6");
+  ScopedEnvironment region("PS1_VULKAN_REPLAY_READBACK_REGION", "32,32,16,8");
   games::mgs::configure(true, false);
   metrics::reset();
   metrics::setEnabledForTesting(true);
@@ -1769,34 +1845,42 @@ TEST(MgsScreenEffectsTest, OptInGpuVisorRetainsSubpixelEdgesAndNativeVram) {
     gpu.writeGP0(value, address);
     native.writeGP0(value, address);
   };
-  send(0xe3000000);
-  send(0xe4000000 | 319 | (223 << 10));
-  send(0x02000000 | 13 | (37 << 8) | (91 << 16));
-  send(0);
-  send(320 | (224 << 16));
-  constexpr Color32 red{217, 19, 27, 255};
-  send(0x28000000 | red.r | (red.g << 8) | (red.b << 16));
-  for (uint32_t i = 0; i < 4; ++i) {
-    const auto xy = packedVertex(32 + int(i & 1), 32 + int(i >> 1));
-    auto value =
-        projectedVertex(xy, 32.25f + float(i & 1), 32.f + float(i >> 1), i + 1);
-    gpu.writeGP0(xy, UINT32_MAX, &value);
-    native.writeGP0(xy);
-  }
-  send(0xe5000000 | 160 | (112 << 11));
-  send(0xe1000220);
-  send(0x62287838, prims + 20);
-  send(packedVertex(-160, -112));
-  send(320 | (224 << 16));
-  send(0xe1000240);
-  for (unsigned i = 0; i < 112; ++i) {
-    send(0x62404040, prims + 68 + i * 16);
-    send(packedVertex(-160, -112 + int(i) * 2));
-    send(320 | (1 << 16));
-  }
-  gpu.snapshotDisplayBuffer(2);
-  renderer.renderFrame();
-  renderer.drainReplayDiagnostics();
+  const auto renderSensor = [&](uint32_t frame, uint32_t guestTime,
+                                bool paused) {
+    word(0x800ada48, guestTime);
+    word(0x800ae0a0, paused);
+    games::mgs::captureScreenEffects(ram);
+    send(0xe5000000);
+    send(0xe3000000);
+    send(0xe4000000 | 319 | (223 << 10));
+    send(0x02000000 | 13 | (37 << 8) | (91 << 16));
+    send(0);
+    send(320 | (224 << 16));
+    constexpr Color32 red{217, 219, 227, 255};
+    send(0x28000000 | red.r | (red.g << 8) | (red.b << 16));
+    for (uint32_t i = 0; i < 4; ++i) {
+      const auto xy = packedVertex(32 + int(i & 1), 32 + int(i >> 1));
+      auto value = projectedVertex(xy, 32.25f + float(i & 1),
+                                   32.f + float(i >> 1), i + 1);
+      gpu.writeGP0(xy, UINT32_MAX, &value);
+      native.writeGP0(xy);
+    }
+    send(0xe5000000 | 160 | (112 << 11));
+    send(0xe1000220);
+    send(0x62287838, prims + 20);
+    send(packedVertex(-160, -112));
+    send(320 | (224 << 16));
+    send(0xe1000240);
+    for (unsigned i = 0; i < 112; ++i) {
+      send(0x62404040, prims + 68 + i * 16);
+      send(packedVertex(-160, -112 + int(i) * 2));
+      send(320 | (1 << 16));
+    }
+    gpu.snapshotDisplayBuffer(frame);
+    renderer.renderFrame();
+    renderer.drainReplayDiagnostics();
+  };
+  renderSensor(2, 17, false);
   EXPECT_EQ(metrics::get("mgs.screen_effect.pass.night_vision"), 1u);
   EXPECT_EQ(metrics::get("mgs.screen_effect.replaced_packets"), 113u);
   EXPECT_EQ(metrics::get("host.renderer.mgs_screen.snapshot"), 1u);
@@ -1804,29 +1888,58 @@ TEST(MgsScreenEffectsTest, OptInGpuVisorRetainsSubpixelEdgesAndNativeVram) {
   EXPECT_EQ(gpu.internalResolutionScale(), 1u);
   for (uint32_t i = 0; i < GPU::VRAM_WIDTH * GPU::VRAM_HEIGHT; ++i)
     ASSERT_EQ(gpu.getVRAM()[i].raw, native.getVRAM()[i].raw) << i;
-  std::ifstream ppm(directory / "frame-2.ppm", std::ios::binary);
-  ASSERT_TRUE(ppm);
-  std::string magic;
-  unsigned width, height, max;
-  ppm >> magic >> width >> height >> max;
-  ppm.get();
-  ASSERT_EQ(width, 8u);
-  ASSERT_EQ(height, 4u);
-  ASSERT_EQ(max, 255u);
-  std::array<uint8_t, 8 * 4 * 3> pixels{};
-  ppm.read(reinterpret_cast<char *>(pixels.data()), pixels.size());
-  ASSERT_TRUE(ppm);
-  // The edge stays at column one (a quarter native pixel), never at column
-  // zero/four. Sensor noise may change a channel by two levels, not this edge.
+  const auto readImage = [&](uint32_t frame) {
+    std::ifstream ppm(directory / ("frame-" + std::to_string(frame) + ".ppm"),
+                      std::ios::binary);
+    std::string magic;
+    unsigned width = 0, height = 0, max = 0;
+    ppm >> magic >> width >> height >> max;
+    ppm.get();
+    EXPECT_EQ(magic, "P6");
+    EXPECT_EQ(width, 64u);
+    EXPECT_EQ(height, 32u);
+    EXPECT_EQ(max, 255u);
+    std::vector<uint8_t> pixels(width * height * 3);
+    ppm.read(reinterpret_cast<char *>(pixels.data()), pixels.size());
+    EXPECT_TRUE(ppm);
+    return pixels;
+  };
+  const auto pixels = readImage(2);
+  ASSERT_EQ(pixels.size(), 64u * 32 * 3);
+  // Even with pronounced grain and light scatter the bright edge must begin
+  // at column one, not at an upscaled native-pixel boundary (zero or four).
   for (unsigned y = 0; y < 4; ++y) {
     const auto green = [&](unsigned x) {
-      return int(pixels[(y * 8 + x) * 3 + 1]);
+      return int(pixels[(y * 64 + x) * 3 + 1]);
     };
+    int background = green(0), foreground = 255;
     for (unsigned x = 1; x < 5; ++x)
-      EXPECT_GT(green(x), green(0) + 12);
+      foreground = std::min(foreground, green(x));
     for (unsigned x = 5; x < 8; ++x)
-      EXPECT_LE(std::abs(green(x) - green(0)), 3);
+      background = std::max(background, green(x));
+    EXPECT_GT(foreground, background + 30);
   }
+  // Noise must be perceptible over a uniform source, not +/- one RGB8 level.
+  double sum = 0, squared = 0;
+  unsigned count = 0;
+  for (unsigned y = 12; y < 32; ++y)
+    for (unsigned x = 12; x < 64; ++x) {
+      double value = pixels[(y * 64 + x) * 3 + 1];
+      sum += value;
+      squared += value * value;
+      ++count;
+    }
+  EXPECT_GT(std::sqrt(squared / count - (sum / count) * (sum / count)), 5.0);
+  renderSensor(3, 18, false);
+  const auto next = readImage(3);
+  EXPECT_NE(pixels, next);
+  renderSensor(4, 17, false);
+  EXPECT_EQ(pixels, readImage(4)); // save-state rewind
+  renderSensor(5, 19, true);
+  const auto pause = readImage(5);
+  renderSensor(6, 40, true);
+  EXPECT_EQ(pause, readImage(6)); // host ticks cannot animate a paused sensor
+  EXPECT_EQ(metrics::get("host.renderer.vulkan_replay_executor_downgrade"), 0u);
   renderer.destroy();
 }
 
