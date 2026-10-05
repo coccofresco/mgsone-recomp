@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-04",
+  "kind": "cinematic_red_semantic_correction",
+  "cause": "La dominante rossa dell’intro era stata erroneamente reinterpretata come termografia. GoggleIr/ScnMask e STATE_THERMG sono riutilizzati dalla demo: non bastano a identificarne il significato visivo.",
+  "user_confirmation": "Il filtro dell’intro era semplicemente una luce/dominante rossa.",
+  "implementation": {
+    "screen": "CinematicRedTint per maschera rossa nel contesto STATE_DEMO; tinta RGB8, texture e shading conservati. Il gameplay mantiene ThermalVision.",
+    "material": "Rimossa cinematicBodyRig; emissione termica solo con STATE_THERMG, flag IR originale e assenza di STATE_DEMO.",
+    "guest_state": "Nessun cambio al codice o ai dati nativi, ai tempi o alle palette del gioco."
+  },
+  "runtime_sha256": "26d6d580dde2060c2017f985a24d5c23d39ec1bb9c90f6756a7047e37c6a15cd",
+  "source_sha256": {
+    "engine/ps1Runtime/include/runtime/gpu/modern_replay.h": "ce889525e96569825b58eb1e15699be9f4ac054253b9ecd29618c810bf80a9b2",
+    "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl": "2d4ffead8a8315ba8209ee07be078b6a09be59264e9e853a71fb6366af52d5ee",
+    "engine/ps1Runtime/src/games/mgs_screen_effects.cpp": "dcb67fc5f8061d7858f54957ecd263900ebc99cac6e3b21349911b0a36eb0e3f",
+    "engine/ps1Runtime/src/games/mgs_source_material.cpp": "d648d67e277624a4cb132282ac7f603034d55065e0f8b68ef25a03035da77ec6",
+    "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp": "b64c8d4b4ad0ae3d23df0debd3bb09d7668704b2c1f8958e1a0433dc4089b684",
+    "engine/ps1Test/runtime/test_mgs_asset_cache.cpp": "9faadf7471b67b300c55ebf531fcd7f4969b4ee9aab13eecc49c2decda57ab4b",
+    "engine/ps1Test/runtime/test_mgs_screen_effects.cpp": "aa7fb161fb708cc73ba8490c97450611115f71c941f2ed1a6da476c11cd38a78"
+  },
+  "tests": {
+    "passed": 77,
+    "suites": 4,
+    "skipped": 0,
+    "gpu_integration": true,
+    "original_usa_executable": true,
+    "original_asset_cache": true,
+    "log": ".local/cinematic-red-tests.log",
+    "log_sha256": "49eab821a1b95d8363a2da3e888441e715fd18246602f240e131d9c3661da3d6",
+    "filter": "MgsScreenEffectsTest.*:MgsSourceMeshTest.*:GpuModernReplayVulkanBakeTest.*:MgsAssetCacheTest.ValidatesLocallyExtractedUsaCache",
+    "regressions": [
+      "Maschera rossa DMO distinta da termico di gameplay, anche dopo cambio contesto/rewind.",
+      "Gruppo completo di 113 packet riconosciuto e composto nel buffer corretto.",
+      "Shader GPU conserva bordo subpixel e shading; niente grana dipendente dal tempo nella tinta.",
+      "Termico di gameplay distinto dalla tinta cinematografica.",
+      "Emissione termica spenta in demo anche su materiale IR; ripristinata tornando al gameplay.",
+      "VRAM software identica all’esecuzione dei packet originali."
+    ]
+  },
+  "checkpoint": {
+    "source": "data/native/effects-checkpoint/quick_slot_0.ps1s",
+    "source_sha256": "8f6785b4bc9b62fbe233fc1f07d39fda6b99fbd1593ba3d5b5aab1c1e8b145b6",
+    "run_json": "data/native/cinematic-red-correction/run.json",
+    "exit_code": 0,
+    "vblanks_after_load": 600,
+    "timing_vblanks_total": 602,
+    "counts": {
+      "mgs.screen_effect.pass.cinematic_red_tint": 118,
+      "mgs.screen_effect.pass.thermal_vision": 0,
+      "mgs.source.thermal_emissive_faces": 0,
+      "mgs.screen_effect.pass.night_vision": 136,
+      "mgs.screen_effect.pass.fade_black": 30,
+      "mgs.screen_effect.incomplete_pass": 0,
+      "host.renderer.vulkan_replay_executor_downgrade": 0
+    },
+    "metrics": "data/native/cinematic-red-correction/metrics.json",
+    "metrics_sha256": "e508d93061b43ad05112829f272bb4f4cd920ea35c66d8e769496a29eea4496b",
+    "captures": [
+      {
+        "path": "data/native/cinematic-red-correction/gpu/frame-10140-present-4-ordinary-scanout.ppm",
+        "sha256": "c0bb460da2297b9dd0fcff47b3cb7d5a4e198ba7b94816c0faf02ccd8b9ff2a6",
+        "width": 3840,
+        "height": 2160
+      },
+      {
+        "path": "data/native/cinematic-red-correction/gpu/frame-9600-present-1-ordinary-scanout.ppm",
+        "sha256": "872273364a5ad65f1f189d9b7641f5c901cbf05ffa4abbb0902373e5d8e31af5",
+        "width": 3840,
+        "height": 2160
+      },
+      {
+        "path": "data/native/cinematic-red-correction/gpu/frame-9780-present-2-ordinary-scanout.ppm",
+        "sha256": "4b4bf93e3d8d828194473fb96021b42700579ee030b5a3dbcaadac6d436aa2d1",
+        "width": 3840,
+        "height": 2160
+      },
+      {
+        "path": "data/native/cinematic-red-correction/gpu/frame-9960-present-3-ordinary-scanout.ppm",
+        "sha256": "fe7c71248cc3ca0260b0bb133a9860151fab446bd8d255e1b331e2d6353144fc",
+        "width": 3840,
+        "height": 2160
+      }
+    ]
+  },
+  "preview": {
+    "path": "data/native/cinematic-red-correction/intro-red-4k.png",
+    "sha256": "3d89ca4554db62e99fa90dd90f20e83dbf050c6b9c2a590517b7bc1404c81125",
+    "source_frame": 9780,
+    "note": "Conversione PPM→PNG senza modifica del rendering; ispezionato il fotogramma del briefing con la dominante rossa."
+  },
+  "historical_correction": {
+    "evidence": "docs/mgs-expressive-effects-evidence.json",
+    "note": "I vecchi contatori thermal_vision e la didascalia Termico nelle immagini dell’intro erano nomi di implementazione errati. Le evidenze storiche restano conservate come tali, non attestano uso reale del visore termico."
+  },
+  "protected_files": {
+    "savestates/quick_slot_0.ps1s": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+    "data/memory_cards/card1.mcd": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0",
+    "data/memory_cards/card2.mcd": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+  },
+  "limits": [
+    "Validazione visiva della sequenza del checkpoint, non di tutte le cinematiche del gioco.",
+    "Eventuali sensori termici realmente mostrati in altre demo richiedono identificazione specifica; non si deducono dal solo flag IR.",
+    "La separazione del termico gameplay è verificata da test CPU/GPU; questo run non è una partita con Therm.G equipaggiato."
+  ]
+}

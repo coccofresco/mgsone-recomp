@@ -3,6 +3,7 @@
 #include "runtime/games/mgs_decomp.h"
 #include "runtime/games/mgs_profile.h"
 #include "runtime/games/mgs_scene.h"
+#include "runtime/games/mgs_surface_effects.h"
 #include "runtime/gpu/modern_replay.h"
 #include "runtime/memory.h"
 #include "runtime/metrics.h"
@@ -80,6 +81,7 @@ struct Face {
   bool precisePose = false;
   double projection = 0;
   gpu::replay::OriginalMeshGeometry geometry;
+  gpu::replay::MgsSurfaceEffect effect;
 };
 std::array<std::unordered_map<uint32_t, Face>, 2> faces;
 // One source geometry registry, independent of packet allocation/culling.
@@ -196,6 +198,11 @@ bool sourceFaceVisible(const std::array<Point, 4> &eye,
 // and ordering are adapters; geometry/projection/depth policy are shared.
 void applySourceGeometry(gpu::replay::DrawPacket &packet, const Face &face) {
   packet.originalMesh = face.geometry;
+  if(face.effect.kind!=gpu::replay::MgsSurfaceKind::None) {
+    packet.surfaceEffect=face.effect;
+    if(face.geometry.lighting.ambient[3]!=0)
+      for(auto &v:packet.vertices) v.color={128,128,128};
+  }
   packet.originalMesh->projection = {
       float(face.projection), float(packet.state.drawOffset.x),
       float(packet.state.drawOffset.y), face.procedural ? 2.0f : 1.0f};
@@ -313,10 +320,12 @@ void prepareFullSourceMeshes(const SceneSnapshot &scene, const Memory &memory,
         const uint32_t texture = face.draw.originalMesh->textureId;
         const bool runtimeTexture = face.draw.originalMesh->runtimeTexture;
         const bool thermalEmission = face.draw.originalMesh->thermalEmission;
+        const auto lighting = face.draw.originalMesh->lighting;
         applySourceGeometry(face.draw, source->second);
         face.draw.originalMesh->textureId = texture;
         face.draw.originalMesh->runtimeTexture = runtimeTexture;
         face.draw.originalMesh->thermalEmission = thermalEmission;
+        face.draw.originalMesh->lighting = lighting;
         face.draw.originalMesh->sourceTopology =
             face.draw.originalMesh->sourceRecovery = true;
         face.visible = sourceFaceVisible(source->second.view, scene,
@@ -657,6 +666,131 @@ bool buildSourceFace(const SceneSnapshot &scene, const SceneInstance &instance,
   }
   return complete;
 }
+// Actors such as REX's laser and lit_mdl construct DG_MDL in RAM instead
+// of loading a KMD. Decode that original indexed format before PSX projection;
+// its complete allocation and live semantic owner remain mandatory.
+void prepareDynamicEffectFaces(const SceneSnapshot &scene,const Memory &memory,
+                               std::unordered_map<uint32_t,Face> &output) {
+  using Kind=gpu::replay::MgsSurfaceKind;
+  if(cache->section(AssetCache::Templates).count!=4) return;
+  const auto ptr=[&](uint32_t p){return memory.ramPtr()+(p&0x1fffffffu);};
+  constexpr unsigned order[]{0,1,3,2};
+  for(const auto &instance:scene.instances) {
+    const auto effect=surfaceEffectForObject(instance.guestAddress);
+    if(!instance.visible || instance.asset!=~0u ||
+       (effect.kind!=Kind::Energy && effect.kind!=Kind::VolumeLight)) continue;
+    if(instance.models.size()!=instance.primaryModels || instance.models.size()>64) continue;
+    for(const auto &model:instance.models) {
+      const uint32_t object=model.guestAddress;
+      if(!range(object,92)) continue;
+      const uint32_t desc=u32(ptr(object+64));
+      if(!desc || !range(desc,88)) continue;
+      const uint32_t count=u32(ptr(desc+4)),nv=u32(ptr(desc+52)),
+                     positions=u32(ptr(desc+56)),indices=u32(ptr(desc+60));
+      const uint32_t nn=u32(ptr(desc+64)),normals=u32(ptr(desc+68)),normalIndices=u32(ptr(desc+72));
+      const bool hasNormals=nn && nn<=256 && normals && normalIndices &&
+          range(normals,nn*8u) && range(normalIndices,count*4u);
+      if(!count || count>4096 || !nv || nv>256 || !range(positions,nv*8u) ||
+         !range(indices,count*4u) || (nn && !hasNormals) || (u32(ptr(desc))&0x10000)) continue;
+      const uint32_t packs=u32(ptr(object+84+scene.bufferIndex*4));
+      if(!packs || !range(packs,count*52u)) continue;
+      const auto &world=model.presentationWorld;
+      const double det=world[0]*(world[5]*world[10]-world[9]*world[6])-
+                       world[4]*(world[1]*world[10]-world[9]*world[2])+
+                       world[8]*(world[1]*world[6]-world[5]*world[2]);
+      if(std::abs(det)<1e-10) continue;
+      for(unsigned f=0;f<count;++f) {
+        const auto *pack=ptr(packs+f*52);
+        if((pack[7]&0xfc)!=0x3c) continue;
+        Face face{};face.effect=effect;face.procedural=true;face.step=12;
+        face.assetModel=~0u;face.sequence=scene.sequence;face.projection=scene.projection;
+        face.sourceFace=sourceFaceId(instance.guestAddress,0xc0000000u+f*4);
+        face.opcode=pack[7];face.clut=u16(pack+14);face.tpage=u16(pack+26);
+        std::array<float,4> bounds{1e9f,1e9f,-1e9f,-1e9f};
+        bool valid=true;
+        for(unsigned k=0;k<4 && valid;++k) {
+          const auto vi=ptr(indices)[f*4+order[k]];
+          const unsigned ni=hasNormals ? ptr(normalIndices)[f*4+order[k]] : 0;
+          if(vi>=nv || (hasNormals && ni>=nn)){valid=false;break;}
+          Point local{},normal{};
+          for(unsigned a=0;a<3;++a) {
+            local[a]=int16_t(u16(ptr(positions+vi*8+a*2)));
+            normal[a]=hasNormals ? int16_t(u16(ptr(normals+ni*8+a*2)))/4096.0 : 0;
+          }
+          const auto wp=transform(world,local);
+          Point wn{};
+          // Inverse transpose, including nonuniform scale and reflections.
+          for(unsigned a=0;a<3;++a) for(unsigned b=0;b<3;++b) {
+            const unsigned r1=(a+1)%3,r2=(a+2)%3,c1=(b+1)%3,c2=(b+2)%3;
+            wn[a]+=(world[c1*4+r1]*world[c2*4+r2]-world[c2*4+r1]*world[c1*4+r2])/det*normal[b];
+          }
+          for(unsigned a=0;a<3;++a) {
+            face.geometry.lighting.positions[k][a]=float(wp[a]);
+            double n=wn[a];
+            if(effect.kind==Kind::Energy) {
+              n=0;for(unsigned b=0;b<3;++b)n+=scene.view[b*4+a]*wn[b];
+            }
+            face.geometry.lighting.normals[k][a]=float(n);
+          }
+          face.view[k]=transform(scene.view,wp);
+          face.view[k][1]*=58.0/64.0;
+          if(scene.widescreen) face.view[k][0]*=0.75;
+          const auto *screen=ptr(object+32);
+          Point reference{};
+          for(unsigned a=0;a<3;++a) {
+            double value=double(int32_t(u32(screen+20+a*4)))*4096;
+            for(unsigned b=0;b<3;++b)value+=int16_t(u16(screen+(a*3+b)*2))*local[b];
+            reference[a]=std::floor(value/4096.0);
+          }
+          face.reference[k]=referenceProjection(reference,scene.projection);
+          face.nativeView[k]=reference;
+          face.geometry.pointBytes[k]=cache->section(AssetCache::Templates).offset+k*16;
+          face.xy[k]={int16_t(u16(pack+8+k*12)),int16_t(u16(pack+10+k*12))};
+          face.uv[k]=u16(pack+12+k*12);face.colors[k]=u32(pack+4+k*12)&0xffffff;
+          bounds[0]=std::min(bounds[0],float(face.uv[k]&255));bounds[1]=std::min(bounds[1],float(face.uv[k]>>8));
+          bounds[2]=std::max(bounds[2],float(face.uv[k]&255));bounds[3]=std::max(bounds[3],float(face.uv[k]>>8));
+        }
+        if(!valid) continue;
+        if(!hasNormals) {
+          const auto &p=face.geometry.lighting.positions;
+          Point a{},b{},normal{};
+          for(unsigned i=0;i<3;++i){a[i]=p[1][i]-p[0][i];b[i]=p[2][i]-p[0][i];}
+          for(unsigned i=0;i<3;++i) normal[i]=a[(i+1)%3]*b[(i+2)%3]-a[(i+2)%3]*b[(i+1)%3];
+          const double length=std::sqrt(normal[0]*normal[0]+normal[1]*normal[1]+normal[2]*normal[2]);
+          for(auto &n:face.geometry.lighting.normals) for(unsigned i=0;i<3;++i) {
+            double value=normal[i];
+            if(effect.kind==Kind::Energy) {
+              value=0;for(unsigned j=0;j<3;++j)value+=scene.view[j*4+i]*normal[j];
+            }
+            n[i]=float(value/std::max(length,1e-12));
+          }
+        }
+        face.effect.parameters[1]=bounds;
+        const uint32_t light=u32(ptr(instance.guestAddress+52));
+        if(effect.kind==Kind::VolumeLight && (instance.flags&8u) &&
+           !(u32(ptr(desc))&4u) && light && range(light,64)) {
+          auto &lighting=face.geometry.lighting;lighting.ambient[3]=1;
+          for(unsigned row=0;row<3;++row) {
+            lighting.ambient[row]=(instance.flags&0x100u)
+                ? float(int32_t(u32(ptr(light+20+row*4)))) : scene.ambient[row];
+            for(unsigned a=0;a<3;++a) {
+              lighting.directions[row][a]=int16_t(u16(ptr(light+(row*3+a)*2)))/4096.f;
+              lighting.colors[row][a]=int16_t(u16(ptr(light+32+(row*3+a)*2)))/16.f;
+            }
+          }
+        }
+        for(unsigned k=0;k<4;++k) for(unsigned a=0;a<3;++a) {
+          auto &row=face.geometry.viewRows[k*3+a];
+          row[0]=face.view[1][a]-face.view[0][a];row[1]=face.view[2][a]-face.view[0][a];
+          row[3]=face.view[0][a];
+          if(k==3) row[3]+=face.view[3][a]-face.view[2][a]-face.view[1][a]+face.view[0][a];
+        }
+        output.emplace((packs+f*52)&0x1fffffffu,std::move(face));
+        metrics::count("mgs.effects.dynamic_model.source_faces");
+      }
+    }
+  }
+}
 void preparePrimitiveFaces(const SceneSnapshot &scene, const Memory &memory,
                            std::unordered_map<uint32_t, Face> &output) {
   if (cache->section(AssetCache::Templates).count != 4)
@@ -702,7 +836,8 @@ void preparePrimitiveFaces(const SceneSnapshot &scene, const Memory &memory,
         !range(positions, uint64_t(count) * (rectangle ? 1 : 4) * 8) ||
         (rectangle && !range(rect, 8)))
       continue;
-    const auto world = matrix(address);
+    const uint32_t root=u32(p+32);
+    const auto world = matrix(root && range(root,32) ? root : address);
     for (uint32_t n = 0; n < count; ++n) {
       const uint32_t packet = packs + n * packetSize;
       const auto *pack = ptr(packet);
@@ -723,6 +858,9 @@ void preparePrimitiveFaces(const SceneSnapshot &scene, const Memory &memory,
             positions + (n * (rectangle ? 1 : 4) + (rectangle ? 0 : k)) * 8);
         Point point{double(int16_t(u16(v))), double(int16_t(u16(v + 2))),
                     double(int16_t(u16(v + 4)))};
+        const auto worldPoint=transform(world,point);
+        for(unsigned axis=0;axis<3;++axis)
+          face.geometry.lighting.positions[k][axis]=float(worldPoint[axis]);
         if (!camera) {
           point = transform(scene.view, transform(world, point));
           // DG_PrimChanl has its own inline overscan, distinct from KMD.
@@ -939,6 +1077,7 @@ void meshDividePacket(recomp_context *ctx) {
 void prepareMeshReplay(recomp_context *ctx) {
   if (!enabled || !active() || !ctx || !ctx->mem)
     return;
+  captureSurfaceEffects({ctx->mem->ramPtr(),Memory::RAM_SIZE});
   const auto scene = latestSceneSnapshot();
   const uint32_t buffer = ctx->r5;
   if (buffer > 1) {
@@ -1043,6 +1182,7 @@ void prepareMeshReplay(recomp_context *ctx) {
       }
     }
   }
+  prepareDynamicEffectFaces(*scene, *ctx->mem, output);
   preparePrimitiveFaces(*scene, *ctx->mem, output);
   uint32_t derived = 0;
   for (const auto &[child, link] : subdivided[buffer]) {
@@ -1273,7 +1413,9 @@ bool bindRecoveredSceneDraw(gpu::replay::DrawPacket &packet,
     metrics::count("mgs.source.runtime_surface_material_draws");
     return true;
   }
-  return packet.originalTexture.has_value();
+  return packet.originalTexture.has_value() ||
+         (packet.surfaceEffect.kind==gpu::replay::MgsSurfaceKind::Camo &&
+          packet.state.texturePage.depth==gpu::replay::TextureDepth::Direct15);
 }
 void adaptMeshReplayPacket(gpu::replay::DrawPacket &packet) {
   if (!enabled || !active())

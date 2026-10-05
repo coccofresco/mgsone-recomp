@@ -188,7 +188,10 @@ KernelThreads::Snapshot KernelThreads::snapshot() const {
   result.currentTcb = impl_->current->tcb;
   for (unsigned i = 0; i < impl_->fibers.size(); ++i) {
     const auto &fiber = impl_->fibers[i];
-    if (fiber.initialized && impl_->ctx.mem->read32(fiber.tcb) == 0x4000)
+    // A restored thread may remain dormant across several saves. Its guest
+    // continuation exists even before we allocate a new host stack for it.
+    if ((fiber.initialized || fiber.resumePc) &&
+        impl_->ctx.mem->read32(fiber.tcb) == 0x4000)
       result.resumePcs[i] = fiber.resumePc;
   }
   return result;
@@ -204,6 +207,12 @@ void KernelThreads::restart(const Snapshot &state) {
       fiber.resumePc = state.resumePcs[i];
       fiber.tcb = fresh->base() + i * 0xc0;
       fiber.owner = fresh.get();
+      // The BIOS TCB is also the architectural authority for a dormant
+      // thread. Older snapshots omitted the metadata above when a restored
+      // thread had not run again; recover its PC without replaying a prologue.
+      if (!fiber.resumePc && i < fresh->count() &&
+          fresh->ctx.mem->read32(fiber.tcb) == 0x4000)
+        fiber.resumePc = fresh->ctx.mem->read32(fiber.tcb + 0x88);
     }
     fresh->root = fresh->current = &fresh->fibers[(state.currentTcb - fresh->base()) / 0xc0];
     fresh->current->initialized = true;

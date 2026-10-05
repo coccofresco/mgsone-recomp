@@ -54,9 +54,18 @@ layout(set = 1, binding = 0, std140) uniform CrashReplayDrawState {
   ivec4 mgs_texture_origin;
   uvec4 mgs_palette[2];
   vec4 mgs_weights[4];
+  vec4 mgs_normals[4];
+  vec4 mgs_light_directions[3];
+  vec4 mgs_light_colors[3];
+  vec4 mgs_ambient;
+  vec4 mgs_world_positions[4];
+  uvec4 mgs_point_lights;
+  vec4 mgs_surface_effect[4];
 } u_draw;
 #include "games/mgs_original_texture.glsl"
+#include "games/mgs_lighting.glsl"
 #include "games/mgs_screen_texture.glsl"
+#include "games/mgs_surface_effects.glsl"
 
 layout(location = 0) in vec2 v_uv;
 layout(location = 1) noperspective in vec3 v_color_255;
@@ -133,13 +142,13 @@ uvec3 texelRgb5(uint texel) {
 }
 
 uvec3 expandRgb5(uvec3 rgb5) {
-  return (rgb5 << 3u) | (rgb5 >> 2u);
+  return uvec3(round(mgs_albedo(rgb5)));
 }
 
 uvec3 shadeColor() {
   // uint conversion truncates toward zero, matching the software oracle's
   // float-to-int Gouraud conversion before its 0..255 clamp.
-  return uvec3(clamp(v_color_255, vec3(0.0), vec3(255.0)));
+  return uvec3(clamp(mgs_lighting(v_color_255), vec3(0.0), vec3(255.0)));
 }
 
 uvec3 blendPs1TrueColor(uvec3 foreground, uvec3 background, uint mode) {
@@ -178,10 +187,11 @@ void main() {
   uvec3 foreground;
   if (textured) {
     bool visible;
-    if (mgs_screen_texel(v_uv, v_color_255, foreground, source_stp, visible)) {
+    if (mgs_surface_texel(v_uv, v_color_255, foreground, source_stp, visible) ||
+        mgs_screen_texel(v_uv, v_color_255, foreground, source_stp, visible)) {
       if (!visible) discard;
     } else {
-      texel = samplePs1Texel(v_uv);
+      texel = samplePs1Texel(mgs_surface_uv(v_uv));
       // Only raw zero is transparent.  0x8000 is visible black with STP/mask.
       if (texel == 0u)
         discard;
@@ -195,14 +205,22 @@ void main() {
         // min(255, (texel5 * shade8) >> 4).  CrashReplayV1 retains that exact
         // generated 8-bit value instead of dithering/quantizing it back to 5-bit.
         foreground =
-            min(uvec3(255u), (rgb5 * shadeColor()) >> 4u);
+            min(uvec3(255u), mgs_modulate(rgb5, v_color_255));
       }
     }
   } else {
+    bool visible;
     foreground = shadeColor();
+    uvec3 effectColor;bool effectStp;
+    if(mgs_surface_texel(v_uv,v_color_255,effectColor,effectStp,visible)) {
+      if(!visible) discard;
+      foreground=effectColor;
+      source_stp=effectStp;
+    }
   }
 
-  foreground = mgs_thermal_emission(foreground, v_color_255);
+  foreground = mgs_surface_color(foreground,v_uv);
+  foreground = mgs_thermal_emission(foreground, mgs_lighting(v_color_255));
   // Textured semi-transparency is selected per texel by STP.  Non-STP texels
   // remain opaque in color, while the whole packet stays painter ordered in
   // color and writes a far visibility-boundary depth. Untextured
@@ -229,7 +247,15 @@ void main() {
         texelFetch(u_destination_color, destination, 0).rgb;
     const uvec3 background =
         uvec3(round(clamp(destination_unorm, vec3(0.0), vec3(1.0)) * 255.0));
-    foreground = blendPs1TrueColor(
+    if (u_draw.mgs_surface_effect[0].x==15.0) {
+      foreground=uvec3(round(vec3(foreground)*mgs_surface_coverage));
+      const uvec3 transmitted=uvec3(round(vec3(background)*mgs_bubble_transmission));
+      foreground=blendPs1TrueColor(foreground,transmitted,u_draw.texture_state.w);
+      foreground=uvec3(round(clamp(vec3(foreground)+mgs_bubble_scattering*
+                                  mgs_surface_coverage,vec3(0),vec3(255))));
+    } else if ((u_draw.texture_state.w & 3u) == 0u && u_draw.mgs_surface_effect[0].x != 0.0)
+      foreground=uvec3(round(mix(vec3(background),vec3(foreground),0.5*mgs_surface_coverage)));
+    else foreground = blendPs1TrueColor(
         foreground, background, u_draw.texture_state.w);
   }
 
@@ -237,5 +263,5 @@ void main() {
   // PS1 bit 15 is an independent plane.  It is deliberately not host alpha.
   o_mask = (source_stp || force_mask) ? 1u : 0u;
   gl_FragDepth = replay_occlusion_depth();
-  o_surface_depth = replay_surface_depth();
+  o_surface_depth = mgs_screen_output_depth(replay_surface_depth());
 }

@@ -1,0 +1,55 @@
+{
+  "format": "mgs-tas-route-1",
+  "source_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757",
+  "source_url": "https://tasvideos.org/3462S",
+  "description": "Resume the original SOCOM firing action from the retained east-side battle checkpoint, gated on Ocelot returning to the southwest firing window. Stop on original victory story 39; abort mission failure even if Snake is alive.",
+  "reference_evidence": {
+    "path": ".local/tas-reference/reference-ticks-prefix.tsv",
+    "sha256": "ccf28bdd27a67228093803b257fe4dc0e22271aafb1ca20cc937bd0094129574",
+    "frames": [
+      33519,
+      33520
+    ]
+  },
+  "steps": [
+    {
+      "name": "original-ocelot-target-window",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "until": {
+        "story": {
+          "min": 39
+        }
+      },
+      "abort_when": {
+        "socom_ammo": 0
+      },
+      "action": {
+        "source_frames": [
+          33519,
+          33520
+        ],
+        "minimum_hold": 4,
+        "settle_frames": 110
+      },
+      "attempts": 20,
+      "max_frames": 2000,
+      "when": {
+        "revolver_09fb_x": {
+          "max": -2500
+        },
+        "revolver_09fb_z": {
+          "max": 4000
+        },
+        "revolver_09fb_phase": {
+          "ne": 3
+        }
+      }
+    }
+  ]
+}

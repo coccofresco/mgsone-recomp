@@ -8,6 +8,7 @@ import struct
 import subprocess
 import tomllib
 from mgs_assets import Disc, stages, stage_members
+from mgs_overlay_catalog import describe
 
 ROOT = Path(__file__).resolve().parents[1]
 EXE_SHA = '3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32'
@@ -17,6 +18,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--exe', type=Path, default=ROOT / 'data/assets/usa/disc1/SLUS_005.94')
     parser.add_argument('--cue', type=Path, required=True)
+    parser.add_argument('--campaign', action='store_true', help='compile all story-stage overlay candidates from the original USA archive')
     args = parser.parse_args()
     exe = args.exe.resolve(strict=True)
     cue = args.cue.resolve(strict=True)
@@ -26,11 +28,18 @@ def main():
     # CD_sync poll: the original delay slot sets a0=-1 before VSync.
     assert struct.unpack_from('<I', data, 0x8ff54 - 0x10000 + 2048)[0] == 0x2404ffff
     assert struct.unpack_from('<I', data, 0x17b38 - 0x10000 + 2048)[0] == 0x84830006
-    assert struct.unpack_from('<I', data, 0x1919c - 0x10000 + 2048)[0] == 0x27bdffd8
-    assert struct.unpack_from('<I', data, 0x1e0ac - 0x10000 + 2048)[0] == 0x00804821
+    # DG_SortChanlSystem dispatch, including channel/buffer argument setup.
+    # Observe the stage of the pipeline, even when fog replaces its callback.
+    assert struct.unpack_from('<7I', data, 0x18774 - 0x10000 + 2048) == (
+        0x3c04800b, 0x24844164, 0x02602821, 0x8e420000,
+        0x26520004, 0x0040f809, 0x2631ffff)
     for pc, instruction in ((0x8001A618, 0x27bdffd0), (0x80019F60, 0x27bdffc8),
                             (0x80019CDC, 0x27bdffe8), (0x80019F48, 0xac860000)):
         assert struct.unpack_from('<I', data, (pc & 0x1fffff) - 0x10000 + 2048)[0] == instruction
+    # Ocelot's loader calls this leaf entry directly (USA s04b: JAL at
+    # 0x800D8A00). The analyzer includes it after the preceding routine's JR.
+    assert struct.unpack_from('<4I', data, 0x3b090 - 0x10000 + 2048) == (
+        0x3c02800a, 0x24420a1c, 0x03e00008, 0)
     analysis = ROOT / 'data/mgs.usa.analysis.toml'
     with (ROOT / '.local/analyze-usa.log').open('w') as log:
         subprocess.run([str(ROOT / 'build/ps1Analyzer/ps1Analyzer'), str(exe), str(analysis)],
@@ -58,6 +67,8 @@ def main():
     # Register native entries rather than taking the private interpreter path.
     main_entries = {
         0x8001c65c: [0x8001c680],
+        # s04c post-Ocelot demo, direct JAL at USA 0x800C777C.
+        0x80024b0c: [0x80024c64],
         0x8002778c: [0x80027838],
         0x800279ec: [0x80027a94],
         0x8002f610: [0x8002f6c0],
@@ -66,8 +77,11 @@ def main():
         0x80034b64: [0x80034bd8],
         0x8003a01c: [0x8003a074],
         0x8003a918: [0x8003a928],
+        0x8003b028: [0x8003b090],
         0x8003f088: [0x8003f09c],
         0x80041100: [0x80041114],
+        # Retail memory-card load menu (abst: caller return 800C6CEC).
+        0x80044c5c: [0x80044d2c],
         0x80052254: [0x80052288, 0x8005229c],
         0x800723f8: [0x800724f4],
         0x8008b168: [0x8008b180],
@@ -94,16 +108,15 @@ def main():
         s += f'\n[[functions]]\nname = "func_{start:08X}"\naddress = "0x{start:08X}"\nsize = {end-start}\nleaf = false\nsource = "verified_sdk_boundary"\n'
     # JSON quoting is valid TOML basic-string quoting (not shell interpolation).
     import json
-    s += '\n[recompiler]\ntranslation_units = 32\n'
+    s += f'\n[recompiler]\ntranslation_units = {160 if args.campaign else 32}\n'
     s += f'\n[disc]\nexe_path = {json.dumps(str(exe))}\ncue_path = {json.dumps(str(cue))}\n'
     s += '\n[video]\nbackend = "vulkan"\nvsync = false\npgxp = false\ntrue_depth = false\ntrue_color = false\n'
     s += '\n[game]\nprofile = "mgs_usa_v1_0"\nwidescreen_16_9 = true\n\n[timing]\nvideo_standard = "ntsc"\n'
     s += '\n[instruction_overrides]\n"0x8008FF54" = "if (ctx->bios) ps1::runtimeBiosDrainPendingCallbacks(ctx->bios, 0x8008FF50u); pgxp_addiu(ctx, 4, 0, -1);"\n'
     s += '\n"0x80017B38" = "extern void mgsAdjustProjection(recomp_context*); mgsAdjustProjection(ctx); pgxp_invalidate_gpr(ctx, 3); ctx->r3 = (int16_t)MEM_READ16(ctx, ctx->r4 + 6);"\n'
-    # Capture after native pose composition and before geometric bounds.
-    s += '\n"0x8001919C" = "extern void mgsCaptureSceneBeforeBounds(recomp_context*); mgsCaptureSceneBeforeBounds(ctx); pgxp_addiu(ctx, 29, 29, -40);"\n'
-    # DG_ChanlUnits[6], after transform/shade/divide, before OT sorting.
-    s += '\n"0x8001E0AC" = "extern void mgsPrepareMeshReplay(recomp_context*); mgsPrepareMeshReplay(ctx); pgxp_move_gpr(ctx, 9, 4, ctx->r4);"\n'
+    # Observe DG_ChanlUnits[1] before bounds and [6] before sorting. Hooks at
+    # the default callback entries were bypassed by s12c's fog replacements.
+    s += '\n"0x80018780" = "extern void mgsBeforeChannelUnit(recomp_context*); mgsBeforeChannelUnit(ctx); pgxp_invalidate_gpr(ctx, 2); ctx->r2 = pgxp_load_word(ctx, 2, ctx->r18);"\n'
     # Observe subdivision lineage without modifying original subdivision or RAM.
     for pc, name, original in (
         (0x8001A618, 'mgsBeginMeshDivide', 'pgxp_addiu(ctx, 29, 29, -48);'),
@@ -155,6 +168,59 @@ def main():
                 parser.error(f'Unexpected callback boundary {stage}: {address:08x}')
         s = s.replace(f'name = "usa_{stage}"\n',
                       f'name = "usa_{stage}"\nadditional_functions = {addresses}\n')
+    if args.campaign:
+        known = {item[0]: item for item in specifications}
+        catalogue = []
+        images = {}
+        for name, _, stage in stages(archive):
+            if name.startswith(('vr', 'select')) or name in ('camera', 'sound', 'demosel'):
+                continue
+            for member, payload in stage_members(stage):
+                if member['extension'] != 'b':
+                    continue
+                entry = describe(name, payload)
+                images[name] = payload
+                if name in known:
+                    if entry['code_size'] != known[name][2] - 0x800c5968:
+                        parser.error(f'Candidate extent disagrees with verified {name}')
+                    entry['derivation'] = 'previously donor-verified extent; existing callback list retained'
+                    catalogue.append(entry)
+                    continue
+                overlay = ROOT / f'data/overlays/usa/{name}.bin'
+                overlay.write_bytes(payload)
+                # Match immutable constructor addresses without including the
+                # mutable globals after short actor tables (e.g. change.b).
+                identity_size = min(64, entry['actor_table_size'])
+                s += (f'\n[[overlays]]\nname = "usa_{name}"\nram_base = {0x800c5968}\n'
+                      f'size = {entry["code_size"]}\nbinary_path = "overlays/usa/{name}.bin"\n'
+                      f'identity_size = {identity_size}\n'
+                      f'additional_functions = {entry["additional_functions"]}\n')
+                entry['identity_size'] = identity_size
+                catalogue.append(entry)
+        for i, entry in enumerate(catalogue):
+            for other in catalogue[i + 1:]:
+                left, right = images[entry['stage']], images[other['stage']]
+                prefix = min(entry.get('identity_size', known.get(entry['stage'], (None, None, None, 64))[3]),
+                             other.get('identity_size', known.get(other['stage'], (None, None, None, 64))[3]))
+                if left[:prefix] != right[:prefix] or left[:entry['code_size']] == right[:other['code_size']]:
+                    continue
+                start = max(entry['actor_table_size'], other['actor_table_size']) + 8
+                offset = next((j for j in range(start, min(entry['code_size'], other['code_size']) - 3, 4)
+                               if left[j:j + 4] != right[j:j + 4]), None)
+                if offset is None:
+                    parser.error(f'No immutable code identity separates {entry["stage"]} and {other["stage"]}')
+                for candidate in (entry, other):
+                    candidate.setdefault('additional_identity_offsets', []).append(offset)
+        for entry in catalogue:
+            if entry.get('additional_identity_offsets'):
+                offsets = sorted(set(entry['additional_identity_offsets']))
+                entry['additional_identity_offsets'] = offsets
+                s = s.replace(f'name = "usa_{entry["stage"]}"\n',
+                              f'name = "usa_{entry["stage"]}"\nadditional_identity_offsets = {offsets}\n')
+        report = {'archive_sha256': hashlib.sha256(archive).hexdigest(),
+                  'note': 'Candidate static coverage only; reached-stage TAS validation is required.',
+                  'overlays': catalogue}
+        (ROOT / 'data/overlays/usa/campaign-catalog.json').write_text(json.dumps(report, indent=2) + '\n')
     output = ROOT / 'data/mgs.usa.native.toml'
     output.write_text(s)
     print(output)

@@ -1,0 +1,2894 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "scope": "MGS1 PSX USA, campagna dei due dischi e presentazione; Integral come fonte logica, non tabella di indirizzi USA.",
+  "upstream": {
+    "repository": "https://github.com/FoxdieTeam/mgs_reversing",
+    "commit": "7b66372bcf156249560c90918d9472a47aabf3c5",
+    "source_tree_sha256": "67e6c165bb7f3671be2b44e8613689c39ef2e62c06cc8f12aaacab45a951dd41",
+    "runtime_donor_commit_unchanged": "217509eae471629b1a53633b816c61adfef9ed5c"
+  },
+  "priority_legend": {
+    "P0": "Prossimi adattatori/infrastruttura o lacune ad alto rischio da verificare per prime.",
+    "P1": "Effetti visibili da reinterpretare dopo i collegamenti semantici.",
+    "P2": "Rifiniture o accertamenti regionali.",
+    "P3": "Fuori campagna/secondario."
+  },
+  "status_legend": {
+    "modern_adapter": "Adattatore moderno già presente; copertura limitata alle scene documentate.",
+    "partial": "Supporto condiviso o parziale; non equivalenza di tutti gli attori.",
+    "pending": "Nessun adattatore semantico dedicato identificato in questa revisione; può già apparire tramite replay generico.",
+    "investigate": "Prova USA o meccanismo mancante prima di implementare.",
+    "existing_geometry": "Già presentato come geometria; rifinitura della composizione."
+  },
+  "common_contract": [
+    "3840x2160 e aspect 16:9 bloccato nella presentazione; rendering/VRAM nativi sotto il cofano.",
+    "Identità per attore, oggetto, animazione, materiale e revisione overlay; mai solo per colore, forma o nome file.",
+    "Snapshot copiati dei parametri prima del packing PSX; nessun puntatore RAM in coda GPU.",
+    "Attachment moderni per colore/depth/maschera, ordinati secondo le dipendenze; non ricampionare RGB555 nativo per un effetto moderno.",
+    "Sopprimere solo gruppi originali interamente riconosciuti; fallback completo se la prova manca; niente doppio effetto.",
+    "Tempo e RNG del gioco invariati; semi visivi separati riproducibili; reset history su load, cambio scena e camera cut.",
+    "Non cambiare hitbox, AI, danno, stealth, tempi di cecità, indicatori o acquisizioni native.",
+    "Il campo vulkan descrive il renderer implementato; le prove delle scene e le rifiniture future sono documentate separatamente.",
+    "Distinguere il significato dell’effetto dal nome dell’attore: goggleir è riusato per la dominante rossa della cinematica, senza intenzione termografica.",
+    "Equivalenza valutata su resa visiva generale, significato e leggibilità; non sul metodo PSX. Sono ammessi e richiesti shader e composizione diversi quando migliorano il risultato.",
+    "Illuminazione dinamica e preshade di scenario ricostruiti per pixel da normali originali e sorgenti .LIT; non interpolare RGB già illuminati come sostituto della luce.",
+    "Calcolo della presentazione in float e target RGB8 (24 bit colore); niente dithering PSX o quantizzazione RGB555 intermedia. Gli indici/palette originali e lo STP restano dati di ingresso.",
+    "Copertura completa è un requisito verificabile, non una descrizione dello stato: ogni scheda deve avere renderer, prova GPU e scenario; il replay generico non completa un adattatore moderno.",
+    "I video con scanline riconosciute sono ricostruiti da segnali di cella, emissione dei fosfori RGB e diffusione in luce lineare; nessuna griglia sovrapposta a un’immagine continua di fondo. Le primitive estranee ai video restano escluse."
+  ],
+  "limitations": [
+    "La scansione delle API è euristica: non rileva da sola shader impliciti nei packet, emitter indiretti, bytecode e ASM.",
+    "Registrazione in stage/*.c indica disponibilità del costruttore Integral, non esecuzione dello script né presenza confermata USA.",
+    "Non si assegnano indirizzi USA dalle funzioni con suffisso 800... della build Integral.",
+    "s17a/s17ar, s18a/s18ar e s19a/s19ar hanno lacune di decompilazione; le varianti RED e le fasi dei boss richiedono trace USA.",
+    "Gli stub regionali, i simboli PC-ONLY e gli effetti VR non sono prove di un effetto nella campagna USA.",
+    "Le famiglie e i dossier dei boss si sovrappongono intenzionalmente: il conteggio non è un numero di effetti visivi indipendenti.",
+    "Il successo dell’audit certifica riferimenti/hash/classificazione, non correttezza visiva o copertura delle scene.",
+    "dymc_flr/dymc_seg sono geometria di collisione HZD; celofan2 è dentro #if 0. Nomi evocativi non bastano per attribuire un renderer.",
+    "Gli adattatori sono implementati; la campagna completa e tutte le combinazioni di boss/equipaggiamento non sono certificate dalle acquisizioni rappresentative.",
+    "Shadow map aggiuntive, motion vectors, interpolazione 2x e ricostruzione del dettaglio assente nei video/bitmap originali restano fuori da questa consegna."
+  ],
+  "online_sources": [
+    {
+      "url": "https://github.com/FoxdieTeam/mgs_reversing",
+      "role": "Decompilazione Integral e stato degli overlay; analizzata la fotografia Git con commit fissato."
+    },
+    {
+      "url": "https://github.com/nuggslet/MGSM2Fix/releases/tag/v3.0",
+      "role": "Il manutentore documenta fix agli effetti framebuffer in upscale: acqua, cutscene e cifre Codec. Motivazione per testare tutte le dipendenze fra attachment."
+    },
+    {
+      "url": "https://github.com/nuggslet/MGSM2Fix/issues/23",
+      "role": "Segnalazione riproducibile di zoom errato con effetti subacquei/cutscene, distinta dalla successiva conferma di fix nella release."
+    },
+    {
+      "url": "https://metalgear.konami.net/manual/mc1/mgs1/pc/en/page16.html",
+      "role": "Manuale ufficiale: laser SOCOM, chaff, stun e guida Nikita; vincoli funzionali della presentazione."
+    },
+    {
+      "url": "https://metalgear.konami.net/manual/mc1/mgs1/pc/en/page17.html",
+      "role": "Manuale ufficiale: funzione del termico e dell’equipaggiamento; non specifica una tecnica di rendering."
+    },
+    {
+      "url": "https://github.com/Jayveer/Rex",
+      "role": "Estrazione Stage/DAR per reperire gli asset, non implementazione degli effetti."
+    },
+    {
+      "url": "https://github.com/virusek20/mint",
+      "role": "Strumenti di analisi/formati; non prova automatica di semantica o copertura degli effetti."
+    }
+  ],
+  "effects": [
+    {
+      "id": "water_view",
+      "title": "Ottica subacquea",
+      "domain": "screen",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/wt_area.c",
+        "takabe/wt_area2.c",
+        "takabe/wt_view.c"
+      ],
+      "native": "SPRT in strisce di due righe, ricampionamento del framebuffer e filtro colorato; attivazione entro un volume.",
+      "parameters": "Bounds, colore, fase n_prims, pausa, buffer e ordine della submission.",
+      "vulkan": "Rifrazione continua 2D inferiore a 0,7 pixel nativi e foschia blu scura da profondità fisica, con assorbimento più forte del rosso. La sfocatura zoom conserva la profondità della scena corrente per il passaggio acqua successivo; elementi senza profondità esclusi. Nessuna velatura uniforme; estendere la prova alle altre aree acquatiche.",
+      "constraints": "Distinguere gli usi del medesimo attore; non alterare ossigeno, collisioni o stato sommerso.",
+      "verification": "Intro e dock: ingresso/uscita, superficie davanti a Snake, pausa e reload; confronto UHD della stessa scena.",
+      "anchors": [
+        {
+          "file": "takabe/wt_view.c",
+          "text": "NewWaterView2"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+            "anchor": "WaterRefraction"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "mgs_water_color"
+          }
+        ],
+        "validation": "intro_checkpoint",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-optics-v4-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "furnace_heat",
+      "title": "Calore della fonderia e immersione nel metallo",
+      "domain": "screen",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "okajima/melt_die.c",
+        "takabe/furnace.c",
+        "takabe/wt_view.c"
+      ],
+      "native": "Furnace richiama NewWaterView2 con bounds e colore predefinito 64/10/10; crea MeltDie nei contatti. Non è una prova di una foschia termica globale già presente.",
+      "parameters": "Attore Furnace, bounds, colore, collegamento al WaterView generato, eventi MeltDie.",
+      "vulkan": "Profilo di aria calda ascendente già implementato in Vulkan, separato da acqua/caustiche mediante identità furnace.c e tuple map/name/bounds/color condivise con wt_view. Verifica della scena di caduta nel metallo ancora necessaria.",
+      "constraints": "Riconoscimento per proprietà del volume e attori vivi; non per pixel rossi. Fixture CPU valida l’attribuzione, ma non certifica la scena USA della fonderia.",
+      "verification": "Seed fonderia s13a: fuori/dentro volume, granata o oggetto nel metallo; prima verificare quali attori e packet USA sono davvero attivi.",
+      "anchors": [
+        {
+          "file": "takabe/furnace.c",
+          "text": "NewWaterView2(name, where, work->bound, &work->color)"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+            "anchor": "furnaceHeat"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "mgs_water_color"
+          }
+        ],
+        "validation": "cpu_owner_fixture",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "night_vision",
+      "title": "Visore notturno",
+      "domain": "screen",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "equip/gglmng.c",
+        "equip/gglsight.c",
+        "takabe/goggle.c",
+        "takabe/scn_mask.c"
+      ],
+      "native": "Maschera a TILE/righe e palette alternative, coordinata con equipaggiamento.",
+      "parameters": "Modalità attiva, palette, luminosità, GV_Time e ordine dei packet.",
+      "vulkan": "Il segnale del visore viene integrato in celle dal framebuffer moderno. Ogni cella alimenta fosfori RGB: fascio dipendente dalla luminosità, diffusione locale e alone ampio si sommano in luce lineare. Grana ed esposizione fanno parte del segnale della cella; nessuna immagine continua resta sotto una griglia. Griglia comune di 426×240 celle RGB simulate, uscita 4K; impronta di campionamento proporzionata alla cella.",
+      "constraints": "Non introdurre oggetti visibili attraverso pareti; rispettare attivazione/occlusione e HUD.",
+      "verification": "Intro più scenario buio con equipaggiamento reale: toggle, pause, equipaggiamento rapido, cambio mappa.",
+      "anchors": [
+        {
+          "file": "takabe/scn_mask.c",
+          "text": "GV_SetNamedActor"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+            "anchor": "NightVision"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "mgs_screen_effect"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_crt.glsl",
+            "anchor": "mgs_crt_cell_light"
+          }
+        ],
+        "validation": "s15a_actual_equipment_input_run_intro_crt_and_gpu_fixture",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-crt-v12-evidence.json",
+        "crt_evidence": "docs/mgs-crt-v12-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "cinematic_red_tint",
+      "title": "Dominante rossa cinematografica",
+      "domain": "screen",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "source_and_usa_ram_with_user_semantic_correction",
+      "source_files": [
+        "takabe/goggleir.c",
+        "takabe/scn_mask.c"
+      ],
+      "native": "Le demo riusano GoggleIr e ScnMask rossa; RAM dell’intro con GM_GameStatus 0x80000028 e demothrd/goggleir/scn_mask vivi. È una dominante cromatica, non prova di un sensore termico.",
+      "parameters": "Stato STATE_DEMO, colore/intensità del TILE, gruppo dei 113 packet e buffer.",
+      "vulkan": "Ricostruzione da celle video 320x112: risposta cromatica rossa/verde e rumore nel segnale, emissione RGB spaziale, diffusione e codifica finale. 16 campioni colore per frammento, quattro celle adiacenti e quattro per il bagliore ampio. Distinto dal termico di gameplay. Griglia comune di 426×240 celle RGB simulate, uscita 4K; impronta di campionamento proporzionata alla cella.",
+      "constraints": "Eliminata l’euristica che rendeva caldi i rig cinematici. Futuri sensori realmente mostrati dentro demo richiedono attribuzione specifica della sequenza.",
+      "verification": "Checkpoint intro rosso/verde: confronto CRT e bloom, test GPU di rumore, pausa/rewind, VRAM invariata e ritorno al termico di gameplay.",
+      "anchors": [
+        {
+          "file": "takabe/goggleir.c",
+          "text": "GM_GameStatus |= STATE_THERMG"
+        },
+        {
+          "file": "takabe/scn_mask.c",
+          "text": "// dark red tint"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+            "anchor": "CinematicRedTint"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "mgs_screen_effect"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_crt.glsl",
+            "anchor": "mgs_crt_cell_light"
+          }
+        ],
+        "validation": "intro_checkpoint_and_gpu_fixture",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-crt-v12-evidence.json",
+        "crt_evidence": "docs/mgs-crt-v12-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "thermal_vision",
+      "title": "Visore termico e materiali IR",
+      "domain": "screen_material",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "equip/gglmng.c",
+        "libdg/bound.c",
+        "takabe/goggleir.c",
+        "takabe/scn_mask.c"
+      ],
+      "native": "Palette del visore e flag DG_FLAG_IRTEXTURE. GoggleIr/ScnMask sono riusati nelle demo per una dominante rossa: il nome dell’attore o STATE_THERMG da soli non provano una visione termica.",
+      "parameters": "STATE_THERMG fuori da STATE_DEMO, flag IR degli oggetti, palette e appartenenza alle mesh.",
+      "vulkan": "Il segnale originale dei materiali IR e la palette calda alimentano le celle del display; la somma dei fosfori e della luce diffusa genera l’immagine. Identità degli oggetti IR, visibilità e logica di equipaggiamento rimangono originali. Griglia comune di 426×240 celle RGB simulate, uscita 4K; impronta di campionamento proporzionata alla cella.",
+      "constraints": "Non trattare la dominante rossa dell’intro come termografia. La copertura del vero equipaggiamento termico richiede scene gameplay dedicate.",
+      "verification": "Equipaggiare Therm.G in gameplay: umano/scenario, mine e sensori IR, palette dopo reload; intro rossa come controprova che non attiva la termografia.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+            "anchor": "ThermalVision"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "mgs_screen_effect"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_crt.glsl",
+            "anchor": "mgs_crt_cell_light"
+          }
+        ],
+        "validation": "s15a_actual_equipment_input_run_and_gpu_fixture",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-crt-v12-evidence.json",
+        "crt_evidence": "docs/mgs-crt-v12-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "fade",
+      "title": "Dissolvenze cinematiche",
+      "domain": "screen",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/fadeio.c"
+      ],
+      "native": "TILE semitrasparenti con andamento temporale e blend PSX.",
+      "parameters": "Intensità del packet disegnato, modo, durata, colore e pausa.",
+      "vulkan": "Corretta la dissolvenza RGB8 con offset luminoso nativo e clipping continuo, rispettando la scomparsa delle ombre e il montaggio. Test GPU sui livelli intermedi oltre agli estremi.",
+      "constraints": "Non anticipare il contatore dell’attore rispetto al fotogramma renderizzato.",
+      "verification": "Intro e transizioni di entrambi i dischi; nero/bianco, ingresso/uscita Codec e cambio disco.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+            "anchor": "FadeBlack"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "mgs_screen_effect"
+          }
+        ],
+        "validation": "intro_checkpoint_and_gpu_fixture",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "temporal_trails",
+      "title": "Scie e persistenza temporale",
+      "domain": "screen_temporal",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "okajima/blurpure.c"
+      ],
+      "native": "Copia semitrasparente del buffer precedente, ritaglio cinematico e STP.",
+      "parameters": "Peso scia, indice buffer, area, attivazione e frame del gioco.",
+      "vulkan": "Rimosse dominante e espansione radiale inventate; persistenza ridotta e scia orientata da una stima limitata del gradiente. Non sono motion vectors geometrici.",
+      "constraints": "Le attuali scie stimano direzione dai gradienti: non sono motion vectors geometrici o interpolazione 2x.",
+      "verification": "Intro e Mantis: oggetto fermo/movimento, camera cut, pause, save/load, inizio/fine attore.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+            "anchor": "TemporalBlur"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "mgs_screen_effect"
+          }
+        ],
+        "validation": "intro_run_and_gpu_regressions",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "zoom_blur",
+      "title": "Zoom, sfasamento e deformazione a quadranti",
+      "domain": "screen",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "okajima/blur.c"
+      ],
+      "native": "Quattro POLY_FT4 sul framebuffer con offset, jitter e modi oscillazione/espansione/contrazione; gestione STP e clear.",
+      "parameters": "Modo, offset XY/UV, oscillazione, casualità già decisa dal gioco, maschera.",
+      "vulkan": "Uno shutter radiale continuo con dieci campioni sostituisce i quattro quadranti; conserva variante, crop, doppio buffer e tempo del gioco. Attivato 40 volte nel checkpoint intro UHD.",
+      "constraints": "Separare blur.c da blurpure.c; nessuna chiamata extra al RNG del gioco.",
+      "verification": "Cinematiche con DEMO_BLUR: attivazione di ogni modo e bordi del frame; scegliere seed dalle registrazioni, poi provare USA.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+            "anchor": "ZoomBlur"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "mgs_screen_effect"
+          }
+        ],
+        "validation": "intro_checkpoint_and_cpu_fixture",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "focus",
+      "title": "Messa a fuoco selettiva",
+      "domain": "screen_depth",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/focus.c"
+      ],
+      "native": "Due copie orizzontalmente traslate e DR_STP inseriti in posizioni near/far della ordering table; FocusView cambia il bersaglio.",
+      "parameters": "f_len, f_target, f_range, xoff/yoff e messaggio FocusView.",
+      "vulkan": "CoC da profondità Vulkan, 20 campioni distribuiti e preservazione di HUD/silhouette, comandati da flen/range dell’attore.",
+      "constraints": "La conversione bin OT/profondità reale va calibrata: non basta usare f_len come distanza fisica.",
+      "verification": "DEMO_UNSHAPEVIEW: primo piano/sfondo, cambio bersaglio, cut e pause; verificare la partizione near/far USA.",
+      "anchors": [
+        {
+          "file": "takabe/focus.c",
+          "text": "f_target"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_screen_effects.cpp",
+            "anchor": "Focus"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "nearFocus"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "stun_flash",
+      "title": "Flashbang e abbagliamento",
+      "domain": "screen_particles",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "okajima/stgfd_io.c",
+        "okajima/stngrnd.c"
+      ],
+      "native": "NewStanBlast genera anello/flare e NewStnFade: una sequenza cromatica su TILE; STATE_STUN appartiene al gameplay.",
+      "parameters": "Posizione esplosione, fase, colori, sequenza e durata della cecità originale.",
+      "vulkan": "Sovraesposizione morbida guidata dai tre canali originali, con bianco pieno all’estremo. Durata di cecità e logica restano native. Gli otto riflessi originali di stngrnd.c usano il percorso Glow con coordinate da camera e nessuna falsa occlusione dalla scena; 133 fotogrammi del flash e 8×15 riflessi verificati nel replay USA.",
+      "constraints": "Conservare esattamente la finestra di cecità e la leggibilità prevista; non allungare lo stordimento.",
+      "verification": "Granata stun in ambiente chiaro/scuro, dietro parete e durante altri filtri; verificare STATE_STUN e attori prima/dopo.",
+      "anchors": [
+        {
+          "file": "okajima/stgfd_io.c",
+          "text": "UpdateStunFlash"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+            "anchor": "StunFlash"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "mgs_screen_effect"
+          },
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "stngrnd.c"
+          }
+        ],
+        "validation": "s15a_input_driven_grenade_and_flashbang_visual_replays_plus_cpu_gpu_regressions",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-v13-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "red_alert",
+      "title": "Lampeggi e lavaggi cromatici d’allarme",
+      "domain": "screen",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "okajima/red_alrt.c"
+      ],
+      "native": "Attore RedAlert con colori, durata e messaggi di apertura/chiusura; composizione di primitive.",
+      "parameters": "Colori estremi, fase e messaggi dell’attore.",
+      "vulkan": "Risposta ancorata per il 75% al blend originale e per il 25% alla curva ottica, rispettando sottrazione, semisomma e quarto di somma.",
+      "constraints": "Non dedurre l’attivazione da un generico stato di allerta: usare l’attore effettivo.",
+      "verification": "Scenario che registra CHARA_REDALERT: accensione, spegnimento, sovrapposizione con fade e menu.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+            "anchor": "AlertTint"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "mgs_screen_effect"
+          }
+        ],
+        "validation": "gpu_fixture_scene_pending",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "sepia",
+      "title": "Monocromia e viraggi",
+      "domain": "palette_screen",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/palette.c",
+        "takabe/sepia.c"
+      ],
+      "native": "Conversione delle CLUT conservando il bit alto/trasparenza; Sepia aggiunge una regione TILE colorata. Esiste anche NewSepia_800C5214.",
+      "parameters": "Callback palette, variante, RGB e dominio dei materiali interessati.",
+      "vulkan": "Applicata la stessa conversione monocromatica anche ai materiali filtrati, una sola volta e nella regione CLUT corretta; trasparenza/STP conservati.",
+      "constraints": "Il nome sepia non prova un filtro marrone a pieno schermo; evitare doppia applicazione alle palette già trasformate.",
+      "verification": "s16b e DEMO_SEPIA/MONOTONE: texture nuove/caricate tardi, nero opaco contro trasparenza, attore distrutto.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "paletteMode"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "gas_halo",
+      "title": "Aloni e velature di gas",
+      "domain": "screen",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/gas_efct.c",
+        "takabe/gasdamge.c"
+      ],
+      "native": "Sedici settori POLY_G4 con gradienti animati e blend; danno da gas gestito separatamente.",
+      "parameters": "Raggio, proporzione, colori interni/esterni, blend e fase.",
+      "vulkan": "Già presente alone ellittico continuo; eventuale foschia locale solo dopo legame verificato a volume e trigger.",
+      "constraints": "L’effetto ottico non deve decidere danni, ossigeno o protezione della maschera.",
+      "verification": "Intro/area gas: maschera sì/no, bordo volume, pause e composizione con visori.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+            "anchor": "GasHaze"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+            "anchor": "mgs_screen_effect"
+          }
+        ],
+        "validation": "s15a_equipment_and_intro_runs_plus_cpu_fixture",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "mosaic",
+      "title": "Mosaico e censura regionale",
+      "domain": "screen_region",
+      "priority": "P2",
+      "status": "modern_adapter",
+      "evidence": "regional_stub",
+      "source_files": [
+        "takabe/mosaic.c"
+      ],
+      "native": "Nella fonte Integral le funzioni sono stub. Il commento associa probabilisticamente l’attore alla censura di Johnny.",
+      "parameters": "Messaggi Mosaic on/off e parametri superstiti; layout e rendering USA ancora da rintracciare.",
+      "vulkan": "Mosaico USA riconosciuto dalla sua allocazione e dalle celle vive: campionamento della scena Vulkan, con snapshot condiviso fra tutti i quad dell’attore.",
+      "constraints": "Non considerare implementato un renderer assente né rimuovere intenzionalmente la censura; non ricavare offset USA da Integral.",
+      "verification": "Verificare binario e script USA della relativa sequenza prima di creare l’adattatore.",
+      "anchors": [
+        {
+          "file": "takabe/mosaic.c",
+          "text": "missing in Integral"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "mosaic.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "optical_camo",
+      "title": "Mimetica ottica e rivelazione del corpo",
+      "domain": "mesh_refraction",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "equip/kogaku2.c"
+      ],
+      "native": "Riscrittura di UV e tpage dei POLY_GT4 per campionare il framebuffer opposto; tinte distinte Snake/Ninja e soglie Y di rivelazione.",
+      "parameters": "Oggetto originale, flag, fase ninja, soglie ypos, geometria/pose e ordine di composizione.",
+      "vulkan": "Mesh originale animata, materiale dinamico autenticato da kogaku2 e modalità Direct15; rifrazione continua con ampia contrazione orizzontale dello sfondo, modulazione nativa e normali originali. Rivelazione e termico restano guidati dal gioco.",
+      "constraints": "Non cambiare invisibilità logica, hitbox, durata o porzioni rivelate; gestire anche il clone nello specchio.",
+      "verification": "Ninja, equipaggiamento stealth e riflessi: posa animata, davanti/dietro vetro, bordi dello schermo, attivazione a metà frame.",
+      "anchors": [
+        {
+          "file": "equip/kogaku2.c",
+          "text": "TPageUVUpdate"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "kogaku2.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "s08c_ninja_reveal_input_only_replay_and_source_dynamic_material_regression; seven_transition_bake_rejections_remain",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-v15-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "env_mapping",
+      "title": "Riflessi dipendenti dalle normali",
+      "domain": "mesh_material",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/envmap3.c"
+      ],
+      "native": "Trasforma le normali del modello rispetto alla camera e le converte in UV byte; sostituisce texture e CLUT dei packet.",
+      "parameters": "Normali KMD, camera, trasformazione oggetto, texture scelta e stato originale dei flag.",
+      "vulkan": "Riflessione per pixel dalle normali originali, campionando la texture ambiente identificata dall’attore; nessuna riduzione agli UV prodotti dal GTE.",
+      "constraints": "Non applicare un materiale metallico indiscriminatamente: rispettare l’oggetto a cui NewEnvmap3 si collega.",
+      "verification": "Oggetto riflettente ruotato e animato: camera in movimento, visori, texture ripristinate alla distruzione.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "envmap3.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "planar_mirror",
+      "title": "Specchi e oggetti riflessi",
+      "domain": "scene_reflection",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/mirror.c"
+      ],
+      "native": "Duplica oggetti, riflette posizione e matrici lungo un asse/piano e manipola le code; supporta Snake con stealth/equipaggiamento.",
+      "parameters": "Piano, asse, lista attiva di oggetti, pose, luci ed equipaggiamento.",
+      "vulkan": "Mesh originali degli oggetti riflessi, trasformazioni float, illuminazione per pixel e clipping del piano. La riflessione già espressa dalle trasformazioni originali viene conservata; composizione esplicita con la mimetica.",
+      "constraints": "Evitare duplicare clone nativo e riflesso moderno; non usare solo SSR se manca geometria fuori schermo.",
+      "verification": "Mappe registrate per CHARA_MIRROR: avvicinamento, uscita campo, Snake stealth/body armor/bandana e reload.",
+      "anchors": [
+        {
+          "file": "takabe/mirror.c",
+          "text": "sp10 = entry->control->mov"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "mirror.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "water_surface",
+      "title": "Superficie dell’acqua",
+      "domain": "surface",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/wsurface.c"
+      ],
+      "native": "Griglia POLY_GT4 semitrasparente con UV animati, interpolazione di perturbazioni e attenuazione ai bordi.",
+      "parameters": "Griglia e bounds, texture, shade, fase e perturbazioni già campionate.",
+      "vulkan": "Materiale e UV originali guidano la risposta; rifrazione continua e piccoli riflessi si aggiungono in misura limitata, seguendo trasparenza e inviluppo.",
+      "constraints": "Conservare livello, bordi e occlusione; mantenere separata l’ottica della camera sommersa.",
+      "verification": "CHARA_WSURFACE: camera sopra e sotto, attraversamento Snake e sovrapposizione ripple/particelle.",
+      "anchors": [
+        {
+          "file": "takabe/wsurface.c",
+          "text": "Wsurface_800DAFE8"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "wsurface.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "ripples",
+      "title": "Onde concentriche da contatto",
+      "domain": "surface",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/ripple.c",
+        "takabe/ripples.c",
+        "takabe/rsurface.c"
+      ],
+      "native": "Ripple usa otto quad; RippleSurface segue fino a quattro controlli dentro un volume e genera onde temporizzate.",
+      "parameters": "Centro, matrice, scala, altezza superficie, cadenza e ingresso degli oggetti.",
+      "vulkan": "Conservata la deduplicazione in un piano continuo, rimossa la dominante blu e ridotto l’anello secondario aggiunto.",
+      "constraints": "Riutilizzare gli eventi originali; non sostituire trigger/contatti con una simulazione fisica nuova.",
+      "verification": "Oggetto fermo e in movimento, più sorgenti contemporanee, bordo volume e salvataggio.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "ripple.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "submarine_material",
+      "title": "Scorrimento luminoso sul sottomarino",
+      "domain": "mesh_material",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/sub_efct.c"
+      ],
+      "native": "Il comando DEMO_SUBMARINEWATER calcola UV dai vertici trasformati, cambia flag e matrice di luce del modello.",
+      "parameters": "Parent OBJECT, rotazione, geometria e materiale originali.",
+      "vulkan": "Proiezione SubEfct continua e trama originale, con guadagno luminoso 1,65 e piccolo rinforzo delle alte luci guidato dalla luminanza del materiale. STP traslucido conservato; nessun reticolo cellulare aggiunto.",
+      "constraints": "Non confondere con il postprocess wt_view; ripristinare materiale e luce quando termina l’attore.",
+      "verification": "Intro: sottomarino in movimento e fine effetto; controllare entrambe le famiglie contemporaneamente.",
+      "anchors": [
+        {
+          "file": "takabe/sub_efct.c",
+          "text": "SubEfct_800CC860"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "sub_efct.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-optics-v6-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "distance_fog",
+      "title": "Nebbia di profondità e black fog",
+      "domain": "scene_atmosphere",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/fog.c",
+        "takabe/libdg2.c"
+      ],
+      "native": "Fog sostituisce bound, transform, shade e sort; scala l’effetto anche con GM_Camera.zoom.",
+      "parameters": "Scale s/e, zoom, distanza, parametri pipeline e map.",
+      "vulkan": "Curva di nebbia per pixel dalla profondità moderna; intervallo e attivazione ricavati dall’updater USA verificato e dalla mappa attiva.",
+      "constraints": "Il fix di acquisizione mesh in s12c non è un adattatore di nebbia. Conservare visibilità di gameplay e opacità utile allo scontro.",
+      "verification": "s12c: campo largo e zoom PSG1, nemico in distanza, neve/trasparenti, ingresso e ripristino dei quattro hook.",
+      "anchors": [
+        {
+          "file": "takabe/fog.c",
+          "text": "DG_SetChanlSystemUnits"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "fogRange"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "snow",
+      "title": "Neve e tormenta",
+      "domain": "particles",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "kojo/sstorm.c",
+        "okajima/snowarea.c",
+        "thing/snow.c"
+      ],
+      "native": "Snow distribuisce TILE di 1–2 pixel in volumi; SnowStorm usa ANIMATION/PRESCRIPT; SnowArea ha il proprio percorso.",
+      "parameters": "Bounds, vento/velocità, posizioni, densità, messaggi on/off e semi già decisi.",
+      "vulkan": "Fiocchi morbidi da posizioni originali, scala prospettica e intersezioni morbide. La bufera usa il programma SnowStorm costruito a runtime, verificato con la sola durata variabile.",
+      "constraints": "Non trasformare la neve in pioggia né aumentare l’occlusione dei bersagli; RNG della presentazione separato e deterministico.",
+      "verification": "Heliport e s12c, magazzino se attivo: camera ferma/rotante, zoom, interni/esterni e reload.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "snow.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "bubbles",
+      "title": "Bolle e scie subacquee",
+      "domain": "particles",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "okajima/bub_d_sn.c",
+        "okajima/bubble_p.c",
+        "okajima/bubble_s.c",
+        "okajima/bubble_t.c"
+      ],
+      "native": "Attori con primitive e posizioni per bolle, scie e variante legata a Snake.",
+      "parameters": "Sorgenti, vita, scala, velocità, superficie e attach point.",
+      "vulkan": "Taratura intermedia: 50% PCX originali filtrati e 50% illuminazione continua di corpo/bordo/riflesso meno satura, limitata dalla sagoma originale. Metà luce additiva/quarto-additiva originale e metà corpo illuminato, con assorbimento massimo del 50% per strato; DG_PRIM.raise invariato.",
+      "constraints": "Leggere lo stato vivo; i suffissi dei file non provano da soli ogni utilizzo nelle cinematiche.",
+      "verification": "Intro e Snake nel dock, sovrapposizione acqua/bolle, uscita dal volume, save/load.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "bubble_s.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-optics-v6-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "smoke_steam",
+      "title": "Fumo, vapore, polvere e scie persistenti",
+      "domain": "particles",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "anime/effect/fog.c",
+        "anime/effect/rcm.c",
+        "anime/effect/rcm2.c",
+        "anime/effect/smoke.c",
+        "anime/effect/smoke2.c",
+        "anime/effect/smoke3.c",
+        "anime/effect/smoke4.c",
+        "anime/effect/smoke_ln.c",
+        "chara/rope/dsmoke2.c",
+        "chara/rope/landing.c",
+        "enemy/smoke.c",
+        "kojo/demothrd.c",
+        "okajima/smke_ln.c",
+        "okajima/smktrgt.c"
+      ],
+      "native": "Famiglie ANIMATION e attori specializzati; atlanti, scale e trasparenza animati, emitters lungo segmenti o da target.",
+      "parameters": "Identità ANIMATION, texture, prescript, posizione, velocità, età, blend e sorgente.",
+      "vulkan": "Ripristinati sagoma, palette e fotogramma degli asset; filtro continuo, intersezioni morbide e variazione volumetrica contenuta al 10%.",
+      "constraints": "Non ogni smoke è equivalente; tenere la copertura visiva e la durata previste. Niente nuova logica danno nei target.",
+      "verification": "Emissione singola/continua, Nikita e oggetti danneggiati, rappelling/atterraggio; depth e visori.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "animationKind"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "breath_cigarettes",
+      "title": "Condensa del respiro e sigarette",
+      "domain": "particles",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "anime/effect/breath.c",
+        "equip/tabako.c"
+      ],
+      "native": "Sprite animati del respiro e fumo con attacco al personaggio/equipaggiamento.",
+      "parameters": "Attach point, fase, emitters, stato equipaggiamento e visibilità.",
+      "vulkan": "Stesso percorso dei materiali animati originali, con volume moderato e profondità moderna. Condensa osservata; accensione e fumo della sigaretta non verificati in questa run.",
+      "constraints": "La sigaretta ha anche effetti di gameplay: non cambiare consumo vita o rivelazione sensori.",
+      "verification": "Snake in ambiente freddo, prima/terza persona e sigaretta davanti ai sensori.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "animationKind"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "shared_revision",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "explosions_fire",
+      "title": "Esplosioni, fiamme e onde d’urto",
+      "domain": "particles_light",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "anime/effect/bullet.c",
+        "anime/effect/m1e1.c",
+        "bullet/blast.c",
+        "okajima/melt_die.c"
+      ],
+      "native": "Blast e funzioni AN_* compongono animazioni, flash e fumo; separati dalle prove geometriche e danni del bersaglio.",
+      "parameters": "Evento esplosione, trasformazione, scala, famiglia di animazione, vita e luce originale.",
+      "vulkan": "Atlante, centro ed espansione originali; volume di presentazione con intersezione prospettica raggio/ellissoide, occlusione sulle superfici e luce locale che conserva il dettaglio del materiale. DG_PRIM.raise resta metadato d’ordine e non anticipa fisicamente il blast. La V14 sostituisce la scorciatoia di profondità della V13.",
+      "constraints": "Non aggiungere esplosioni o cambiare raggio/danno/tempo; ricostruire componenti e non sostituire l’attore gameplay.",
+      "verification": "Granata/C4/Stinger/Nikita, più esplosioni, dietro pareti e durante visore; confrontare target e stato scena.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "SurfaceKind::Explosion"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "s15a_grenade_and_c4_spatial_scene_reviews_plus_foreground_intersection_background_gpu_regressions",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-v15-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "muzzle_flashes",
+      "title": "Vampe delle armi e illuminazione istantanea",
+      "domain": "particles_light",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "anime/effect/bullet.c",
+        "anime/effect/socom.c",
+        "enemy/glight.c",
+        "kojo/famaslit.c",
+        "weapon/famas.c",
+        "weapon/socom.c"
+      ],
+      "native": "AN_SocomFlash/AN_HeavyFlash e primitive GunLight/FamasLight con attacco al modello.",
+      "parameters": "Tipo arma, volata, matrice della mano, visibilità e fase del colpo.",
+      "vulkan": "Asset originale come forma e colore, con piccolo rinforzo del nucleo; attacco all’arma e durata invariati.",
+      "constraints": "Non spostare l’istante di fuoco; evitare di contare emitter.c come simulatore universale di particelle.",
+      "verification": "SOCOM silenziata/non, FAMAS e armi nemiche, prima persona e raffica.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "SurfaceKind::Muzzle"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "shared_revision",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "projectiles",
+      "title": "Traccianti, missili e traiettorie visibili",
+      "domain": "scene_particles",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "bullet/amissile.c",
+        "bullet/rmissile.c",
+        "chara/hind/hind_bul.c",
+        "chara/hind2/hd_bul2.c",
+        "okajima/bullet.c",
+        "weapon/rcm.c"
+      ],
+      "native": "Primitive dei proiettili e corpi missile con animazioni/scie associate.",
+      "parameters": "Posizione precedente/corrente nativa, direzione, tipo proiettile, contatto e camera missile.",
+      "vulkan": "Tolte tinte aggiunte dai fasci; asset originale quando associato e profilo continuo lungo l’asse reale altrimenti. Missili sul percorso KMD.",
+      "constraints": "Interpolare solo la presentazione; collisioni, bersagli e guida missile restano originali.",
+      "verification": "Colpi veloci contro superfici, prima persona Nikita, disattivazione e rientro in camera Snake.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "hind_bul.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "sparks",
+      "title": "Scintille, urti e rimbalzi",
+      "domain": "particles",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "okajima/spark.c",
+        "takabe/revbullt.c",
+        "takabe/spark2.c"
+      ],
+      "native": "Primitive e animazioni impulsive da impatti/rimbalzi; vettori e durate attore.",
+      "parameters": "Punto, normale/direzione, velocità, evento e colore.",
+      "vulkan": "Conservati RGB e immagini originali invece di imporre arancio; segmenti continui per le primitive senza texture associata.",
+      "constraints": "Non cambiare la riflessione del proiettile o la collisione che genera l’evento.",
+      "verification": "Metallo/parete, spada e rimbalzo, più impatti nello stesso frame e cambio camera.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "spark.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "electricity",
+      "title": "Archi elettrici, scariche e plasma",
+      "domain": "procedural_particles",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "okajima/death_sp.c",
+        "okajima/flr_spa.c",
+        "okajima/plasma.c",
+        "okajima/plasma_h.c",
+        "okajima/wall_spa.c",
+        "takabe/elc_damg.c",
+        "takabe/elc_flr.c"
+      ],
+      "native": "Segmenti/quad texturizzati plasma fra punti o attach point; attori di pavimento/parete e danno separati.",
+      "parameters": "Estremi, ramificazioni/segmenti, fase, durata, colore e messaggi di attivazione.",
+      "vulkan": "Texture e inviluppi originali per gli archi; risposta energetica continua moderata e neutra, con dissolvenza fino a zero.",
+      "constraints": "Non cambiare aree elettrificate, timing o bersagli; mantenere leggibile il pericolo.",
+      "verification": "B2 elettrificato, pareti e Ninja: attivazione/spegnimento, camera vicina, sovrapposizione acqua/stealth.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "plasma_l.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "blood_spray",
+      "title": "Sangue in aria e gocce",
+      "domain": "particles",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "kojo/blooddrp.c",
+        "okajima/blood.c",
+        "okajima/d_bloodr.c"
+      ],
+      "native": "Primitive e animazioni di sangue/gocce, con varianti cinematiche.",
+      "parameters": "Posizione d’impatto, direzione, quantità originale e durata.",
+      "vulkan": "Sagoma e palette degli asset originali, filtro continuo e riflesso limitato al 6%, mantenendo posizione e durata native.",
+      "constraints": "Non inventare ferite o aumentare la violenza; rispettare eventuali impostazioni/regione.",
+      "verification": "Colpo a personaggio, cutscene e visibilità sotto termico; nessuna duplicazione con decal.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "blooddrp.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "shared_revision",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "liquid_decals",
+      "title": "Pozze, macchie e cerchi di liquido",
+      "domain": "surface_decals",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "okajima/blood_bl.c",
+        "okajima/blood_cl.c",
+        "okajima/d_bloods.c"
+      ],
+      "native": "Primitive aderenti al suolo per pozze e cerchi; DEMO_URINATIONCIRCLE rimane simbolo irrisolto nel registry.",
+      "parameters": "Piano di supporto, centro, dimensione, espansione e materiale.",
+      "vulkan": "Forma, colore e dissolvenza originali con ricostruzione continua del materiale e riflesso contenuto.",
+      "constraints": "Non catalogare automaticamente ogni d_bloods come sangue: il registry cita anche un cerchio di urina.",
+      "verification": "Pozza statica/in espansione, pendenza/bordo e passaggio personaggi; attribuzione USA per variante.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "blood_bl.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "shared_revision",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "glass_shards",
+      "title": "Vetri e frammenti",
+      "domain": "mesh_particles",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/glass.c",
+        "takabe/gsplash.c"
+      ],
+      "native": "Glass e Gsplash: quest’ultimo usa la texture glass e genera frammenti, non spruzzi d’acqua.",
+      "parameters": "Superficie, pezzi, trasformazioni, evento di rottura e vita.",
+      "vulkan": "Conservati fotogramma, crepe, trasparenza e tinta del vetro; rifrazione e riflessi moderni restano un contributo limitato.",
+      "constraints": "Stato rotto/intatto e collisione restano quelli del gioco; evitare di sostituire lo stesso frammento due volte.",
+      "verification": "Rottura da colpo, visuale attraverso il pannello, riverbero e frammenti davanti a un visore.",
+      "anchors": [
+        {
+          "file": "takabe/gsplash.c",
+          "text": "GV_StrCode(\"glass\")"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "gsplash.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "debris",
+      "title": "Detriti, spruzzi e materiali espulsi",
+      "domain": "particles",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "okajima/splash.c",
+        "okajima/splash2.c",
+        "okajima/splash3.c",
+        "takabe/breakobj.c",
+        "takabe/paper.c",
+        "takabe/pfall.c"
+      ],
+      "native": "Splash usa blood_1; Splash2/Splash3 usano awa_3 e Splash2 può generare Ripple. Paper/Pfall e BreakObject coprono carta/oggetti espulsi. Sono profili distinti sotto un renderer comune.",
+      "parameters": "Evento, origine, materiale/texture, traiettoria, rotazione e vita originali.",
+      "vulkan": "Frammenti rigidi dalla geometria/immagine originale e gocce d’acqua con profilo distinto; nessuna sostituzione arbitraria dell’arte dei detriti.",
+      "constraints": "Il nome splash non basta a classificarli come acqua; conservare pezzi che veicolano collisione o trigger.",
+      "verification": "Oggetto distruttibile e varianti chiamate nelle demo; controllo texture/chiamante prima della reinterpretazione.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "pfall.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "footprints",
+      "title": "Impronte di gameplay e cinematiche",
+      "domain": "surface_decals",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "enemy/asiato.c",
+        "enemy/asiato2.c",
+        "enemy/demoasi.c"
+      ],
+      "native": "Primitive per impronte con varianti di superficie, attore cinematico e logica collegata alle tracce.",
+      "parameters": "Contatto piede, posizione, orientamento, numero/vita e supporto.",
+      "vulkan": "Ripristinata la sagoma dell’impronta originale filtrata, con orientamento e fading nativi. Nessuna modifica alle tracce rilevate dalle guardie.",
+      "constraints": "Le impronte sono indizi per le guardie: non modificarne comparsa, persistenza utile o percorso.",
+      "verification": "Neve, passi incrociati, inseguimento guardia, transizione superficie e reload.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "asiato2.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "shadows",
+      "title": "Ombre dei personaggi",
+      "domain": "scene_shadow",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "chara/snake/shadow.c",
+        "enemy/demokage.c"
+      ],
+      "native": "Shadow segue ossa/controllo e muove un modello con texture shadow; Demokage aggiunge la variante da demo.",
+      "parameters": "Parent, ossa/indici, pavimento, enabled, luce e visibilità originale.",
+      "vulkan": "Texture originale filtrata sulla geometria e sull’inviluppo originali. Restano ombre di contatto, senza dichiarare shadow map aggiuntive.",
+      "constraints": "Non esporre nemici nascosti o stealth tramite una nuova ombra; sopprimere il proxy nativo solo se riconosciuto.",
+      "verification": "Snake animato, scale e salto, cutscene, invisibilità e luce mobile.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "demokage.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "shared_revision",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "lights_glows",
+      "title": "Luci locali, bagliori e lampeggianti",
+      "domain": "scene_light",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "enemy/eyeflash.c",
+        "game/lamp.c",
+        "kojo/inverlt2.c",
+        "libdg/light.c",
+        "okajima/blink_tx.c",
+        "okajima/dog/wolf_eye.c",
+        "okajima/p_lamp.c",
+        "okajima/pato_lmp.c",
+        "thing/emitter.c"
+      ],
+      "native": "Luci DG più primitive emissive/lampeggianti e texture. Emitter è un gruppo di quad luminosi senza Act, non il motore generale degli emitter.",
+      "parameters": "Posizione, direzione, colore, attenuazione, abilitazione e fase, quando presenti nel rispettivo attore.",
+      "vulkan": "Asset emissivi originali con rinforzo del nucleo al massimo del 12%. Restano attive luci .LIT/SHADE per pixel e sorgenti originali. Riflessi della flashbang autenticati tramite l’array completo di otto primitive; gli effetti ottici in spazio camera non leggono la profondità del mondo.",
+      "constraints": "Il nuovo shading non deve cambiare coni di scoperta o scaldare tutti gli emissivi come corpi nel termico.",
+      "verification": "Locale buio, lampada rotante, lampo e occhio; bloom isolato dall’interfaccia, toggle materiale.",
+      "anchors": [
+        {
+          "file": "thing/emitter.c",
+          "text": "NULL, Die, \"emitter.c\""
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "inverlt2.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "s15a_input_driven_grenade_and_flashbang_visual_replays_plus_cpu_gpu_regressions",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-v13-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "searchlights",
+      "title": "Proiettori di ricerca e coni luminosi",
+      "domain": "scene_light",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "enemy/searchli.c",
+        "takabe/lit_mdl.c"
+      ],
+      "native": "Searchlight combina geometria procedurale, primitive e logica esplicita di scoperta di Snake.",
+      "parameters": "Matrice faro, volume e superficie illuminata, attivazione e direzione originali.",
+      "vulkan": "Ridotta l’attenuazione artificiale delle normali; texture e volume originali guidano il fascio continuo. Logica di scoperta invariata.",
+      "constraints": "Cono estetico raccordato al cono di rilevamento nativo; niente nuova logica stealth.",
+      "verification": "Heliport: Snake al centro e sul bordo del fascio, ostacolo fra faro e Snake, pausa e allerta.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "lit_mdl.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "lasers",
+      "title": "Laser, sensori infrarossi e puntamento",
+      "domain": "scene_lines",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "enemy/camera.c",
+        "enemy/camera2.c",
+        "enemy/l_sight.c",
+        "okajima/guncame.c",
+        "takabe/ir_cens.c",
+        "weapon/socom.c"
+      ],
+      "native": "Fasci da quad/segmenti; IrSensor condiziona la visibilità anche a STATE_THERMG e gestisce messaggi/trappola.",
+      "parameters": "Estremi, ostacoli, intensità e condizione di visibilità per modalità/equipaggiamento.",
+      "vulkan": "Fasci continui nel colore originale e risposta energetica senza dominante blu inventata. Visibilità IR e proiezione del puntamento restano native.",
+      "constraints": "Non rendere visibili a occhio nudo sensori nascosti: conservare termico/fumo e stato originale di rilevamento.",
+      "verification": "Area sensori: visione normale/termica/sigaretta, SOCOM prima/terza persona, camera distrutta.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "l_sight.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "shared_revision",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "texture_animation",
+      "title": "Texture scorrevoli e palette animate",
+      "domain": "material",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "equip/effect.c",
+        "libdg/palette.c",
+        "takabe/palette.c",
+        "takabe/tex_scrl.c"
+      ],
+      "native": "TexScroll copia rettangoli VRAM tramite area temporanea; palette alternative e scambio di descrittori texture.",
+      "parameters": "Texture originali, regioni, velocità, indice palette e versione degli upload.",
+      "vulkan": "Filtro degli asset segue UV e palette vivi; il percorso billboard conserva ora il fotogramma originale invece di sostituire gli UV con 0..128.",
+      "constraints": "La cache statica non deve congelare upload, CLUT o EQ_ChangeTexture; distinguere animazione semantica da copie generiche.",
+      "verification": "Acqua/macchinari/monitor e cambio equipaggiamento: caricamento tardivo, cache hit e reload.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_source_material.cpp",
+            "anchor": "fractional coordinates of the source format"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "monitors",
+      "title": "Monitor, display del sottomarino e della base",
+      "domain": "material_ui",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "game/evpanel.c",
+        "okajima/mg_room.c",
+        "okajima/sub_room.c",
+        "takabe/monitor1.c",
+        "takabe/optxtscn.c",
+        "takabe/panel.c"
+      ],
+      "native": "Texture VRAM aggiornate e primitive specifiche dei display; monitor distruttibile, righe/segnali nel sub e nella base.",
+      "parameters": "Identità schermo, contenuto originale, fase, stato integro/rotto, messaggi.",
+      "vulkan": "Rimosso lo sfarfallio sinusoidale inventato. Contenuto originale, aggiornamenti dell’atlante verificati e lieve risposta emissiva costante.",
+      "constraints": "Non sostituire con una schermata generica: contenuto e stato appartengono alla narrazione; replay generico non è già un adattatore completo.",
+      "verification": "Intro nel sub, stanza controllo Disc2 e rottura monitor; leggibilità ravvicinata e maschera termica.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "optxtscn.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "sky_panorama",
+      "title": "Cielo e panorami avvolgenti",
+      "domain": "background",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "thing/sphere.c",
+        "thing/sphere2.c"
+      ],
+      "native": "DG_IMG con tilemap; direzione della camera convertita in offset di quad a schermo e scorrimento.",
+      "parameters": "Immagine originale, attribs/tilemap, direzione, elevazione e velocità.",
+      "vulkan": "Tile delle immagini originali, offset subpixel dalla camera e dominio UV completo con clamp, eliminando il taglio del bordo a 255. La fase di scorrimento resta quella originale.",
+      "constraints": "Il dettaglio della bitmap resta quello dell’asset; non promettere geometria o risoluzione assente.",
+      "verification": "Rotazione completa, bordo orizzontale e verticale, widescreen e movimento del panorama.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "sphere.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "wind_rings",
+      "title": "Anelli di vento e spostamento d’aria",
+      "domain": "procedural_particles",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/windcrcl.c"
+      ],
+      "native": "Primitive animate con texture hind_wind01 e più costruttori; registry cita anche DEMO_NINJAGROUND irrisolto.",
+      "parameters": "Matrice, raggio/scala, durata, variante ed evento chiamante.",
+      "vulkan": "Texture originale quando associata e campo continuo neutro nel ripiego, con raggio/fase originali e senza duplicare un anello per settore.",
+      "constraints": "Non dedurre che ogni chiamata sia del Hind: risolvere i caller USA per le varianti Ninja.",
+      "verification": "Evento elicottero e cinematica pertinente: bordo anello, collisione visiva con pareti e profondità.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "windcrcl.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "ninja_special",
+      "title": "Ninja: lampi, spada e sfera energetica",
+      "domain": "boss_composite",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "partial_source",
+      "source_files": [
+        "animal/ninja/tenmetu.c",
+        "enemy/katana.c",
+        "overlays/s08b/okajima/p_sphere.c",
+        "overlays/s08b/okajima/plasma_l.c"
+      ],
+      "native": "Effetti Tenmetu, primitive della katana e plasma/sfera specifici del boss; plasma_l contiene ancora ASM.",
+      "parameters": "Fase boss, traccia lama, centri/raggi, colori, sorgenti e legame a kogaku2/plasma.",
+      "vulkan": "Applicate le correzioni condivise di colore, energia e mimetica; pose e geometrie native conservate. Combinazioni di tutte le fasi del boss ancora da osservare.",
+      "constraints": "Separare composizione estetica da telegraph, parate e danno; non dichiarare nota la parte ASM.",
+      "verification": "s08b battaglia: comparsa/scomparsa, attacco lama e fase energetica. Un seed nel corridoio s08c non basta.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "p_sphere.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "shared_revision",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "mantis_special",
+      "title": "Mantis: HIDEO, telecinesi e onde",
+      "domain": "boss_composite",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "partial_source",
+      "source_files": [
+        "chara/psyco/mempsy.c",
+        "chara/psyco/padmng.c",
+        "chara/psyco/psyobj.c",
+        "chara/psyco/sonic.c",
+        "overlays/s07b/chara/psyco/psyco.c"
+      ],
+      "native": "Sonic usa Kogaku2 e plasma; oggetti telecinetici dedicati. Psyco contiene stringhe hideo_b/hideo_s/hideo ma numerose funzioni sono ASM.",
+      "parameters": "Evento boss, oggetti, fase invisibile, stato HIDEO, pad e momento della transizione.",
+      "vulkan": "Ripristinato nero pieno del backplate; logo originale conservato. Onde/oggetti usano i percorsi condivisi corretti, senza certificare tutte le fasi del boss.",
+      "constraints": "Non sostituire gameplay telecinetico o trucchi pad/memory card; le stringhe non provano da sole il renderer HIDEO.",
+      "verification": "s07b: schermo HIDEO, cambio porta pad e ritorno alla scena; stessi trigger nel confronto donor/native.",
+      "anchors": [
+        {
+          "file": "overlays/s07b/chara/psyco/psyco.c",
+          "text": "\"hideo_b\""
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "psyco.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "tank_hind_special",
+      "title": "Tank e Hind: composizione degli effetti",
+      "domain": "boss_composite",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "partial_source",
+      "source_files": [
+        "chara/hind2/hind2.c",
+        "overlays/s05a/kojo/m1e1shel.c",
+        "overlays/s05a/kojo/m1e1smke.c",
+        "overlays/s11g/okajima/11g_demo.c",
+        "overlays/s11g/okajima/blastoff.c"
+      ],
+      "native": "Proiettili/fumo tank e attori dedicati all’esplosione/demo Hind, con parte ASM in 11g_demo.",
+      "parameters": "Evento boss, punti di emissione, pezzi e fasi, collegati alle famiglie comuni.",
+      "vulkan": "Conservati UV e texture dei billboard autenticati, insieme alla geometria ricostruita. Fuoco, fumo e traccianti ricevono le correzioni comuni.",
+      "constraints": "Le varianti boss non sono automaticamente coperte dai profili generici; evitare duplicazioni.",
+      "verification": "s05a e conclusione Hind s11g: colpi, fumo persistente e sequenza di distruzione.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "blastoff.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "raven_special",
+      "title": "Vulcan Raven e magazzino",
+      "domain": "boss_composite",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "partial_source",
+      "source_files": [
+        "overlays/s15c/okajima/valcan/valcan.c"
+      ],
+      "native": "Boss con primitive e sezioni ancora ASM; ambiente condiviso con le famiglie di neve/fumo/vampe.",
+      "parameters": "Volata, fase, impatto, corpo e condizioni ambientali da attribuire ai caller.",
+      "vulkan": "Correzioni comuni applicate ai materiali e colori, senza cambiare mesh/pose. La run del magazzino non certifica l’intero combattimento Raven.",
+      "constraints": "Non confondere avvio corretto dello scenario con copertura di tutti gli attacchi e delle cinematiche.",
+      "verification": "s15c: raffiche, colonne/occlusione, danno e fine scontro; trace delle emissioni non classificate.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "valcan.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "shared_revision",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "rex_unknown",
+      "title": "REX: laser, armi e scarichi USA",
+      "domain": "boss_gap",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "registry_gap",
+      "source_files": [
+        "include/charalst.h",
+        "stage/s17a.c",
+        "stage/s17ar.c"
+      ],
+      "native": "Il registry contiene DEMO_METALGEARLASER senza costruttore risolto; README indica s17a/s17ar non decompilati.",
+      "parameters": "Da ricostruire da script USA, overlay, trace attori/packet e parametri dei proiettili.",
+      "vulkan": "Laser con RGB originale e risposta energetica neutra; fumo con atlanti originali. Nessun nuovo effetto dedotto dal solo nome DEMO_METALGEARLASER.",
+      "constraints": "Laser documentato dal simbolo; non presentare il resto come meccanismo decompilato o intero boss come già censito.",
+      "verification": "Seed della battaglia REX con fasi e attacchi distinti; isolare identità overlay e attori USA.",
+      "anchors": [
+        {
+          "file": "include/charalst.h",
+          "text": "DEMO_METALGEARLASER"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "mgrexlzr.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "shared_revision",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "liquid_garage_unknown",
+      "title": "Liquid e garage: mesh ed emissioni condivise",
+      "domain": "boss_gap",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "registry_gap",
+      "source_files": [
+        "include/charalst.h",
+        "stage/s18a.c",
+        "stage/s19a.c"
+      ],
+      "native": "Registry contiene CHARA_BLACKSMOKE con riferimento animal/liquid/b_smoke.c irrisolto; overlay s18a/s19a non decompilati secondo README.",
+      "parameters": "Trigger, fasi e attori della build USA da rilevare.",
+      "vulkan": "Applicato il percorso condiviso dei fotogrammi del fumo; mesh e pose native conservate. Copertura visiva delle fasi Liquid/garage ancora parziale.",
+      "constraints": "I test precedenti di danno/recupero o attraversamento non attestano completezza grafica.",
+      "verification": "Seed Liquid, inizio/fine combattimento e garage: tracciare ogni emissione sconosciuta e transizioni.",
+      "anchors": [
+        {
+          "file": "include/charalst.h",
+          "text": "CHARA_BLACKSMOKE"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "animationKind"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "shared_revision",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "jeep_variants",
+      "title": "Fuga in jeep: fari, fuoco, vetro e colpi",
+      "domain": "boss_composite",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "partial_source",
+      "source_files": [
+        "overlays/s19b/anime/effect/janime2.c",
+        "overlays/s19b/takabe/jeep/gsplash3.c",
+        "overlays/s19b/takabe/jeep/jblast.c",
+        "overlays/s19b/takabe/jeep/jblood.c",
+        "overlays/s19b/takabe/jeep/jbullet.c",
+        "overlays/s19b/takabe/jeep/jdrumfir.c",
+        "overlays/s19b/takabe/jeep/jdrumsmk.c",
+        "overlays/s19b/takabe/jeep/jeep_gls.c",
+        "overlays/s19b/takabe/jeep/jlamp.c",
+        "overlays/s19b/takabe/jeep/jlamp2.c",
+        "overlays/s19b/takabe/jeep/jspark.c",
+        "overlays/s19b/takabe/jeep/spark2_m.c"
+      ],
+      "native": "Varianti proprie di attori comuni, alcune ancora ASM; non condividono necessariamente layout e identificatori con il gameplay a piedi.",
+      "parameters": "Veicolo/attach point, fase, texture, luce, vita e tipo variante.",
+      "vulkan": "Ritoccati i profili comuni senza cambiare i layout verificati, con vetro originale e colori delle emissioni. La run disco 2 non è una prova di tutta la fuga.",
+      "constraints": "Unificazione del rendering senza assumere uguaglianza strutturale degli attori o sovrascrivere traiettorie.",
+      "verification": "s19b/s19br: tunnel, bidoni, fari, vetro e fuoco simultanei, cambio camera e conclusione fuga.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "jdrumfir.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "shared_revision",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "head_marks",
+      "title": "Segni di allerta, sonno e indicatori narrativi",
+      "domain": "world_ui",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "anime/effect/mark.c",
+        "anime/effect/sleep.c",
+        "okajima/scn_mark.c"
+      ],
+      "native": "Animazioni e attori per !, ?, sonno, cuori e relative varianti di colore.",
+      "parameters": "Segno, personaggio/attach point, fase e durata.",
+      "vulkan": "Ripristinati simboli e fasi degli asset quando associati; filtro continuo e aggancio originale. Evitata la sostituzione universale con glifi procedurali.",
+      "constraints": "Sono segnali gameplay: conservare significato, colore, tempistica e priorità rispetto al mondo.",
+      "verification": "Guardia sospettosa/allertata e segni da cinematica, zoom e uscita campo.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "animationKind"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "codec_radar",
+      "title": "Codec, interferenze radar e composizione dell’interfaccia",
+      "domain": "ui",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "menu/radar.c",
+        "menu/radio.c",
+        "menu/radiofacedraw.c",
+        "menu/radiomem.c",
+        "menu/radiotex.c",
+        "okajima/chafgrnd.c"
+      ],
+      "native": "Primitive/texture per radar e Codec; chaff è un attore di particelle e disturbo elettronico. Copie VRAM dell’interfaccia richiedono semantica propria.",
+      "parameters": "Stato chaff/jamming, modalità radar, contenuto Codec, ritratti e fasi originali.",
+      "vulkan": "Disturbo radar originale durante jamming e UI vettoriale. Il Codec viene ricostruito da una griglia comune di 426×240 celle RGB dopo la composizione di ritratti, cornici, pannello, etichette e cifre. Un unico passaggio autenticato tramite i due SPRT di scansione dell’arena menuman; il testo della conversazione viene disegnato dopo il CRT e resta invariato. Animazioni, scansione mobile, crossfade e framebuffer nativo seguono il gioco.",
+      "constraints": "Non restaurare informazioni radar oscurate dal gioco. MGSM2Fix documenta bug di framebuffer anche nelle cifre Codec.",
+      "verification": "Chaff e interferenza ambientale, chiamata Codec in ingresso/uscita, combinazioni con fade e menu.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "menuman.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_crt.glsl",
+            "anchor": "mgs_crt_cell_light"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json",
+        "crt_evidence": "docs/mgs-crt-v12-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "optical_sights",
+      "title": "Mirini e ottiche di equipaggiamento",
+      "domain": "ui_scene",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "equip/gglsight.c",
+        "equip/gmsight.c",
+        "equip/scope.c",
+        "thing/sgtrect3.c",
+        "thing/sight.c",
+        "weapon/rfsight.c",
+        "weapon/stnsight.c"
+      ],
+      "native": "Maschere, reticoli e indicatori di binocolo, visori/maschera, PSG1 e Stinger.",
+      "parameters": "Zoom/camera, arma, lock-on, overlay attivo e geometria reticolo.",
+      "vulkan": "SGT e array originali di scope/gglsight/stnsight identificati per owner: reticoli proporzionati in 16:9, bordi esterni delle maschere estesi e linee continue UHD. Il lock-on nello spazio mondo conserva la propria proiezione.",
+      "constraints": "Non allargare campo di mira o cambiare lock-on, zoom o stabilizzazione PSG1; 16:9 senza allungare reticoli.",
+      "verification": "Switch prima persona e arma, bersaglio in lock e fuori campo, resize finestra, maschera/visore sovrapposti.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "bindInterfaceGeometry"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "camera_shake",
+      "title": "Scuotimenti e tagli della camera",
+      "domain": "camera",
+      "priority": "P1",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/camshake.c",
+        "takabe/cat_in.c",
+        "takabe/shakemdl.c"
+      ],
+      "native": "Attori cambiano camera o trasformazioni del modello; non sono un filtro di pixel.",
+      "parameters": "Pose/camera precedente e corrente, amplitude/fase e messaggi originali.",
+      "vulkan": "Camera e deformazioni originali prima della proiezione; spostamenti delle mesh dalla copia dei vertici vivi verificata contro gli originali, trasformati in float. Nessun nuovo clock o campionamento 2x introdotto.",
+      "constraints": "Non filtrare o spostare la camera usata dalla logica e dal puntamento; non interpolare tra due camere disgiunte.",
+      "verification": "Esplosione, danno, cut-in e pause: traiettorie moderne confrontate con camera nativa.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_mesh_replay.cpp",
+            "anchor": "displacement"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "cinema_bands",
+      "title": "Bande cinematografiche e aperture",
+      "domain": "ui_composition",
+      "priority": "P2",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "takabe/cinema.c",
+        "takabe/cineutil.c"
+      ],
+      "native": "Geometria di bande e controllo di apertura/chiusura del frame.",
+      "parameters": "Altezza, velocità, stato e piano nell’ordine di composizione.",
+      "vulkan": "Bande geometriche e gradienti composti in RGB8 alla risoluzione finale, conservando ordine, draw area e inviluppo dell’attore; niente texture del framebuffer nativo per il ritaglio.",
+      "constraints": "Nessun bisogno di simulare la bassa risoluzione dei TILE; non deformare l’immagine cambiando finestra.",
+      "verification": "Apertura/chiusura durante fade, scie e Codec; acquisizione UHD e aspect bloccato.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/gpu/gpu.cpp",
+            "anchor": "capturePolygonPacket"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "titles_gameover",
+      "title": "Titoli, game over, telop e cambio disco",
+      "domain": "ui_composition",
+      "priority": "P2",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "game/over.c",
+        "onoda/abst/ab_ch.c",
+        "onoda/abst/ab_demo1.c",
+        "onoda/abst/ab_demo2.c",
+        "onoda/abst/abst.c",
+        "onoda/change/change.c",
+        "onoda/change/met_logo.c",
+        "onoda/open/open.c",
+        "onoda/preope/pre_met1.c",
+        "onoda/preope/pre_met2.c",
+        "onoda/preope/preope.c",
+        "takabe/ed_telop.c",
+        "takabe/ending2.c",
+        "takabe/telop.c"
+      ],
+      "native": "Sequenze di primitive, geometria e texture per titoli/transizioni, da distinguere da video MDEC.",
+      "parameters": "Fase, posizione, alpha/colore, testo/asset e ordine scena/interfaccia.",
+      "vulkan": "Ricostruzione vettoriale delle linee animate, primitive/gradienti alla risoluzione finale e asset originali per immagini e lettering; tempi e layout dell’overlay conservati.",
+      "constraints": "Non equiparare un filmato prerenderizzato a un effetto ricostruibile dal KMD; mantenere tempo e leggibilità.",
+      "verification": "Avvio, game over, cambio disco e finale, con transizioni complete e asset mancanti segnalati.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/gpu/gpu.cpp",
+            "anchor": "recordScreenLineGroup"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "photo_camera",
+      "title": "Fotocamera e acquisizioni della scena",
+      "domain": "capture_ui",
+      "priority": "P2",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "equip/jpegcam.c"
+      ],
+      "native": "Fotocamera con primitive e letture del framebuffer native.",
+      "parameters": "Evento scatto, camera, contenuto e formato del salvataggio originale.",
+      "vulkan": "Scatto aggiuntivo della presentazione Vulkan in RGB8, attivato dalla transizione osservata di jpegcam e salvato in data/presentation/photos. JPEG nativo, fantasmi, album e memory card restano gestiti dal gioco.",
+      "constraints": "Non cambiare formato, dimensioni o semantica dei dati originali; effetti o contenuti speciali vanno verificati per regione.",
+      "verification": "Equipaggiare/scattare/aprire album, save/load e cambio risoluzione; confronto del dato salvato.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/gpu/renderer_vulkan.cpp",
+            "anchor": "mgsPhotoCapture"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "procedural_geometry",
+      "title": "Mantelli e deformazioni delle mesh",
+      "domain": "mesh_deformation",
+      "priority": "P2",
+      "status": "modern_adapter",
+      "evidence": "source_candidate",
+      "source_files": [
+        "onoda/s04b/cape.c"
+      ],
+      "native": "Attore dedicato al mantello; ricostruzione da geometria/trasformazioni originali. I file dymc_flr/dymc_seg riguardano HZD e non provano un effetto grafico.",
+      "parameters": "Geometria e stato del mantello, trasformazioni e abilitazione.",
+      "vulkan": "Superficie originale del mantello ricostruita dai vertici deformati, normali condivise pesate per area e illuminazione per pixel dalle matrici originali.",
+      "constraints": "Non sostituire movimenti con significato gameplay o cambiare collisioni; attribuzione e completezza USA ancora da provare.",
+      "verification": "Sequenza con mantello: movimento, occlusione, luce e cache; attribuzione USA prima di una simulazione estetica nuova.",
+      "anchors": [],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "cape.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "retained",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "animation_vm",
+      "title": "Motore comune degli effetti animati",
+      "domain": "infrastructure",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "anime/animconv/anime.c",
+        "anime/animconv/anime.h",
+        "kojo/demoexec.c",
+        "kojo/demoscrn.c",
+        "kojo/demothrd.c"
+      ],
+      "native": "ANIMATION/PRESCRIPT descrivono texture, suddivisione atlante, numero frame/vertici, dimensioni, blend, posizione/velocità e bytecode. Le demo hanno dispatch e camera propri in demoexec/demothrd/demoscrn; i comandi DEMO vanno risolti in quel contesto.",
+      "parameters": "Identità dell’animazione, prescript, istruzione/fase, texture originale, trasformazione e vita delle istanze.",
+      "vulkan": "77 firme e VM native conservate; la nuova valutazione dei materiali usa l’atlante e gli UV vivi, mantenendo le differenze fra programmi e fasi.",
+      "constraints": "Lasciare la VM originale eseguire logica e RNG. Leggere snapshot e renderizzare varianti; evitare reimplementazioni separate per ogni clone.",
+      "verification": "Catturare emissioni da effetti comuni e boss su entrambi i dischi; contatori per istanze note/sconosciute e packet sostituiti.",
+      "anchors": [
+        {
+          "file": "anime/animconv/anime.h",
+          "text": "typedef struct ANIMATION"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "animationSignatures"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "pose_afterimage",
+      "title": "Duplicati temporali delle pose del Ninja",
+      "domain": "mesh_temporal",
+      "priority": "P0",
+      "status": "modern_adapter",
+      "evidence": "source_mechanism",
+      "source_files": [
+        "animal/ninja/bunsin2.c"
+      ],
+      "native": "Bunsin2 mantiene un anello di 32 world matrix e pose di 16 ossa; il duplicato usa un campione ritardato, flag PAINT e stato di visibilità.",
+      "parameters": "Mesh parent, indice anello, ritardo, world, rotazioni ossa e stato del duplicato.",
+      "vulkan": "Rimossa la tinta ciano e il bordo additivo indipendente dalla dissolvenza. Palette, pose storiche e inviluppo originali con risposta delle normali moderata.",
+      "constraints": "Non confondere con blurpure: il duplicato è geometria nello spazio mondo. Conservare identità, ritardo e attivazione; nessuna copia del RNG nativo.",
+      "verification": "s08b: corsa/scatto, stop, cambio camera, attivazione/spegnimento e reload nel mezzo della scia.",
+      "anchors": [
+        {
+          "file": "animal/ninja/bunsin2.c",
+          "text": "work->world[index] = work->root_obj->objs->world"
+        }
+      ],
+      "presentation_contract": {
+        "equivalence": "overall_visual_result",
+        "native_logic_unchanged": true,
+        "status": "implemented",
+        "runtime_evidence": [
+          {
+            "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+            "anchor": "bunsin2.c"
+          },
+          {
+            "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+            "anchor": "mgs_surface_texel"
+          }
+        ],
+        "validation": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+        "complete_scene_coverage": false,
+        "adapter_evidence": "docs/mgs-effects-adapter-evidence.json"
+      },
+      "style_review": {
+        "date": "2026-10-05",
+        "decision": "revised",
+        "report": "docs/mgs-effects-style-review.json",
+        "all_variants_visually_verified": false
+      }
+    }
+  ],
+  "scan_exclusions": [
+    {
+      "reason": "Infrastruttura di caricamento/disegno/dispatch e inizializzazione personaggio; non un effetto autonomo. I loro hook restano dipendenze dei percorsi semantici.",
+      "files": [
+        "chara/snake/sna_init.c",
+        "game/gamed.c",
+        "game/script.c",
+        "libdg/chanl.c",
+        "libdg/frame.c",
+        "libdg/loader.c",
+        "libdg/opack.c"
+      ]
+    },
+    {
+      "reason": "Interfaccia ordinaria, font, menu o briefing: conservare asset e composizione UHD; la semplice presenza di semitrasparenza non giustifica un nuovo effetto creativo. Le parti ASM del briefing restano un limite.",
+      "files": [
+        "chara/torture/info.c",
+        "font/font.c",
+        "menu/datasave.c",
+        "menu/item.c",
+        "menu/jimaku.c",
+        "menu/life.c",
+        "menu/weapon.c",
+        "onoda/brf/b_count.c",
+        "onoda/demosel/demosel.c",
+        "onoda/option/opt.c",
+        "overlays/brf/onoda/brf/b_graph.c",
+        "overlays/brf/onoda/brf/b_select.c",
+        "overlays/s19b/menu/countdwn.c"
+      ]
+    },
+    {
+      "reason": "Entità/oggetti e relative primitive ordinarie: usare il percorso mesh/primitive originale moderno; non sostituire fauna, pickup, mine, porte o geometria funzionale con un postprocess. Gli eventi di esplosione riusano la famiglia esplosioni.",
+      "files": [
+        "chara/torture/boxall.c",
+        "game/item.c",
+        "okajima/claymore.c",
+        "okajima/dog/dog.c",
+        "okajima/ductmous.c",
+        "okajima/evntmous.c",
+        "okajima/hiyoko.c",
+        "okajima/uji.c",
+        "okajima/wolf/wolf2.c",
+        "onoda/s04b/revolver.c",
+        "onoda/s04b/wire.c",
+        "takabe/door2.c",
+        "takabe/rasen_el.c"
+      ]
+    },
+    {
+      "reason": "Video MDEC prerenderizzati: non ricostruibili come effetto o scena KMD dalla decompilazione; migliorabile solo la presentazione del contenuto disponibile.",
+      "files": [
+        "game/movie.c"
+      ]
+    },
+    {
+      "reason": "VR/debug/demo promozionale/album e funzioni esterne alla campagna; non prova di un effetto da reinterpretare nel gioco USA. Conservare nel registro per un audit dedicato.",
+      "files": [
+        "chara/snake_vr/sna_init.c",
+        "koba/vr/vrwindow.c",
+        "menu/debug.c",
+        "game/tobcnt.c",
+        "overlays/camera/overlay2.c",
+        "overlays/camera/unknown/camera.c",
+        "overlays/rank/menu/pocket.c",
+        "takabe/vib_edit.c"
+      ]
+    }
+  ],
+  "runtime_review": {
+    "files": [
+      "engine/ps1Runtime/src/games/mgs_screen_effects.cpp",
+      "engine/ps1Runtime/src/games/mgs_source_material.cpp",
+      "engine/ps1Runtime/src/games/mgs_mesh_replay.cpp",
+      "engine/ps1Runtime/src/games/mgs_scene.cpp",
+      "engine/ps1Runtime/src/games/mgs_pose.cpp"
+    ],
+    "historical_evidence": [
+      "docs/mgs-screen-effects-evidence.json",
+      "docs/mgs-expressive-effects-evidence.json"
+    ],
+    "scenario_evidence_for_seed_selection_only": [
+      "docs/mgs-scenario-evidence.json",
+      "docs/mgs-disc2-scenario-evidence.json",
+      "docs/mgs-situation-evidence.json"
+    ],
+    "note": "Il censimento iniziale era solo documentale; la successiva correzione cinematic_red_tint modifica renderer e materiale. Le catture termiche storiche dell’intro avevano una classificazione semantica errata. Questa revisione aggiunge illuminazione per pixel, colore RGB8/float, zoom blur, stun, allarme e profilo calore. La copertura totale dei 60 dossier resta aperta.",
+    "correction_evidence": "docs/mgs-cinematic-red-evidence.json",
+    "presentation_evidence": "docs/mgs-modern-presentation-evidence.json",
+    "crt_research": "docs/mgs-crt-research.json",
+    "crt_evidence": "docs/mgs-crt-v12-evidence.json",
+    "crt_reconstruction_research": "docs/mgs-crt-royale-reconstruction.json",
+    "latest_particle_scenario_evidence": "docs/mgs-effects-v15-evidence.json",
+    "latest_camouflage_scenario_evidence": "docs/mgs-effects-v15-evidence.json"
+  }
+}

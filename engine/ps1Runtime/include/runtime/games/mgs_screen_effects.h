@@ -11,12 +11,15 @@ inline constexpr uint32_t SCREEN_TEXTURE_HEIGHT = 224;
 struct ScreenRead {
   gpu::replay::VulkanReplayBakedRect source;
   gpu::replay::VulkanReplayBakedRect destination;
+  uint32_t group = 0; // immutable scene for an actor or consecutive bubble plume
+  bool depth = false;
 };
 std::optional<ScreenRead>
 screenRead(const gpu::replay::VulkanReplayBakedDraw &draw,
            const gpu::replay::VulkanReplayBakedBatch &batch);
 void prepareScreenReads(gpu::replay::VulkanReplayBakedBatch &batch,
                         bool replaceActorEffects = true);
+void prepareColorPresentation(gpu::replay::VulkanReplayBakedBatch &batch);
 void captureWaterEffects(std::span<const uint8_t> ram);
 void bindWaterEffect(gpu::replay::DrawPacket &packet, uint32_t commandAddress);
 // Snapshot read-only actor ownership at each ordering-table submission. No
@@ -34,6 +37,7 @@ public:
 
 private:
   bool valid_ = false;
+  uint32_t group_ = 0;
   std::vector<gpu::replay::VulkanReplayBakedRect> writes_;
 };
 } // namespace ps1::games::mgs

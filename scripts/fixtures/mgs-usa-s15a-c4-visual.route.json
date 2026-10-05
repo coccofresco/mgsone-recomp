@@ -1,0 +1,109 @@
+{
+  "format": "mgs-tas-route-1",
+  "name": "s15a-c4-spatial-visual",
+  "source": "weapon/bomb.c and bullet/bakudan.c: placement owns bakudan actor; circle detonates after three actor ticks. No guest-state edits. Branch from V14 grenade recovery.",
+  "steps": [
+    {
+      "name": "select-c4",
+      "until": {
+        "weapon": 6,
+        "pause_level": 0
+      },
+      "guard": {
+        "stage": "s15a",
+        "story": 219,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 360,
+      "stable_frames": 12,
+      "action": {
+        "sequence": "r2:30,r2+left:6,r2:24,r2+left:6,r2:24,r2+left:6,r2:24,wait:30"
+      }
+    },
+    {
+      "name": "plant-one-c4",
+      "until": {
+        "actor_bakudan_count": 1,
+        "gcl_1180002e": 12
+      },
+      "guard": {
+        "stage": "s15a",
+        "story": 219,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 360,
+      "action": {
+        "sequence": "wait:12,square:12,wait:60"
+      }
+    },
+    {
+      "name": "retreat-outside-blast",
+      "until": {
+        "z": {
+          "min": -2800
+        },
+        "actor_bakudan_count": 1
+      },
+      "guard": {
+        "stage": "s15a",
+        "story": 219,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 360,
+      "action": {
+        "move_to": {
+          "x": 2873,
+          "z": -2600
+        }
+      }
+    },
+    {
+      "name": "detonate-original-actor",
+      "until": {
+        "actor_blast_count": {
+          "min": 1
+        }
+      },
+      "guard": {
+        "stage": "s15a",
+        "story": 219,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 360,
+      "action": {
+        "sequence": "wait:12,circle:12,wait:60"
+      }
+    },
+    {
+      "name": "blast-finished",
+      "until": {
+        "actor_bakudan_count": 0,
+        "actor_blast_count": 0,
+        "pause_level": 0,
+        "gcl_1180002e": 12
+      },
+      "guard": {
+        "stage": "s15a",
+        "story": 219,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 360,
+      "stable_frames": 90
+    }
+  ]
+}

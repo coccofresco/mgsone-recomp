@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
@@ -51,16 +52,24 @@ bool InputScript::parse(std::string_view text, std::string *error) {
     std::istringstream fields(line);
     Interval interval;
     std::string buttonName;
-    if (!(fields >> interval.firstVblank))
+    std::string first, last, portText, trailing;
+    if (!(fields >> first))
       continue;
-    if (!(fields >> interval.lastVblank >> buttonName))
+    const auto number = [](const std::string &token, auto &value) {
+      const auto result =
+          std::from_chars(token.data(), token.data() + token.size(), value);
+      return result.ec == std::errc{} &&
+             result.ptr == token.data() + token.size();
+    };
+    if (!(fields >> last >> buttonName) ||
+        !number(first, interval.firstVblank) ||
+        !number(last, interval.lastVblank))
       return fail(error, lineNumber,
                   "expected: first_vblank last_vblank button [port]");
-    if (fields >> interval.port) {
-      if (interval.port > 1)
+    if (fields >> portText) {
+      if (!number(portText, interval.port) || interval.port > 1)
         return fail(error, lineNumber, "controller port must be 0 or 1");
     }
-    std::string trailing;
     if (fields >> trailing)
       return fail(error, lineNumber, "unexpected trailing field");
     if (interval.lastVblank < interval.firstVblank)

@@ -1,0 +1,345 @@
+{
+  "format": "mgs-tas-route-1",
+  "source_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757",
+  "source_url": "https://tasvideos.org/3462S",
+  "description": "Extreme dock from restored player control: opening reference inputs, then an HZD-derived west-aisle adaptation armed by original patrol and lift conditions. Every traversal aborts on alert or death.",
+  "steps": [
+    {
+      "name": "restore-original-start-stance",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "stance": 1
+      },
+      "action": {
+        "sequence": "cross:6,wait:6"
+      },
+      "max_frames": 60
+    },
+    {
+      "name": "reference-dock-west-alcove",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "z": {
+          "max": -9000
+        },
+        "stance": 0
+      },
+      "action": {
+        "source_frames": [
+          1900,
+          2770
+        ],
+        "minimum_hold": 4,
+        "minimum_release": 4
+      },
+      "max_frames": 950
+    },
+    {
+      "name": "wait-for-original-lift-and-guard-gate",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "gcl_16000040": 60856,
+        "gcl_12000067": {
+          "mask": 112,
+          "eq": 16
+        }
+      },
+      "max_frames": 12000,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    },
+    {
+      "name": "wait-for-west-patrol-departure",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "watcher_1466_x": {
+          "min": -4000,
+          "max": -1500
+        },
+        "watcher_1466_z": {
+          "max": -22000
+        },
+        "watcher_1466_target_x": -1000
+      },
+      "max_frames": 4800,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    },
+    {
+      "name": "enter-west-aisle",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "x": {
+          "min": -5650
+        }
+      },
+      "action": {
+        "sequence": "right:200"
+      },
+      "max_frames": 220,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    },
+    {
+      "name": "follow-west-aisle",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "z": {
+          "max": -20500
+        }
+      },
+      "action": {
+        "sequence": "wait:30,up:600"
+      },
+      "max_frames": 650,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    },
+    {
+      "name": "wait-for-both-north-patrols-to-clear",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "watcher_13e8_target_x": {
+          "min": 7000
+        },
+        "watcher_13e8_x": {
+          "min": 1500
+        },
+        "watcher_13e8_z": {
+          "max": -22000
+        },
+        "watcher_1466_z": {
+          "min": -20000
+        },
+        "watcher_1466_target_z": {
+          "min": -20000
+        }
+      },
+      "max_frames": 3600,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    },
+    {
+      "name": "leave-west-cover",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "z": {
+          "max": -22400
+        }
+      },
+      "action": {
+        "sequence": "up:120"
+      },
+      "max_frames": 140,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    },
+    {
+      "name": "cross-north-aisle",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "x": {
+          "min": 100
+        }
+      },
+      "action": {
+        "sequence": "wait:10,right:300"
+      },
+      "max_frames": 350,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    },
+    {
+      "name": "approach-lift",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "z": {
+          "max": -26700
+        }
+      },
+      "action": {
+        "sequence": "wait:10,up:200"
+      },
+      "max_frames": 250,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    },
+    {
+      "name": "wait-before-lift-entry",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "gcl_16000040": 60856,
+        "gcl_12000067": {
+          "mask": 112,
+          "eq": 16
+        }
+      },
+      "max_frames": 2400,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    },
+    {
+      "name": "enter-original-lift-trigger",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "gcl_1403002d": 1
+      },
+      "action": {
+        "sequence": "up:240"
+      },
+      "max_frames": 260,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    },
+    {
+      "name": "wait-for-original-stage-exit",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "gcl_1100000a": 7
+      },
+      "max_frames": 1200,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    },
+    {
+      "name": "wait-for-heliport-film",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "stage": "d00a"
+      },
+      "max_frames": 1500,
+      "abort_when": {
+        "gcl_1200006c": {
+          "ne": 0
+        }
+      }
+    }
+  ],
+  "script_evidence": {
+    "stage": "s00a",
+    "resource": "ea54.g",
+    "sha256": "e8e52ac90bf05181c0f2daf4c03f090a49df1ca8a90f3f3670b584c52f3d1bd8",
+    "lift_gate_procedure": "053e",
+    "lift_entry_offset": "34b5",
+    "exit_offset": "36c4",
+    "hazard_resource": "c661.h",
+    "geometry": "liftup x[-1750,4000] z[-30500,-27750] y[0,5000]; move01A y[3000,6000]",
+    "adaptation": "Use west aisle, wait behind the north-west container until the west patrol has cleared the center and the lift patrol is moving east, then cross and enter the original liftup trigger.",
+    "patrol_layout": "Foxdie enemy/enemy.h and game/g_struct.h; USA watcher name +0x50, position +0x20, target +0xbe0, route +0xb7d. HZD c661.h routes 13 and 15."
+  }
+}

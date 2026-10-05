@@ -12,4 +12,4 @@ if [[ -z "${PS1_MGS_ASSET_CACHE+x}" ]]; then
         export PS1_MGS_ASSET_CACHE=data/presentation/usa/assets.mgsc
     fi
 fi
-exec build/ps1Runtime/ps1Runtime --config data/mgs.usa.native.toml "$@"
+exec "${PS1_NATIVE_RUNTIME:-build/ps1Runtime/ps1Runtime}" --config "${PS1_NATIVE_CONFIG:-data/mgs.usa.native.toml}" "$@"

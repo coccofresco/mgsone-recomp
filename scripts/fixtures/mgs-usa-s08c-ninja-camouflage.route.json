@@ -1,0 +1,99 @@
+{
+  "format": "mgs-tas-route-1",
+  "name": "s08c-ninja-optical-camouflage-entry",
+  "source": "USA c763.hzd: south corridor bypasses corpse collision; mv_s08b triggers story 75->76 and laboratory cinematic while stage stays s08c. Linked kogaku2 actor gates observation; no guest edits.",
+  "steps": [
+    {
+      "name": "south-corridor",
+      "until": {
+        "z": {
+          "max": -7600
+        }
+      },
+      "guard": {
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 1000,
+      "action": {
+        "move_to": {
+          "x": 2750,
+          "z": -7800
+        }
+      }
+    },
+    {
+      "name": "cross-below-corridor",
+      "until": {
+        "x": {
+          "max": -2600
+        }
+      },
+      "guard": {
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 1000,
+      "action": {
+        "move_to": {
+          "x": -2750,
+          "z": -7800
+        }
+      }
+    },
+    {
+      "name": "trigger-laboratory-cinematic",
+      "until": {
+        "story": 76
+      },
+      "guard": {
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 1200,
+      "action": {
+        "move_to": {
+          "x": -2750,
+          "z": -11000
+        }
+      }
+    },
+    {
+      "name": "live-optical-camouflage",
+      "until": {
+        "actor_kogaku2_count": {
+          "min": 1
+        }
+      },
+      "guard": {
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 2400,
+      "stable_frames": 4
+    },
+    {
+      "name": "original-camouflage-ends",
+      "until": {
+        "actor_kogaku2_count": 0
+      },
+      "guard": {
+        "story": 76,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 2400,
+      "stable_frames": 60
+    }
+  ]
+}

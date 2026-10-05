@@ -1,0 +1,1520 @@
+{
+  "format": "mgs-situations-evidence-1",
+  "date": "2026-10-04",
+  "runtime": {
+    "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+    "sha256": "c3502a158384d9b670ac4c75f45ecf6205600a74ca08b7b6a3eda00b519ba155"
+  },
+  "source_scenarios": {
+    "path": "docs/mgs-disc2-scenario-evidence.json",
+    "sha256": "88d220b439aaff5aaf46dd96cb4897dc511b36d74ed0b5ee45b14f07cbc2875c"
+  },
+  "implementation": [
+    {
+      "path": "scripts/mgs_situations.py",
+      "sha256": "a64227517e9d692a7c468f6bb24658701a9ba14cb3e661d8512674b6823a0b48"
+    },
+    {
+      "path": "scripts/tests/test_mgs_situations.py",
+      "sha256": "1b17d02cbf6cf6a0954f710ea96903483148581981868ed89cae1b2be0f8af89"
+    },
+    {
+      "path": "scripts/fixtures/mgs-usa-s14e-return-s13a.situation.json",
+      "sha256": "82aef92f5bb6ea4ff7e617a960cfadf16aead7c69ddcb72c629c58aa0feb46bf"
+    },
+    {
+      "path": "scripts/fixtures/mgs-usa-liquid-damage.situation.json",
+      "sha256": "547410f15447d81a474888be70803f843594c2e024518668d0a5b4c198712a40"
+    }
+  ],
+  "primary_decomp_sources": [
+    {
+      "path": ".local/mgs_reversing/source/libgv/libgv.h",
+      "sha256": "42eb07e661369241957cfbdf52ccd902b8ed721738696605e5179862440f800b"
+    },
+    {
+      "path": ".local/mgs_reversing/source/game/g_define.h",
+      "sha256": "1e101c6891ef9d27c675ec36b760e2a8353f4106a836c46d93692f1f41f03753"
+    },
+    {
+      "path": ".local/mgs_reversing/source/game/gamed.c",
+      "sha256": "0dbc924dd28d30fe0538a6d63731de209d4ba627f10112d06b9eee91df04968f"
+    },
+    {
+      "path": ".local/mgs_reversing/source/menu/radio.c",
+      "sha256": "a037ac0dcec180fd16dcb933beb9df12ca7502f2d7f5d9dab54098e5e83c0edd"
+    },
+    {
+      "path": ".local/mgs_reversing/source/menu/item.c",
+      "sha256": "fbb58733ff6948759defe542dc5efd7bf11056b0d8e0fda25e78481834d2cda9"
+    },
+    {
+      "path": ".local/mgs_reversing/source/menu/weapon.c",
+      "sha256": "2b7100b185c596d9877f65e59439d661ae8203dd405f005fcbc3385d106ac55b"
+    },
+    {
+      "path": ".local/mgs_reversing/source/overlays/d18a/animal/snake18/snake18.c",
+      "sha256": "6f5e222197748007813bca6cdfb4c82c189322106700911699fbf2fa42329979"
+    }
+  ],
+  "distinct_passed_situations": 48,
+  "successful_executions": 50,
+  "not_applicable": 5,
+  "coverage": {
+    "menu_and_view_checks": 40,
+    "stages": 8,
+    "quick_item_checks": 5,
+    "quick_weapon_checks": 1,
+    "door_transitions": 1,
+    "damage_recovery": 1
+  },
+  "situations": [
+    {
+      "stage": "s15a",
+      "saved_story": 219,
+      "name": "codec",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/codec-vulkan-01/result.json",
+        "sha256": "a77fc64cbbd93e7e27a18f206664d30cca6ee7be5d81fda7dc18288b830f8e48"
+      },
+      "recipe_sha256": "7cbd9df2562d32a6fb526d25cf6158b266ba4af44dc7080a9d625a9fa06d3729",
+      "route_sha256": "99d9af3071c4d56697a6823c2b7ee214463a99368fd12d1f0db766ce7d1b4fd3",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 147,
+      "donor_frames": 149,
+      "native_replay": "complete",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s14e",
+      "saved_story": 204,
+      "name": "s14e-return-s13a",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/door-01/result.json",
+        "sha256": "83dd9030dab9e927e2a5d2a2e05dd9c9bfe54ea5b1decae740876c1b5e09f661"
+      },
+      "recipe_sha256": "6b77338d660964d4dea6de0be5edcf52989c25b9bba26e433770282c1ea19ead",
+      "route_sha256": "ec8f8430919257e3835bbf063453f9dc8916d0910ff529f8594ac1160eb80fb0",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 365,
+      "donor_frames": 373,
+      "native_replay": "complete",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s18a",
+      "saved_story": 277,
+      "name": "liquid-damage-recovery",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/liquid-damage-02/result.json",
+        "sha256": "30639f06361dbfaaeccb560688e39cfa9924cb9f4b1815497a6b2d57b2826d39"
+      },
+      "recipe_sha256": "c4ac39a5ad3ca3fde3bdb86675f39d3245e03ace04b988fe86801a0af337070d",
+      "route_sha256": "9a33947eca6e9b0d0ba121b0bd5475368c4f9e08868f3284a77163d72e189e61",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 1502,
+      "donor_frames": 794,
+      "native_replay": "complete",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s13a",
+      "saved_story": 204,
+      "name": "codec",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s13a-codec/result.json",
+        "sha256": "6956c8df3998ad10f5b15caa7a23af373b3a29eb12c6d60407b01afa643c51c4"
+      },
+      "recipe_sha256": "f3640ace4f15fe069235ee8686d081ed3e687499c89af41cdb4f754ba24cfe89",
+      "route_sha256": "756e8cd7918ce69ac018f4a0cf5d2c48142835dcad36feb78617ece3905c422a",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 146,
+      "donor_frames": 149,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s13a",
+      "saved_story": 204,
+      "name": "first-person",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s13a-first-person/result.json",
+        "sha256": "b5efdf532b64d68d522460186e3f6169142f37e9a73fe4cdc8438c9f0c006ce8"
+      },
+      "recipe_sha256": "76b67c2868560cfd17860957f8591855396dd4b0d2dfe2e9c593d47aee65708e",
+      "route_sha256": "954db23c929f7c97e3fec1ac36a7d36e55f06d430e0f830a5890f6ffe1935a6f",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s13a",
+      "saved_story": 204,
+      "name": "items",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s13a-items/result.json",
+        "sha256": "18e4fa785622e94f09c63ffa63cfd9dddff35613d356fcca686bc3ba5d12cf9e"
+      },
+      "recipe_sha256": "bea9565be7525e29847914025f4ae281657498e9e5bf1f38d06e41f6ce731a75",
+      "route_sha256": "5c7bee16b8383454e734f14e77769a2ada5dd9b9c04493e8057b34a0e68dbb2d",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 46,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s13a",
+      "saved_story": 204,
+      "name": "pause",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s13a-pause/result.json",
+        "sha256": "c0396d0149bef6f4dbe196a0af0aa952c33f45c583534f0e79b6f8ebd2eb3cd8"
+      },
+      "recipe_sha256": "f4c5e2f33ec83931cea790c9ad3ef5ac8d22bc7c3b71af75af3e501dc1dd09ba",
+      "route_sha256": "8d75b893d5cbd9d6ec7225bc959735e3b5ff8416408ee4d424ab79d8446ee536",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 106,
+      "donor_frames": 109,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s13a",
+      "saved_story": 204,
+      "name": "quick-weapon",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s13a-quick-weapon/result.json",
+        "sha256": "8e8dd8827d18a8af656039d1e1fb2fe54a20e13ff7af63d0f126cea4b2394ad8"
+      },
+      "recipe_sha256": "3e96852060513b908ac6f4a3d27cf913124e271296391cc9d7b6fca9f6a672ce",
+      "route_sha256": "0021fdee0f2ea67625189aba214370e426613107d31670c743530c0c23a62599",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 76,
+      "donor_frames": 79,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s13a",
+      "saved_story": 204,
+      "name": "weapons",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s13a-weapons/result.json",
+        "sha256": "b6cd79cf6b1c8195828ae72e011af3cfa1cdcea4c450df84be5bf03d23e7a1ab"
+      },
+      "recipe_sha256": "5fa5b5cbdb1798e243110a44178ed6fd67b82c0dbb81bb310aac8983f5ad7563",
+      "route_sha256": "f23c71e12f688fe7e8966a1f40ede0408c5851b369bfd67ac0d0e197b523f536",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 46,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s14e",
+      "saved_story": 204,
+      "name": "codec",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s14e-codec/result.json",
+        "sha256": "d0f7aeb5a71e4f2f5b290fb24aec30b90d30c4da847107a2bfe2d9cd4388a5e9"
+      },
+      "recipe_sha256": "c56c29043cb825e79fdd448a72410e9375bdf0b9c934132f6a6693b417463a6e",
+      "route_sha256": "e8da3c7bc61efd432e49897a243603df0bc3382d754758b09afccb95d2c47ac7",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 147,
+      "donor_frames": 149,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s14e",
+      "saved_story": 204,
+      "name": "first-person",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s14e-first-person/result.json",
+        "sha256": "ffe75d4c441961d165586b8d35e8c3cc1b22ffc745c1356057c83eab1f1ec3f7"
+      },
+      "recipe_sha256": "27790a8e82cc4e40fb1d777ff45b432520aaab2fd7505791ae863804ae0152be",
+      "route_sha256": "1b6c1dcd597a5045bb48cb3ce36d48df4f7d8174f7191142218ba75084f97dfd",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s14e",
+      "saved_story": 204,
+      "name": "items",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s14e-items/result.json",
+        "sha256": "c950bd8c08cb4e9fba49fec034295fd8cb3a9298e2ccc6b2f743be0032921f57"
+      },
+      "recipe_sha256": "e7c312fdd4da291ec8002ea2da289e066f6830354d52a5a5acba582f26920430",
+      "route_sha256": "3ab8e64a1908c6cc58bca325497f0e729cf41334397523adf9cf269180dcd5b3",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s14e",
+      "saved_story": 204,
+      "name": "pause",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s14e-pause/result.json",
+        "sha256": "9e3850b1571d26c628f5fe563b0364f0931af3e15fc70077ff4f3305489ddb9b"
+      },
+      "recipe_sha256": "1966f184bf405633da31be5f5bc367f5d4a35dc9c43622758e9bd47feb92cb46",
+      "route_sha256": "d8bdf98ee4f2dd303fab9de6a52830eb0502aedf7ff8b3f0324310542f1cee2a",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 107,
+      "donor_frames": 109,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s14e",
+      "saved_story": 204,
+      "name": "weapons",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s14e-weapons/result.json",
+        "sha256": "d84bf54c00cbe548ca689e0fbfccdfc1c9d14d87a5b4373ea67ab8a1bb2c5767"
+      },
+      "recipe_sha256": "972319add05c8643ff01d4cd06a4ea22bb7a29d7c377a07fb8df9ecd190a157f",
+      "route_sha256": "401bfd49632b2c61930cd5375f81b1a0373dd307e2c8cbe95656f86ba9e3ec9d",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16a",
+      "saved_story": 237,
+      "name": "codec",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s16a-codec/result.json",
+        "sha256": "eb74e81c68b951c290eef315345009ef1cf4eac1cdde828fd93ab653b908dcf4"
+      },
+      "recipe_sha256": "1ec4a7a62a5b1992e8536abdc50c149ec3ccdcf3af487d164551979a949299cb",
+      "route_sha256": "02052abe96218fa877a4c8537faa17c870e529dd0ab33eb3dece8030d680380c",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 146,
+      "donor_frames": 148,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16a",
+      "saved_story": 237,
+      "name": "first-person",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s16a-first-person/result.json",
+        "sha256": "4a850cd48d02a3d152a23113952f19773c793643dd282331e4e3357e1d8cf509"
+      },
+      "recipe_sha256": "5ed50d805f387c479c19e868368e26f8aed3faadce8574bbe59b30ea318f7eb1",
+      "route_sha256": "fe38dfbb384c0806e1500bfcf390efb7f7914656e16d8ec66c5487824b764704",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16a",
+      "saved_story": 237,
+      "name": "items",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s16a-items/result.json",
+        "sha256": "01e872398bc3ced47c4354259134af7dc630d52aceb5a97bd3c6532c9335dc25"
+      },
+      "recipe_sha256": "794d509b802f0505d809643880d34868be1928a9f12ea50bdc27fed2e51ac443",
+      "route_sha256": "7a34180171c227083adb90b3ddf807819debd93dd13e2580b1beee3ae55e82d4",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 46,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16a",
+      "saved_story": 237,
+      "name": "pause",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s16a-pause/result.json",
+        "sha256": "616124bff219fe23929c263f93896599b4d1766ae052eb787a5bbcd0e6071fd4"
+      },
+      "recipe_sha256": "c17f6373564d626a2e37bbb2499c37b93d963823153f98ab266972e25da0306e",
+      "route_sha256": "e0de567e2010fd2afa576740442756e8388c8cd98e210aa0433ceeaefdae791d",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 106,
+      "donor_frames": 109,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16a",
+      "saved_story": 237,
+      "name": "weapons",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s16a-weapons/result.json",
+        "sha256": "67c6aaa00175813c35651c23b6715696bb8f99c268e21155d37782099b4dc1bb"
+      },
+      "recipe_sha256": "b9a3ec814dc605060aa966440d7e103e4ea724b08ecdf3e7f937d2646a84f889",
+      "route_sha256": "80bf51609534022bf75503554e9398d73e99ae022d9da6aa34034c580eb69a2d",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 46,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16d",
+      "saved_story": 240,
+      "name": "codec",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s16d-codec/result.json",
+        "sha256": "87d69d34d72394efe0e5ee5260112da87d9df6560dfe54c422699e51c62a4a3f"
+      },
+      "recipe_sha256": "598a77c331dd2621a37ea6286e7bc54d8f8de2e93b1bff5158b743afce15eb8e",
+      "route_sha256": "f5ae13795d81eca76bb3e78c38dce907a90e0ad6f828102d9b5e2f3e24c8488b",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 147,
+      "donor_frames": 148,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16d",
+      "saved_story": 240,
+      "name": "first-person",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s16d-first-person/result.json",
+        "sha256": "43cc9d46d9624a592ad315836ce0efa811836dfef2eb98f70b7f065437c53b59"
+      },
+      "recipe_sha256": "ab6471895b2aa15cd26ec8a085347da7811e7e8c83966d627d9ac7350f6d2c24",
+      "route_sha256": "18248e5636b5a057c348b16f95bde6667e4e8e3c6239c1a043347f7b313b225c",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16d",
+      "saved_story": 240,
+      "name": "items",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s16d-items/result.json",
+        "sha256": "098e7f7291d46173125ae9fe01c63a564e52a981fe0353c58c3b622d4ed6f2f0"
+      },
+      "recipe_sha256": "993aefa4d434a755e2196cc3c003cbe60dc6f5ad8ff4512e74432efcf403363e",
+      "route_sha256": "838f42f55333f4cca19d8c08e47c02073628105e77186e48d1a772d68b7aacdf",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16d",
+      "saved_story": 240,
+      "name": "pause",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s16d-pause/result.json",
+        "sha256": "c19180e9e28474deef0d5c47454df570922f737044cad3732ee08596553a448d"
+      },
+      "recipe_sha256": "1cf7adf9015135bf7d49472aebfe5d4e905222e6db066340e19d56f3ccc98458",
+      "route_sha256": "03af6329688e80982f5e20553590bd48defab9d61b4eed8626ec5a0daed44554",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 107,
+      "donor_frames": 109,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16d",
+      "saved_story": 240,
+      "name": "weapons",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s16d-weapons/result.json",
+        "sha256": "daedf1efc73700f8654ca425e9b9c76e25be48820212c6ce7ba8a365a95317ab"
+      },
+      "recipe_sha256": "4128df8b6fbc25e7547243e0e8d98c9224bde7c1ae3c03c80cc97fc38b345ac3",
+      "route_sha256": "10be11a0325eacf6b19c40599584cdb29d814e84c5233e033d6013f6ebddab1a",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s17a",
+      "saved_story": 253,
+      "name": "codec",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s17a-codec/result.json",
+        "sha256": "b41b587690b80169a37b3734bd06f6c1ff55d89797f907b973c06eea19413e59"
+      },
+      "recipe_sha256": "5ade472bc899be32ac16e17b695a0d71f1f6094d328ce38a7942514863cb210f",
+      "route_sha256": "c20706b9bc02f237e25ad099138ac763be493feb000f8fe6956f81a156746653",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 147,
+      "donor_frames": 149,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s17a",
+      "saved_story": 253,
+      "name": "first-person",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s17a-first-person/result.json",
+        "sha256": "ec300de187659f52b13f10972bff84104d9a31dbddea4a2303962a05408ff450"
+      },
+      "recipe_sha256": "6801d3f4b8c13b449e66661d1c56dfc8faee550b5d3c92e4c251db7f0396726d",
+      "route_sha256": "178db778705fdd40486b025386b03d813b6e3c0ca739dedecf2b6711beface0c",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s17a",
+      "saved_story": 253,
+      "name": "items",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s17a-items/result.json",
+        "sha256": "00f6547f92fa3c686d017312e4e95155df46da76b6e04ce4baf73a169dcacdc8"
+      },
+      "recipe_sha256": "dc149035b03a9e39b5e5a022c3ef30581cea848104ac64cd26e2a08ff545a021",
+      "route_sha256": "cf01982d18c5b7405a46754f21a0ca792e4324d15065329eb3427ddc85b0794e",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s17a",
+      "saved_story": 253,
+      "name": "pause",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s17a-pause/result.json",
+        "sha256": "b34d5f353adcb5d752c9faa886297efcd6d851fa6eb979a5deb86b08f3b5c88d"
+      },
+      "recipe_sha256": "b07e31046c5ba942a24dbb84e899ca49eb8c8ba79737516cdb06b634589b259c",
+      "route_sha256": "5cc002ad640bc159f04c0c7370c8830f01f53642c7998ab2699c11e4b4ef4f8e",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 107,
+      "donor_frames": 109,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s17a",
+      "saved_story": 253,
+      "name": "weapons",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s17a-weapons/result.json",
+        "sha256": "c9c5137f6ce3fe649ab0ed80dbbf2708a7e45a53f5cc30273ef37f9e74adc158"
+      },
+      "recipe_sha256": "a2463276f37ffc6dd1e3d504fb119f8830634b581dea75b360a8d4a91987c37a",
+      "route_sha256": "c5d1ef9450aba98d63eadf5542e9618f115c001b27b1f8f93d8be70ad9dbbad6",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s18a",
+      "saved_story": 277,
+      "name": "codec",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s18a-codec/result.json",
+        "sha256": "4675806921cf32f362bc7ea669cf886921196316bf2107e84d814c5586565bb0"
+      },
+      "recipe_sha256": "b11dfab89aba61ece57f00c4545da3d26d3f02aece688d65c83c3fce569629bb",
+      "route_sha256": "cbb53338b077ced6a1a2c3b8e482a83ef35612786023a5fded38f20bef309325",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 147,
+      "donor_frames": 148,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s18a",
+      "saved_story": 277,
+      "name": "first-person",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s18a-first-person/result.json",
+        "sha256": "784f499302470ef405506d724d1778c2e2c85b6afb9951a95367967723cf4698"
+      },
+      "recipe_sha256": "4ab9f20c83776a5159e04c6dee37551120d2bba5c6a17c066e096615fd951ce9",
+      "route_sha256": "2d99fdfafeb81379effcdf72153eb294b45312304b32de5af4a21aea002582b7",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s18a",
+      "saved_story": 277,
+      "name": "items",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s18a-items/result.json",
+        "sha256": "b4e17edb3696590f40dabb992fea69a063701bf9630f0431c13eb9f7af9815d3"
+      },
+      "recipe_sha256": "62f7d0b7e361dd400662f4b6e568f19c26c68fa9574df5dc7141519477a431fc",
+      "route_sha256": "fc4928e0ebf6bbb687ada3673c95e81943ee72e2a5f87ea661b19d11d9c17a65",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s18a",
+      "saved_story": 277,
+      "name": "pause",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s18a-pause/result.json",
+        "sha256": "86677b1e8833037249c77281debf8b96502966921eb77740e9c6b253738f7cc7"
+      },
+      "recipe_sha256": "0f94313146a3a3a9b57504c88c1321eacb9a428ce990b92a1b0a1e136cffac2b",
+      "route_sha256": "5ef390f1ef0902b43dd3db15968a625fc5a62cc75cda6f07ecbfbbfc967f9299",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 107,
+      "donor_frames": 109,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s18a",
+      "saved_story": 277,
+      "name": "weapons",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s18a-weapons/result.json",
+        "sha256": "bd68f88fe0c076c7aeb423303a6d34ff815bb65095cfd60b72bbf1fcb0b8cd4f"
+      },
+      "recipe_sha256": "922b9538ab4d7ce47269f8ec18a6afbbe3be8a51600d8d00364bdcbc6a45a578",
+      "route_sha256": "09f65a7d675d21d1db9bc067c4ba8c7fcfc0e8d26270d4a62da0ccfb0b7903e5",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s19a",
+      "saved_story": 283,
+      "name": "codec",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s19a-codec/result.json",
+        "sha256": "61fb3ae6d7c3a267ee106dcde262a014021020dcefde704b67bd90042e704dc9"
+      },
+      "recipe_sha256": "85cb596020b66b86facdfb632dc545a660cf077ca5991d374b4f5275ef3d2db7",
+      "route_sha256": "c67038d0c8d24bea746d66ce47dc5ac410cc698568578c9f0f6e8f8c8f209935",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 147,
+      "donor_frames": 149,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s19a",
+      "saved_story": 283,
+      "name": "first-person",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s19a-first-person/result.json",
+        "sha256": "2ec5ab81c2c54e4752466eaa16d9cf2b9d61894ef19ae0c7d07ce9bda208a088"
+      },
+      "recipe_sha256": "a8d9807dea357b2c7d708e17f2b19f1ab1f300b73c7c4f65a822a9987af12911",
+      "route_sha256": "90dbe08d27c92062c3757c603fd1113051f1f5bbe68cfe6ac888ca7ca0a249d1",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s19a",
+      "saved_story": 283,
+      "name": "items",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s19a-items/result.json",
+        "sha256": "775c32c596aa6b0a2d00c8f823cedcdfcc8d049be34c1c4406d1ef253affd1db"
+      },
+      "recipe_sha256": "c3dbb3d00519093ef74d4e2ce7eee0fb2d7f2f807890a3b4ce427a2e844d171c",
+      "route_sha256": "0a31e8d8f6469d408a81723a22e5081db15b3b585a72a8044fe65213cd362cd6",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s19a",
+      "saved_story": 283,
+      "name": "pause",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s19a-pause/result.json",
+        "sha256": "b1140ec321894584f3321471a4e1487b0693af6c4fb75b63c4efe3891a06137d"
+      },
+      "recipe_sha256": "dfeecffdd9dd07c76a0eeedab77b1e67f7248cca930e64dfa780748dd03f6105",
+      "route_sha256": "74ce327aa2f94188fd1e62a3e253a8a94febb049a49a3c9e5f14b825c41baed0",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 107,
+      "donor_frames": 109,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s19a",
+      "saved_story": 283,
+      "name": "weapons",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/matrix-01/s19a-weapons/result.json",
+        "sha256": "c427802a7f76b915c946a985edfcf337019d1b542670f9c3ee8fca3aa049a521"
+      },
+      "recipe_sha256": "b0e3dbefb2142e22e5cacf4836f48039573c8d5954eddb25c5479f5b90f13a30",
+      "route_sha256": "ae23803f612ce13ffaa324c449d6c5c4129c31437bfa09ee7e7f80516b00abf4",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16d",
+      "saved_story": 246,
+      "name": "quick-item",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/pal-room-quick-item-01/result.json",
+        "sha256": "181bab4f919aad76146191e3ef4170a72c2a6d89db3ab604b03f428f4f056d5a"
+      },
+      "recipe_sha256": "43d1e841ad88e500ed18f485586b6fbf190de577917d38eb083c33c948b57e87",
+      "route_sha256": "18c49e075dcbce25f273a10e30ac0b5c65a48932fba4e1bd9d222feb614287ac",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 77,
+      "donor_frames": 79,
+      "native_replay": "complete",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s15a",
+      "saved_story": 219,
+      "name": "codec",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/pilot-01/codec/result.json",
+        "sha256": "1cae7f6d04b611bea454f7e8a3fd053bdfcbfd0267928c0d4a9eb8ad2a713f8f"
+      },
+      "recipe_sha256": "7cbd9df2562d32a6fb526d25cf6158b266ba4af44dc7080a9d625a9fa06d3729",
+      "route_sha256": "99d9af3071c4d56697a6823c2b7ee214463a99368fd12d1f0db766ce7d1b4fd3",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 147,
+      "donor_frames": 149,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s15a",
+      "saved_story": 219,
+      "name": "first-person",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/pilot-01/first-person/result.json",
+        "sha256": "65e1e2344fd54db1f94d4601e79582acd588e1b234bf73e5887dce51729dd4b1"
+      },
+      "recipe_sha256": "bf7b22edd9995b55ed5e9cafb224dc560173023326e705986e1fe20bf19cca4c",
+      "route_sha256": "e6cc473332c7a2dd3405269da58f94eb4e0ca724c4b18f7a1b8ff3c3be56ba36",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s15a",
+      "saved_story": 219,
+      "name": "items",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/pilot-01/items/result.json",
+        "sha256": "75aaef6894281999c8a54dcaaf360c724533f2c872880a1d6c4457b52c1ded6a"
+      },
+      "recipe_sha256": "33cf3dc50c2b9ab2b5bb0ae6f2bd0cb28da702d71ff0743805d2f0d048fc085b",
+      "route_sha256": "115912ae3f1315082f95899a3315a98543aa265ec3134b1979ff2f24b86756c3",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s15a",
+      "saved_story": 219,
+      "name": "pause",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/pilot-01/pause/result.json",
+        "sha256": "69c4526e48b9f52a2136c3522bbb26de541397297da1df0f7a77dcc2bb7a5e1e"
+      },
+      "recipe_sha256": "c3a1ac02d10e9d1294af71d386453629ec8a6a0827bf37cb27970fa50386f56c",
+      "route_sha256": "850f0df9deb54ca544b5c93cd74acd240f849f1f72b23abcad10c3d3954edc42",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 107,
+      "donor_frames": 109,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s15a",
+      "saved_story": 219,
+      "name": "quick-item",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/pilot-01/quick-item/result.json",
+        "sha256": "aa31a136ea48cd08a64d86b76b2f1af67bb02cb95cf96e477f17e937fbbe49d8"
+      },
+      "recipe_sha256": "b0805c3b34ecb87af82ca84b6c098d57f78bd8e09d389a898f6ddbd23f3e4fc3",
+      "route_sha256": "5d4c400800f6143d71024af6edc9f2b987b8165b071f8e26263c21d56e466378",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 77,
+      "donor_frames": 79,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s15a",
+      "saved_story": 219,
+      "name": "quick-weapon",
+      "status": "not-applicable",
+      "result": {
+        "path": "data/scenarios/situations/pilot-01/quick-weapon/result.json",
+        "sha256": "89da7700c3f2c1ceeab2442fd92a7e54637b91a7af9aea2df9f13e922a70d027"
+      },
+      "recipe_sha256": "bff0a508d0f05930a5da80ae2d83268bf797165a920c80ae671016190d195802",
+      "route_sha256": "9d077c3344bc73e68db7f483c13d8a112a1a609187ad97ac5f93cb3a831bae05",
+      "initial_conditions_satisfied": {
+        "native": false,
+        "donor": false
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": null,
+      "donor_frames": null,
+      "native_replay": "not-run",
+      "differences": null,
+      "invariant_changes": {}
+    },
+    {
+      "stage": "s15a",
+      "saved_story": 219,
+      "name": "weapons",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/pilot-01/weapons/result.json",
+        "sha256": "3577bd0fae4d057fb151760505c57bdc554e5d205b81ff7efa170ad3a2cf2d1b"
+      },
+      "recipe_sha256": "f302c05bc2947848795a0fe0fb098be668c2d2c54df6e9ae92ee7234282bcd80",
+      "route_sha256": "7b18e34b10fa0fea29e97fb38b2376c8681067ca2c2e1e73280cb7073b9f0fcf",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 47,
+      "donor_frames": 47,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s13a",
+      "saved_story": 204,
+      "name": "quick-item",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/quick-items-matrix-01/s13a-quick-item/result.json",
+        "sha256": "287a59c409fd20925df2cd0648867431b2de99aa182865fbaf69ad9da4cda10e"
+      },
+      "recipe_sha256": "5ed70ac4d9dc077bf5b7a861dcd5bf9b9e4ceb6230f9f266c1f29f766dbe67af",
+      "route_sha256": "42cf4ee0c07bc96328cce9ac6f10e424926ba929dfcd59de5ab0f5e97e096fc8",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 76,
+      "donor_frames": 79,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s14e",
+      "saved_story": 204,
+      "name": "quick-item",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/quick-items-matrix-01/s14e-quick-item/result.json",
+        "sha256": "8b07eaf622f64d98178cd01f7524e7c93915b2c340c9fea32b2afb395cde6b5b"
+      },
+      "recipe_sha256": "8e92dac259ed80433bd68d8f97f380909adb34952d12ce3bc2a4f0eaf7f9938c",
+      "route_sha256": "66b1243a9cc647d6b9196b989bbfb8e172a8e277ee1f2140bc21a633a360b45f",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 77,
+      "donor_frames": 79,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s15a",
+      "saved_story": 219,
+      "name": "quick-item",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/quick-items-matrix-01/s15a-quick-item/result.json",
+        "sha256": "34d38d03fad05d75f016ba59128d66746c58044c7cb3e3c2b92cc21df526d556"
+      },
+      "recipe_sha256": "b0805c3b34ecb87af82ca84b6c098d57f78bd8e09d389a898f6ddbd23f3e4fc3",
+      "route_sha256": "5d4c400800f6143d71024af6edc9f2b987b8165b071f8e26263c21d56e466378",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 77,
+      "donor_frames": 79,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s16a",
+      "saved_story": 237,
+      "name": "quick-item",
+      "status": "not-applicable",
+      "result": {
+        "path": "data/scenarios/situations/quick-items-matrix-01/s16a-quick-item/result.json",
+        "sha256": "e09ff2abf1127a20b0cc2fa4113e3aed05c3de770f7ba646e2bc14e37487be6f"
+      },
+      "recipe_sha256": "6e064fdfb673f721d928a7c22b380625e68c9645848628f8739f014a3a0b6861",
+      "route_sha256": "3bfee8f5edd85429a97922e72bcca78a6167c228d5ef3104707b230c23bb73d7",
+      "initial_conditions_satisfied": {
+        "native": false,
+        "donor": false
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": null,
+      "donor_frames": null,
+      "native_replay": "not-run",
+      "differences": null,
+      "invariant_changes": {}
+    },
+    {
+      "stage": "s16d",
+      "saved_story": 240,
+      "name": "quick-item",
+      "status": "complete",
+      "result": {
+        "path": "data/scenarios/situations/quick-items-matrix-01/s16d-quick-item/result.json",
+        "sha256": "0f431560a771a7da5aa3c385d73a313103a2b3cd27118f0d0311662b42d79863"
+      },
+      "recipe_sha256": "9b0565cec4e4a1018005b97b7475f02791d0b3d63cf003ec1afb21ace4491fad",
+      "route_sha256": "ea1e2ac153cec328848500d8f5378e5ffb0d224e7e98b66e18d1abe9819d9c99",
+      "initial_conditions_satisfied": {
+        "native": true,
+        "donor": true
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": 77,
+      "donor_frames": 79,
+      "native_replay": "not-run",
+      "differences": {},
+      "invariant_changes": {
+        "native": {},
+        "donor": {}
+      }
+    },
+    {
+      "stage": "s17a",
+      "saved_story": 253,
+      "name": "quick-item",
+      "status": "not-applicable",
+      "result": {
+        "path": "data/scenarios/situations/quick-items-matrix-01/s17a-quick-item/result.json",
+        "sha256": "abf7b8e2ef8610bd1ac78f2105e4f0d13a3c01bf95186245a95170a25dfa587c"
+      },
+      "recipe_sha256": "e47edd2be427bf53dce83eec5a1312743f5e3798846e419f004194bbbbfbe0ec",
+      "route_sha256": "2c58cb550d25d13581f1d586026d6ff18209d7b05f3d9aff275663335082fc44",
+      "initial_conditions_satisfied": {
+        "native": false,
+        "donor": false
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": null,
+      "donor_frames": null,
+      "native_replay": "not-run",
+      "differences": null,
+      "invariant_changes": {}
+    },
+    {
+      "stage": "s18a",
+      "saved_story": 277,
+      "name": "quick-item",
+      "status": "not-applicable",
+      "result": {
+        "path": "data/scenarios/situations/quick-items-matrix-01/s18a-quick-item/result.json",
+        "sha256": "de1b8c28d5ceae7a8c8475dd940e6a7040a9fc5ca4f92a07e36c02fd3a4a579b"
+      },
+      "recipe_sha256": "03d61ddea7c3dce2bad2b7c5790e1c4362513f94769b3bd9ea9c4725846d6056",
+      "route_sha256": "ec6e766510f8a6ab6e55611e6450faf7f15cc3a1eac66383e455f03f67353e0e",
+      "initial_conditions_satisfied": {
+        "native": false,
+        "donor": false
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": null,
+      "donor_frames": null,
+      "native_replay": "not-run",
+      "differences": null,
+      "invariant_changes": {}
+    },
+    {
+      "stage": "s19a",
+      "saved_story": 283,
+      "name": "quick-item",
+      "status": "not-applicable",
+      "result": {
+        "path": "data/scenarios/situations/quick-items-matrix-01/s19a-quick-item/result.json",
+        "sha256": "7f827ffad4e1226eb45b9a780a7268f32495ce1c22e320b7eeeea5fc19f41f20"
+      },
+      "recipe_sha256": "077c8e08ab6007ef9f03ea58320c7deca5f4cb6894fa60b83f92a19a22035292",
+      "route_sha256": "ba3e8f783bafa50b5ba2046aa3dfceee632c6cae015832f2a77222901fce02ea",
+      "initial_conditions_satisfied": {
+        "native": false,
+        "donor": false
+      },
+      "seed_artifacts_audited_unchanged": true,
+      "native_frames": null,
+      "donor_frames": null,
+      "native_replay": "not-run",
+      "differences": null,
+      "invariant_changes": {}
+    }
+  ],
+  "retained_failures": [
+    {
+      "result": {
+        "path": "data/scenarios/situations/liquid-damage-01/result.json",
+        "sha256": "002564e14f44fdff287076e93bbdec7c205407b46f51f88f41e5054c492cdf67"
+      },
+      "classification": "incorrect test contract shared by both engines",
+      "detail": "Both stop at life 684 and player_status 0x240 when no recovery input is supplied. Original Snake18 D0AF8 waits for a pressed button other than Triangle; gated Cross resolves the test in both engines.",
+      "resolved_by": {
+        "path": "data/scenarios/situations/liquid-damage-02/result.json",
+        "sha256": "30639f06361dbfaaeccb560688e39cfa9924cb9f4b1815497a6b2d57b2826d39"
+      }
+    }
+  ],
+  "exact_native_replays": [
+    {
+      "path": "data/scenarios/situations/door-01/verified-replay/result.json",
+      "sha256": "711ff2d342dac5f7546200ee518600a3ec565df81086d0505480021ab49a36db"
+    },
+    {
+      "path": "data/scenarios/situations/liquid-damage-02/verified-replay/result.json",
+      "sha256": "b618004d56b148f4984e6e826b7b8947f0259c242801604b8aa5757543c22829"
+    },
+    {
+      "path": "data/scenarios/situations/codec-vulkan-01/verified-replay/result.json",
+      "sha256": "8cd9ed07597b3da3f4e113dd159b0898b79b058f0f4dc80b5e404e1cfab4aeb3"
+    },
+    {
+      "path": "data/scenarios/situations/pal-room-quick-item-01/verified-replay/result.json",
+      "sha256": "1593fb7c1e3fe8e7d0b9329085a26527b73be856dd73f735c8818f077c3563fa"
+    }
+  ],
+  "vulkan": {
+    "result": {
+      "path": "data/scenarios/situations/codec-vulkan-01/native/session/result.json",
+      "sha256": "7a3369ccb3bad7e397269ddea6168cdf0fee52c9da08d51fa806488e29560505"
+    },
+    "presentation_size": [
+      3840,
+      2160
+    ],
+    "captures": [
+      {
+        "path": "data/scenarios/situations/codec-vulkan-01/native/session/gpu/frame-2040-present-1-ordinary-scanout.ppm",
+        "sha256": "b317eed9dcf217b0dd59382ac18e690aa4c889656e95af13efefa3efa08e9de8"
+      },
+      {
+        "path": "data/scenarios/situations/codec-vulkan-01/native/session/gpu/frame-2070-present-2-ordinary-scanout.ppm",
+        "sha256": "7a74a8455b5b5764f6dce8d527202f2fb903d961ae6868f834d0b2de402c131e"
+      },
+      {
+        "path": "data/scenarios/situations/codec-vulkan-01/native/session/gpu/frame-2100-present-3-ordinary-scanout.ppm",
+        "sha256": "a405b65219a7579e64b34ec14e48075c833c09ffca883fa761bb4f3fe430b3ed"
+      },
+      {
+        "path": "data/scenarios/situations/codec-vulkan-01/native/session/gpu/frame-2130-present-4-ordinary-scanout.ppm",
+        "sha256": "2dc905364da59ed67798da576bf97c076e1801dc3e3372c76c5a5c2df3fb5205"
+      },
+      {
+        "path": "data/scenarios/situations/codec-vulkan-01/native/session/gpu/frame-2160-present-5-ordinary-scanout.ppm",
+        "sha256": "46cc020dbee1e780b2e60cbbe6d7dbd564660c315ee92b0a0ec3181b91cd4810"
+      }
+    ],
+    "visually_reviewed": true,
+    "contact_sheet": {
+      "path": ".local/situations-codec-contact.png",
+      "sha256": "76500bada8440101bb3944d7f8f75071408b36ea9dd2bf6ec2b789624feb62e2"
+    },
+    "scope": "Codec menu opening, closing and restoration of the scene; no conversation was placed."
+  },
+  "tests": {
+    "situation_unit_tests": 3,
+    "scenario_unit_tests": 7
+  },
+  "scope_exclusions": [
+    "complete boss fights",
+    "death/continue",
+    "lift travel",
+    "PAL temperature or authentication logic",
+    "all pickups or equipment effects",
+    "full Codec conversations",
+    "complete first-person camera movement",
+    "disc swap",
+    "continuous campaign",
+    "normal reachability of artificial states"
+  ],
+  "protected_user_state": "quick_slot_0 and both personal cards verified unchanged"
+}

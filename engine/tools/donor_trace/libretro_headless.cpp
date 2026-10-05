@@ -4,11 +4,15 @@
 // software-rendered video frame can be retained as a PPM donor oracle.
 
 #include <libretro.h>
+#ifdef PS1_DONOR_TAS_ROUTE
+#include "runtime/input/tas_route.h"
+#endif
 
 #include <algorithm>
+#include <charconv>
 #include <chrono>
-#include <cstdarg>
 #include <cinttypes>
+#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -58,6 +62,12 @@ std::string stateLoadPath;
 std::string stateDumpPath;
 unsigned stateDumpFrame = ~0u;
 bool stateDumped = false;
+#ifdef PS1_DONOR_TAS_ROUTE
+ps1::input::TasRoute donorRoute;
+bool donorRouteEnabled = false;
+std::array<uint16_t, 2> donorRoutePads{};
+std::filesystem::path donorRouteOutput;
+#endif
 const auto hostEpoch = std::chrono::steady_clock::now();
 
 template <typename T> T symbol(void *library, const char *name) {
@@ -314,13 +324,21 @@ void loadInputScript(const char *path) {
     unsigned last = 0;
     unsigned port = 0;
     std::string button;
-    if (!(fields >> first))
+    std::string firstText, lastText, portText;
+    if (!(fields >> firstText))
       continue;
-    if (!(fields >> last >> button))
+    const auto number = [](const std::string &token, unsigned &value) {
+      const auto result =
+          std::from_chars(token.data(), token.data() + token.size(), value);
+      return result.ec == std::errc{} &&
+             result.ptr == token.data() + token.size();
+    };
+    if (!(fields >> lastText >> button) || !number(firstText, first) ||
+        !number(lastText, last))
       throw std::runtime_error("invalid donor input script line " +
                                std::to_string(lineNumber));
-    if (fields >> port) {
-      if (port > 7)
+    if (fields >> portText) {
+      if (!number(portText, port) || port > 7)
         throw std::runtime_error("invalid donor input port on line " +
                                  std::to_string(lineNumber));
     }
@@ -336,6 +354,24 @@ void loadInputScript(const char *path) {
 
 uint16_t activeInputMask(unsigned port) {
   uint16_t mask = 0;
+#ifdef PS1_DONOR_TAS_ROUTE
+  if (donorRouteEnabled) {
+    // Route masks are PSX wire order, pressed-high; libretro uses SNES order.
+    static constexpr unsigned ids[] = {RETRO_DEVICE_ID_JOYPAD_SELECT,
+      RETRO_DEVICE_ID_JOYPAD_L3, RETRO_DEVICE_ID_JOYPAD_R3,
+      RETRO_DEVICE_ID_JOYPAD_START, RETRO_DEVICE_ID_JOYPAD_UP,
+      RETRO_DEVICE_ID_JOYPAD_RIGHT, RETRO_DEVICE_ID_JOYPAD_DOWN,
+      RETRO_DEVICE_ID_JOYPAD_LEFT, RETRO_DEVICE_ID_JOYPAD_L2,
+      RETRO_DEVICE_ID_JOYPAD_R2, RETRO_DEVICE_ID_JOYPAD_L,
+      RETRO_DEVICE_ID_JOYPAD_R, RETRO_DEVICE_ID_JOYPAD_X,
+      RETRO_DEVICE_ID_JOYPAD_A, RETRO_DEVICE_ID_JOYPAD_B,
+      RETRO_DEVICE_ID_JOYPAD_Y};
+    if (port < donorRoutePads.size())
+      for (unsigned bit = 0; bit < 16; ++bit)
+        if (donorRoutePads[port] & (1u << bit)) mask |= 1u << ids[bit];
+    return mask;
+  }
+#endif
   for (const InputInterval &interval : inputIntervals) {
     if (interval.port == port && runFrame >= interval.firstFrame &&
         runFrame <= interval.lastFrame)
@@ -483,6 +519,25 @@ int main(int argc, char **argv) {
   }
   if (const char *path = std::getenv("PS1_DONOR_INPUT_SCRIPT"))
     loadInputScript(path);
+  if (const char *path = std::getenv("PS1_DONOR_ROUTE")) {
+#ifdef PS1_DONOR_TAS_ROUTE
+    if (std::getenv("PS1_DONOR_INPUT_SCRIPT"))
+      throw std::runtime_error("donor route and input script are mutually exclusive");
+    std::string error;
+    if (!donorRoute.load(path, error)) throw std::runtime_error(error);
+    const char *output = std::getenv("PS1_DONOR_ROUTE_OUTPUT");
+    if (!output || !*output)
+      throw std::runtime_error("PS1_DONOR_ROUTE requires PS1_DONOR_ROUTE_OUTPUT");
+    donorRouteOutput = output;
+    if (std::filesystem::exists(donorRouteOutput))
+      throw std::runtime_error("refusing to overwrite donor route output");
+    std::filesystem::create_directories(donorRouteOutput);
+    donorRouteEnabled = true;
+#else
+    (void)path;
+    throw std::runtime_error("runner was built without PS1_DONOR_TAS_ROUTE");
+#endif
+  }
   if (const char *path = std::getenv("PS1_DONOR_STATE_LOAD"))
     stateLoadPath = path;
   if (const char *path = std::getenv("PS1_DONOR_STATE_DUMP_PATH")) {
@@ -573,12 +628,49 @@ int main(int argc, char **argv) {
     return value != nullptr && *value != '\0' && *value != '0';
   }();
   const auto runLoopStart = std::chrono::steady_clock::now();
+  std::ofstream movieLog;
+  if (const char *path = std::getenv("PS1_DONOR_MOVIE_LOG"); path && *path) {
+    if (std::filesystem::exists(path))
+      throw std::runtime_error("refusing to overwrite donor movie log");
+    movieLog.open(path);
+    movieLog << "MGSORACLE 1\n";
+    if (!movieLog)
+      throw std::runtime_error("cannot create donor movie log");
+  }
+  unsigned executedFrames = 0;
   for (unsigned frame = 0; frame < frames; ++frame) {
     runFrame = frame + 1;
+#ifdef PS1_DONOR_TAS_ROUTE
+    if (donorRouteEnabled) {
+      donorRoutePads = donorRoute.sample(static_cast<const uint8_t *>(
+          getMemoryData(RETRO_MEMORY_SYSTEM_RAM)),
+          getMemorySize(RETRO_MEMORY_SYSTEM_RAM), runFrame);
+      for (const auto &event : donorRoute.takeEvents())
+        std::fprintf(stderr, "[Route] %s\n", event.c_str());
+      if (donorRoute.done() || donorRoute.failed()) break;
+    }
+#endif
     run();
+    ++executedFrames;
     const auto *ram = static_cast<const uint8_t *>(
         getMemoryData(RETRO_MEMORY_SYSTEM_RAM));
     const size_t ramSize = getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
+    if (movieLog.is_open()) {
+      if (!ram || ramSize != 2 * 1024 * 1024)
+        throw std::runtime_error("donor movie requires the complete PSX RAM");
+      uint64_t hash = UINT64_C(14695981039346656037);
+      for (size_t i = 0; i < ramSize; ++i) {
+        hash ^= ram[i];
+        hash *= UINT64_C(1099511628211);
+      }
+      // Masks use libretro bit order (not PSX active-low order). This log is
+      // for independent donor repeatability; hashes are not native witnesses.
+      movieLog << "F " << runFrame << ' ' << hash << ' ' << activeInputMask(0)
+               << ' ' << activeInputMask(1) << '\n';
+      movieLog.flush();
+      if (!movieLog)
+        throw std::runtime_error("donor movie log write failed");
+    }
     sampleRam(ram, ramSize);
     dumpRam(ram, ramSize);
     if (!stateDumped && !stateDumpPath.empty() &&
@@ -600,6 +692,12 @@ int main(int argc, char **argv) {
                    bytes.size(), stateDumpPath.c_str(), runFrame);
     }
   }
+  if (movieLog.is_open()) {
+    movieLog << "E " << executedFrames << '\n';
+    movieLog.flush();
+    if (!movieLog)
+      throw std::runtime_error("donor movie footer write failed");
+  }
   const auto runLoopEnd = std::chrono::steady_clock::now();
   if (benchmark) {
     const uint64_t elapsedUs = static_cast<uint64_t>(
@@ -607,18 +705,41 @@ int main(int argc, char **argv) {
                                                               runLoopStart)
             .count());
     const double framesPerSecond =
-        elapsedUs != 0 ? static_cast<double>(frames) * 1000000.0 /
+        elapsedUs != 0 ? static_cast<double>(executedFrames) * 1000000.0 /
                              static_cast<double>(elapsedUs)
                        : 0.0;
     std::fprintf(stderr,
                  "[donor-benchmark] %u frames in %" PRIu64
                  " us (%.2f/s)\n",
-                 frames, elapsedUs, framesPerSecond);
+                 executedFrames, elapsedUs, framesPerSecond);
   }
 
   if (!stateDumpPath.empty() && !stateDumped)
     throw std::runtime_error("donor state dump frame was not reached");
 
+  bool routeFailed = false;
+#ifdef PS1_DONOR_TAS_ROUTE
+  if (donorRouteEnabled) {
+    const auto *ram = static_cast<const char *>(getMemoryData(RETRO_MEMORY_SYSTEM_RAM));
+    const size_t ramSize = getMemorySize(RETRO_MEMORY_SYSTEM_RAM);
+    if (!ram || ramSize != 2097152) throw std::runtime_error("missing final donor RAM");
+    std::ofstream ramFile(donorRouteOutput / "final-ram.bin", std::ios::binary);
+    if (!ramFile.write(ram, ramSize)) throw std::runtime_error("cannot save donor RAM");
+    std::vector<uint8_t> state(serializeSize());
+    if (state.empty() || !serialize(state.data(), state.size()))
+      throw std::runtime_error("cannot serialize final donor state");
+    std::ofstream stateFile(donorRouteOutput / "final.state", std::ios::binary);
+    if (!stateFile.write(reinterpret_cast<const char *>(state.data()), state.size()))
+      throw std::runtime_error("cannot save final donor state");
+    routeFailed = donorRoute.failed() || !donorRoute.done();
+    std::ofstream result(donorRouteOutput / "result.json");
+    result << "{\"status\":\"" << (routeFailed ? "failed" : "complete")
+           << "\",\"frames\":" << executedFrames << "}\n";
+    if (!result) throw std::runtime_error("cannot save donor route result");
+    std::fprintf(stderr, "[donor-route] %s after %u frames: %s\n",
+      routeFailed ? "failed" : "complete", executedFrames, donorRoute.error().c_str());
+  }
+#endif
   unloadGame();
   deinit();
   dlclose(library);
@@ -626,5 +747,5 @@ int main(int argc, char **argv) {
     std::fclose(statsFile);
   if (ramTraceFile)
     std::fclose(ramTraceFile);
-  return 0;
+  return routeFailed ? 43 : 0;
 }

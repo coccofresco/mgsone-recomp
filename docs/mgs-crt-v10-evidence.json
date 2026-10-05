@@ -1,0 +1,738 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "revision": "v10_emitter_reconstruction_final",
+  "research": {
+    "path": "docs/mgs-crt-royale-reconstruction.json",
+    "sha256": "220e9f125c28945555d148d6c12981969d10146cfb3e1ee2f7d5f5a787f21a2b"
+  },
+  "implementation": [
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_crt.glsl",
+      "sha256": "9ea4de086624f7e74d662f01f8426d6fdb617f451f1c6c87d837215e56f9438c"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+      "sha256": "c294979cbe9d251685e7a8a620f0c2da4e6945c47ab26d41edaf7df035acda7c"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+      "sha256": "c803f76abcd0d516f55d8061d4243537c4e37ead1ec369fa1faaa4be57e7eb54"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp",
+      "sha256": "2aa904db91487069c9e28ec37f27b3aa12dc5b6f36baa2b0b475f603c618b0bd"
+    }
+  ],
+  "shader_builds": {
+    "v9": [
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_semi_textured.frag.spv",
+        "sha256": "80523433a104c63fe16ba34ba40b196686c2925a08a21d8cd005de7763a82d75"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_semi_untextured.frag.spv",
+        "sha256": "86b3d895a31caedc3d8a5792204570ad080e94e9db0116be7829359df1eda8f7"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_sidecar.vert.spv",
+        "sha256": "fc3e657161228d4c4727f9e7321de3616d15d29d2119ba23cdb30538665a0f28"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_sidecar_midpoint.comp.spv",
+        "sha256": "057c63e6f77128188fc31315e7c7d85d2ce784156e155493f36848324e2fd24e"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_sidecar_midpoint_fp32.comp.spv",
+        "sha256": "4c89786f7b30d8e36934e11f9524830cf0a8fd9617adfb98a66954f7730d3db6"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_sidecar_model_pulled.vert.spv",
+        "sha256": "869ccb090b473ce142019fb3db8745f180791a97385850c2c69b202bca182363"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_sidecar_opaque.frag.spv",
+        "sha256": "df5d5014a3e68b395e967386392e8886bf3ecb6d1004ad18e38b2942dbe762c7"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_sidecar_pulled.vert.spv",
+        "sha256": "1797000ac54cb5a2b5909e71eb753513efbdbba7a2287ce6fa0b5d50eecdb9c9"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_sidecar_pulled_interpolated.vert.spv",
+        "sha256": "f490b4fe3766b3ff46fd2d0ce9ed834ed839b81fb774cd7137c31597ae22119a"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_sidecar_raw_pulled.vert.spv",
+        "sha256": "2a90c29328b2bc594135bbd90d503601d92d0023062758b9cdd32ea4f5de41b4"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_sidecar_semi_interlock.frag.spv",
+        "sha256": "184b23ff49259ab02c8b28faaca8778ebf0a7b462a6030b11b5ca9211ea271ae"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_sidecar_semi_textured.frag.spv",
+        "sha256": "2e62e333ae1b835e5395963f0d5ada82e4339fe5c3bb3155dbc85ecbadba6cdb"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/crash3_sidecar_semi_untextured.frag.spv",
+        "sha256": "a164427920290aa8f0159c18960d09d5416d2db27e44fdb667dc3aaa8a44e794"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/present_fullscreen.vert.spv",
+        "sha256": "b07e8466fb11e9dc18c71f0839d211f30bf5a12d6973d79b4f0b864cc700bf3d"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/present_native.frag.spv",
+        "sha256": "66a0ec8e54a941db47279aa4050a03c19e9740af8c5f389762a48383ca47d6e6"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/present_replay.frag.spv",
+        "sha256": "582f2958d5a1ad31cb4d411d9aa1110be14e8001db87c4117e40e159d5001b41"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/present_replay_depth.frag.spv",
+        "sha256": "a507331efe81866cb5b6a362d27d3174d6634d12767d6c17499020e7b131abd5"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/present_replay_temporal.frag.spv",
+        "sha256": "8f46ffe6ac971910d174fdd47e91f2a0496e701a5655e34fc27f8a2baa64041b"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/present_rgba.frag.spv",
+        "sha256": "1bdbb621042e22ea51c58b9357d99043b1519510f9e3b15fd7a394fca4e073cf"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/replay_copy_scratch.frag.spv",
+        "sha256": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/replay_native_expand.frag.spv",
+        "sha256": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/replay_opaque_textured.frag.spv",
+        "sha256": "fa3a8d60b59f6a243b97f7647968496e04cb74246a61d97572a5d19b50678f62"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/replay_opaque_untextured.frag.spv",
+        "sha256": "108205c3a029d85be8d242055c6a4e8127db1b22ed8064ed1c360805757dcbca"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/replay_precise.frag.spv",
+        "sha256": "8ef8ec1ad08566c9ab6ad37c9eab4adf1b8d752fea40f4def4419bf34d5aefcd"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/replay_precise.vert.spv",
+        "sha256": "e4bdb5ad46b968a59cf2ce824aec373dfb2f7b0c3331730c3a0f119dcd6c00b4"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/replay_seed.frag.spv",
+        "sha256": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/replay_semi_textured.frag.spv",
+        "sha256": "e0f38fc5358c89dad034c0a4753587c55eb8f1323b228f9f3edbd81c62ee2a6b"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/replay_visibility_owner.frag.spv",
+        "sha256": "ff93339ddaa8e3d94047a29f3d4fef5fb720000c7af1074cc6bc3923d7a5d513"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/replay_visibility_precise.vert.spv",
+        "sha256": "82b30a4c0b1ea3cb0d4ceda857d29ce076d0fd3c18fe37b61b4d75524990025f"
+      },
+      {
+        "path": ".local/crt-v10-before/shaders/replay_visibility_stack.frag.spv",
+        "sha256": "534f57f99f8bfccfc95e12ae40318a3bb1ad3ebc0894a97c14a0358ac0e84b62"
+      }
+    ],
+    "v10": [
+      {
+        "path": "build/ps1Runtime/shaders/crash3_semi_textured.frag.spv",
+        "sha256": "80523433a104c63fe16ba34ba40b196686c2925a08a21d8cd005de7763a82d75"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_semi_untextured.frag.spv",
+        "sha256": "86b3d895a31caedc3d8a5792204570ad080e94e9db0116be7829359df1eda8f7"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar.vert.spv",
+        "sha256": "fc3e657161228d4c4727f9e7321de3616d15d29d2119ba23cdb30538665a0f28"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_midpoint.comp.spv",
+        "sha256": "057c63e6f77128188fc31315e7c7d85d2ce784156e155493f36848324e2fd24e"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_midpoint_fp32.comp.spv",
+        "sha256": "4c89786f7b30d8e36934e11f9524830cf0a8fd9617adfb98a66954f7730d3db6"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_model_pulled.vert.spv",
+        "sha256": "869ccb090b473ce142019fb3db8745f180791a97385850c2c69b202bca182363"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_opaque.frag.spv",
+        "sha256": "df5d5014a3e68b395e967386392e8886bf3ecb6d1004ad18e38b2942dbe762c7"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_pulled.vert.spv",
+        "sha256": "1797000ac54cb5a2b5909e71eb753513efbdbba7a2287ce6fa0b5d50eecdb9c9"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_pulled_interpolated.vert.spv",
+        "sha256": "f490b4fe3766b3ff46fd2d0ce9ed834ed839b81fb774cd7137c31597ae22119a"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_raw_pulled.vert.spv",
+        "sha256": "2a90c29328b2bc594135bbd90d503601d92d0023062758b9cdd32ea4f5de41b4"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_interlock.frag.spv",
+        "sha256": "184b23ff49259ab02c8b28faaca8778ebf0a7b462a6030b11b5ca9211ea271ae"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_textured.frag.spv",
+        "sha256": "2e62e333ae1b835e5395963f0d5ada82e4339fe5c3bb3155dbc85ecbadba6cdb"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_untextured.frag.spv",
+        "sha256": "a164427920290aa8f0159c18960d09d5416d2db27e44fdb667dc3aaa8a44e794"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_fullscreen.vert.spv",
+        "sha256": "b07e8466fb11e9dc18c71f0839d211f30bf5a12d6973d79b4f0b864cc700bf3d"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_native.frag.spv",
+        "sha256": "66a0ec8e54a941db47279aa4050a03c19e9740af8c5f389762a48383ca47d6e6"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_replay.frag.spv",
+        "sha256": "582f2958d5a1ad31cb4d411d9aa1110be14e8001db87c4117e40e159d5001b41"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_replay_depth.frag.spv",
+        "sha256": "a507331efe81866cb5b6a362d27d3174d6634d12767d6c17499020e7b131abd5"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_replay_temporal.frag.spv",
+        "sha256": "8f46ffe6ac971910d174fdd47e91f2a0496e701a5655e34fc27f8a2baa64041b"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_rgba.frag.spv",
+        "sha256": "1bdbb621042e22ea51c58b9357d99043b1519510f9e3b15fd7a394fca4e073cf"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_copy_scratch.frag.spv",
+        "sha256": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_native_expand.frag.spv",
+        "sha256": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_opaque_textured.frag.spv",
+        "sha256": "90938c3e6fb66907eaf3362003d6cb83799089933abc99ce500c4f7685589328"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_opaque_untextured.frag.spv",
+        "sha256": "1ad61c0131f36069cfa4698b502552ed4bb5effe04ec53ec071bb3fea98cc38d"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_precise.frag.spv",
+        "sha256": "6529cc2e41c54f53dfd38286e079ab1fd5afdb5ec0f2d78e3d87cd6e33f25fca"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_precise.vert.spv",
+        "sha256": "e4bdb5ad46b968a59cf2ce824aec373dfb2f7b0c3331730c3a0f119dcd6c00b4"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_seed.frag.spv",
+        "sha256": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_semi_textured.frag.spv",
+        "sha256": "5800c5698f072d494cc3f4b511c7e4dffaff4f0317d1c41833473e27c1248ae7"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_owner.frag.spv",
+        "sha256": "ff93339ddaa8e3d94047a29f3d4fef5fb720000c7af1074cc6bc3923d7a5d513"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_precise.vert.spv",
+        "sha256": "82b30a4c0b1ea3cb0d4ceda857d29ce076d0fd3c18fe37b61b4d75524990025f"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_stack.frag.spv",
+        "sha256": "534f57f99f8bfccfc95e12ae40318a3bb1ad3ebc0894a97c14a0358ac0e84b62"
+      }
+    ]
+  },
+  "validation": {
+    "tests": 360,
+    "suites": 28,
+    "passed": 360,
+    "failed": 0,
+    "skipped": 0,
+    "vulkan_integration": true,
+    "log": {
+      "path": ".local/crt-v10-tests-final.log",
+      "sha256": "c9f1e691dff9398e82422f3532a152a3adfc7abeffde2329e4dfd41614db3fbb"
+    },
+    "filter": "Mgs*:*Vulkan*:*ModernReplay*",
+    "new_behavior": "Two complementary half-cell bars produce identical reconstructed output; shifting to the next cell changes the output. The geometry differs at the source, but drives the same cell energy in the first pair.",
+    "checks": [
+      "Equivalent cell drive produces identical output (frames 18/19)",
+      "Moving drive to another cell changes the output (18/20)",
+      "Independent R/G/B emission peaks and original scanline phase",
+      "Light remains localized; camera grade and black-level readability",
+      "Pause, save-state rewind and reproducible noise",
+      "GPU native VRAM equals scalar oracle",
+      "Native captures equal V9 in all five representative runs"
+    ],
+    "negative_control": {
+      "log": {
+        "path": ".local/crt-v10-v9-negative-control.log",
+        "sha256": "a4fa8ca17aafe23f4fe947b17ea1814843d0f272f99e6ec94610ff1d26c98de5"
+      },
+      "shader_directory": ".local/crt-v10-before/shaders",
+      "expected_failure": true,
+      "finding": "V9 fails the equality of frames 18 and 19. It also fails the new localization threshold; no passing V9 validation is claimed."
+    },
+    "protected_saves": {
+      "path": ".local/crt-v10-protected.log",
+      "sha256": "47928750547a87d628691b664cbc1aa2c409fafc917061523b7125a2d0cba221"
+    },
+    "gallery_browser": {
+      "screenshot": ".local/crt-v10-gallery.png",
+      "dom": ".local/crt-v10-gallery-dom.html",
+      "result": "Chromium loaded the final comparison, ten scene entries and emitter close-ups."
+    },
+    "catalog": {
+      "path": ".local/crt-v10-catalog-check.log",
+      "sha256": "6725940cd502d9b2a65b2b619e9b7083323b36a12d20f558ff319009c60de373",
+      "adapters_complete": true,
+      "complete_scene_coverage": false
+    }
+  },
+  "runs": [
+    {
+      "name": "red-focus",
+      "directory": "data/native/crt-v10-final-red-focus-after",
+      "baseline_directory": "data/native/crt-v9-red-focus-after",
+      "manifest": {
+        "path": "data/native/crt-v10-final-red-focus-after/manifest.json",
+        "sha256": "81fe2e6068f4ce6aedb3672dff6e789e152adf7ce9bacdf6ad8df0ede0b4cb13"
+      },
+      "metrics": {
+        "path": "data/native/crt-v10-final-red-focus-after/metrics.json",
+        "sha256": "415596b107ceefb7f5dd2bb88ee5fcf92317ffe8725d5e9a9523ad71e73a1a8a"
+      },
+      "native_captures": [
+        {
+          "path": "data/native/crt-v10-final-red-focus-after/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884",
+          "v9_reference": "data/native/crt-v9-red-focus-after/native/frame-0.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-red-focus-after/native/frame-7680.ppm",
+          "sha256": "fda0d03875f79089df362f36a314865561e084c7fa2a0f48b411e70a851128da",
+          "v9_reference": "data/native/crt-v9-red-focus-after/native/frame-7680.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-red-focus-after/native/frame-7690.ppm",
+          "sha256": "7048c1740611f2a519665f87ac86b190ac62ee95f559265bb64ef58b8a7f09f4",
+          "v9_reference": "data/native/crt-v9-red-focus-after/native/frame-7690.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-red-focus-after/native/frame-7700.ppm",
+          "sha256": "7bd5cc904df497ba2c23228e2ab8113e2422b1a9afd5572d8bfc8947fae4f15d",
+          "v9_reference": "data/native/crt-v9-red-focus-after/native/frame-7700.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-red-focus-after/native/frame-7710.ppm",
+          "sha256": "51d89f12dc0396203e81570ee9cef85175a42d0fbe673db15de03cfb48bd9f2e",
+          "v9_reference": "data/native/crt-v9-red-focus-after/native/frame-7710.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-red-focus-after/native/frame-7720.ppm",
+          "sha256": "51d89f12dc0396203e81570ee9cef85175a42d0fbe673db15de03cfb48bd9f2e",
+          "v9_reference": "data/native/crt-v9-red-focus-after/native/frame-7720.ppm",
+          "identical": true
+        }
+      ],
+      "renderer_downgrades": 0,
+      "profile_counts": {
+        "mgs.screen_effect.pass.cinematic_red_tint": 19,
+        "mgs.screen_effect.pass.fade_black": 18,
+        "mgs.screen_effect.pass.water_view": 2
+      }
+    },
+    {
+      "name": "green-focus",
+      "directory": "data/native/crt-v10-final-green-focus-after",
+      "baseline_directory": "data/native/crt-v9-green-focus-after",
+      "manifest": {
+        "path": "data/native/crt-v10-final-green-focus-after/manifest.json",
+        "sha256": "4efb2ab864626260a5f406fc8a46ce4368cfedd60ea736b604c971a36f66d495"
+      },
+      "metrics": {
+        "path": "data/native/crt-v10-final-green-focus-after/metrics.json",
+        "sha256": "f90ef8c855a9a0533029d4f1ad6d759645305d448c7bfd0631173ac5a11f74e9"
+      },
+      "native_captures": [
+        {
+          "path": "data/native/crt-v10-final-green-focus-after/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884",
+          "v9_reference": "data/native/crt-v9-green-focus-after/native/frame-0.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-green-focus-after/native/frame-10160.ppm",
+          "sha256": "905eea2e0c3468a28cff5b5ce5f5d660aeecc2e570d52763573a7b83cb3d9a32",
+          "v9_reference": "data/native/crt-v9-green-focus-after/native/frame-10160.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-green-focus-after/native/frame-10170.ppm",
+          "sha256": "e9f903aa20064f50ebff02d0443cec645ba1b8b5c8a846dec7fdd4dcc8e44655",
+          "v9_reference": "data/native/crt-v9-green-focus-after/native/frame-10170.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-green-focus-after/native/frame-10180.ppm",
+          "sha256": "a98470cec418987c2443f43d052088b6bc7a2d6c322cfd867aa51faca1b12985",
+          "v9_reference": "data/native/crt-v9-green-focus-after/native/frame-10180.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-green-focus-after/native/frame-10190.ppm",
+          "sha256": "9ae41bf8a8d32de92110bc0bf3077959a2839cbf0d56e0070c9a7bac3791d7dd",
+          "v9_reference": "data/native/crt-v9-green-focus-after/native/frame-10190.ppm",
+          "identical": true
+        }
+      ],
+      "renderer_downgrades": 0,
+      "profile_counts": {
+        "mgs.screen_effect.pass.fade_black": 6,
+        "mgs.screen_effect.pass.night_vision": 11,
+        "mgs.screen_effect.pass.water_view": 19,
+        "mgs.screen_effect.pass.zoom_blur": 1
+      }
+    },
+    {
+      "name": "night",
+      "directory": "data/native/crt-v10-final-night-after",
+      "baseline_directory": "data/native/crt-v9-night-after",
+      "manifest": {
+        "path": "data/native/crt-v10-final-night-after/manifest.json",
+        "sha256": "456cd7a18fa7d9c5d2b9c3075d49aad3c2fa443eba2257b4b3518bb288f3cf04"
+      },
+      "metrics": {
+        "path": "data/native/crt-v10-final-night-after/metrics.json",
+        "sha256": "b23b229e7fb6e75c7b7b2c5505beba13ba592370ff6a9dbdd9df536aae4f3455"
+      },
+      "native_captures": [
+        {
+          "path": "data/native/crt-v10-final-night-after/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884",
+          "v9_reference": "data/native/crt-v9-night-after/native/frame-0.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-night-after/native/frame-2400.ppm",
+          "sha256": "277dda6afdc3b68d26f578b5f680b08fb9c636aea615d0d02d44f060f36c3b10",
+          "v9_reference": "data/native/crt-v9-night-after/native/frame-2400.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-night-after/native/frame-2460.ppm",
+          "sha256": "eb2c897a3f7e4bf6d119331be962241504f0c7752c5cca9d3c80aeb0daece9a0",
+          "v9_reference": "data/native/crt-v9-night-after/native/frame-2460.ppm",
+          "identical": true
+        }
+      ],
+      "renderer_downgrades": 0,
+      "profile_counts": {
+        "mgs.screen_effect.pass.gas_haze": 59,
+        "mgs.screen_effect.pass.night_vision": 59
+      }
+    },
+    {
+      "name": "thermal",
+      "directory": "data/native/crt-v10-final-thermal-after",
+      "baseline_directory": "data/native/crt-v9-thermal-after",
+      "manifest": {
+        "path": "data/native/crt-v10-final-thermal-after/manifest.json",
+        "sha256": "b3895c0e7dc4d9344a068de44d3ef1b8d40fd251cac8fa21abd2a3115102219f"
+      },
+      "metrics": {
+        "path": "data/native/crt-v10-final-thermal-after/metrics.json",
+        "sha256": "0a29e646183500184ae723ca3359baf946e5d196669f544319759730bfd42c8c"
+      },
+      "native_captures": [
+        {
+          "path": "data/native/crt-v10-final-thermal-after/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884",
+          "v9_reference": "data/native/crt-v9-thermal-after/native/frame-0.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-thermal-after/native/frame-2400.ppm",
+          "sha256": "f403337fbccea9b43dacede39c69c4c4315ec8de542c6abcc2909b6f10d671b8",
+          "v9_reference": "data/native/crt-v9-thermal-after/native/frame-2400.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-thermal-after/native/frame-2460.ppm",
+          "sha256": "25ad83e86a528042d9d419953c7be708d3015f01bf3f7c3ee848d4c3271fbbdb",
+          "v9_reference": "data/native/crt-v9-thermal-after/native/frame-2460.ppm",
+          "identical": true
+        }
+      ],
+      "renderer_downgrades": 0,
+      "profile_counts": {
+        "mgs.screen_effect.pass.thermal_vision": 60
+      }
+    },
+    {
+      "name": "codec-fixed",
+      "directory": "data/native/crt-v10-final-codec-fixed-after",
+      "baseline_directory": "data/native/crt-v9-codec-fixed-after",
+      "manifest": {
+        "path": "data/native/crt-v10-final-codec-fixed-after/manifest.json",
+        "sha256": "71b438396627eb1527f1b5ff5fd5489cf0f7ab96a655f021a87ae3104e1f129d"
+      },
+      "metrics": {
+        "path": "data/native/crt-v10-final-codec-fixed-after/metrics.json",
+        "sha256": "8c0ec3b28ba90ac21a38639be2ceca4d6e02e7e18b3e2fd21dafe691875a9437"
+      },
+      "native_captures": [
+        {
+          "path": "data/native/crt-v10-final-codec-fixed-after/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884",
+          "v9_reference": "data/native/crt-v9-codec-fixed-after/native/frame-0.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-codec-fixed-after/native/frame-53040.ppm",
+          "sha256": "617425b096e616284eb0d2d69404ba2c903512e31e20f67c82cd796713b92cba",
+          "v9_reference": "data/native/crt-v9-codec-fixed-after/native/frame-53040.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v10-final-codec-fixed-after/native/frame-53100.ppm",
+          "sha256": "711c04560092654282d6ac061a2aa346b4b81f6e2443418390b24494818e4077",
+          "v9_reference": "data/native/crt-v9-codec-fixed-after/native/frame-53100.ppm",
+          "identical": true
+        }
+      ],
+      "renderer_downgrades": 0,
+      "profile_counts": {
+        "mgs.effects.gpu.kind.42": 118
+      }
+    }
+  ],
+  "gallery": {
+    "path": "data/presentation/crt-review-20261005-v10/manifest.json",
+    "sha256": "4c2c9d9d3e852e70298223bfb5685af3bfe00116777e64e64c44f94db697a3d3"
+  },
+  "benchmark": {
+    "gpu": "NVIDIA GeForce RTX 4060",
+    "trials": [
+      {
+        "variant": "before",
+        "trial": 1,
+        "path": ".local/crt-v10-final-bench-before-1.json",
+        "sha256": "34d42e4589caa3d8a6ae249bb1e1df5b9e8965bf2574dbaf62ccaad593a837ed",
+        "result": {
+          "internal_scale": 12,
+          "window": [
+            3840,
+            2160
+          ],
+          "warmup_frames": 24,
+          "measured_frames": 96,
+          "profiles": [
+            {
+              "name": "cinematic_red",
+              "total_ns": 243563136,
+              "samples": 96
+            },
+            {
+              "name": "cinematic_green",
+              "total_ns": 243298336,
+              "samples": 96
+            },
+            {
+              "name": "night_vision",
+              "total_ns": 290504320,
+              "samples": 96
+            },
+            {
+              "name": "thermal_vision",
+              "total_ns": 315595680,
+              "samples": 96
+            }
+          ],
+          "downgrades": 0
+        }
+      },
+      {
+        "variant": "before",
+        "trial": 2,
+        "path": ".local/crt-v10-final-bench-before-2.json",
+        "sha256": "58d00f1c104bf04cddf788682c012c96d57492cff10df8d76725ad97156c7a12",
+        "result": {
+          "internal_scale": 12,
+          "window": [
+            3840,
+            2160
+          ],
+          "warmup_frames": 24,
+          "measured_frames": 96,
+          "profiles": [
+            {
+              "name": "cinematic_red",
+              "total_ns": 304328096,
+              "samples": 96
+            },
+            {
+              "name": "cinematic_green",
+              "total_ns": 305732640,
+              "samples": 96
+            },
+            {
+              "name": "night_vision",
+              "total_ns": 289851296,
+              "samples": 96
+            },
+            {
+              "name": "thermal_vision",
+              "total_ns": 307981728,
+              "samples": 96
+            }
+          ],
+          "downgrades": 0
+        }
+      },
+      {
+        "variant": "after",
+        "trial": 1,
+        "path": ".local/crt-v10-final-bench-after-1.json",
+        "sha256": "5ac48126e625ab2e6ade6d0cdea59824654b36bad5712892545f92d20c585cb6",
+        "result": {
+          "internal_scale": 12,
+          "window": [
+            3840,
+            2160
+          ],
+          "warmup_frames": 24,
+          "measured_frames": 96,
+          "profiles": [
+            {
+              "name": "cinematic_red",
+              "total_ns": 446360576,
+              "samples": 96
+            },
+            {
+              "name": "cinematic_green",
+              "total_ns": 469930624,
+              "samples": 96
+            },
+            {
+              "name": "night_vision",
+              "total_ns": 528153408,
+              "samples": 96
+            },
+            {
+              "name": "thermal_vision",
+              "total_ns": 497745280,
+              "samples": 96
+            }
+          ],
+          "downgrades": 0
+        }
+      },
+      {
+        "variant": "after",
+        "trial": 2,
+        "path": ".local/crt-v10-final-bench-after-2.json",
+        "sha256": "dae318ff897298b272cf80b674b1590ca2ac640f29295aa4c5febf8c33a1f0d7",
+        "result": {
+          "internal_scale": 12,
+          "window": [
+            3840,
+            2160
+          ],
+          "warmup_frames": 24,
+          "measured_frames": 96,
+          "profiles": [
+            {
+              "name": "cinematic_red",
+              "total_ns": 414325152,
+              "samples": 96
+            },
+            {
+              "name": "cinematic_green",
+              "total_ns": 580674592,
+              "samples": 96
+            },
+            {
+              "name": "night_vision",
+              "total_ns": 532802688,
+              "samples": 96
+            },
+            {
+              "name": "thermal_vision",
+              "total_ns": 499934912,
+              "samples": 96
+            }
+          ],
+          "downgrades": 0
+        }
+      }
+    ],
+    "means": [
+      {
+        "profile": "cinematic_red",
+        "before_ms": 2.8536001666666664,
+        "after_ms": 4.482738166666667,
+        "delta_percent": 57.09061903732018
+      },
+      {
+        "profile": "cinematic_green",
+        "before_ms": 2.8595363333333337,
+        "after_ms": 5.471902166666667,
+        "delta_percent": 91.35627349375639
+      },
+      {
+        "profile": "night_vision",
+        "before_ms": 3.0226855,
+        "after_ms": 5.525813,
+        "delta_percent": 82.81137749858529
+      },
+      {
+        "profile": "thermal_vision",
+        "before_ms": 3.247799,
+        "after_ms": 5.196251,
+        "delta_percent": 59.99299833518024
+      }
+    ],
+    "method": "Fixture ScnMask autenticata, scena fissa, 24 frame di riscaldamento + 96 misurati per profilo, due run per variante, timestamp GPU e readback disabilitato. Costo dell’intero frame di prova, inclusi copia e presentazione: non timestamp del solo shader. Risoluzione interna 12x, sorgente 3840x2688, presentazione 3840x2160. Non è un benchmark della campagna o di altre GPU."
+  },
+  "performance_scope": "Final four-cell implementation only. Earlier nine-cell and compact-quartic experiments are not the shipping shader or the gallery reference. No timing claim for the entire campaign.",
+  "limitations": [
+    "Independent analytical approximation inspired by Royale ordering, not a port of its twelve-pass preset.",
+    "Gaussian beam cores, compact local diffusion, and four-cell wide-scatter quadrature approximate the optical response. No electrical CRT model or phosphor persistence.",
+    "The 320x112 screen-effect cell grid intentionally limits the displayed signal while consuming the modern source; the scene is not copied from the native framebuffer. Codec retains its original 52x89 signal.",
+    "Only five previously authenticated profiles were exercised. Full campaign effect coverage is not asserted."
+  ]
+}

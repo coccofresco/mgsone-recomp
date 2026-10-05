@@ -1,0 +1,33 @@
+{
+  "format": "mgs-situation-1",
+  "name": "liquid-damage-recovery",
+  "source": {
+    "actor": "overlays/d18a/animal/snake18/snake18.c",
+    "flags": "game/g_define.h: PLAYER_DAMAGED, PLAYER_DOWNED, PLAYER_GROUND",
+    "recovery": "d18a_snake18_800D0AF8 requires a pressed button other than Triangle to leave the downed state; CF850 clears the downed flag after its animation."
+  },
+  "requires": {"stage": "s18a", "story": 277, "disc": 2, "difficulty": 1, "life": 768, "pause_level": 0, "game_over_timer": 0},
+  "preserve": ["stage", "story", "difficulty", "disc", "max_life", "weapon", "item", "weapons", "items", "game_over_timer"],
+  "compare": ["stage", "story", "difficulty", "disc", "life", "max_life", "weapon", "item", "weapons", "items", "pause_level", "game_over_timer"],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "receive-original-attack",
+        "until": {"life": {"min": 1, "max": 767}},
+        "guard": {"stage": "s18a", "life": {"min": 1}, "game_over_timer": 0},
+        "max_frames": 3600
+      },
+      {
+        "name": "recover-from-damage",
+        "until": {"life": {"min": 1, "max": 767}, "pause_level": 0, "player_status": {"mask": 536871744, "eq": 0}},
+        "guard": {"stage": "s18a", "life": {"min": 1}, "game_over_timer": 0},
+        "when": {"player_status": {"mask": 576, "eq": 576}},
+        "action": {"sequence": "cross:6,wait:30"},
+        "attempts": 6,
+        "stable_frames": 30,
+        "max_frames": 600
+      }
+    ]
+  }
+}

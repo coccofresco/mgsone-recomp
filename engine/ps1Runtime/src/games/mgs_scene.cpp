@@ -2,6 +2,7 @@
 #include "runtime/cpu_context.h"
 #include "runtime/games/mgs_mesh_replay.h"
 #include "runtime/games/mgs_profile.h"
+#include "runtime/games/mgs_surface_effects.h"
 #include "runtime/memory.h"
 #include "runtime/metrics.h"
 #include "runtime/psyq/psyq_state.h"
@@ -30,6 +31,55 @@ uint32_t u32(const uint8_t *p) {
   return uint32_t(p[0]) | uint32_t(p[1]) << 8 | uint32_t(p[2]) << 16 | uint32_t(p[3]) << 24;
 }
 uint16_t u16(const uint8_t *p) { return uint16_t(p[0]) | uint16_t(p[1]) << 8; }
+void captureStageLighting(const Memory &m, SceneInstance &instance) {
+  // USA GM_UpdateMapGroup 800329d4: StageObjs=800b9ff8,
+  // MAP[16]=800ba078, N_StageObjs=gp+820, gMapCount=gp+824.
+  // Reconstruct from live RAM every capture, also after savestate restore.
+  const uint32_t objects = u32(ram(m, 0x800ae21c));
+  const uint32_t maps = u32(ram(m, 0x800ae220));
+  if (!objects || objects > 32 || !maps || maps > 16 || !(instance.flags & 2u))
+    return;
+  bool owned = false;
+  for (uint32_t i = 0; i < objects; ++i)
+    owned |= u32(ram(m, 0x800b9ff8 + i * 4)) == instance.guestAddress;
+  if (!owned)
+    return;
+  std::vector<gpu::replay::OriginalPointLight> lights;
+  std::vector<uint32_t> seenTables;
+  bool found = false;
+  for (uint32_t i = 0; i < maps; ++i) {
+    const auto *map = ram(m, 0x800ba078 + i * 20);
+    if (u32(map) != (1u << i))
+      return;
+    if (!u16(map + 6) || !(u32(map) & instance.group))
+      continue;
+    found = true;
+    const uint32_t lit = u32(map + 12);
+    if (!lit)
+      continue;
+    if (std::find(seenTables.begin(), seenTables.end(), lit) != seenTables.end())
+      continue;
+    if (!ramRange(lit, 4))
+      return;
+    const uint32_t count = u32(ram(m, lit));
+    if (count > 4096 || !ramRange(lit, 4ull + count * 16ull))
+      return;
+    seenTables.push_back(lit);
+    for (uint32_t k = 0; k < count; ++k) {
+      const auto *p = ram(m, lit + 4 + k * 16);
+      const float radius = u16(p + 8), extent = u16(p + 10);
+      if (radius == 0 || extent == 0)
+        continue;
+      lights.push_back({{float(int16_t(u16(p))), float(int16_t(u16(p + 2))),
+                         float(int16_t(u16(p + 4))), radius},
+                        {float(p[12]), float(p[13]), float(p[14]), extent}});
+    }
+  }
+  if (found) {
+    instance.stageLighting = true;
+    instance.pointLights = std::move(lights);
+  }
+}
 std::array<float, 16> matrix(const Memory &m, uint32_t address) {
   std::array<float, 16> result{};
   const uint8_t *p = ram(m, address);
@@ -277,6 +327,7 @@ void resetSceneCapture() {
   std::lock_guard lock(snapshotMutex);
   latest.reset();
   resetMeshReplay();
+  captureSurfaceEffects({});
 }
 std::shared_ptr<const SceneSnapshot> latestSceneSnapshot() {
   std::lock_guard lock(snapshotMutex); return latest;
@@ -311,6 +362,7 @@ void captureSceneBeforeBounds(recomp_context *ctx) {
     instance.guestAddress = address; instance.definition = u32(o + 36);
     instance.rootAddress = u32(o + 32);
     instance.flags = u32(o + 40); instance.group = u16(o + 44);
+    captureStageLighting(m, instance);
     instance.visible = !(instance.flags & 0x80) && (!instance.group || (instance.group & snap->currentGroup));
     const uint32_t n = u16(o + 46);
     instance.primaryModels = n;
@@ -384,3 +436,14 @@ void captureSceneBeforeBounds(recomp_context *ctx) {
 }
 }
 void mgsCaptureSceneBeforeBounds(recomp_context *ctx) { ps1::games::mgs::captureSceneBeforeBounds(ctx); }
+void mgsBeforeChannelUnit(recomp_context *ctx) {
+  if (!ctx)
+    return;
+  // USA DG_SortChanlSystem, immediately before lw v0,0(s2). s2 points
+  // to the current DG_ChanlUnits slot; a0/a1 already hold channel/buffer.
+  // These hooks read original state regardless of the installed callback.
+  if (ctx->r18 == 0x8009FAACu)
+    ps1::games::mgs::captureSceneBeforeBounds(ctx);
+  else if (ctx->r18 == 0x8009FAC0u)
+    ps1::games::mgs::prepareMeshReplay(ctx);
+}

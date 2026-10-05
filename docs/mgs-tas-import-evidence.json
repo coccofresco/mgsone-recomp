@@ -1,0 +1,204 @@
+{
+  "format": "mgs-tas-import-evidence-1",
+  "date": "2026-10-03",
+  "source": {
+    "url": "https://tasvideos.org/3462S",
+    "format": "psxjin-pjm-2",
+    "emulator_version": 20,
+    "author": "theenglishman",
+    "frames": 330540,
+    "rerecords": 37499,
+    "flags": 72,
+    "disc_ids": [
+      "slus00594",
+      "slus00776"
+    ],
+    "controller_types": [
+      4,
+      4
+    ],
+    "embedded_card_sha256": [
+      "7bff260cb3e01d1a105b6b4352493410cd5e1fa0061cf2c6a4eac6972618ed8f",
+      "7ac7627ec0ee5e847890333c3f51bb67bd9a74a5dbb6982c747497bf2927b62b"
+    ],
+    "events": [
+      {
+        "frame": 191147,
+        "mask": 4,
+        "kind": "disc_lid_toggle"
+      },
+      {
+        "frame": 191150,
+        "mask": 4,
+        "kind": "disc_lid_toggle"
+      }
+    ],
+    "source_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757"
+  },
+  "imported_prefix": [
+    1,
+    191146
+  ],
+  "exact_source_input_check": {
+    "session": "usa-pjm-boot-aligned-3000",
+    "frames": 3000,
+    "ports": 2,
+    "matching_samples": true,
+    "first_native_vblank": 3
+  },
+  "cross_emulator_synchronization": "failed: menu outcomes differ; no source gameplay route validated",
+  "observations": [
+    "Raw offset-7 trial selects Easy and remains in opening Codec.",
+    "Title rebases at source frames 959 and 829 remain in title menus.",
+    "Shifting the frame-829 trial one VBlank enters the opening Codec on Easy.",
+    "Exact source frame 1 to native VBlank 3 mapping remains in title menus.",
+    "Native replays reproduce their own recorded RAM witnesses; this does not establish agreement with PSXjin."
+  ],
+  "routes": {
+    "usa-pjm-raw-3000": {
+      "result_file": "data/tas/reference/usa-pjm-raw-3000/result.json",
+      "result_sha256": "c3d76493d659851aef80b5258bc23f0edaebedc9ebadee9814b4f69992fb4558",
+      "status": "complete",
+      "completed_frames": 3000,
+      "runtime_sha256": "585a75517dc78361003e49a0ba6c5dd617eae5f75e674afe3fbc6e7681197986",
+      "elapsed_seconds": 21.361,
+      "interpreter_counters": {},
+      "game_errors": [],
+      "game_state": {
+        "stage": "s00a",
+        "difficulty": 0,
+        "pause_level": 1,
+        "player_position": [
+          -5812,
+          496,
+          -1358
+        ]
+      }
+    },
+    "usa-pjm-raw-3000-replay": {
+      "result_file": "data/tas/reference/usa-pjm-raw-3000-replay/result.json",
+      "result_sha256": "823951e9b958c6e4d2662354ffb9fdf88abad0adc6e6dabf2fda7692bf2de783",
+      "status": "complete",
+      "completed_frames": 3000,
+      "runtime_sha256": "585a75517dc78361003e49a0ba6c5dd617eae5f75e674afe3fbc6e7681197986",
+      "elapsed_seconds": 21.758,
+      "interpreter_counters": {},
+      "game_errors": [],
+      "game_state": {
+        "stage": "s00a",
+        "difficulty": 0,
+        "pause_level": 1,
+        "player_position": [
+          -5812,
+          496,
+          -1358
+        ]
+      }
+    },
+    "usa-pjm-title-rebased": {
+      "result_file": "data/tas/reference/usa-pjm-title-rebased/result.json",
+      "result_sha256": "e18bd88e7979ae7330bd5f5f601116e823a820a5ce05d5e98cb600c6afff10f8",
+      "status": "complete",
+      "completed_frames": 942,
+      "runtime_sha256": "585a75517dc78361003e49a0ba6c5dd617eae5f75e674afe3fbc6e7681197986",
+      "elapsed_seconds": 10.489,
+      "interpreter_counters": {},
+      "game_errors": [],
+      "game_state": {
+        "stage": "title",
+        "difficulty": 0,
+        "pause_level": 0,
+        "player_position": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "usa-pjm-title829-rebased": {
+      "result_file": "data/tas/reference/usa-pjm-title829-rebased/result.json",
+      "result_sha256": "633de0a7112f51649311309abb15dcb5e3cd5920318a78064f45edbe098f97e0",
+      "status": "complete",
+      "completed_frames": 3172,
+      "runtime_sha256": "585a75517dc78361003e49a0ba6c5dd617eae5f75e674afe3fbc6e7681197986",
+      "elapsed_seconds": 27.868,
+      "interpreter_counters": {},
+      "game_errors": [],
+      "game_state": {
+        "stage": "title",
+        "difficulty": 0,
+        "pause_level": 0,
+        "player_position": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "usa-pjm-title829-phase1": {
+      "result_file": "data/tas/reference/usa-pjm-title829-phase1/result.json",
+      "result_sha256": "cd6a5d81983b28390d5b15162534a6474943d4b3bbd7cd165f0a9e05a3ceaab1",
+      "status": "complete",
+      "completed_frames": 1173,
+      "runtime_sha256": "585a75517dc78361003e49a0ba6c5dd617eae5f75e674afe3fbc6e7681197986",
+      "elapsed_seconds": 10.44,
+      "interpreter_counters": {},
+      "game_errors": [],
+      "game_state": {
+        "stage": "s00a",
+        "difficulty": 0,
+        "pause_level": 1,
+        "player_position": [
+          -5812,
+          496,
+          -1358
+        ]
+      }
+    },
+    "usa-pjm-boot-aligned-3000": {
+      "result_file": "data/tas/reference/usa-pjm-boot-aligned-3000/result.json",
+      "result_sha256": "8f373adb6201b5a9ab29a07c85bb671e6c1971855f05ca50057ac5ff3e1834ad",
+      "status": "complete",
+      "completed_frames": 3000,
+      "runtime_sha256": "585a75517dc78361003e49a0ba6c5dd617eae5f75e674afe3fbc6e7681197986",
+      "elapsed_seconds": 24.657,
+      "interpreter_counters": {},
+      "game_errors": [],
+      "game_state": {
+        "stage": "title",
+        "difficulty": 0,
+        "pause_level": 0,
+        "player_position": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "usa-pjm-boot-aligned-3000-replay": {
+      "result_file": "data/tas/reference/usa-pjm-boot-aligned-3000-replay/result.json",
+      "result_sha256": "e11667d766cea269646f24621ae71fcbfbbcf8b1d6d8c8f3f0ae2714c2f67350",
+      "status": "complete",
+      "completed_frames": 3000,
+      "runtime_sha256": "585a75517dc78361003e49a0ba6c5dd617eae5f75e674afe3fbc6e7681197986",
+      "elapsed_seconds": 25.513,
+      "interpreter_counters": {},
+      "game_errors": [],
+      "game_state": {
+        "stage": "title",
+        "difficulty": 0,
+        "pause_level": 0,
+        "player_position": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "tests": {
+    "mgs_python_tests_passed": 33,
+    "pjm_import_tests_passed": 6
+  },
+  "campaign_progress": "Meryl prison ambush; fight not yet won; Ocelot and disc change unvalidated"
+}

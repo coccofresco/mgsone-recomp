@@ -7,7 +7,7 @@ mkdir -p .local
 cmake -S engine -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DPS1RECOMP_USE_STUB=ON -DPS1RECOMP_DIAGNOSTIC_FAST_COMPILE=ON
 cmake --build build --target ps1Analyzer ps1Recomp --parallel "${BUILD_JOBS:-4}"
-python3 scripts/prepare_native.py --cue "$1"
+python3 scripts/prepare_native.py --campaign --cue "$1"
 build/ps1Recomp/ps1Recomp data/mgs.usa.native.toml engine/ps1Runtime/src/recompiled_out.cpp
 python3 scripts/install_decomp_bridges.py
 cmake -S engine -B build -G Ninja -DPS1RECOMP_USE_STUB=OFF

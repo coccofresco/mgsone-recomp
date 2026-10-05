@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "revision": "v12_shared_crt_426x240",
+  "simulated_rgb_cells": [
+    426,
+    240
+  ],
+  "presentation_pixels": [
+    3840,
+    2160
+  ],
+  "native_rendering_unchanged": true,
+  "composition": {
+    "codec": "One fullscreen CRT reconstruction after the two owned rolling-band sprites and before conversation/save-dialog text in reversed OT order. Retains the original rolling band and UI source; removes portrait-only CRT to prevent double filtering. PTT/MEMORY/frequency are part of the authored interface, conversation text is excluded.",
+    "authentication": "Live menuman actor and validated linked list, allocated menu arena, both exact 0x66181818 SPRTs, dimensions, positions, UVs, Direct15 and additive blending. Complete adjacent group with same actor/submission/buffer required; interleaved/incomplete groups are not promoted.",
+    "source_evidence": {
+      "path": ".local/effects-research/mgs-upstream/source/menu/radio.c",
+      "sha256": "d6530a5e85119d95c197d709df87b0f1452f52e4fc5cded813f1cb707515cb6d",
+      "functions": [
+        "menu_radio_codec_helper_helper15_80040B8C",
+        "menu_radio_codec_helper_8004158C",
+        "draw_radio_message"
+      ]
+    },
+    "additional_codec_passes": 1,
+    "additional_codec_snapshot": 1,
+    "new_attachments": 0,
+    "screen_profiles": "Cinematic red/green, NVG, thermal and whole-interface Codec share 426x240 cells. Source footprint follows the shared pitch; fixed-cell integration, RGB emission and diffusion remain in linear light."
+  },
+  "implementation": [
+    {
+      "path": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+      "sha256": "6465edb7bec428829d6b134cd1b7f37e398f26cdd8dee5670aef5cc97c2628ae"
+    },
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_screen_effects.cpp",
+      "sha256": "039b612592ee6387411d2a41a8eb28b50ba9ba58d3d59fb1ed37414a1a3e555e"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_crt.glsl",
+      "sha256": "1a7dd5c539a06d4c336cc7d96aa22880dbd2a114d55bc09f890af6a41e989767"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+      "sha256": "ac9295a5e22612e6bd188a4304eff4943b1cea84974d6c74f2a8762afe730ce5"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+      "sha256": "f7364e9441b7fed5f5c6cd1cfc30df6d262e0890648ac36b675ed810cc62e9de"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_screen_effects.cpp",
+      "sha256": "0c2493f213c179fb38ea8d354446372924d72035774f3fdd51b36b6d5edfc561"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp",
+      "sha256": "ab6fb4f3d931c128bd4fc3177bf15a3436a89f2e0b1d582d523b207d5d0fcaf1"
+    }
+  ],
+  "shader_builds": [
+    {
+      "path": "build/ps1Runtime/shaders/replay_copy_scratch.frag.spv",
+      "sha256": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_native_expand.frag.spv",
+      "sha256": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_opaque_textured.frag.spv",
+      "sha256": "f287fa3b70822c7210739f65f56b35a2b283b7dd2be2911e8c2cfac045051bcc"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_opaque_untextured.frag.spv",
+      "sha256": "944d5da588d966fff9be32d5b29fbb1c13a43e5ca770d0e4fb243b961e9efd7e"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_precise.frag.spv",
+      "sha256": "650f1a06f8fd68cb108117268cbdd3c14aaaabe865a663d8dacd3b4f011721b5"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_precise.vert.spv",
+      "sha256": "e4bdb5ad46b968a59cf2ce824aec373dfb2f7b0c3331730c3a0f119dcd6c00b4"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_seed.frag.spv",
+      "sha256": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_semi_textured.frag.spv",
+      "sha256": "60beb105ff761e63f2ffd79250cd81291ee8e775531656c2a5696d626c2d179d"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_owner.frag.spv",
+      "sha256": "ff93339ddaa8e3d94047a29f3d4fef5fb720000c7af1074cc6bc3923d7a5d513"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_precise.vert.spv",
+      "sha256": "82b30a4c0b1ea3cb0d4ceda857d29ce076d0fd3c18fe37b61b4d75524990025f"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_stack.frag.spv",
+      "sha256": "534f57f99f8bfccfc95e12ae40318a3bb1ad3ebc0894a97c14a0358ac0e84b62"
+    }
+  ],
+  "validation": {
+    "test_log": ".local/crt-v12-tests-final.log",
+    "test_log_sha256": "889830ebb18d23882fecc56805594ad81fc9ea0e54e1066c63db7c1d88c30329",
+    "passed": 362,
+    "suites": 28,
+    "checks": [
+      "Live Codec boundary authentication and rejection after actor retirement or malformed pair",
+      "Single full-buffer CRT composition before unchanged dialogue uniforms; incomplete/interleaved groups rejected",
+      "240-row periodicity and spatial R/G/B peaks measured at internal scale 12",
+      "Different half-cell source bars reconstruct identical emitters; moving to the next cell changes output",
+      "Pause/rewind, sensor palettes/noise, native VRAM identity and no Vulkan executor downgrade",
+      "Thermal palette measured over complete RGB triads, not one fixed output column",
+      "Bloom measured at identical output coordinates/time with and without a nearby bright source, separating glare from phosphor phase and grain"
+    ],
+    "dialogue_pixel_equality": [
+      {
+        "frame": 53040,
+        "dialogue_region": [
+          0,
+          1240,
+          3840,
+          2160
+        ],
+        "dialogue_identical": true,
+        "native_identical": true
+      },
+      {
+        "frame": 53100,
+        "dialogue_region": [
+          0,
+          1240,
+          3840,
+          2160
+        ],
+        "dialogue_identical": true,
+        "native_identical": true
+      }
+    ],
+    "native_capture_pairs_identical": 10
+  },
+  "runs": [
+    {
+      "profile": "red-focus",
+      "metrics": "data/native/crt-v12-red-focus-after/metrics.json",
+      "sha256": "23aa9597b89e8e21cb1a82210a9f48b070c7fc6c9873dfcb7c5967a43af5eaa3",
+      "executor_downgrades": 0,
+      "whole_run_gpu_average_ms": 15.055481142857143,
+      "samples": 42,
+      "codec_passes": 0
+    },
+    {
+      "profile": "green-focus",
+      "metrics": "data/native/crt-v12-green-focus-after/metrics.json",
+      "sha256": "93d063fc388b946974de22bec013cf766f9b15084c35068416df9d20a077e125",
+      "executor_downgrades": 0,
+      "whole_run_gpu_average_ms": 14.373347047619049,
+      "samples": 42,
+      "codec_passes": 0
+    },
+    {
+      "profile": "night",
+      "metrics": "data/native/crt-v12-night-after/metrics.json",
+      "sha256": "da3ec924155757b34a3807b34d69a9a699b37692f5e1f93f156ddf7a4d0bd9fa",
+      "executor_downgrades": 0,
+      "whole_run_gpu_average_ms": 8.464268327868853,
+      "samples": 122,
+      "codec_passes": 0
+    },
+    {
+      "profile": "thermal",
+      "metrics": "data/native/crt-v12-thermal-after/metrics.json",
+      "sha256": "47a2312e81ff7f6851c88dcaf36b4caa0eba6838d1c952bcd11e30f7261c142b",
+      "executor_downgrades": 0,
+      "whole_run_gpu_average_ms": 6.837675540983606,
+      "samples": 122,
+      "codec_passes": 0
+    },
+    {
+      "profile": "codec",
+      "metrics": "data/native/crt-v12-codec-after/metrics.json",
+      "sha256": "d271e1e43487d22481ab0af43aa88dbe8e6bdbdb303de85c82775391217874ea",
+      "executor_downgrades": 0,
+      "whole_run_gpu_average_ms": 7.443514229508197,
+      "samples": 122,
+      "codec_passes": 59
+    }
+  ],
+  "timing_scope": "Whole live capture runs, including other effects, copying and presentation; not isolated CRT costs or controlled A/B benchmarks.",
+  "gallery": {
+    "path": "data/presentation/crt-review-20261005-v12/index.html",
+    "manifest": "data/presentation/crt-review-20261005-v12/manifest.json",
+    "manifest_sha256": "fdcad899f50c7237e84a39c548716f021256198b3766f19dd715918b15cae572",
+    "pairs": 10,
+    "browser_check": ".local/crt-v12-gallery.png"
+  },
+  "limitations": [
+    "Five representative saved scenarios, not a full-campaign validation.",
+    "CRT density does not create missing detail in original portrait bitmaps.",
+    "Uses the bounded analytical emitter model documented in V10; not a full CRT-Royale port."
+  ],
+  "change": "User-approved intermediate simulated resolution. Shared pitch changed from 854x480 to 426x240; full Codec composition and 4K presentation retained."
+}

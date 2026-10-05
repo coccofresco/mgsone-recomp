@@ -219,11 +219,30 @@ void writeShardedTranslation(const std::filesystem::path &outputPath,
   for (std::string &shard : shards)
     shard = include;
 
-  // Largest-first packing prevents one compiler process from inheriting
-  // several of the duplicated hand-written renderer islands. Name hashing is
-  // the deterministic tie breaker, so an unchanged translation rewrites no
-  // shard and therefore keeps incremental renderer builds free of game-code
-  // work.
+  // Keep existing function placement when a body changes. Repacking every
+  // shard by size made a single added entry label rebuild the whole campaign.
+  // Fresh translations and new functions still use largest-first balancing.
+  std::unordered_map<std::string, std::size_t> previousShards;
+  for (std::size_t index = 0; index < shardCount; ++index) {
+    std::ifstream previous(directory / fmt::format("{}.part{:03}.cpp", stem, index));
+    if (!previous) { previousShards.clear(); break; }
+    const std::string source((std::istreambuf_iterator<char>(previous)), {});
+    if (source == include) continue; // an intentionally empty shard
+    try {
+      for (const auto &definition : findGeneratedDefinitions(source))
+        previousShards.emplace(definition.name, index);
+    } catch (const std::runtime_error &) {
+      previousShards.clear(); break; // regenerate incomplete generated files
+    }
+  }
+  // Resizing the partition set requires a fresh balance.
+  if (std::filesystem::exists(directory / fmt::format("{}.part{:03}.cpp", stem, shardCount)))
+    previousShards.clear();
+  for (const auto &definition : definitions) {
+    const auto previous = previousShards.find(definition.name);
+    if (previous != previousShards.end())
+      shardBytes[previous->second] += definition.source.size();
+  }
   std::vector<std::size_t> definitionOrder(definitions.size());
   std::iota(definitionOrder.begin(), definitionOrder.end(), 0u);
   std::sort(definitionOrder.begin(), definitionOrder.end(),
@@ -240,11 +259,13 @@ void writeShardedTranslation(const std::filesystem::path &outputPath,
             });
   for (const std::size_t definitionIndex : definitionOrder) {
     const GeneratedDefinition &definition = definitions[definitionIndex];
-    const std::size_t shard = static_cast<std::size_t>(std::distance(
-        shardBytes.begin(),
-        std::min_element(shardBytes.begin(), shardBytes.end())));
+    const auto previous = previousShards.find(definition.name);
+    const std::size_t shard = previous != previousShards.end() ? previous->second :
+        static_cast<std::size_t>(std::distance(shardBytes.begin(),
+            std::min_element(shardBytes.begin(), shardBytes.end())));
     shards[shard].append(definition.source.data(), definition.source.size());
-    shardBytes[shard] += definition.source.size();
+    if (previous == previousShards.end())
+      shardBytes[shard] += definition.source.size();
   }
 
   std::set<std::filesystem::path> expectedShards;
@@ -1700,8 +1721,20 @@ int main(int argc, char *argv[]) {
           auto [functionScore, prologueFunctions] =
               OverlayScanner::detectFunctions(code, codeLen, ovl_ramBase);
           (void)functionScore;
-          ovl_funcs.insert(ovl_funcs.end(), prologueFunctions.begin(),
-                           prologueFunctions.end());
+          for (uint32_t address : prologueFunctions) {
+            const size_t offset = address - ovl_ramBase;
+            if (offset >= 4 && offset < codeLen) {
+              const uint8_t *p = code + offset - 4;
+              const uint32_t previous = uint32_t(p[0]) | uint32_t(p[1]) << 8 |
+                                        uint32_t(p[2]) << 16 | uint32_t(p[3]) << 24;
+              // Compilers can allocate the stack in a branch delay slot.
+              // It is not evidence of a new entry: splitting there loses the
+              // taken branch's delay instruction and can orphan its target.
+              // Explicit JAL/config entries are still collected separately.
+              if (MipsDecoder::decode(previous).hasBranchDelaySlot()) continue;
+            }
+            ovl_funcs.push_back(address);
+          }
           for (size_t i = 0; i + 3 < codeLen; i += 4) {
             uint32_t word = static_cast<uint32_t>(code[i]) |
                             (static_cast<uint32_t>(code[i + 1]) << 8) |
@@ -1855,6 +1888,23 @@ int main(int argc, char *argv[]) {
           std::string condition = fmt::format("    if (normalized >= 0x{:08X}u && normalized < 0x{:08X}u", ovl_ramBase, ovl_ramBase + ovl_codeSize);
           for (uint32_t i = 0; i < identitySize; ++i)
             condition += fmt::format(" && rdram[0x{:X}] == {}", (ovl_ramBase & 0x1fffffffu) + i, ovl_data[ovl_codeOffset + i]);
+          // Stage variants can share the constructor table but differ in
+          // executable words. Never let the first matching prefix select the
+          // wrong translation for those variants.
+          if (ov.contains("additional_identity_offsets")) {
+            for (const int64_t offset : toml::find<std::vector<int64_t>>(
+                     ov, "additional_identity_offsets")) {
+              if (offset < 0 || (offset & 3) ||
+                  static_cast<uint64_t>(offset) + 4 > ovl_codeSize ||
+                  static_cast<uint64_t>(ovl_codeOffset) + offset + 4 > ovl_data.size() ||
+                  static_cast<uint64_t>(ovl_ramBase & 0x1fffffffu) + offset + 4 > 0x200000u)
+                throw std::runtime_error("Additional overlay identity outside code/RAM");
+              for (uint32_t i = 0; i < 4; ++i)
+                condition += fmt::format(" && rdram[0x{:X}] == {}",
+                    (ovl_ramBase & 0x1fffffffu) + offset + i,
+                    ovl_data[ovl_codeOffset + offset + i]);
+            }
+          }
           condition += ") {\n        switch (normalized) {\n";
           overlayLookupBody += condition;
           for (auto address : ovl_funcs)

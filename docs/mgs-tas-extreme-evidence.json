@@ -1,0 +1,132 @@
+{
+  "format": "mgs-tas-extreme-evidence-1",
+  "date": "2026-10-04",
+  "scope": "Extreme restart and dock alignment; not a disc-change or full-game certification",
+  "reference_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757",
+  "decomp_commit": "217509eae471629b1a53633b816c61adfef9ed5c",
+  "catalog": {
+    "path": "data/tas/extreme/alignment-catalog-03.json",
+    "sha256": "534b081a485c142d7a5d26a3d7c1ad07f51df08418437d914cfedcc8662c85da",
+    "stage_archive_sha256": "6bbb36d44a77afee01765cb56c96cc75b891681a0ddc518515da67fcec6db79e",
+    "stages": 96,
+    "scripts": 137,
+    "candidates": 6455,
+    "hazards": 230,
+    "patrol_routes": 906,
+    "source_frame_correspondence_inferred": false
+  },
+  "runs": [
+    {
+      "path": "data/tas/extreme/start-03",
+      "recipe_sha256": "07ead708b21d39d6eadb1a4981f59eb12f0f45d92286a1997045b556641eaa6f",
+      "recording_result_sha256": "3fa90aa178bbe119803a12d00c046131fc9d77f2599cc2d0b3663f9fb4042fd7",
+      "replay_result_sha256": "1cf8005ae4db54fc4decf9ce12be1b30cba67c5b6d54f6078f780b8625411399",
+      "movie_sha256": "3b2641705851f925084b516432ec2d8d230f23fa39fc33b050042485917bb5a3",
+      "runtime_sha256": "089d06a3bca8288e94bb16a8026e636c903845a26321d782ae85a77c33e29cb9",
+      "frames": 1998,
+      "recording_seconds": 15.904,
+      "replay_seconds": 15.751,
+      "recording_status": "complete",
+      "replay_status": "complete",
+      "interpreter_counters": {},
+      "game_errors": [],
+      "replay_interpreter_counters": {},
+      "replay_game_errors": [],
+      "final": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "story": 6,
+        "life": 256,
+        "alert_mode": 0
+      }
+    },
+    {
+      "path": "data/tas/extreme/dock-12",
+      "recipe_sha256": "d76d6340a3a4e1eda2df56976fe0c408816264a183746780cfab559f2b6cb54d",
+      "recording_result_sha256": "a43215a19125059a46a6b027b26f4c4aa454205c6c2f0b390e2f06ee2bcaf294",
+      "replay_result_sha256": "1d7254740fe90da21873bd6d018ad17b5197792830c65537cb3871afac2a4fc2",
+      "movie_sha256": "f225abd8502c8c0f07851809607733dfda521f92e1029a7c70f18b2456370d7b",
+      "runtime_sha256": "87e3efb6af214e2f7f16c6c4336dae6713d4e8312aa8490406b3be6950b0b29c",
+      "frames": 4601,
+      "recording_seconds": 89.904,
+      "replay_seconds": 77.35,
+      "recording_status": "complete",
+      "replay_status": "complete",
+      "interpreter_counters": {},
+      "game_errors": [],
+      "replay_interpreter_counters": {},
+      "replay_game_errors": [],
+      "final": {
+        "stage": "d00a",
+        "difficulty": 3,
+        "story": 7,
+        "life": 256,
+        "alert_mode": 0
+      }
+    },
+    {
+      "path": "data/tas/extreme/intro-milestone-02",
+      "recipe_sha256": "a26c45f9d7623a5a70f40c991674dd465258e77876b26a683ad48f5c93c04952",
+      "recording_result_sha256": "3b385a4b35f57459630a824fd00a097a2497f70f277c6f5fb79de25ab0686abd",
+      "replay_result_sha256": "f63464dc93e841551ccc6907c3e0859d6c5d28b9c45cd4f934b6a49ce4b5a4fe",
+      "movie_sha256": "bc3bb0c6b64accb7ddc03dc1e7ca1d721459d5c4715942b9ca436a8751fb2829",
+      "runtime_sha256": "87e3efb6af214e2f7f16c6c4336dae6713d4e8312aa8490406b3be6950b0b29c",
+      "frames": 17588,
+      "recording_seconds": 144.848,
+      "replay_seconds": 145.591,
+      "recording_status": "complete",
+      "replay_status": "complete",
+      "interpreter_counters": {},
+      "game_errors": [],
+      "replay_interpreter_counters": {},
+      "replay_game_errors": [],
+      "final": {
+        "stage": "s01a",
+        "difficulty": 3,
+        "story": 18,
+        "life": 256,
+        "alert_mode": 0,
+        "game_status": 0,
+        "pause_level": 0,
+        "player_status": 0
+      },
+      "terminal_state": "/home/xander/mgs_recomp/data/tas/extreme/intro-milestone-02/session/states/checkpoint_000017588_vblank_17590.ps1s",
+      "terminal_sha256": "bd464c16b29c126b062d75866e671fddf8f5f423d121378b42d2aaefa7f045e8"
+    }
+  ],
+  "tests": {
+    "python_tas_import_route_catalog": 20,
+    "native_bios_card_route_movie": 24
+  },
+  "full_intro_status": "complete; full replay verified",
+  "fixtures": {
+    "scripts/fixtures/mgs-usa-extreme-start.route.json": "07ead708b21d39d6eadb1a4981f59eb12f0f45d92286a1997045b556641eaa6f",
+    "scripts/fixtures/mgs-usa-extreme-dock.route.json": "77302b17415ec0fd3870a8eac0033242ac2462db38cd3d787ff7314981c625a2",
+    "scripts/fixtures/mgs-usa-extreme-intro.route.json": "a26c45f9d7623a5a70f40c991674dd465258e77876b26a683ad48f5c93c04952"
+  },
+  "decomp_input_flags": {
+    "file": "game/g_define.h",
+    "sha256": "1e101c6891ef9d27c675ec36b760e2a8353f4106a836c46d93692f1f41f03753"
+  },
+  "input_confirmation": {
+    "path": "data/tas/extreme/heliport-input-01",
+    "result_sha256": "76fc348be56d85aa94f550a828b6359111454ca363fe1b8d64405e2e6cfd3fdb",
+    "frames": 28,
+    "status": "complete",
+    "verified_replay": false,
+    "final": {
+      "stage": "s01a",
+      "difficulty": 3,
+      "story": 18,
+      "life": 256,
+      "x": -3985,
+      "z": 20451,
+      "pause_level": 0
+    }
+  },
+  "protected_files": {
+    "savestates/quick_slot_0.ps1s": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+    "data/memory_cards/card1.mcd": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0",
+    "data/memory_cards/card2.mcd": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+  }
+}

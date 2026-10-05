@@ -3,16 +3,24 @@
 #include "runtime/games/mgs_mesh_replay.h"
 #include "runtime/games/mgs_profile.h"
 #include "runtime/games/mgs_scene.h"
+#include "runtime/games/mgs_surface_effects.h"
 #include "runtime/gpu/gpu.h"
 #include "runtime/gpu/modern_replay.h"
 #include "runtime/gpu/modern_replay_execution_plan.h"
 #include "runtime/gpu/modern_replay_vulkan_bake.h"
+#include "runtime/gpu/renderer_options.h"
+#include "runtime/gpu/renderer_vulkan.h"
 #include "runtime/memory.h"
+#include "runtime/metrics.h"
+#include <SDL2/SDL.h>
 #include <algorithm>
 #include <bit>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
+#include <set>
 
 using namespace ps1;
 using namespace ps1::games::mgs;
@@ -1158,6 +1166,214 @@ TEST_F(MgsSourceMeshTest, CompleteFaceUsesSourceWithoutNativeProjectionGate) {
   EXPECT_FALSE(result->meshes.front().visible);
 }
 
+TEST_F(MgsSourceMeshTest, RuntimeGeneratedLaserUsesIndexedVerticesNormalsAndExactOwner) {
+  cache=AssetCache::decode(fixture(true,true,true));setSceneAssetCache(&cache);
+  constexpr uint32_t actor=0x80018000,name=0x80018400,head=0x800af390+5*68;
+  memory.write32(head+4,actor);memory.write32(actor,head);memory.write32(actor+4,head+32);
+  memory.write32(head+32,actor);memory.write32(actor+8,0x80070000);memory.write32(actor+20,name);
+  for(unsigned i=0;i<sizeof("mgrexlzr.c");++i) memory.write8(name+i,"mgrexlzr.c"[i]);
+  memory.write32(actor+56,object);
+  memory.write16(definition+120,250); // generated shape is absent from static KMD cache
+  memory.write32(object+72+84,packs);
+  for(unsigned offset:{0u,8u,16u}) memory.write16(object+72+32+offset,4096);
+  memory.write32(object+72+32+28,10000);
+  gpu::replay::DrawPacket draw;
+  draw.opcode=0x3c;draw.textured=draw.gouraud=true;draw.vertexCount=4;draw.indexCount=6;
+  draw.triangleIndices={0,1,2,1,2,3};draw.state.drawOffset={160,112};
+  for(unsigned k=0;k<4;++k) {
+    const unsigned x=k==0 ? 8 : 0;
+    memory.write32(packs+4+k*12,0x3c808080);memory.write32(packs+8+k*12,x);
+    auto &v=draw.vertices[k];v.nativeX=160+x;v.nativeY=112;v.color={128,128,128};
+    v.provenance.dmaNodeSource=(packs&0x1fffffffu)+1;
+    v.provenance.gp0WordSource=(packs&0x1fffffffu)+9+k*12;
+    v.provenance.evidence=gpu::replay::ReplayVertexDmaTraversalExact|gpu::replay::ReplayVertexGp0WordSourceExact;
+  }
+  captureSceneBeforeBounds(&ctx);prepareMeshReplay(&ctx);
+  ASSERT_EQ(latestSceneSnapshot()->instances.front().asset,~0u);
+  const auto original=draw;
+  ASSERT_TRUE(replaceMeshReplayPacket(draw));
+  EXPECT_EQ(draw.surfaceEffect.kind,gpu::replay::MgsSurfaceKind::Energy);
+  ASSERT_TRUE(draw.originalMesh);
+  EXPECT_FLOAT_EQ(draw.originalMesh->lighting.positions[0][0],250);
+  EXPECT_NEAR(draw.vertices[1].x,160.032,1e-6);
+  EXPECT_FLOAT_EQ(draw.originalMesh->lighting.normals[0][2],1);
+  // Reusing the same packet allocation without its living effect owner is
+  // insufficient to submit arbitrary generated geometry.
+  memory.write32(head+4,head+32);memory.write32(head+32,head);
+  prepareMeshReplay(&ctx);draw=original;
+  EXPECT_FALSE(replaceMeshReplayPacket(draw));
+}
+
+TEST_F(MgsSourceMeshTest, MirrorAndOpticalCamoComposeAcrossActorLevels) {
+  constexpr uint32_t mirror=0x80018000,camo=0x80019000,parent=0x80019800;
+  const auto actor=[&](uint32_t a,unsigned level,const char *name,uint32_t storage) {
+    const uint32_t head=0x800af390+level*68;
+    memory.write32(head+4,a);memory.write32(a,head);memory.write32(a+4,head+32);
+    memory.write32(head+32,a);memory.write32(a+8,0x80070000);memory.write32(a+20,storage);
+    for(unsigned i=0;i<=std::strlen(name);++i) memory.write8(storage+i,name[i]);
+  };
+  for(bool reverse:{false,true}) {
+    actor(mirror,reverse ? 5 : 1,"mirror.c",0x80019900);
+    actor(camo,reverse ? 1 : 5,"kogaku2.c",0x80019940);
+    memory.write32(mirror+48,0);memory.write16(mirror+40,123);
+    memory.write32(mirror+56,1);memory.write32(mirror+68,object);
+    memory.write32(camo+32,parent);memory.write32(parent,object);
+    captureSceneBeforeBounds(&ctx);prepareMeshReplay(&ctx);
+    const auto effect=surfaceEffectForObject(object);
+    EXPECT_EQ(effect.kind,gpu::replay::MgsSurfaceKind::Camo);
+    EXPECT_FLOAT_EQ(effect.parameters[2][2],1);
+    EXPECT_FLOAT_EQ(std::abs(effect.parameters[1][0]),1);
+    EXPECT_FLOAT_EQ(std::abs(effect.parameters[1][3]),123);
+  }
+}
+
+TEST_F(MgsSourceMeshTest, OpticalCamoSubmitsDynamicMaterialWithOriginalGeometry) {
+  link();
+  constexpr uint32_t actor=0x80018000,parent=0x80019000,name=0x80019100;
+  constexpr uint32_t head=0x800af390+6*68;
+  memory.write32(head+4,actor);memory.write32(actor,head);memory.write32(actor+4,head+32);
+  memory.write32(head+32,actor);memory.write32(actor+8,0x80070000);memory.write32(actor+20,name);
+  for(unsigned i=0;i<sizeof("kogaku2.c");++i) memory.write8(name+i,"kogaku2.c"[i]);
+  memory.write32(actor+32,parent);memory.write32(parent,object);
+  memory.write16(packs+26,0x100); // original scene sampling, not a cached PCX
+  const std::vector<uint8_t> before(memory.ramPtr(),memory.ramPtr()+Memory::RAM_SIZE);
+  gpu::GPU modern,native;
+  configureGpu(modern,true);configureGpu(native,false);
+  ASSERT_TRUE(recover());
+  EXPECT_NO_THROW(modern.processLinkedList(table+256*4,memory.ramPtr(),&memory));
+  native.processLinkedList(table+256*4,memory.ramPtr(),&memory);
+  modern.snapshotDisplayBuffer(2);
+  const auto frame=modern.tryConsumeReplay();ASSERT_TRUE(frame);
+  unsigned count=0;
+  for(const auto &op:frame->operations()) if(const auto *draw=std::get_if<gpu::replay::DrawPacket>(&op)) {
+    ++count;ASSERT_TRUE(draw->originalMesh);
+    EXPECT_TRUE(draw->originalMesh->sourceTopology);
+    EXPECT_TRUE(draw->originalMesh->runtimeTexture);
+    EXPECT_FALSE(draw->originalTexture);
+    EXPECT_EQ(draw->surfaceEffect.kind,gpu::replay::MgsSurfaceKind::Camo);
+    EXPECT_NEAR(draw->vertices[1].x,160.032,1e-8);
+  }
+  EXPECT_EQ(count,1u);
+  EXPECT_EQ(std::memcmp(before.data(),memory.ramPtr(),before.size()),0);
+  EXPECT_EQ(std::memcmp(modern.getVRAM(),native.getVRAM(),
+                        1024*512*sizeof(gpu::Color16)),0);
+  // Revealed faces and thermal vision must restore the ordinary material.
+  for(bool thermal:{false,true}) {
+    memory.write16(packs+26,thermal ? 0x100 : 0);
+    memory.write32(0x800adb3c,thermal ? 8 : 0);
+    const auto revealed=recover();ASSERT_TRUE(revealed);
+    const auto &draw=revealed->meshes.front().draw;
+    EXPECT_NE(draw.surfaceEffect.kind,gpu::replay::MgsSurfaceKind::Camo);
+    EXPECT_FALSE(draw.originalMesh->runtimeTexture);
+  }
+  // Direct15 alone cannot authorize a missing static material.
+  memory.write32(0x800adb3c,0);
+  memory.write32(head+4,head+32);memory.write32(head+32,head);
+  const auto unowned=recover();ASSERT_TRUE(unowned);
+  EXPECT_FALSE(unowned->meshes.front().draw.originalMesh->runtimeTexture);
+}
+
+TEST_F(MgsSourceMeshTest, SubmarineUsesAuthoredProjectionWithoutByteQuantization) {
+  link();
+  constexpr uint32_t actor=0x80018000,parent=0x80019000,rotation=0x80019100,name=0x80019200;
+  constexpr uint32_t head=0x800af390;
+  memory.write32(head+4,actor);memory.write32(actor,head);memory.write32(actor+4,head+32);
+  memory.write32(head+32,actor);memory.write32(actor+8,0x80070000);memory.write32(actor+20,name);
+  for(unsigned i=0;i<sizeof("sub_efct.c");++i) memory.write8(name+i,"sub_efct.c"[i]);
+  memory.write32(actor+32,parent);memory.write32(parent,object);memory.write32(actor+36,rotation);
+  memory.write32(object+20,1200);memory.write32(object+24,3400);
+  memory.write32(object+72+20,1200);memory.write32(object+72+24,3400);
+  for(unsigned angle:{0u,1024u}) {
+    memory.write16(rotation+4,angle);
+    const std::vector<uint8_t> before(memory.ramPtr(),memory.ramPtr()+Memory::RAM_SIZE);
+    auto result=recover();ASSERT_TRUE(result);ASSERT_EQ(result->meshes.size(),1u);
+    const auto &draw=result->meshes.front().draw;
+    ASSERT_EQ(draw.surfaceEffect.kind,gpu::replay::MgsSurfaceKind::Submarine);
+    const auto &p=draw.surfaceEffect.parameters;
+    EXPECT_NEAR(p[2][0],angle==0 ? 0.125 : 0,1e-6);
+    EXPECT_NEAR(p[2][1],angle==0 ? 0 : -0.125,1e-6);
+    // Translation cancels out of local projection; fractional positions
+    // remain fractional until sampling instead of wrapping at each vertex.
+    const float u=p[0][2]+p[2][0]*1200.5f+p[2][1]*3400.5f;
+    EXPECT_NEAR(u,angle==0 ? 128.0625 : 127.9375,1e-3);
+    EXPECT_EQ(std::memcmp(before.data(),memory.ramPtr(),before.size()),0);
+  }
+  memory.write32(actor+36,0);recover();
+  EXPECT_EQ(surfaceEffectForObject(object).kind,gpu::replay::MgsSurfaceKind::None);
+}
+
+TEST_F(MgsSourceMeshTest, PanoramaOwnsAffineProjectionAndCompleteTileDomain) {
+  constexpr uint32_t actor=0x80100000,prim=0x80110000,img=0x80120000,
+                     ids=0x80120100,tex=0x80120200,pack=0x80130000,
+                     head=0x800af390+4*68;
+  memory.write32(head+4,actor);memory.write32(actor,head);memory.write32(actor+4,head+32);
+  memory.write32(head+32,actor);memory.write32(actor+8,0x80070000);memory.write32(actor+20,0x80140000);
+  for(unsigned i=0;i<sizeof("sphere.c");++i) memory.write8(0x80140000+i,"sphere.c"[i]);
+  memory.write32(actor+32,prim);memory.write32(actor+36,img);memory.write32(actor+40,tex);
+  memory.write32(prim+36,0x812);memory.write16(prim+42,1);memory.write16(prim+48,40);
+  memory.write32(prim+64,pack);memory.write16(tex,0xabcd);memory.write16(tex+4,0x100);
+  for(unsigned o:{0u,2u,4u,6u}) memory.write16(img+o,32);
+  memory.write32(img+8,ids);memory.write32(img+12,img+0x300);memory.write32(img+16,img+0x400);
+  memory.write16(ids,1);memory.write16(ids+2,0xabcd);
+  memory.write32(pack+4,0x2c808080);memory.write16(pack+16,32);
+  memory.write16(pack+26,32);memory.write16(pack+22,0x100);
+  captureSceneBeforeBounds(&ctx);prepareMeshReplay(&ctx);
+  gpu::replay::DrawPacket p;p.opcode=0x2c;p.vertexCount=4;p.indexCount=6;p.textured=true;
+  p.triangleIndices={0,1,2,1,2,3};p.state.texturePage.raw=0x100;
+  p.route=gpu::replay::PacketRoute::Projected3D;
+  p.fallbackReason=gpu::replay::PacketFallbackReason::MissingPrecisionPacketAtomic;
+  for(unsigned k=0;k<4;++k) {
+    auto &v=p.vertices[k];v.x=v.nativeX=(k&1)*32;v.y=v.nativeY=(k>>1)*32;
+    v.u=(k&1)*31;v.v=(k>>1)*31;v.color={128,128,128};v.inventedW=true;
+  }
+  bindSurfaceEffect(p,pack+4);
+  EXPECT_EQ(p.surfaceEffect.kind,gpu::replay::MgsSurfaceKind::Panorama);
+  EXPECT_EQ(p.route,gpu::replay::PacketRoute::Screen2D);
+  EXPECT_EQ(p.fallbackReason,gpu::replay::PacketFallbackReason::None);
+  EXPECT_DOUBLE_EQ(p.vertices[3].u,32);EXPECT_DOUBLE_EQ(p.vertices[3].v,32);
+  EXPECT_DOUBLE_EQ(p.state.textureUvDomain.maxU,31);
+  EXPECT_FALSE(p.vertices[0].inventedW);EXPECT_TRUE(p.state.depth.invalidateOnAccepted);
+}
+
+TEST_F(MgsSourceMeshTest, RetailBillboardsPreserveAnimatedUvAndSourceTexture) {
+  constexpr uint32_t actor=0x80100000,prim=0x80110000,pack=0x80120000,
+                     positions=0x80130000,callback=0x80140000,name=0x80150000,
+                     head=0x800af390+5*68;
+  memory.write32(head+4,actor);memory.write32(actor,head);memory.write32(actor+4,head+32);
+  memory.write32(head+32,actor);memory.write32(actor+8,0x80070000);memory.write32(actor+20,name);
+  for(unsigned i=0;i<sizeof("blastoff.c");++i) memory.write8(name+i,"blastoff.c"[i]);
+  memory.write32(actor+36,prim);memory.write32(prim+36,0x2212);
+  memory.write16(prim+42,1);memory.write16(prim+48,40);memory.write16(prim+50,4);
+  memory.write16(prim+52,8);memory.write16(prim+54,8);memory.write16(prim+72,1);
+  memory.write32(prim+56,positions);memory.write32(prim+64,pack);memory.write32(prim+80,callback);
+  memory.write16(positions+4,1000);memory.write16(positions+6,100);
+  for(const auto [off,value]:std::array<std::pair<unsigned,uint32_t>,4>{{
+      {0,0x00a04021},{4,0x24c6ffff},{8,0x8c8b0038},{12,0x3c0d800b}}})
+    memory.write32(callback+off,value);
+  memory.write32(pack+4,0x2e808080);memory.write16(pack+14,0x7000);memory.write16(pack+22,0x20);
+  captureSceneBeforeBounds(&ctx);prepareMeshReplay(&ctx);
+  const std::vector<uint8_t> before(memory.ramPtr(),memory.ramPtr()+Memory::RAM_SIZE);
+  gpu::replay::DrawPacket p;p.opcode=0x2e;p.vertexCount=4;p.textured=true;
+  p.state.texturePage.raw=0x20;p.state.clut.raw=0x7000;p.state.blend.enabled=true;
+  p.originalTexture.emplace();p.originalTexture->data={10,20,64,64};
+  const auto texture=p.originalTexture;
+  for(unsigned k=0;k<4;++k) {
+    p.vertices[k].u=64.25+(k&1)*31;p.vertices[k].v=32.5+(k>>1)*31;
+    p.vertices[k].color={128,128,128};
+  }
+  bindSurfaceEffect(p,pack+4);
+  ASSERT_EQ(p.surfaceEffect.kind,gpu::replay::MgsSurfaceKind::Explosion);
+  ASSERT_TRUE(p.originalTexture);EXPECT_EQ(p.originalTexture->data,texture->data);
+  EXPECT_DOUBLE_EQ(p.vertices[0].u,64.25);EXPECT_DOUBLE_EQ(p.vertices[3].v,63.5);
+  EXPECT_DOUBLE_EQ(p.vertices[0].w,1000);
+  EXPECT_GT(p.vertices[1].x,p.vertices[0].x);
+  EXPECT_EQ(std::memcmp(before.data(),memory.ramPtr(),before.size()),0);
+  // A different callback cannot inherit the billboard's texture/projection.
+  memory.write32(callback,0);captureSurfaceEffects({memory.ramPtr(),Memory::RAM_SIZE});
+  p.surfaceEffect={};bindSurfaceEffect(p,pack+4);
+  EXPECT_EQ(p.surfaceEffect.kind,gpu::replay::MgsSurfaceKind::None);
+}
+
 TEST_F(MgsSourceMeshTest, SubdivisionChildrenShareOneOriginalFace) {
   link();
   captureSceneBeforeBounds(&ctx);
@@ -1218,7 +1434,14 @@ TEST_F(MgsSourceMeshTest, AnimatedLightingUsesOriginalNormalsWithoutPackets) {
   ASSERT_EQ(result->buckets[39].size(), 1u);
   const auto &draw = result->buckets[39].front();
   EXPECT_TRUE(draw.originalMesh->sourceTopology);
-  EXPECT_EQ(draw.vertices[0].color, (gpu::replay::Rgb8{64, 32, 16}));
+  EXPECT_EQ(draw.vertices[0].color, (gpu::replay::Rgb8{128, 128, 128}));
+  const auto &lighting = draw.originalMesh->lighting;
+  EXPECT_EQ(lighting.normals[0], (std::array<float, 4>{0, 0, 1, 0}));
+  EXPECT_EQ(lighting.directions[0], (std::array<float, 4>{0, 0, 1, 0}));
+  EXPECT_EQ(lighting.colors[0], (std::array<float, 4>{64, 0, 0, 0}));
+  EXPECT_EQ(lighting.colors[1], (std::array<float, 4>{32, 0, 0, 0}));
+  EXPECT_EQ(lighting.colors[2], (std::array<float, 4>{16, 0, 0, 0}));
+  EXPECT_FLOAT_EQ(lighting.ambient[3], 1);
   EXPECT_EQ(std::memcmp(before.data(), memory.ramPtr(), before.size()), 0);
   // A quarter turn changes the normal with the bone, without creating packs.
   memory.write16(angles + 2, 1024);
@@ -1229,7 +1452,9 @@ TEST_F(MgsSourceMeshTest, AnimatedLightingUsesOriginalNormalsWithoutPackets) {
       sourceMeshMaterial(cache, memory, *scene, scene->instances[0], 0,
                          std::array<uint32_t, 1>{0}, 0, 0);
   ASSERT_TRUE(material);
-  EXPECT_EQ(material->vertices[0].color, (gpu::replay::Rgb8{0, 0, 0}));
+  EXPECT_EQ(material->vertices[0].color, (gpu::replay::Rgb8{128, 128, 128}));
+  EXPECT_NEAR(material->originalMesh->lighting.normals[0][0], 1, 1e-5);
+  EXPECT_NEAR(material->originalMesh->lighting.normals[0][2], 0, 1e-5);
 }
 
 TEST_F(MgsSourceMeshTest, TransparencyDoesNotRequireNativePacketAllocation) {
@@ -1277,13 +1502,21 @@ TEST_F(MgsSourceMeshTest, ThermalEmissionRequiresBothLiveModeAndEligibility) {
   ASSERT_TRUE(result);
   EXPECT_FALSE(result->buckets[39].front().originalMesh->thermalEmission);
   memory.write32(object + 40, 0x257);
+  memory.write32(0x800adb3c, 0x80000008u); // cinematic red, same native IR bit
+  result = recover();
+  ASSERT_TRUE(result);
+  EXPECT_FALSE(result->buckets[39].front().originalMesh->thermalEmission);
+  memory.write32(0x800adb3c, 8); // returning to gameplay restores real thermal
+  result = recover();
+  ASSERT_TRUE(result);
+  EXPECT_TRUE(result->buckets[39].front().originalMesh->thermalEmission);
   memory.write32(0x800adb3c, 0);
   result = recover();
   ASSERT_TRUE(result);
   EXPECT_FALSE(result->buckets[39].front().originalMesh->thermalEmission);
 }
 
-TEST_F(MgsSourceMeshTest, AnimatedSceneryIsNotAConnectedThermalBody) {
+TEST_F(MgsSourceMeshTest, CinematicAnimationDoesNotImplyThermalEmission) {
   captureSceneBeforeBounds(&ctx);
   const auto scene = latestSceneSnapshot();
   ASSERT_TRUE(scene);
@@ -1498,4 +1731,237 @@ TEST_F(MgsSourceMeshTest, TextScreenUsesSourceMeshWithVerifiedActorSurface) {
   const auto invalid = recover();
   ASSERT_TRUE(invalid);
   EXPECT_FALSE(invalid->meshes.front().draw.originalMesh->runtimeTexture);
+}
+
+TEST_F(MgsSourceMeshTest, OptInGpuLightingIsPerPixelAndNativeRasterUnchanged) {
+  if (!std::getenv("PS1_RUN_VULKAN_INTEGRATION"))
+    GTEST_SKIP();
+  const auto dir =
+      std::filesystem::temp_directory_path() /
+      ("mgs-pixel-light-" + std::to_string(SDL_GetPerformanceCounter()));
+  std::filesystem::create_directories(dir);
+  struct Environment {
+    std::vector<std::pair<std::string, std::optional<std::string>>> saved;
+    std::filesystem::path dir;
+    void set(const char *name, const std::string &value) {
+      const char *old = std::getenv(name);
+      saved.push_back(
+          {name, old ? std::optional<std::string>(old) : std::nullopt});
+      setenv(name, value.c_str(), 1);
+    }
+    ~Environment() {
+      for (const auto &[name, value] : saved)
+        if (value)
+          setenv(name.c_str(), value->c_str(), 1);
+        else
+          unsetenv(name.c_str());
+      std::filesystem::remove_all(dir);
+      metrics::reset();
+      metrics::setEnabledForTesting(false);
+    }
+  } env{{}, dir};
+  // A single original KMD quad whose normals point radially outward. All
+  // four corners have identical diffuse light: Gouraud would be uniform.
+  // Phong must instead produce a bright centre and a continuous gradient.
+  auto bytes = fixture(false, true, true);
+  const auto base = cache.section(AssetCache::Source).offset;
+  put(bytes, base + 96, 4);
+  put(bytes, base + 100, 120); // normals share the synthetic position stream
+  put(bytes, cache.section(AssetCache::Models).offset + 28, 4);
+  for (unsigned k = 0; k < 4; ++k) {
+    const int x = (k == 1 || k == 2) ? 100 : -100;
+    const int y = k >= 2 ? 100 : -100;
+    for (const auto [offset, value] :
+         std::array<std::pair<unsigned, int>, 3>{{{0, x}, {2, y}, {4, 100}}}) {
+      bytes[base + 120 + k * 8 + offset] = uint16_t(value);
+      bytes[base + 121 + k * 8 + offset] = uint16_t(value) >> 8;
+      put(bytes,
+          cache.section(AssetCache::Vertices).offset + k * 48 + offset * 2,
+          std::bit_cast<uint32_t>(float(value)));
+    }
+    bytes[base + 164 + k] = k;
+  }
+  checksum(bytes);
+  cache = AssetCache::decode(bytes);
+  const auto assetPath = dir / "fixture.mgsc";
+  {
+    std::ofstream file(assetPath, std::ios::binary);
+    file.write(reinterpret_cast<const char *>(bytes.data()), bytes.size());
+  }
+  for (unsigned i = 0; i < 178; ++i)
+    memory.write8(definition + i, bytes[base + i]);
+  for (unsigned field : {56u, 60u, 68u, 72u, 76u, 80u})
+    memory.write32(definition + 32 + field,
+                   definition + memory.read32(definition + 32 + field));
+  memory.write16(definition + 176, 0x1234);
+  memory.write32(object + 40, 0x1d);
+  memory.write32(object + 28, 1000);
+  memory.write32(object + 72 + 28, 1000);
+  constexpr uint32_t light = 0x80017000;
+  memory.write32(object + 52, light);
+  memory.write16(light + 4, 4096);
+  for (unsigned channel = 0; channel < 3; ++channel)
+    memory.write16(light + 32 + channel * 6, 128 * 16);
+  setSceneAssetCache(&cache);
+  env.set("PS1_MGS_ASSET_CACHE", assetPath.string());
+  env.set("PS1_VULKAN_REPLAY_READBACK", "all");
+  env.set("PS1_VULKAN_REPLAY_READBACK_FRAME_FROM", "2");
+  env.set("PS1_VULKAN_REPLAY_READBACK_FRAME_TO", "5");
+  env.set("PS1_VULKAN_REPLAY_READBACK_REGION", "132,84,56,56");
+  env.set("PS1_VULKAN_REPLAY_READBACK_DUMP_DIRECTORY", dir.string());
+  metrics::reset();
+  metrics::setEnabledForTesting(true);
+  gpu::GPU gpu;
+  gpu::configureVulkanNativeOracle(gpu, true);
+  gpu::RendererOptions options;
+  options.internalScale = 4;
+  options.pgxp = options.trueDepth = options.trueColor = true;
+  options.trueDepthMode = "hybrid";
+  gpu::RendererVulkan renderer(gpu, options);
+  ASSERT_TRUE(renderer.init("MGS per-pixel light", 320, 224, false, false));
+  gpu.writeGP1(0x03000000);
+  gpu.writeGP1(0x05000000);
+  gpu.writeGP0(0xe3000000);
+  gpu.writeGP0(0xe4000000 | 319 | (223u << 10));
+  gpu.writeGP0(0xe5000000 | 160 | (112u << 11));
+  gpu.writeGP0(0xa0000000);
+  gpu.writeGP0(0);
+  gpu.writeGP0(1 | (4u << 16));
+  gpu.writeGP0(0x11111111);
+  gpu.writeGP0(0x11111111);
+  gpu.writeGP0(0xa0000000);
+  gpu.writeGP0(512 | (400u << 16));
+  gpu.writeGP0(16 | (1u << 16));
+  gpu.writeGP0(0x7fff0000);
+  for (unsigned i = 1; i < 8; ++i)
+    gpu.writeGP0(0);
+  gpu.snapshotDisplayBuffer(1);
+  renderer.renderFrame();
+  renderer.drainReplayDiagnostics();
+  const std::vector<gpu::Color16> native(gpu.getVRAM(),
+                                         gpu.getVRAM() + 1024 * 512);
+  std::vector<uint8_t> baseline;
+  for (unsigned frame = 2; frame <= 5; ++frame) {
+    // Toggling native dither must not alter modern lighting. The third frame
+    // exercises the textured semi-transparent pipeline using opaque STP texels.
+    gpu.writeGP0(0xe1000000 | (frame == 3 ? 0x200 : 0));
+    if (frame == 4)
+      memory.write32(definition + 32, 2);
+    if (frame == 5) {
+      // Reclassify the synthetic quad as an authenticated static stage mesh.
+      // Three differently colored original .LIT lights must all contribute;
+      // the old two-light preshade would lose the blue channel entirely.
+      memory.write32(definition + 32, 0);
+      memory.write32(object + 40, 0x57);
+      memory.write16(object + 44, 1);
+      memory.write32(0x800ae0e0, 1);
+      memory.write32(0x800ae21c, 1);
+      memory.write32(0x800ae220, 1);
+      memory.write32(0x800b9ff8, object);
+      memory.write32(0x800ba078, 1);
+      memory.write16(0x800ba078 + 6, 1);
+      memory.write32(0x800ba078 + 12, 0x80018000);
+      memory.write32(0x80018000, 3);
+      for (unsigned i = 0; i < 3; ++i) {
+        uint32_t p = 0x80018004 + i * 16;
+        memory.write16(p + 4, 1000);
+        memory.write16(p + 8, 200);
+        memory.write16(p + 10, 1000);
+        memory.write8(p + 12 + i, 32);
+      }
+    }
+    captureSceneBeforeBounds(&ctx);
+    prepareMeshReplay(&ctx);
+    gpu.processLinkedList(table + 256 * 4, memory.ramPtr(), &memory);
+    gpu.snapshotDisplayBuffer(frame);
+    renderer.renderFrame();
+    renderer.drainReplayDiagnostics();
+    std::ifstream file(dir / ("frame-" + std::to_string(frame) + ".ppm"),
+                       std::ios::binary);
+    std::string magic;
+    unsigned w = 0, h = 0, max = 0;
+    file >> magic >> w >> h >> max;
+    file.get();
+    ASSERT_EQ(magic, "P6");
+    ASSERT_EQ(w, 224u);
+    ASSERT_EQ(h, 224u);
+    std::vector<uint8_t> pixels(w * h * 3);
+    file.read(reinterpret_cast<char *>(pixels.data()), pixels.size());
+    ASSERT_TRUE(file);
+    const auto red = [&](unsigned x, unsigned y) {
+      return pixels[(y * w + x) * 3];
+    };
+    if (frame <= 4) {
+      EXPECT_GT(red(112, 112), 240);
+      EXPECT_LT(red(8, 8), 170);
+      std::set<uint8_t> shades;
+      for (unsigned x = 0; x < 112; ++x)
+        shades.insert(red(x, 112));
+      EXPECT_GT(shades.size(), 32u) << "must exceed a 5-bit color ramp";
+      if (frame == 2)
+        baseline = pixels;
+      else
+        EXPECT_EQ(pixels, baseline)
+            << "dither/material pipeline changed lighting";
+    } else {
+      EXPECT_NEAR(red(112, 112), 72, 2);
+      EXPECT_LT(red(8, 8), red(112, 112) - 10);
+      for (unsigned c = 1; c < 3; ++c)
+        EXPECT_EQ(pixels[(112 * w + 112) * 3 + c], red(112, 112));
+    }
+    EXPECT_EQ(std::memcmp(native.data(), gpu.getVRAM(),
+                          native.size() * sizeof(gpu::Color16)),
+              0);
+  }
+  EXPECT_GT(metrics::get("mgs.lighting.per_pixel_faces"), 0u);
+  EXPECT_EQ(metrics::get("host.renderer.vulkan_replay_executor_downgrade"), 0u);
+  EXPECT_TRUE(gpu::isVulkanNativeOraclePolicyActive(gpu));
+  renderer.destroy();
+}
+
+TEST_F(MgsSourceMeshTest, StageLightingRequiresMapOwnershipAndReloadsSources) {
+  memory.write16(object + 44, 3);
+  memory.write32(0x800ae0e0, 3);
+  memory.write32(0x800ae21c, 1);
+  memory.write32(0x800ae220, 2);
+  memory.write32(0x800b9ff8, object);
+  memory.write32(0x800ba078, 1);
+  memory.write16(0x800ba078 + 6, 1);
+  memory.write32(0x800ba078 + 12, 0x80018000);
+  // Two active maps may share a light table. Do not double its energy.
+  memory.write32(0x800ba078 + 20, 2);
+  memory.write16(0x800ba078 + 26, 1);
+  memory.write32(0x800ba078 + 32, 0x80018000);
+  memory.write32(0x80018000, 3);
+  for (unsigned i = 0; i < 3; ++i) {
+    uint32_t p = 0x80018004 + i * 16;
+    memory.write16(p + 4, 8000);
+    memory.write16(p + 8, 3000);
+    memory.write16(p + 10, 6000);
+    memory.write8(p + 12 + i, 32);
+  }
+  auto first = recover();
+  ASSERT_TRUE(first);
+  const auto &lighting = first->buckets[39][0].originalMesh->lighting;
+  ASSERT_EQ(lighting.pointLights.size(), 3u);
+  EXPECT_EQ(lighting.positions[0], (std::array<float, 4>{0, 0, 10000, 0}));
+  EXPECT_EQ(lighting.ambient[3], 1);
+  memory.write16(0x80018004 + 4, 7000);
+  auto second = recover();
+  ASSERT_TRUE(second);
+  EXPECT_EQ(second->buckets[39][0]
+                .originalMesh->lighting.pointLights[0]
+                .positionRadius[2],
+            7000);
+  EXPECT_EQ(lighting.pointLights[0].positionRadius[2], 8000)
+      << "queued snapshot must be immutable";
+  memory.write32(0x800b9ff8, object + 4); // same PAINT flag, no map ownership
+  second = recover();
+  ASSERT_TRUE(second);
+  EXPECT_EQ(second->buckets[39][0].originalMesh->lighting.ambient[3], 0);
+  memory.write32(0x800b9ff8, object);
+  memory.write32(0x80018000, 0x80000000); // invalid light extent
+  second = recover();
+  ASSERT_TRUE(second);
+  EXPECT_EQ(second->buckets[39][0].originalMesh->lighting.ambient[3], 0);
 }

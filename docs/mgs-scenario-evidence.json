@@ -1,0 +1,495 @@
+{
+  "format": "mgs-independent-scenes-evidence-1",
+  "date": "2026-10-04",
+  "difficulty": "Normal",
+  "disc": 1,
+  "passed_saves": 14,
+  "distinct_stages": 12,
+  "identity": {
+    "runtime": {
+      "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+      "sha256": "eb247aa0c9c3650b89d4769938964e6241c15fba20ea9740f11fffd5790ee808"
+    },
+    "config": {
+      "path": "/home/xander/mgs_recomp/data/mgs.usa.native.toml",
+      "sha256": "d0003d8a510c17134d95384dab55b9483098beaa718e93c358f6ddb6de9d79a3"
+    },
+    "exe": {
+      "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+      "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+    },
+    "cue": {
+      "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+      "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+    },
+    "track_0": {
+      "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+      "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+    },
+    "asset_cache": {
+      "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+      "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+    }
+  },
+  "donor": {
+    ".local/libretro_headless.scenarios": "fac15316d4bc8fd83c18ea0bcbe19b86accb1f9858ad1242ea93e44f883a7a1a",
+    ".local/swanstation/swanstation_libretro.so": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b",
+    ".local/swanstation/dep/openbios/openbios.bin": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+  },
+  "source_archive_sha256": "a5ae365e5791dc7169f562ca1af9aeaed1c8f45fad268bd23070c4b9aca62893",
+  "source_url": "https://www.reddit.com/r/metalgearsolid/comments/qyv2ma/metal_gear_solid_1_save_files_for_duckstation/",
+  "checks": [
+    "retail memory-card load",
+    "30 consecutive controllable VBlanks",
+    "crouch",
+    "stand",
+    "read-only semantic comparison with SwanStation"
+  ],
+  "compared_fields": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "life",
+    "max_life",
+    "stance",
+    "weapon",
+    "item",
+    "weapons",
+    "items",
+    "x",
+    "z",
+    "game_over_timer"
+  ],
+  "scope_exclusions": [
+    "complete fights",
+    "complete traversals",
+    "disc swap",
+    "continuous campaign",
+    "complete visual equivalence"
+  ],
+  "fixes": [
+    "native retail load entry 0x80044D2C",
+    "standalone overlay callbacks referenced by pointer tables (s12c 0x800D7A00 crash)"
+  ],
+  "scenarios": [
+    {
+      "block": 1,
+      "stage": "s01a",
+      "saved_story": 18,
+      "control_story": 18,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-01-s01a-18/native-01/result.json",
+      "native_result_sha256": "e8b287fb1b28b1c4d4a2cfe933913e42a77d3e1e764186995b4159033c188ed7",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-01-s01a-18/donor-01/result.json",
+      "donor_result_sha256": "0383c181a5ccb5ef383d8914b3bbce15348198f9e9255ea80e604abadcea2c9c",
+      "native_frames": 2109,
+      "donor_frames": 3261,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 64,
+      "max_life": 256,
+      "position": [
+        -4605,
+        1104,
+        20452
+      ],
+      "route_sha256": "19d347f1b94676cc5e956b227ca3c00a8c681d817c56d77bc1ccebfebf55a021",
+      "native_terminal_ram_sha256": "2eafea6d05efe5e59af05df6a49ab1bb3a6830a5937c4084f2dfd2046ed58f32",
+      "donor_terminal_ram_sha256": "9578a1ed3959530f88dca8f61f587c3de5f9fdf6db4871d71a34bce3d7838af7"
+    },
+    {
+      "block": 2,
+      "stage": "s03a",
+      "saved_story": 18,
+      "control_story": 18,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-02-s03a-18/native-01/result.json",
+      "native_result_sha256": "b3de84dc62e65ea14cd0048ab74d86444e595b7370696cf1e41afe3c8be3f26d",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-02-s03a-18/donor-01/result.json",
+      "donor_result_sha256": "b747c0f095d74b544a24adaf64e2765eafc1f111865ffb95c6a0c1e48cb03695",
+      "native_frames": 2259,
+      "donor_frames": 3362,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 64,
+      "max_life": 256,
+      "position": [
+        1500,
+        1104,
+        -10000
+      ],
+      "route_sha256": "8f5c6964a064065309e04619e781f6e855ab6a10859cbd5b78d67f0c17b6c4e2",
+      "native_terminal_ram_sha256": "27b27e96b0a7294ac858d39cb344ca49ac01d2f280dddd34feab18415f8a1714",
+      "donor_terminal_ram_sha256": "f2b22402aa4d2cd971e446bd14538e53cb3caf37cb24c88885e71105413c00e3"
+    },
+    {
+      "block": 3,
+      "stage": "s04b",
+      "saved_story": 36,
+      "control_story": 36,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-03-s04b-36/native-01/result.json",
+      "native_result_sha256": "bcd405d171e29fafcd22122681f4e6face94436578992fad86e80dafaf3c2626",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-03-s04b-36/donor-01/result.json",
+      "donor_result_sha256": "e9477461c8058811157003ab5f8262af9b00d5b33c427e50e5c1ee4e40ef4de9",
+      "native_frames": 2177,
+      "donor_frames": 3297,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 192,
+      "max_life": 256,
+      "position": [
+        -10000,
+        1012,
+        2000
+      ],
+      "route_sha256": "528d6affa68e16ff77c8f17a6d21c60e8859714017a65341d460114802144a85",
+      "native_terminal_ram_sha256": "2882d98dd0e9877bf92437c5f6335cb70dc1605050b2713a2d6848a4eb9d684a",
+      "donor_terminal_ram_sha256": "06f8c148034c496e245301158d49037ea860de941b951de045a5f5c6a5e591d7"
+    },
+    {
+      "block": 4,
+      "stage": "s08c",
+      "saved_story": 75,
+      "control_story": 75,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/ninja/native-01/result.json",
+      "native_result_sha256": "6e8fd9b62b2eaa86e5d8bce6365be02779c74b2f98c552902bed0ee0d749e267",
+      "donor_result": "data/scenarios/usa-normal/cases/ninja/donor-01/result.json",
+      "donor_result_sha256": "1670be25accb5a98066e178693b7ca259e0925519ab3710b9cb194a0a30d817d",
+      "native_frames": 2097,
+      "donor_frames": 3224,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 384,
+      "max_life": 384,
+      "position": [
+        2750,
+        1016,
+        -6500
+      ],
+      "route_sha256": "3f0341e23ff61a8f9b3406cda797121ca061a17c315ed6bb272e3813dbec92e8",
+      "native_terminal_ram_sha256": "5e5e5d2a10549b77a132d6018e487bab6de1daeb0529392449caeed7be26fcc0",
+      "donor_terminal_ram_sha256": "63765671b966f02438d9b42a0c482f5603bc44ef4e36b388f8aec053de8084c4"
+    },
+    {
+      "block": 5,
+      "stage": "s08c",
+      "saved_story": 111,
+      "control_story": 111,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-05-s08c-111/native-01/result.json",
+      "native_result_sha256": "5cbb2c4d7b7f6b3757c27c9a4f9894d1cc100c9654c7d17dfc95cd6f93e46c88",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-05-s08c-111/donor-01/result.json",
+      "donor_result_sha256": "cb2980ae00edca8de579c63ee1203e6a41aa2becdcbf352eeec74801cf0c4c7b",
+      "native_frames": 2089,
+      "donor_frames": 3223,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 414,
+      "max_life": 448,
+      "position": [
+        -2750,
+        1104,
+        -8875
+      ],
+      "route_sha256": "0785825763f23f399bcd86f2b908367a78fb21c5b8de576eba05d2ea430d0788",
+      "native_terminal_ram_sha256": "f38da14ff120f0f9f2b494c50f6873bb8d9ef6809cabb811f048c2c1d9676f7e",
+      "donor_terminal_ram_sha256": "4115cee0a47bf3c5ca1ccba903793911d078c589a4c612f441ff1ce2dd6e94f5"
+    },
+    {
+      "block": 6,
+      "stage": "s07c",
+      "saved_story": 119,
+      "control_story": 119,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-06-s07c-119/native-01/result.json",
+      "native_result_sha256": "c5273d81cf402111c2a0d301971627726ac01da79b2a9beb94340ec5ab7f99c5",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-06-s07c-119/donor-01/result.json",
+      "donor_result_sha256": "371b88c454cbf8cd8391763b58a48ec8f3b1ce549596124292b06011ec66cece",
+      "native_frames": 2155,
+      "donor_frames": 3237,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 414,
+      "max_life": 448,
+      "position": [
+        0,
+        1104,
+        -6750
+      ],
+      "route_sha256": "7f7be9479624be4a647ea4728f882c56c686b1bfd78d53257f2f2acbb165315e",
+      "native_terminal_ram_sha256": "45fe3974dd90e8dd0849b4afe53bbc190d9592cf12f064863fc79fcffbef6980",
+      "donor_terminal_ram_sha256": "0e4267e833d76ab8f9ced8941d7ff01f45e1a19f9cbf91391b3d74c87f9dfd15"
+    },
+    {
+      "block": 7,
+      "stage": "s09a",
+      "saved_story": 137,
+      "control_story": 141,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-07-s09a-137/native-03/result.json",
+      "native_result_sha256": "81020f8d2bbcab83ef3a51d5ad17c16592c3f05fc409540328c9bcfadf43e789",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-07-s09a-137/donor-04/result.json",
+      "donor_result_sha256": "2418149e73c2a7cd235af4993ae2ad5ed42b398bdb3a48052f2ed54a286be52f",
+      "native_frames": 3649,
+      "donor_frames": 4775,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 466,
+      "max_life": 512,
+      "position": [
+        -6620,
+        1104,
+        11500
+      ],
+      "route_sha256": "f5bc435347976143d7f7af4a58bda055f483bf7a37c06ed0cd3117d5fc9b184a",
+      "native_terminal_ram_sha256": "509c0cf3dd49cda551b74448a5a5fdca103e6e6c66627dcd94e632ad7e90b59c",
+      "donor_terminal_ram_sha256": "c241c995f071e71ae085e84d3d5d69b840f8a8f344d7cdf58efaa21f4f2ae316"
+    },
+    {
+      "block": 8,
+      "stage": "s09a",
+      "saved_story": 149,
+      "control_story": 149,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-08-s09a-149/native-01/result.json",
+      "native_result_sha256": "31cc807e35365f6ab357c50e2401a3f59016e03234789c3d26ab2c515d64fe37",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-08-s09a-149/donor-01/result.json",
+      "donor_result_sha256": "58e57b599f2fc887449856449c3257d785124281c4fe7fb9887ce5a346120e20",
+      "native_frames": 2186,
+      "donor_frames": 3295,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 178,
+      "max_life": 512,
+      "position": [
+        8317,
+        1104,
+        -9493
+      ],
+      "route_sha256": "fe54a9a1d0d547ba7c2875b22d3f5b49f0cf9155a071b668e2b94e7bc23f93f7",
+      "native_terminal_ram_sha256": "675e6e41efe0f1d3f92f7f955288a0c3371d118a50e1418e2610987b5ce2f178",
+      "donor_terminal_ram_sha256": "e41867dcd52aa7498bfb013694ddf13e8babdea81806472a37b0da14032a2a42"
+    },
+    {
+      "block": 9,
+      "stage": "s06a",
+      "saved_story": 150,
+      "control_story": 150,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-09-s06a-150/native-01/result.json",
+      "native_result_sha256": "2ade6087176bf3a827f954bec0d747bd2f14d7158913f19250e8a6825722e4cd",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-09-s06a-150/donor-01/result.json",
+      "donor_result_sha256": "44abeda234ea0426a8e4612e97eab9be54c6764355abeb9f54112e9bc7d849a6",
+      "native_frames": 2162,
+      "donor_frames": 3286,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 352,
+      "max_life": 512,
+      "position": [
+        7500,
+        5104,
+        22000
+      ],
+      "route_sha256": "5ef47c8d6252deea1f47343727564d5b7807f51e595b03819f81ae0e3f663fca",
+      "native_terminal_ram_sha256": "cbfb926ad1868f88fd0f8b49378a14b380dd24428f92ed0163a725c44627ef4f",
+      "donor_terminal_ram_sha256": "4328fd9c28594adec5459dd2f416d9b57b2da89670e78b29ee6bd7ca34f36cc1"
+    },
+    {
+      "block": 10,
+      "stage": "s10a",
+      "saved_story": 151,
+      "control_story": 151,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-10-s10a-151/native-01/result.json",
+      "native_result_sha256": "99ebd365ff83e400d3cc9a2b2cd6343b61fbe0b7ce0be4d530fed2f7cf82bde8",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-10-s10a-151/donor-01/result.json",
+      "donor_result_sha256": "20715e557ec8a8b96ddd5b4b17172eecdc65e86ebac6fddcf1201f2fd551b527",
+      "native_frames": 2103,
+      "donor_frames": 3244,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 576,
+      "max_life": 576,
+      "position": [
+        0,
+        -28896,
+        27000
+      ],
+      "route_sha256": "acf83b453c84b48b56e4d0bdc8e81a3ecd2fd56515b9a2b27f35f643770d9acc",
+      "native_terminal_ram_sha256": "b82779647610baa666aec63bbd75e172e94c737937b87ab8b9b729c475295b06",
+      "donor_terminal_ram_sha256": "ac35014b6fde799c08fdbc628e31e1cb27cd6bcb79424a8f181d2452df75b8aa"
+    },
+    {
+      "block": 11,
+      "stage": "s11b",
+      "saved_story": 173,
+      "control_story": 174,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-11-s11b-173/native-02/result.json",
+      "native_result_sha256": "3d484d424dc8d1a8712cab2d53db41808a417efaa51fafdbeeeb89f0a570d220",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-11-s11b-173/donor-04/result.json",
+      "donor_result_sha256": "da4e4f292af606fce206112ed3e7d490fef5b4bb98cfca62293a2541d37fff0e",
+      "native_frames": 2383,
+      "donor_frames": 3522,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 240,
+      "max_life": 576,
+      "position": [
+        -3827,
+        1022,
+        22054
+      ],
+      "route_sha256": "73e60034f0e7c372c273a67bc99bb11d2f57c4a01ec94adfcf61b2ddf9f92302",
+      "native_terminal_ram_sha256": "c91208530be3253b9253c2d3ebbb730979e18b67bbe8416e930d76a900fc478a",
+      "donor_terminal_ram_sha256": "b7186591181c5ad6dba8a71db234671d893ae224243905018d62c8f99e213d98"
+    },
+    {
+      "block": 12,
+      "stage": "s11c",
+      "saved_story": 190,
+      "control_story": 190,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-12-s11c-190/native-01/result.json",
+      "native_result_sha256": "4d2cf1ed0e4560536b6db175705861fd17e6da4ec384e9a1ce69f5c269ec8671",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-12-s11c-190/donor-01/result.json",
+      "donor_result_sha256": "b8c3940e96251debd009db7706b1407b0114a0360204778fa8e4c9ed1c7722eb",
+      "native_frames": 2412,
+      "donor_frames": 3572,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 640,
+      "max_life": 640,
+      "position": [
+        -3827,
+        25104,
+        -3288
+      ],
+      "route_sha256": "bfc0976e86d1c22260c4d4544456e9fb1ca0f8cfaeee85c62ef1fed26cc567d4",
+      "native_terminal_ram_sha256": "e9a60380dce291251e0b9bb6387958e0199c425e743122e15c2894efde820ef7",
+      "donor_terminal_ram_sha256": "87cd887d0d4c33f3ab77e60c06296f25d78340aef1ed2d9a869189111ef5869e"
+    },
+    {
+      "block": 13,
+      "stage": "s12b",
+      "saved_story": 204,
+      "control_story": 204,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/d1-13-s12b-204/native-01/result.json",
+      "native_result_sha256": "52139b55eec932f88ce8cb3e46036fccb468837eed646763626b9d52798625d2",
+      "donor_result": "data/scenarios/usa-normal/cases/d1-13-s12b-204/donor-01/result.json",
+      "donor_result_sha256": "568a952ef865714ce5c8c8406020dc6ed0a661e4acc15b7f01623ed8770a12ac",
+      "native_frames": 2073,
+      "donor_frames": 3215,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 600,
+      "max_life": 704,
+      "position": [
+        -3682,
+        2604,
+        -19273
+      ],
+      "route_sha256": "45bc92ffb9df42f107832ac6dd3b10b407026fbb4925aa101c3d1a141be5c14c",
+      "native_terminal_ram_sha256": "c302f20ecedbf980b9e0b94fe8a0237366ee35883763f765ad44b5dad12befa2",
+      "donor_terminal_ram_sha256": "3477dfe035f53c0543a96a70defbdf23bfd790d3ccc2a146d5b00bc63c7c6f49"
+    },
+    {
+      "block": 14,
+      "stage": "s12c",
+      "saved_story": 204,
+      "control_story": 204,
+      "status": "complete",
+      "native_result": "data/scenarios/usa-normal/cases/disc-change/native-01/result.json",
+      "native_result_sha256": "f590510c83c9fd271b4b4b0956141fd8397038f0dad043169da19176e6c07ec2",
+      "donor_result": "data/scenarios/usa-normal/cases/disc-change/donor-01/result.json",
+      "donor_result_sha256": "694910250fe6b46122d66a63f08ef780203c4b8295d736f183f2da8efaa8f172",
+      "native_frames": 2069,
+      "donor_frames": 3209,
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "differences": {},
+      "life": 216,
+      "max_life": 704,
+      "position": [
+        -876,
+        1104,
+        22800
+      ],
+      "route_sha256": "d058919bce4e1b4dced89f86fc05602e8132a76aa842f8c3a4869661b4b28418",
+      "native_terminal_ram_sha256": "cacd81ce279b5572bae79d6d320a8e19536c6e2dd6c16ff7604cb39a4999597b",
+      "donor_terminal_ram_sha256": "ac4948c93f52f87a7e5f60005c57dc059819589edb6965f39350329c45ebd1ba"
+    }
+  ],
+  "vulkan_checkpoint_probes": [
+    {
+      "case": "ninja",
+      "result": "data/scenarios/usa-normal/cases/ninja/vulkan-01/result.json",
+      "result_sha256": "437d3ae73a72a78a7e25e054269088f683c7aacf02bf1bb14b08d99f3d14aaae",
+      "status": "complete",
+      "frames": 180,
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 90,
+      "original_format_packets": 106521,
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": "data/scenarios/usa-normal/cases/ninja/vulkan-01/gpu/frame-2220-present-3-ordinary-scanout.ppm",
+      "last_capture_sha256": "ef164f809c3ddb2cd2e5199a87f65d6c06c91fdb7fc99ea61765889b5d0688cb"
+    },
+    {
+      "case": "disc-change",
+      "result": "data/scenarios/usa-normal/cases/disc-change/vulkan-01/result.json",
+      "result_sha256": "f30f50edb583d61e9db03c8ffd716dede2c596fef313ae383b2a24075ed1d934",
+      "status": "complete",
+      "frames": 180,
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 0,
+      "original_format_packets": 0,
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": "data/scenarios/usa-normal/cases/disc-change/vulkan-01/gpu/frame-2220-present-3-ordinary-scanout.ppm",
+      "last_capture_sha256": "4a679884f5a6b228ce30152d68d111e4f086c8d675f9dbdc9d8ba89c51cb1fc4"
+    }
+  ],
+  "open_findings": [
+    {
+      "stage": "s12c",
+      "kind": "presentation source coverage",
+      "detail": "Fog actor replaces DG_BOUND_CHANL, bypassing the source-scene capture hook at regular DG_BoundChanl. Vulkan runs but source_scene_captures=0 and original_format_packets=0; original packet presentation remains.",
+      "source": ".local/mgs_reversing/source/overlays/s12c/takabe/fog.c:75",
+      "status": "resolved",
+      "resolved_by": "mgs-disc2-scenario-evidence.json",
+      "resolution": "Common channel dispatch captures replacement fog callbacks; exact 180-VBlank replay passes with 90 source captures, 94/94 matched instances and 20114 original-format GPU submissions. Historical zero counters above describe the pre-fix run."
+    }
+  ],
+  "tests": {
+    "python_tas": 36,
+    "python_overlay_catalog": 3,
+    "python_scenarios": 5,
+    "native_route": 16
+  },
+  "protected_user_state": "quick_slot_0 and both personal cards verified unchanged"
+}

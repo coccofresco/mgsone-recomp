@@ -66,6 +66,7 @@ add_executable(ps1Runtime_tests
     runtime/test_mgs_profile.cpp
     runtime/test_mgs_asset_cache.cpp
     runtime/test_mgs_screen_effects.cpp
+    runtime/test_mgs_surface_effects.cpp
     runtime/test_mgs_pose.cpp
     runtime/test_mgs_decomp.cpp
     runtime/test_crash3_scenery_detail.cpp
@@ -117,6 +118,8 @@ add_executable(ps1Runtime_tests
     runtime/test_cdrom_controller.cpp
     runtime/test_dma.cpp
     runtime/test_input.cpp
+    runtime/test_tas_movie.cpp
+    runtime/test_tas_route.cpp
     runtime/test_mdec.cpp
     runtime/test_timers.cpp
     runtime/test_vblank_scheduler.cpp

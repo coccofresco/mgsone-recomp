@@ -2,6 +2,7 @@
 #include "runtime/cdrom/virtual_fs.h"
 #include "runtime/cpu_context.h"
 #include "runtime/memory.h"
+#include "runtime/input/input.h"
 #include <gtest/gtest.h>
 
 using namespace ps1;
@@ -90,6 +91,34 @@ TEST_F(BiosTableBTest, KernelTablesSurviveThreadRegisterChanges) {
   EXPECT_EQ(ctx.r[V0], 0x801FFE00u);
 }
 
+TEST_F(BiosTableBTest, RetailDeviceDiscoveryReachesMemoryCardDirectory) {
+  input::InputController input;
+  bios->setInputController(&input);
+  // A completed-game name must be visible through the same device lookup
+  // used by the retail firstfile wrapper, before any B0:42 invocation.
+  ASSERT_TRUE(input.getMemoryCard(0).createFile("BASLUS-00594G021qCOA", 1));
+  const auto table = mem.read32(0x150), bytes = mem.read32(0x154);
+  ASSERT_GT(bytes, 0u);
+  ASSERT_EQ(bytes % 0x50, 0u);
+  uint32_t cardDevice = 0;
+  for (uint32_t offset = 0; offset < bytes; offset += 0x50) {
+    const auto name = mem.read32(table + offset);
+    if (name && mem.read8(name) == 'b' && mem.read8(name + 1) == 'u' &&
+        mem.read8(name + 2) == 0) cardDevice = table + offset;
+  }
+  ASSERT_NE(cardDevice, 0u);
+  mem.write32(cardDevice + 0x34, 0x8009C7C4); // retail wrapper installs its hook
+  writeString(0x1000, "bu00:*");
+  ctx.r[T1] = 0x42; ctx.r[A0] = 0x1000; ctx.r[A1] = 0x2000;
+  bios->executeB0();
+  ASSERT_EQ(ctx.r[V0], 0x2000u);
+  EXPECT_EQ(mem.read8(0x2000 + 12), 'G');
+  EXPECT_EQ(mem.read32(0x2000 + 24), 8192u);
+  EXPECT_EQ(mem.read32(cardDevice + 0x34), 0x8009C7C4u);
+  ctx.r[T1] = 0x43; ctx.r[A0] = 0x2000; bios->executeB0();
+  EXPECT_EQ(ctx.r[V0], 0u);
+}
+
 TEST_F(BiosTableBTest, KernelAllocatorHonorsArenaAndOverflow) {
   ctx.r[A0] = 0xA000E800;
   ctx.r[A1] = 32;
@@ -157,7 +186,6 @@ TEST_F(BiosTableBTest, NativeThreadSwitchRetainsStackAndGuestRegisters) {
 }
 #endif
 
-#include "runtime/input/input.h"
 #include "runtime/psyq/psyq_state.h"
 extern void (*g_testRecompDispatchHook)(recomp_context *, uint32_t);
 namespace {
@@ -238,7 +266,38 @@ TEST_F(BiosTableBTest, PortableThreadSnapshotRebuildsWithoutOldHostStacks) {
   EXPECT_EQ(snapshot.currentTcb, 0x80001100u);
   EXPECT_EQ(snapshot.resumePcs[1], 0x80012348u);
   threads.restart(snapshot);
+  // Save again before the worker runs: its reconstructed host fiber does
+  // not exist yet, but the guest continuation must survive another restore.
+  const auto dormantSnapshot = threads.snapshot();
+  EXPECT_EQ(dormantSnapshot.resumePcs[1], 0x80012348u);
+  threads.restart(dormantSnapshot);
   threads.change(handle);
+  EXPECT_EQ(threadProbePhase, 2);
+}
+
+TEST_F(BiosTableBTest, DormantThreadRecoversLegacyOmittedContinuationFromTcb) {
+  mem.write32(0x108, 0x80001000);
+  mem.write32(0x110, 0x80001100);
+  mem.write32(0x114, 2 * 0xc0);
+  mem.write32(0x1000, 0x80001100);
+  mem.write32(0x1100, 0x4000);
+  mem.write32(0x11c0, 0x4000);
+  mem.write32(0x11c0 + 0x88, 0x80012348);
+  mem.write32(0x11c0 + 8 + S0 * 4, 0x1234abcd);
+  mem.write32(0x11c0 + 8 + SP * 4, 0x801e0000);
+  ctx.r[SP] = 0x801f0000;
+  ctx.r31 = 0x80010010;
+  KernelThreads threads(ctx);
+  threadProbe = &threads;
+  threadProbePhase = 0;
+  struct Reset { ~Reset() { g_testRecompDispatchHook = nullptr; threadProbe = nullptr; } } reset;
+  g_testRecompDispatchHook = runPortableThreadProbe;
+  KernelThreads::Snapshot snapshot;
+  snapshot.currentTcb = 0x80001100;
+  snapshot.resumePcs[0] = 0x80010010;
+  threads.restart(snapshot);
+  EXPECT_EQ(threads.snapshot().resumePcs[1], 0x80012348u);
+  threads.change(0xff000001);
   EXPECT_EQ(threadProbePhase, 2);
 }
 #endif

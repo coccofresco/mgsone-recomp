@@ -1,0 +1,43 @@
+{
+  "format": "mgs-tas-route-1",
+  "source_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757",
+  "source_url": "https://tasvideos.org/3462S",
+  "description": "After the prison ambush victory, skip the films across s03d/s03b/s03a and close Codec. Stop on original story 36 with player control restored in s03a.",
+  "steps": [
+    {
+      "name": "post-ambush-films-and-codec",
+      "guard": {
+        "life": {
+          "min": 1
+        },
+        "story": {
+          "min": 29,
+          "max": 36
+        }
+      },
+      "until": {
+        "story": {
+          "min": 36
+        },
+        "pause_level": 0,
+        "game_status": {
+          "mask": 2148007936,
+          "eq": 0
+        },
+        "control": {
+          "ne": 0
+        },
+        "stage": "s03a"
+      },
+      "action": {
+        "source_frames": [
+          973,
+          978
+        ],
+        "settle_frames": 24
+      },
+      "attempts": 110,
+      "max_frames": 3600
+    }
+  ]
+}

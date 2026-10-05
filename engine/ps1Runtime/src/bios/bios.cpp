@@ -59,6 +59,30 @@ Bios::Bios(recomp_context &ctx, cdrom::VirtualFs &fs, Memory &mem)
     mem.write32(c0Addr + i * 4, 0x0000C000 + i); // Sentinel for C0:i
   }
 
+  // Publish the memory-card device in the kernel's device table (DCB entries
+  // are 0x50 bytes). Retail PsyQ firstfile wrappers inspect 0x150/0x154 and
+  // temporarily hook DCB+0x34 before calling B0:42. Without a discoverable
+  // "bu" device they return NULL without ever reaching our file service.
+  // The descriptor lives below the syscall tables, outside the game heap.
+  // File operations themselves remain owned by the B0 HLE implementation;
+  // the per-device hook is guest-visible storage, not a BIOS ROM pointer.
+  constexpr uint32_t cardDevice = 0x801FFA00u;
+  constexpr uint32_t cardDeviceName = cardDevice + 0x50u;
+  for (uint32_t offset = 0; offset < 0x50; offset += 4)
+    mem.write32(cardDevice + offset, 0);
+  mem.write32(cardDevice, cardDeviceName);
+  mem.write32(cardDevice + 4, 0x14); // block device
+  mem.write32(cardDevice + 8, 128);
+  mem.write32(cardDevice + 12, cardDeviceName + 4);
+  mem.write8(cardDeviceName, 'b');
+  mem.write8(cardDeviceName + 1, 'u');
+  mem.write8(cardDeviceName + 2, 0);
+  constexpr char cardDescription[] = "MEMORY CARD";
+  for (uint32_t i = 0; i < sizeof(cardDescription); ++i)
+    mem.write8(cardDeviceName + 4 + i, cardDescription[i]);
+  mem.write32(0x150, cardDevice);
+  mem.write32(0x154, 0x50);
+
   // Store the table pointers where BIOS calls can return them.
   // K0/K1 are kernel-reserved registers; the game must not rely on them.
   ctx_.r[K0] = b0Addr;
@@ -815,11 +839,18 @@ void Bios::drainPendingCallbacks(uint32_t resumePc) {
       fmt::print(stderr, "[DRAIN] exit#{}\n", n);
     }
   }
-  if (resumePc && kernelThreads_.active() && stateCheckpoint_) {
+  if (resumePc && kernelThreads_.active() &&
+      (stateCheckpoint_ || clockCheckpoint_)) {
     kernelThreads_.captureCurrent(resumePc);
-    if (kernelThreads_.canSnapshot()) stateCheckpoint_(resumePc);
+    const bool resumable = kernelThreads_.canSnapshot();
+    // Delivering a clock edge only needs this thread to be parked. Requiring
+    // every fiber to have a portable continuation would deadlock startup when
+    // an unfinished thread needs that very clock edge to reach its first wait.
+    if (clockCheckpoint_)
+      clockCheckpoint_(resumePc, resumable);
+    if (resumable && stateCheckpoint_)
+      stateCheckpoint_(resumePc);
   }
-
 }
 
 void Bios::stub_printf() {

@@ -1,0 +1,143 @@
+{
+  "format": "mgs-tas-route-1",
+  "source_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757",
+  "source_url": "https://tasvideos.org/3462S",
+  "description": "Original published elevator call and B1 selector. Approach the doorway during arrival and wait for the named evpanel door to open before entering; its GV_Time-dependent delay differs from the source run. Selector position follows source frame19469. Input only.",
+  "steps": [
+    {
+      "name": "original-elevator-call",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "evpanel_7858_phase": {
+          "min": 1
+        }
+      },
+      "action": {
+        "source_frames": [
+          19288,
+          19289
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 24
+      },
+      "attempts": 3,
+      "max_frames": 200
+    },
+    {
+      "name": "wait-for-call-animation-release",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "game_status": {
+          "mask": 268435456,
+          "eq": 0
+        }
+      },
+      "max_frames": 750
+    },
+    {
+      "name": "original-doorway-alignment",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "x": {
+          "min": -2221,
+          "max": -2121
+        }
+      },
+      "action": {
+        "source_frames": [
+          19321,
+          19321
+        ],
+        "minimum_hold": 100
+      },
+      "max_frames": 200
+    },
+    {
+      "name": "original-up-through-doorway",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "z": {
+          "max": -10400
+        },
+        "evpanel_7858_door_phase": 2
+      },
+      "action": {
+        "source_frames": [
+          19290,
+          19320
+        ],
+        "minimum_hold": 600
+      },
+      "attempts": 1,
+      "max_frames": 850
+    },
+    {
+      "name": "align-original-selector-pose",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "x": {
+          "min": -4020,
+          "max": -3820
+        },
+        "z": {
+          "min": -11550,
+          "max": -11350
+        }
+      },
+      "action": {
+        "move_to": {
+          "x": -3919,
+          "z": -11451
+        }
+      },
+      "max_frames": 220
+    },
+    {
+      "name": "original-b1-selector-input",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "stage": "s03a"
+      },
+      "action": {
+        "source_frames": [
+          19468,
+          19468
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 450
+      },
+      "attempts": 1,
+      "max_frames": 1800
+    }
+  ]
+}

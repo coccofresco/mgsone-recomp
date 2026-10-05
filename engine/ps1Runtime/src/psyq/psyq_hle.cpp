@@ -144,6 +144,12 @@ static void traceRamSamplesAtFrameBoundary(recomp_context *ctx, int32_t mode,
 // host renderer briefly stalls and two master-clock ticks accumulate.
 //
 void hle_VSync(recomp_context *ctx) {
+  // Native SDK hardware polls (notably CD_cw) query VSync(-1) without any
+  // explicit BIOS drain. Expose a TAS rendezvous here too; the callback admits
+  // an already-due host edge, never advances time simply because it was
+  // queried.
+  if (g_cfg.clockWaitCheckpoint)
+    g_cfg.clockWaitCheckpoint(ctx);
   const int32_t mode = static_cast<int32_t>(ctx->r[A0]);
   auto &state = psyq_state();
   auto &counter = state.vsyncCounter;
@@ -184,7 +190,15 @@ void hle_VSync(recomp_context *ctx) {
           std::chrono::steady_clock::now() + std::chrono::seconds(1);
       while (counter.load(std::memory_order_acquire) < target &&
              std::chrono::steady_clock::now() < deadline) {
+        const auto checkpointStart = std::chrono::steady_clock::now();
+        if (g_cfg.clockWaitCheckpoint)
+          g_cfg.clockWaitCheckpoint(ctx);
         drainOnce();
+        // F10/checkpoint I/O can park either rendezvous for an arbitrary host
+        // duration. That pause must not turn a multi-VBlank wait into an early
+        // timeout, or the same input would replay differently after a pause.
+        if (g_cfg.clockWaitCheckpoint)
+          deadline += std::chrono::steady_clock::now() - checkpointStart;
         std::this_thread::sleep_for(std::chrono::microseconds(100));
       }
       const uint32_t completed = counter.load(std::memory_order_acquire);

@@ -1,0 +1,179 @@
+{
+  "format": "mgs-tas-route-1",
+  "source_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757",
+  "source_url": "https://tasvideos.org/3462S",
+  "description": "Original second Meryl Codec and route through the hangar security corridor to the canyon.",
+  "reference_evidence": {
+    "path": ".local/tas-reference/reference-ticks-prefix.tsv",
+    "sha256": "ccf28bdd27a67228093803b257fe4dc0e22271aafb1ca20cc937bd0094129574",
+    "frames": [
+      41070,
+      42738
+    ]
+  },
+  "steps": [
+    {
+      "name": "original-answer-meryl-door-call",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "until": {
+        "pause_level": 1
+      },
+      "action": {
+        "source_frames": [
+          41070,
+          41201
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 16
+      },
+      "attempts": 4,
+      "max_frames": 750
+    },
+    {
+      "name": "original-meryl-door-dialogue",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "until": {
+        "story": 64,
+        "pause_level": 0
+      },
+      "action": {
+        "source_frames": [
+          41311,
+          41320
+        ],
+        "minimum_hold": 6,
+        "minimum_release": 6
+      },
+      "attempts": 100,
+      "max_frames": 2600
+    },
+    {
+      "name": "wait-meryl-door-control-release",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "until": {
+        "game_status": {
+          "mask": 3691511808,
+          "eq": 0
+        },
+        "player_status": {
+          "mask": 536870912,
+          "eq": 0
+        }
+      },
+      "action": {
+        "sequence": "wait:8"
+      },
+      "attempts": 120,
+      "max_frames": 850
+    },
+    {
+      "name": "original-security-corridor-to-canyon",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "until": {
+        "stage": "s05a",
+        "control": {
+          "ne": 0
+        }
+      },
+      "action": {
+        "sampled_game_runs": [
+          [
+            4,
+            64,
+            0
+          ],
+          [
+            38,
+            96,
+            0
+          ],
+          [
+            4,
+            32,
+            0
+          ],
+          [
+            36,
+            48,
+            0
+          ],
+          [
+            55,
+            16,
+            0
+          ],
+          [
+            29,
+            0,
+            0
+          ],
+          [
+            12,
+            16,
+            0
+          ],
+          [
+            20,
+            0,
+            0
+          ],
+          [
+            47,
+            16,
+            0
+          ],
+          [
+            1,
+            16400,
+            0
+          ],
+          [
+            10,
+            16,
+            0
+          ],
+          [
+            9,
+            0,
+            0
+          ],
+          [
+            31,
+            16,
+            0
+          ],
+          [
+            41,
+            0,
+            0
+          ]
+        ]
+      },
+      "max_frames": 1900
+    }
+  ]
+}

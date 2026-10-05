@@ -1,6 +1,7 @@
 #include "runtime/games/mgs_decomp.h"
 #include "runtime/games/mgs_mesh_replay.h"
 #include "runtime/games/mgs_scene.h"
+#include "runtime/games/mgs_surface_effects.h"
 #include "runtime/memory.h"
 #include "runtime/metrics.h"
 #include <algorithm>
@@ -16,23 +17,6 @@ uint32_t u32(const uint8_t *p) {
 bool range(uint32_t p, uint64_t n) {
   p &= 0x1fffffffu;
   return p < Memory::RAM_SIZE && n <= Memory::RAM_SIZE - p;
-}
-bool cinematicBodyRig(const AssetCache &assets, const SceneInstance &instance) {
-  if (instance.pose.source != ScenePoseSource::Rotations ||
-      instance.pose.invalidInput || instance.primaryModels < 10 ||
-      instance.primaryModels > instance.models.size())
-    return false;
-  // Cinematic scenery also carries rotation arrays: the intro submarine is
-  // a 13-part rig with independent roots. A body needs a connected skeleton,
-  // not merely many animated parts. Original KMD parent indices establish it.
-  for (uint32_t bone = 0; bone < instance.primaryModels; ++bone) {
-    const auto source = assets.sourceModel(instance.models[bone].assetModel);
-    if (!source ||
-        (bone == 0 ? source->parent != -1
-                   : source->parent < 0 || uint32_t(source->parent) >= bone))
-      return false;
-  }
-  return true;
 }
 // optxtscn.c replaces its two placeholder PCXs with text assembled from the
 // EF71 font by DR_MOVE commands in CC22. The KMD surface is still immutable;
@@ -54,12 +38,12 @@ bool textScreenMaterial(const Memory &memory, uint16_t id, const uint8_t *tex,
          tex[8] == 0 && tex[9] == (id == 0xa91d ? 0 : 128) && tex[10] == 127 &&
          tex[11] == 69;
 }
-// DG_ShadeChanl's light model evaluated from original normals and the float
-// skeleton. No GTE, scratchpad, visibility test or native color saturation.
-std::optional<gpu::replay::Rgb8>
-shadeCorner(const AssetCache &assets, const Memory &memory,
-            const SceneSnapshot &scene, const SceneInstance &instance,
-            std::span<const uint32_t> owners, uint32_t model, uint32_t corner) {
+// Source normal transformed with the float pose. Lighting is evaluated only
+// after perspective interpolation in Vulkan, including at rigid parent seams.
+std::optional<std::array<float, 4>>
+normalCorner(const AssetCache &assets, const SceneInstance &instance,
+             std::span<const uint32_t> owners, uint32_t model,
+             uint32_t corner) {
   const uint32_t first = assets.word(AssetCache::Assets, instance.asset, 9);
   const auto *bytes = assets.bytes().data();
   for (size_t step = 0; step <= owners.size(); ++step) {
@@ -92,37 +76,37 @@ shadeCorner(const AssetCache &assets, const Memory &memory,
       normal &= 127u;
     if (normal >= source->normals)
       return {};
-    std::array<double, 3> worldNormal{}, illumination{}, color{};
+    std::array<double, 3> worldNormal{};
     const auto &world = instance.models[owners[model]].presentationWorld;
-    for (unsigned row = 0; row < 3; ++row)
-      for (unsigned axis = 0; axis < 3; ++axis)
-        worldNormal[row] +=
-            world[axis * 4 + row] *
-            (int16_t(u16(bytes + source->normalsByte + normal * 8 + axis * 2)) /
-             4096.0);
-    const auto *ram = memory.ramPtr();
-    const uint32_t lights =
-        u32(ram + ((instance.guestAddress + 52) & 0x1fffffffu));
-    if (!lights || !range(lights, 64))
+    // Inverse transpose, including non-uniform model scaling. The magnitude
+    // of 1/determinant cancels at normalization; its sign must be retained.
+    std::array<std::array<double, 3>, 3> cofactor{};
+    for (unsigned axis = 0; axis < 3; ++axis)
+      for (unsigned row = 0; row < 3; ++row)
+        cofactor[axis][row] =
+            double(world[((axis + 1) % 3) * 4 + (row + 1) % 3]) *
+                world[((axis + 2) % 3) * 4 + (row + 2) % 3] -
+            double(world[((axis + 1) % 3) * 4 + (row + 2) % 3]) *
+                world[((axis + 2) % 3) * 4 + (row + 1) % 3];
+    const double determinant = world[0] * cofactor[0][0] +
+                               world[1] * cofactor[0][1] +
+                               world[2] * cofactor[0][2];
+    if (!std::isfinite(determinant) || std::abs(determinant) < 1e-12)
       return {};
-    const auto *light = ram + (lights & 0x1fffffffu);
-    for (unsigned row = 0; row < 3; ++row) {
-      for (unsigned axis = 0; axis < 3; ++axis)
-        illumination[row] += int16_t(u16(light + (row * 3 + axis) * 2)) /
-                             4096.0 * worldNormal[axis];
-      illumination[row] = std::max(0.0, illumination[row]);
-    }
-    for (unsigned row = 0; row < 3; ++row) {
-      color[row] = instance.flags & 0x100u ? int32_t(u32(light + 20 + row * 4))
-                                           : scene.ambient[row];
-      for (unsigned axis = 0; axis < 3; ++axis)
-        color[row] += int16_t(u16(light + 32 + (row * 3 + axis) * 2)) / 16.0 *
-                      illumination[axis];
-    }
-    return gpu::replay::Rgb8{
-        uint8_t(std::clamp(std::lround(color[0]), 0l, 255l)),
-        uint8_t(std::clamp(std::lround(color[1]), 0l, 255l)),
-        uint8_t(std::clamp(std::lround(color[2]), 0l, 255l))};
+    for (unsigned axis = 0; axis < 3; ++axis)
+      for (unsigned row = 0; row < 3; ++row)
+        worldNormal[row] +=
+            cofactor[axis][row] *
+            int16_t(u16(bytes + source->normalsByte + normal * 8 + axis * 2)) *
+            (determinant < 0 ? -1.0 : 1.0);
+    const double length = std::sqrt(worldNormal[0] * worldNormal[0] +
+                                    worldNormal[1] * worldNormal[1] +
+                                    worldNormal[2] * worldNormal[2]);
+    if (!std::isfinite(length) || length < 1e-8)
+      return {};
+    return std::array<float, 4>{float(worldNormal[0] / length),
+                                float(worldNormal[1] / length),
+                                float(worldNormal[2] / length), 0};
   }
   return {};
 }
@@ -169,11 +153,20 @@ sourceMeshMaterial(const AssetCache &assets, const Memory &memory,
                                  : nullptr;
   uint16_t page = tex ? u16(tex + 4) : 0, clut = tex ? u16(tex + 6) : 0;
   gpu::replay::DrawPacket draw;
+  draw.surfaceEffect=surfaceEffectForObject(instance.guestAddress);
+  using SurfaceKind=gpu::replay::MgsSurfaceKind;
   draw.opcode = (u32(ptr(descriptor)) & 2) ? 0x3e : 0x3c;
   if (packetValid) {
     draw.opcode = ptr(nativePacket)[7];
     page = u16(ptr(nativePacket + 26));
     clut = u16(ptr(nativePacket + 14));
+  }
+  if(draw.surfaceEffect.kind==SurfaceKind::Camo &&
+     (!packetValid || ((page>>7)&3)!=2)) {
+    if(draw.surfaceEffect.parameters[2][2]!=0) {
+      draw.surfaceEffect.kind=SurfaceKind::Mirror;
+      draw.surfaceEffect.parameters[0][0]=float(SurfaceKind::Mirror);
+    } else draw.surfaceEffect={};
   }
   draw.textured = draw.gouraud = true;
   draw.rawTexture = (draw.opcode & 1) != 0;
@@ -189,7 +182,89 @@ sourceMeshMaterial(const AssetCache &assets, const Memory &memory,
   draw.state.blend.mode = gpu::replay::BlendMode((page >> 5) & 3);
   const uint32_t colors = u32(ptr(object + 68));
   const bool painted = colors && range(colors, uint64_t(source->faces) * 16);
-  const bool shaded = (instance.flags & 8u) && !specialMaterial;
+  const bool stageShaded = instance.stageLighting && !(source->flags & 4u);
+  const bool shaded = ((instance.flags & 8u) || stageShaded) &&
+                      !specialMaterial && !draw.rawTexture && draw.surfaceEffect.kind!=SurfaceKind::Shadow;
+  const bool opticalNormals=draw.surfaceEffect.kind==SurfaceKind::Environment ||
+                             draw.surfaceEffect.kind==SurfaceKind::Camo || draw.surfaceEffect.kind==SurfaceKind::Afterimage ||
+                             draw.surfaceEffect.kind==SurfaceKind::Energy;
+  draw.originalMesh.emplace();
+  auto &lighting = draw.originalMesh->lighting;
+  if (model >= owners.size() || owners[model] >= instance.models.size())
+    return {};
+  const auto &world = instance.models[owners[model]].presentationWorld;
+  if(draw.surfaceEffect.kind==SurfaceKind::Submarine) {
+    auto &p=draw.surfaceEffect.parameters;
+    const float cosine=p[2][0],sine=p[2][1];
+    // SubEfct projects local X after the authored Z rotation, at 1/8 scale.
+    // Express that projection in world space for continuous fragment UVs,
+    // without the original per-vertex byte truncation/wrap interpolation.
+    p[0][2]=128.f;
+    for(unsigned row=0;row<3;++row) {
+      p[2][row]=(cosine*world[row]-sine*world[4+row])*0.125f;
+      p[0][2]-=p[2][row]*world[12+row];
+    }
+  }
+  for (unsigned k = 0; k < 4; ++k) {
+    const auto index =
+        assets.bytes()[source->vertexIndicesByte + face * 4 + order[k]];
+    if (index >= source->vertices)
+      return {};
+    const auto *p =
+        assets.bytes().data() + source->positionsByte + index * 8;
+    for (unsigned row = 0; row < 3; ++row) {
+      lighting.positions[k][row] = world[12 + row];
+      for (unsigned axis = 0; axis < 3; ++axis)
+        lighting.positions[k][row] +=
+            world[axis * 4 + row] * int16_t(u16(p + axis * 2));
+    }
+  }
+  if (shaded) {
+    const uint32_t lights =
+        stageShaded ? 0x8009fad0 : u32(ptr(instance.guestAddress + 52));
+    if (!lights || !range(lights, 64))
+      return {};
+    const auto *light = ptr(lights);
+    for (unsigned row = 0; row < 3; ++row) {
+      lighting.ambient[row] = instance.flags & 0x100u
+                                  ? float(int32_t(u32(light + 20 + row * 4)))
+                                  : scene.ambient[row];
+      for (unsigned axis = 0; axis < 3; ++axis) {
+        lighting.directions[row][axis] =
+            int16_t(u16(light + (row * 3 + axis) * 2)) / 4096.f;
+        lighting.colors[row][axis] =
+            int16_t(u16(light + 32 + (row * 3 + axis) * 2)) / 16.f;
+      }
+    }
+    lighting.ambient[3] = 1;
+    if (stageShaded) {
+      // Stage geometry's old RGB array is DG_MakePreshade's output, not
+      // authored albedo. Recover the real .LIT sources instead of relighting
+      // those already illuminated colors or inheriting the two-light limit.
+      for (unsigned row = 0; row < 3; ++row) {
+        lighting.ambient[row] = scene.ambient[row];
+        lighting.directions[1][row] = lighting.directions[2][row] = 0;
+        lighting.colors[row][1] = lighting.colors[row][2] = 0;
+      }
+      // Conservative world AABB culling has no count cap. Every light whose
+      // authored influence can touch the face is evaluated per fragment.
+      for (const auto &light : instance.pointLights) {
+        bool touches = true;
+        for (unsigned axis = 0; axis < 3; ++axis) {
+          float low = lighting.positions[0][axis], high = low;
+          for (unsigned k = 1; k < 4; ++k) {
+            low = std::min(low, lighting.positions[k][axis]);
+            high = std::max(high, lighting.positions[k][axis]);
+          }
+          touches &= light.positionRadius[axis] + light.colorExtent[3] >= low &&
+                     light.positionRadius[axis] - light.colorExtent[3] <= high;
+        }
+        if (touches)
+          lighting.pointLights.push_back(light);
+      }
+      metrics::count("mgs.lighting.stage_per_pixel_faces");
+    }
+  }
   for (unsigned k = 0; k < 4; ++k) {
     auto &vertex = draw.vertices[k];
     const auto *uv =
@@ -198,13 +273,16 @@ sourceMeshMaterial(const AssetCache &assets, const Memory &memory,
     double v = tex ? double(uv[1]) * (uint32_t(tex[11]) + 1) / 256 + tex[9] : 0;
     // UV animation, IR and environment mapping are actor material inputs.
     // Ordinary materials keep the fractional coordinates from the source.
-    if (packetValid && (specialMaterial || !tex ||
+    if (packetValid && draw.surfaceEffect.kind!=SurfaceKind::Submarine && (specialMaterial || !tex ||
                         (uint32_t(std::floor(u)) & 255) !=
                             ptr(nativePacket + 12 + k * 12)[0] ||
                         (uint32_t(std::floor(v)) & 255) !=
                             ptr(nativePacket + 12 + k * 12)[1])) {
-      u = ptr(nativePacket + 12 + k * 12)[0];
-      v = ptr(nativePacket + 12 + k * 12)[1];
+      // Animation changes the integer tile/scroll phase. Preserve the
+      // fractional coordinates of the source format underneath that phase.
+      const auto *native=ptr(nativePacket + 12 + k * 12);
+      u = native[0] + (tex && !specialMaterial ? u-std::floor(u) : 0.0);
+      v = native[1] + (tex && !specialMaterial ? v-std::floor(v) : 0.0);
     }
     vertex.u = std::fmod(u, 256.0);
     vertex.v = std::fmod(v, 256.0);
@@ -212,39 +290,70 @@ sourceMeshMaterial(const AssetCache &assets, const Memory &memory,
                    : painted   ? u32(ptr(colors + (face * 4 + order[k]) * 4))
                                : 0x808080u;
     vertex.color = {uint8_t(rgb), uint8_t(rgb >> 8), uint8_t(rgb >> 16)};
-    if (shaded) {
-      const auto color = shadeCorner(assets, memory, scene, instance, owners,
-                                     model, face * 4 + order[k]);
-      if (!color)
+    if (shaded || opticalNormals) {
+      const auto normal =
+          normalCorner(assets, instance, owners, model, face * 4 + order[k]);
+      if (!normal)
         return {};
-      vertex.color = *color;
+      lighting.normals[k] = *normal;
+      if(opticalNormals && draw.surfaceEffect.kind!=SurfaceKind::Afterimage) {
+        for(unsigned row=0;row<3;++row) {
+          lighting.normals[k][row]=0;
+          for(unsigned axis=0;axis<3;++axis)
+            lighting.normals[k][row]+=scene.view[axis*4+row]*(*normal)[axis];
+        }
+      }
+      // Neutral albedo. Never bake or saturate illumination into vertex RGB.
+      if(shaded) vertex.color = {128, 128, 128};
     }
   }
-  draw.originalMesh.emplace();
-  // USA goggleir.c Act sets STATE_THERMG at 0x800adb3c. Cinematic actors are
-  // created without the gameplay IRTEXTURE flag. Give connected body rigs an
-  // authored warm response during demos; independently animated scenery is
-  // excluded even when it has a rotation array and many parts.
-  // This is an artistic rig classification, not simulated temperatures.
+  if(draw.surfaceEffect.kind==SurfaceKind::Shadow) {
+    std::array<float,4> bounds{1e9f,1e9f,-1e9f,-1e9f};
+    for(const auto &v:draw.vertices) {
+      bounds[0]=std::min(bounds[0],float(v.u));bounds[1]=std::min(bounds[1],float(v.v));
+      bounds[2]=std::max(bounds[2],float(v.u));bounds[3]=std::max(bounds[3],float(v.v));
+    }
+    draw.surfaceEffect.parameters[1]=bounds;
+  }
+  if(draw.surfaceEffect.kind==SurfaceKind::Afterimage)
+    for(unsigned axis=0;axis<3;++axis) draw.surfaceEffect.parameters[2][axis]=scene.view[axis*4+2];
+  // USA goggleir.c also sets STATE_THERMG when DMO uses it for a red grade.
+  // Only gameplay thermal mode receives the authored IR material response.
+  // A cinematic skeleton is not evidence of a hot body: retain its shading.
   const uint32_t gameStatus = u32(ptr(0x800adb3c));
-  draw.originalMesh->thermalEmission =
-      (gameStatus & 8u) &&
-      ((instance.flags & 0x200u) ||
-       ((gameStatus & 0x80000000u) && cinematicBodyRig(assets, instance)));
+  draw.originalMesh->thermalEmission = (gameStatus & 8u) &&
+                                       !(gameStatus & 0x80000000u) &&
+                                       (instance.flags & 0x200u);
   if (draw.originalMesh->thermalEmission)
     metrics::count("mgs.source.thermal_emissive_faces");
   draw.originalMesh->textureId = id;
+  if(draw.surfaceEffect.kind==SurfaceKind::Environment)
+    draw.originalMesh->textureId=uint32_t(draw.surfaceEffect.parameters[2][0]);
   draw.originalMesh->sourceTopology = draw.originalMesh->sourceRecovery = true;
   draw.originalMesh->runtimeTexture =
       textScreenMaterial(memory, id, tex, page, clut);
+  // Kogaku2 replaces each affected face's authored texture with the scene
+  // framebuffer. The live owner and Direct15 page were checked above, including
+  // the original reveal threshold and thermal exclusion. Declare that dynamic
+  // material before submitting the source mesh; it has no static PCX to bind.
+  if (draw.surfaceEffect.kind == SurfaceKind::Camo &&
+      draw.state.texturePage.depth == gpu::replay::TextureDepth::Direct15) {
+    draw.originalMesh->runtimeTexture = true;
+    metrics::count("mgs.source.camouflage_faces");
+  }
   if (id == 0 && page == 0 && clut == 0 &&
       std::all_of(draw.vertices.begin(), draw.vertices.begin() + 4,
                   [](const auto &v) {
                     return v.u >= 0 && v.u < 1 && v.v >= 0 && v.v < 1;
                   }))
     draw.originalMesh->runtimeTexture = true;
-  if (shaded)
+  if (shaded) {
     metrics::count("mgs.source.shaded_faces");
+    metrics::count("mgs.lighting.per_pixel_faces");
+  } else {
+    // PAINT colors are authored/baked material inputs, not live lighting.
+    metrics::count("mgs.lighting.authored_color_faces");
+  }
   return draw;
 }
 } // namespace ps1::games::mgs

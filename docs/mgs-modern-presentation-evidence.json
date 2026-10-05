@@ -1,0 +1,165 @@
+{
+  "date": "2026-10-04",
+  "kind": "modern_per_pixel_lighting_color_and_screen_effects",
+  "implementation": {
+    "animated_meshes": "Normali KMD dalla posa float, trasformate con inversa trasposta; interpolazione prospettica e luce nel fragment shader, senza RGB illuminato ai vertici.",
+    "stage_meshes": "StageObjs e MAP.lit autenticati nella RAM USA; luci puntiformi originali con posizione e attenuazione per pixel, tutte le sorgenti pertinenti senza limite di due luci. Tabelle condivise deduplicate.",
+    "color": "Luce e modulazione float, saturazione dopo albedo × illuminazione; attachment RGB8 (24 bit colore), nessun dithering PSX o nuova quantizzazione RGB555. Non è HDR/FP16.",
+    "new_effect_adapters": [
+      "ZoomBlur: shutter radiale continuo a dieci campioni",
+      "StunFlash: esposizione e diffusione ottica",
+      "AlertTint: tinta di esposizione con impulso originale",
+      "Furnace heat: turbolenza ascendente distinta dalla rifrazione subacquea tramite proprietario del volume"
+    ],
+    "native_state": "Letture della RAM e metadati separati per la presentazione; logica, tempi, palette, VRAM nativa e letture del framebuffer restano originali."
+  },
+  "runtime_sha256": "1ffe6db512c17025af8121a5ba74382132f1ee13bd21657b48f0adb39f87016d",
+  "source_sha256": {
+    "engine/ps1Runtime/include/runtime/games/mgs_scene.h": "06d9a8ea8f33c5cb3991deb70ab6422f1191dbf31fd1393aeb44610e9bc9992d",
+    "engine/ps1Runtime/include/runtime/games/mgs_screen_effects.h": "121a287651bb5e9370072641dd5ca1f5c818d7743483e1625da2c639927ccc69",
+    "engine/ps1Runtime/include/runtime/gpu/modern_replay.h": "c5d0120baabb61e1e21716bd6d1df1cb13c507d80878a192890101bd48f40d58",
+    "engine/ps1Runtime/include/runtime/gpu/modern_replay_vulkan_abi.h": "9cbdc94c417f7b5d83bf9c312a50b300924fc056803d5e131378d4db15f05af4",
+    "engine/ps1Runtime/include/runtime/gpu/modern_replay_vulkan_bake.h": "6f8c23ca0308524cc8d3814097c5c7c7d89bd3a0466cf41a96961381e5bbb334",
+    "engine/ps1Runtime/shaders/games/mgs_lighting.glsl": "f5c6522466a723926522cb6d8297216897d2023652e687e4e35ecf8006ea4d7a",
+    "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl": "d3c9cfd0223841d9cf464aa8d5e3c5cad89aa61b0aae4f8ac7318f82ac779456",
+    "engine/ps1Runtime/shaders/replay_precise.vert": "5bc81c640fe208782785a1a1f664940531c9fcd2ab53f83fc79e14df4ebb07ff",
+    "engine/ps1Runtime/shaders/replay_precise.frag": "9ea51b78de1e444f36362760acfc75678f02c2f5f3cd9531cc76b7247fb01edf",
+    "engine/ps1Runtime/shaders/replay_opaque_textured.frag": "bd74c0dc1c72a5f259cd05368ff5fa0ec00954e77ad6a40f3656b9a81dd3b35e",
+    "engine/ps1Runtime/shaders/replay_semi_textured.frag": "5938bfb5b35bdaef8dab50b35912cef2b2ef462239eee912ae93c07f16cd5ac9",
+    "engine/ps1Runtime/shaders/replay_visibility_owner.frag": "0d94c7d96339e58c1d2bd1bcffe8dd4123a6ab79a7adb65196b5a712646002c0",
+    "engine/ps1Runtime/shaders/replay_visibility_precise.vert": "92f877a5bceef510bd111398f8310ecbe2dc2dd4fff83c30ce55f85060c1b0ea",
+    "engine/ps1Runtime/shaders/replay_visibility_stack.frag": "d5f0e8972d96f830f48638c1ba59bfcc69f4622f24aa18dd2cc853ea9a620887",
+    "engine/ps1Runtime/src/games/mgs_mesh_replay.cpp": "8f2892198ba5c52b1d2531b7d2d7f105333512527123f8cff19e0657a658ce05",
+    "engine/ps1Runtime/src/games/mgs_scene.cpp": "b20152bbcc1526f6a8a1dc969af0c661000893f5962ffd346c31624a5ebb96fe",
+    "engine/ps1Runtime/src/games/mgs_source_material.cpp": "71b3c4def11c0aa5e2c393bf63d49a0de67ee45852204b5c6111f9f530774003",
+    "engine/ps1Runtime/src/games/mgs_screen_effects.cpp": "83b9267b8f9f7b62b20d7f7fa2fc1024615254e80ff7c322118b5d17654510b8",
+    "engine/ps1Runtime/src/gpu/modern_replay_vulkan_bake.cpp": "7bb3d9a9a49729b8c691e7697e70d4caec5a90f33e211f519b5f80eb390dd860",
+    "engine/ps1Runtime/src/gpu/renderer_vulkan.cpp": "70b52a244042ee3aa5b87cf4c41cf76a51a4e3ecc23f8225af0a6c7724398507",
+    "engine/ps1Test/runtime/test_mgs_asset_cache.cpp": "15bdc18f82b79cc11634d19477e1264bf4bd7ed1bdcbc024d83e667e9c95c825",
+    "engine/ps1Test/runtime/test_mgs_screen_effects.cpp": "84aebfef927fcd77b34eb68daf46fd0f7470f9e2944692c004985a16c3cdd884",
+    "engine/ps1Test/runtime/test_gpu_modern_replay.cpp": "9103f6e1edb2862c634e5a19bf9f405722ddd10a31e2430e8d68535d2d40f17f",
+    "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_bake.cpp": "87f3a8c44a911ffd195ddfea2a0cfea724da617cb3b4ce14bc02d70cb8b3c5fd",
+    "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp": "827213aa2b91bdbe55d9846f1cf9c8e1d89da03acc91937350272f4791532c33",
+    "scripts/mgs_effects_catalog.py": "46b41cf9a26cb9c6a981b29495ea34a48091aea5b82be1fdd2d43b07850e9bc8"
+  },
+  "tests": {
+    "passed": 329,
+    "suites": 25,
+    "skipped": 0,
+    "log": ".local/modern-presentation-tests-final.log",
+    "log_sha256": "91210655f13b57f56beb875458e43f9a12d0bdc3d1aaa44bf3dc4538e44c5a11",
+    "filter": "Mgs*:*Vulkan*:*ModernReplay*",
+    "environment": {
+      "PS1_RUN_VULKAN_INTEGRATION": "1",
+      "PS1_VULKAN_HIDDEN_WINDOW": "1",
+      "PS1_TEST_MGS_ASSET_CACHE": "data/presentation/usa-source/assets.mgsc",
+      "PS1_TEST_MGS_USA_EXE": "data/assets/usa/disc1/SLUS_005.94"
+    },
+    "test_binary_sha256": "32fb693bd032fdfacc5707745715ddf5c1b01480de4eb7f50eeeae0d706d5bdb",
+    "regressions": [
+      "Un quad con vertici ugualmente illuminati ha centro più luminoso: distingue luce per pixel da Gouraud.",
+      "Più di 32 gradazioni cromatiche; dithering nativo acceso/spento produce la stessa immagine Vulkan.",
+      "Percorsi opaco e semitrasparente con texel non-STP producono gli stessi colori.",
+      "Tre sorgenti puntiformi R/G/B simultanee, senza perdita della terza luce.",
+      "StageObjs/MAP con due mappe che condividono una tabella LIT: nessun raddoppio dell’energia, ripristino dei dati dopo cambio RAM.",
+      "VRAM nativa identica al raster originale; semantiche STP conservate.",
+      "Stun/allarme richiedono attori e TILE corretti; zoom richiede gruppo completo e ritaglio corretto.",
+      "Profilo fornace autenticato dal proprietario e dai parametri, non dal colore rosso.",
+      "Indirizzi USA di luci e tabelle provati contro istruzioni dell’eseguibile originale."
+    ]
+  },
+  "intro_checkpoint": {
+    "source": "data/native/effects-checkpoint/quick_slot_0.ps1s",
+    "source_sha256": "8f6785b4bc9b62fbe233fc1f07d39fda6b99fbd1593ba3d5b5aab1c1e8b145b6",
+    "run_json": "data/native/modern-lighting/run.json",
+    "run_json_sha256": "87f1a76af2c04f475c5928b458a22b9d1a9b42fac814f53069fc57b9814829a1",
+    "exit_code": 0,
+    "vblanks_after_load": 600,
+    "width": 3840,
+    "height": 2160,
+    "counts": {
+      "mgs.lighting.gpu_per_pixel_draws": 86207,
+      "mgs.lighting.per_pixel_faces": 269105,
+      "mgs.lighting.stage_per_pixel_faces": 56889,
+      "mgs.lighting.authored_color_faces": 15351,
+      "mgs.color.gpu_rgb8_draws": 99771,
+      "mgs.screen_effect.pass.cinematic_red_tint": 118,
+      "mgs.screen_effect.pass.fade_black": 30,
+      "mgs.screen_effect.pass.night_vision": 136,
+      "mgs.screen_effect.pass.water_view": 178,
+      "mgs.screen_effect.pass.zoom_blur": 39,
+      "mgs.screen_effect.incomplete_pass": 0,
+      "host.renderer.vulkan_replay_executor_downgrade": 0
+    },
+    "counter_note": "Un contatore assente vale zero: il runtime crea i contatori al primo evento. Draw presentati e passaggi ottici dipendono anche dal ritmo host; non sono conteggi di avanzamento del gameplay.",
+    "metrics": "data/native/modern-lighting/metrics.json",
+    "metrics_sha256": "9231ff2208ef2f9803e7697c924137ac826cbae5a898afb99c9c700571032133",
+    "captures": [
+      {
+        "path": "data/native/modern-lighting/gpu/frame-10140-present-4-ordinary-scanout.ppm",
+        "sha256": "a487d5156fbdd3489500a401c08a80ee22d045cc9da0c7788e8e8df7717ff7cf",
+        "width": 3840,
+        "height": 2160
+      },
+      {
+        "path": "data/native/modern-lighting/gpu/frame-9600-present-1-ordinary-scanout.ppm",
+        "sha256": "d0cc7b6bbb0820a15b1ddd7a32fbbdf6fa10cb990cb61417aac93025748c1bbf",
+        "width": 3840,
+        "height": 2160
+      },
+      {
+        "path": "data/native/modern-lighting/gpu/frame-9780-present-2-ordinary-scanout.ppm",
+        "sha256": "fe680b3fd5d72f9536770d6d2731625477b5b5bed31db38fb106b6d1bae177fd",
+        "width": 3840,
+        "height": 2160
+      },
+      {
+        "path": "data/native/modern-lighting/gpu/frame-9960-present-3-ordinary-scanout.ppm",
+        "sha256": "0f95a43b13e294e1c1231fc1557ca10dcb30b9c581361c7d455aae2a4bcf2033",
+        "width": 3840,
+        "height": 2160
+      }
+    ],
+    "visually_inspected": [
+      {
+        "path": "data/native/modern-lighting/intro-opening-4k.png",
+        "sha256": "6dea5d9fa4ccfe06468fe0d8eab1f7b3482a731bc0a699c451aff5a1dc79ae4b"
+      },
+      {
+        "path": "data/native/modern-lighting/intro-red-4k.png",
+        "sha256": "aeb32a427e3fe7e08d9667771f1c7ba369c1a3bd15d36711dc17a2a8933b46e1"
+      }
+    ],
+    "visual_note": "PNG ottenuti dai PPM senza alterare il rendering. Verificati sottomarino e dominante rossa dell’intro; non è una certificazione visiva di tutto il titolo."
+  },
+  "effect_coverage": {
+    "catalog": "docs/mgs-effects-catalog.json",
+    "index": "docs/mgs-effects-source-index.json",
+    "required": 60,
+    "renderer_status": {
+      "implemented": 11,
+      "missing": 44,
+      "partial": 5
+    },
+    "fully_scene_validated": 0,
+    "complete": false,
+    "audit_command": "python3 scripts/mgs_effects_catalog.py --check",
+    "audit_exit_code": 0,
+    "completeness_command": "python3 scripts/mgs_effects_catalog.py --check --require-complete",
+    "completeness_exit_code": 2,
+    "note": "Il controllo di completezza fallisce intenzionalmente: 11 adattatori implementati, 5 parziali e 44 mancanti; nessuna scheda è certificata per tutte le scene. Alcuni adattatori hanno prove GPU e/o evidenza reale dell’intro, altri soltanto fixture semantiche."
+  },
+  "protected_files": {
+    "savestates/quick_slot_0.ps1s": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+    "data/memory_cards/card1.mcd": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0",
+    "data/memory_cards/card2.mcd": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+  },
+  "limits": [
+    "I colori e la risoluzione già limitati nelle texture originali non acquistano dettaglio assente. I bit bassi delle palette PCX possono codificare STP e non vengono trattati come nuovi colori.",
+    "I materiali unlit o gli attori PAINT senza attribuzione verificata mantengono il colore originale; non si deduce una luce sconosciuta.",
+    "Le matrici di luce personalizzate degli attori sono valutate per pixel ma non tutte convertite in sorgenti puntiformi con posizione.",
+    "Il target è RGB8: niente HDR/FP16, illuminazione fisica o nuova gestione colore lineare certificata.",
+    "La copertura completa degli effetti rimane aperta, inclusi DOF, nebbia, mimetica, riflessi, particelle e composizioni dei boss.",
+    "Stun/allarme e fornace hanno test CPU/GPU specificati sopra; questa esecuzione dell’intro non prova i loro trigger in gameplay."
+  ]
+}

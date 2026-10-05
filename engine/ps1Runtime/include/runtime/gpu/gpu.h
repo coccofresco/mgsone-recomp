@@ -17,6 +17,7 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <mutex>
 #include <optional>
@@ -456,6 +457,14 @@ private:
   // registers above have been latched. This pointer is an identity token, not
   // a value-derived lookup key: empty VBlanks can share every revision.
   replay::CrashReplayFramePtr displayReplayFrame_;
+  struct PhotoPresentation {
+    DisplayState state;
+    replay::CrashReplayFramePtr frame;
+    std::vector<Color16> native;
+  };
+  // Preserve the shutter's exact latch when several VBlanks elapse before
+  // Vulkan presents. Consumed only by the replay-aware snapshot reader.
+  mutable std::deque<PhotoPresentation> photoPresentations_;
 
   // Mutex for snapshot buffer access
   mutable std::mutex displayMutex_;
@@ -738,7 +747,8 @@ private:
                             uint16_t clut, uint16_t tpage,
                             PGXPSemanticDecision semantic, uint8_t validMask,
                             bool textured, bool gouraud, bool rawTexture,
-                            bool blend);
+                            bool blend,
+                            std::vector<replay::DrawPacket> *collected = nullptr);
   bool shouldRasterizeNativePolygon(PGXPSemanticDecision semantic,
                                     bool replayCaptured) const;
   void markCapturedPolygonNativeWrite(const Vertex *vertices,

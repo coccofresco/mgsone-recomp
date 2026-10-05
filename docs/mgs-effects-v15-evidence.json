@@ -1,0 +1,891 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "scope": "Input-only retail USA C4 and Ninja optical camouflage scenario review. PSX reference is the native runtime framebuffer, not a new donor execution. No full-game or complete-scene certification.",
+  "previous_spatial_work": "docs/mgs-effects-v14-evidence.json",
+  "changes": [
+    "Read-only actor_<basename>_count predicates traverse all nine USA GV lists. Unknown or malformed lists never mean zero; unlinked stale allocations cannot satisfy a goal.",
+    "Adaptive recording completion is based on explicit route success. A completed route can finish before its frame safety budget; fixed-length recordings still cannot end early, and failed/missing routes fail.",
+    "Fixed a real Vulkan exception in the Ninja cinematic: a source KMD face with authenticated kogaku2 Direct15 scene sampling is declared as a runtime material before submission. The strict recorder remains unchanged; ordinary missing materials are not accepted.",
+    "Ninja native reveal thresholds and thermal exclusion retain ordinary materials on unaffected faces. No scene-wide color guess activates camouflage.",
+    "Restored the broad horizontal lens response of EQ_VisibleUnit2 (quarter contraction around the view centre), evaluated continuously inside the original animated mesh with the modern scene color and source normals. Tiny normal offsets alone made the original silhouette illegible."
+  ],
+  "implementation": [
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_source_material.cpp",
+      "sha256": "e8629a753e40b2d0385800be4b682a3f67f3dd10702172d9d238cc61bbb674d4"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+      "sha256": "20f6e1fb40dbcd071db3c68d5a5f51cb6ac0b702f7861af905c4593663217236"
+    },
+    {
+      "path": "engine/ps1Runtime/src/input/tas_route.cpp",
+      "sha256": "a444cdb35199d80944223c090529aac7a107f2778a226fafc3eaed402b34915b"
+    },
+    {
+      "path": "scripts/mgs_tas.py",
+      "sha256": "061886160e07cbf140da4314cb9df634c402ba03b429992a01aece354f147fdb"
+    },
+    {
+      "path": "scripts/mgs_tas_route.py",
+      "sha256": "98d5e11ce452d316cbc2989e289b38998862cc43c9cf363b1e4248203d75a94f"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_asset_cache.cpp",
+      "sha256": "e1dacdffcd0642a66389b501b59d36517f188ae9303e9341c77ce065cd3508cf"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_tas_route.cpp",
+      "sha256": "25b5910a6a156e18224f1b2fb36f34f8edcfda8333cec4ce69e15993ceba1f31"
+    },
+    {
+      "path": "scripts/tests/test_mgs_tas_route.py",
+      "sha256": "c2390ab7e95bf552934914e65aff5b1431aba50096de3b0e68a95bea58760b84"
+    },
+    {
+      "path": "scripts/tests/test_mgs_tas_completion.py",
+      "sha256": "14a290f918e95b0602d4854ec06c558e9cf291226727c4e758bf01153e912689"
+    }
+  ],
+  "source": [
+    {
+      "path": ".local/effects-research/mgs-upstream/source/weapon/bomb.c",
+      "sha256": "441bd64058517e0b928cfef77b31d61668963a988e04a73434894b9707ec3e40"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/bullet/bakudan.c",
+      "sha256": "1bc491a7f1e10883cb1482efb60ce96c9890892276fb80dbcb95b138001e0158"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/bullet/blast.c",
+      "sha256": "3a16bcb6317f80e71d2ebaa43694b1923725e614e5253f9b966c18ad605127f5"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/equip/kogaku2.c",
+      "sha256": "9cdc08141faad2bbba62bf3896d7ebfc1ee4701e556f8e5757e005ff1f251052"
+    }
+  ],
+  "recipes": [
+    {
+      "path": "scripts/fixtures/mgs-usa-s15a-c4-visual.route.json",
+      "sha256": "318b1ec1ff96e80aaf9b5c60194183000a360d7e5a258b3d77d8d014a0c2e768"
+    },
+    {
+      "path": "scripts/fixtures/mgs-usa-s08c-ninja-camouflage.route.json",
+      "sha256": "e53441398ced821eea21ab3e19b0ec8228133e4fff33077dc489ed2f154e705b"
+    }
+  ],
+  "retail_hazard_map": {
+    "path": ".local/effects-v15-s08c/c763.hzd.json",
+    "sha256": "b1397c42a0130f4434094951e186d169c0c589ec29b48d78bd3048e70822d6e0"
+  },
+  "validation": {
+    "cpp_passed": 386,
+    "cpp_suites": 29,
+    "cpp_skipped": 0,
+    "cpp_log": {
+      "path": ".local/effects-v15-complete-tests.log",
+      "sha256": "9d82bff394efeff77881e22e8375520c166ff9c7430d602f4c21d08fa624fd89"
+    },
+    "python_passed": 42,
+    "python_log": {
+      "path": ".local/effects-v15-python-final-tests.log",
+      "sha256": "3a17e895b6e461e6bc09dedf46c8d677962369890d77b7ea3be4c41ed1931285"
+    },
+    "new_regressions": [
+      "OpticalCamoSubmitsDynamicMaterialWithOriginalGeometry",
+      "EffectCountsFollowCompleteActorListsAndRejectStaleAllocations",
+      "ActorObservationNamesAreBoundedAndCannotReadArbitraryFields",
+      "RecordingExtentTests"
+    ],
+    "regression_scope": "Source-geometry submission and dynamic material, RAM/native VRAM identity, revealed faces, thermal mode, lost actor owner; complete actor lists, stale heap, cycles and invalid names; adaptive completion versus fixed-length recordings.",
+    "protected_saves": {
+      "path": ".local/tas-protected.sha256",
+      "sha256": "5414ea1b5bfa9556900c4c540bb0392f2dfe435caf980612e0f22a2f7ddfda8e"
+    }
+  },
+  "runtime": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "sha256": "8d7a681ca76d53adc7af15d7b06b3026624df62a4abedc09b9904f3eae786175"
+  },
+  "shaders": [
+    {
+      "path": "build/ps1Runtime/shaders/replay_copy_scratch.frag.spv",
+      "sha256": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_native_expand.frag.spv",
+      "sha256": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_opaque_textured.frag.spv",
+      "sha256": "50e48b5e0a71224f9cab6f3d7c14c6e36def4293aa4729bcfa1de5efa883f2a2"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_opaque_untextured.frag.spv",
+      "sha256": "31f22d1d179642c6acfc57d55ddc7ef696c420ec998129334a15020b905d33e7"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_precise.frag.spv",
+      "sha256": "9802d25e649cd0bc075d26153117db742e3418397701b4f8afd754e625a0e58a"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_precise.vert.spv",
+      "sha256": "e4bdb5ad46b968a59cf2ce824aec373dfb2f7b0c3331730c3a0f119dcd6c00b4"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_seed.frag.spv",
+      "sha256": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_semi_textured.frag.spv",
+      "sha256": "25a047b35d9efa4e425797a6062ac6875e8c1794f2d8163e7ee3f9ca495b9e84"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_owner.frag.spv",
+      "sha256": "ff93339ddaa8e3d94047a29f3d4fef5fb720000c7af1074cc6bc3923d7a5d513"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_precise.vert.spv",
+      "sha256": "82b30a4c0b1ea3cb0d4ceda857d29ce076d0fd3c18fe37b61b4d75524990025f"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_stack.frag.spv",
+      "sha256": "534f57f99f8bfccfc95e12ae40318a3bb1ad3ebc0894a97c14a0358ac0e84b62"
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "c4",
+      "recording": {
+        "path": "data/native/effects-v15-c4/manifest.json",
+        "sha256": "174349787d9b4122ac0ecd3fd06279abe7d72732cc2bdf4258a137ad6dc0c75c"
+      },
+      "movie": {
+        "path": "data/native/effects-v15-c4/movie.mgst",
+        "sha256": "b2b774cb99eb1762ba6431756b8edb40ff34795f2597b3eb0c78f772437f46de"
+      },
+      "result": {
+        "path": "data/native/effects-v15-c4-final/result.json",
+        "sha256": "698c1546c6f812db3f3dffe091238c28a0e253a2c106c323e1fd79355bdc9819"
+      },
+      "metrics": {
+        "path": "data/native/effects-v15-c4-final/metrics.json",
+        "sha256": "954002294d9079fa2e474c65c5990b3a9835d5d524b7b4cc4502e58a3d4788ab"
+      },
+      "trace": {
+        "path": "data/native/effects-v15-c4-final/effects.jsonl",
+        "sha256": "b94f1f609599beaff55177cbfb035d8eab75d493556d3409af739c550af5ca19"
+      },
+      "verified_vblanks": 447,
+      "native_frame_count": 57,
+      "native_frames_identical": [
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3208.ppm",
+          "sha256": "7d08251231ac61000b855cbc006f5470a4ab589bc84a835d8813c15a3df6c07f"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3216.ppm",
+          "sha256": "0f436496419c7f34fd93654d242ede04366f10b0fcf873260dd5bf82e41b9aa7"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3224.ppm",
+          "sha256": "0f436496419c7f34fd93654d242ede04366f10b0fcf873260dd5bf82e41b9aa7"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3232.ppm",
+          "sha256": "0f436496419c7f34fd93654d242ede04366f10b0fcf873260dd5bf82e41b9aa7"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3240.ppm",
+          "sha256": "0e91b0dcdfe97865bcc4bb95ca5dbd9b9f3f0442035976d9dc1196511c1f005a"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3248.ppm",
+          "sha256": "5b8d3c1019efa6e4f6457d2168f0a8829eabdda4984eba12e36a857556d3345b"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3256.ppm",
+          "sha256": "8826bccf264beb3983b88deb38476686d046b3f0323844ab9bdfc6da16ad8b75"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3264.ppm",
+          "sha256": "8826bccf264beb3983b88deb38476686d046b3f0323844ab9bdfc6da16ad8b75"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3272.ppm",
+          "sha256": "a262769d7dc113f8ad60a56d087c572c022df61402ecc16885fa7c050340fcb4"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3280.ppm",
+          "sha256": "19c3bea1da1565fa8a3a32430a4ab6036aa7af47f301f04eae3feb2878f2ff42"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3288.ppm",
+          "sha256": "c6b772fe34c610ff97e647e8b4a97438be7b23875a8f88aca8d0da9c44b13311"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3296.ppm",
+          "sha256": "c6b772fe34c610ff97e647e8b4a97438be7b23875a8f88aca8d0da9c44b13311"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3304.ppm",
+          "sha256": "485ec658641b3c3e2d23c2c58fc2f1d6d877d4ab9d90e6caf2557f89539a2a95"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3312.ppm",
+          "sha256": "d81bd8ad337b244f5e4013beefd0c4d2bd28300eef4c9a52b8872c524b19cb00"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3320.ppm",
+          "sha256": "a486cb45fbfd8b01c133ca4459ca0bdbd998e828f02f8d313194b0072ea57b1f"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3328.ppm",
+          "sha256": "da432028dee19c96edea3427d68b7ba20f6390fafeff6ee6ae12c6a4bf53af64"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3336.ppm",
+          "sha256": "8cce1f55caf22f298e1dfdb8296d6a0f1354615ed6efcdb6fff94e2e67839bf1"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3344.ppm",
+          "sha256": "31c901d662a56ce2bba916278d5c80d431ae1d659085b3f43e2f1e647baa70a1"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3352.ppm",
+          "sha256": "25f119cd31ed475a74858654093bacada5b733f1d7279652ccf4b2ccd6d83f9d"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3360.ppm",
+          "sha256": "60995e2709ca9f7843d4337f09f3253d9514efd6e35b61b29b0d83c942b4534d"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3368.ppm",
+          "sha256": "3efec17517a78b45d8c0be0dc061f17260bc2fa034a5c43365c19dc3f8d7eb97"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3376.ppm",
+          "sha256": "d174ae2d0c997f3a21162563132a2ea7ff579cfed89b43a31167bc2cead5d03d"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3384.ppm",
+          "sha256": "4fc803212e71ff7e64aaff899fea661ccaf339809159f0fb478cec8ad99e621a"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3392.ppm",
+          "sha256": "80c7f8dd254bc7957840d046cdd1826ffa13419bd97a506781982d71ef3ecbc5"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3400.ppm",
+          "sha256": "0f81ea1fef266896216ef624a196d8edc2e1faa35b422c3bd99991f2948a553d"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3408.ppm",
+          "sha256": "94936004c0e1932219e2ac66e41c314ae84d2de9386df107f4048cdd236276c5"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3416.ppm",
+          "sha256": "da4ae86db335f415f23135e5acacc16fdd7f9fbcbc7a40c6b8385ed29a2f33a0"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3424.ppm",
+          "sha256": "9c596f481025c780e553914ed6a8d808f1b0d8af8c7c871524dca078566a141f"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3432.ppm",
+          "sha256": "f89bb80d75c0e8c54f83712821ff561abaea148a7ec8211af6b30f0b32ad5b75"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3440.ppm",
+          "sha256": "8315923c2c571b8b99c8370731f04ec8d10ca878f987f50cb7382cb6fa58c3a6"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3448.ppm",
+          "sha256": "fc3bd1b4ca396bc61c1176d88cf2b9165f5bb305dec364669748635f7320cef7"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3456.ppm",
+          "sha256": "17a1ec43838ebf08098bbfbf203d5f028eeda9a293476a731bd8ef4063edd2e4"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3464.ppm",
+          "sha256": "7729a7b98c424874e8b91ef3ac6bc9922179552a3b93da1c1092c6e5e56ca7b0"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3472.ppm",
+          "sha256": "2c765fb3125b4279d3891a801189008e390afb503f5cd9e13e06c796e4f08af8"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3480.ppm",
+          "sha256": "a5192d3ccb8d2c21b4ca662382768bbcc70a91213a03b4b97bac258242742762"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3488.ppm",
+          "sha256": "25cee09b4023a3e6921f94d68d70a0d22e08a7cec95ebdb566132ead74cdb701"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3496.ppm",
+          "sha256": "46937c29fccb4574044375dd87c93e202e4fb6331fd26b847699d9daf21b4957"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3504.ppm",
+          "sha256": "ff7e6db3287549c09eb5c94d5d9b629bc91ddbaad8902a09d804331f4239d413"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3512.ppm",
+          "sha256": "eff99c268b451f9ce529ad77b1e165853d74e002819a49e9f9690bb2b80f7ff9"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3520.ppm",
+          "sha256": "15686c08906b4c0208ea823900ee1e8a0f875d7d8038fc723fb5c0b6345f877a"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3528.ppm",
+          "sha256": "4291b5767716d974ec66e925bb4a40858368997da92654dbd95569f89ae43c2f"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3536.ppm",
+          "sha256": "435d933097bc0b41562fa5549510e374809dc77c99c2b61f4a211b56cee6d0b1"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3544.ppm",
+          "sha256": "740a15ad0bd6e10cf3a02c0a46da907b669606374803414d15915ce7e119d152"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3552.ppm",
+          "sha256": "db095fe95f3747de280fd47adde0c603228a394f0f7dd4fbb949951135617fde"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3560.ppm",
+          "sha256": "51a54326181b4105a9a4bbcfde7dfdee894a36f348cdca8fbaeb9f21551fc53d"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3568.ppm",
+          "sha256": "b2a3f34136cbdc3c16f2a2591f5cd748a10153ce54c145966f1a6aef49baffd9"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3576.ppm",
+          "sha256": "6a8fb5bdbac88b70fd0a4fd0884d1439755e78e48b6b5a08d45f4bcf28d179c3"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3584.ppm",
+          "sha256": "a9699360f62b9a9567391ba7605684b4b68a412afc99a6a2b6e83ec96811b204"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3592.ppm",
+          "sha256": "168cc924d4a162a3ae90850fbdf83a7fe64c4c51902c5c17988d5aaf8cf5ee6e"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3600.ppm",
+          "sha256": "f5d7fc4fcf97dfcea8ac4e6f788da7b74f88318d7dff86b6fdd21eb8ee07c39e"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3608.ppm",
+          "sha256": "d20543f93f42d0256701fa448fcf86e000abd751ec690587d7632415e17a264d"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3616.ppm",
+          "sha256": "7d7d1ac04f31dd48799b63326d34089951eace2a90443b6f9f5d983be28da7be"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3624.ppm",
+          "sha256": "897426cd549ff69cd15214ede6f73dff4a06ca8e77910cfa25d562f3513e676a"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3632.ppm",
+          "sha256": "948f8873a63232321eca2f78e5eb24e20ffe5372206d7b7a1934d7df5931354a"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3640.ppm",
+          "sha256": "d8a8bf2f6d2cdd496aa85f53967cb631b7a01b445fd4f907ebd625ec59b92718"
+        },
+        {
+          "path": "data/native/effects-v15-c4-final/native/frame-3648.ppm",
+          "sha256": "821ee479d4992ae31d3ae2ca886d02d237bf71f6010fdbdf227e1f945a068e5b"
+        }
+      ],
+      "final_ram_identical": {
+        "path": "data/native/effects-v15-c4-final/final-ram.bin",
+        "sha256": "01e65ad468d7c14fab7b7e7d5ceb62400ee89a3847072b27f688ee986deb18ca"
+      },
+      "game_state": {
+        "stage": "s15a",
+        "player_position": [
+          2609,
+          1012,
+          -2066
+        ],
+        "game_status": 0,
+        "load_request": 0,
+        "player_status": 0,
+        "alert_mode": 0,
+        "alert_level": 0,
+        "pause_level": 0,
+        "control": 2148910872,
+        "difficulty": 1,
+        "disc": 2,
+        "life": 467,
+        "max_life": 768,
+        "weapon": 6,
+        "item": 8,
+        "stance": 0,
+        "weapons": [
+          192,
+          351,
+          33,
+          17,
+          16,
+          -1,
+          12,
+          8,
+          13,
+          31
+        ],
+        "items": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          0,
+          0,
+          4,
+          1,
+          7,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          0
+        ],
+        "control_position": [
+          2609,
+          1012,
+          -2066
+        ]
+      },
+      "game_errors": [],
+      "interpreter_counters": {},
+      "executor_downgrades": 0,
+      "downgrade_reasons": {},
+      "source_camouflage_faces": 0,
+      "gpu_camouflage_draws": 0,
+      "route_log": [
+        "[Route] action select-c4 vblank=3203 elapsed=1 attempts=1 stage=s15a difficulty=1 game_over_timer=0 life=467 pause_level=0 stance=0 story=219 weapon=2 x=2873 y=1072 z=-5852",
+        "[Route] satisfied select-c4 vblank=3341 elapsed=138 attempts=1 stage=s15a difficulty=1 game_over_timer=0 life=467 pause_level=0 stance=0 story=219 weapon=6 x=2873 y=1025 z=-5852",
+        "[Route] action plant-one-c4 vblank=3342 elapsed=1 attempts=1 stage=s15a actor_bakudan_count=0 difficulty=1 game_over_timer=0 gcl_1180002e=13 life=467 stance=0 story=219 x=2873 y=1012 z=-5852",
+        "[Route] satisfied plant-one-c4 vblank=3380 elapsed=38 attempts=1 stage=s15a actor_bakudan_count=1 difficulty=1 game_over_timer=0 gcl_1180002e=12 life=467 stance=0 story=219 x=2873 y=521 z=-5852",
+        "[Route] move retreat-outside-blast vblank=3381 elapsed=1 attempts=1 stage=s15a actor_bakudan_count=1 difficulty=1 game_over_timer=0 life=467 stance=0 story=219 x=2873 y=521 z=-5852",
+        "[Route] satisfied retreat-outside-blast vblank=3480 elapsed=99 attempts=1 stage=s15a actor_bakudan_count=1 difficulty=1 game_over_timer=0 life=467 stance=0 story=219 x=3067 y=1079 z=-2757",
+        "[Route] action detonate-original-actor vblank=3481 elapsed=1 attempts=1 stage=s15a actor_blast_count=0 difficulty=1 game_over_timer=0 life=467 stance=0 story=219 x=3067 y=1079 z=-2757",
+        "[Route] satisfied detonate-original-actor vblank=3498 elapsed=17 attempts=1 stage=s15a actor_blast_count=1 difficulty=1 game_over_timer=0 life=467 stance=0 story=219 x=2687 y=1049 z=-2142",
+        "[Route] satisfied blast-finished vblank=3649 elapsed=150 attempts=0 stage=s15a actor_bakudan_count=0 actor_blast_count=0 difficulty=1 game_over_timer=0 gcl_1180002e=12 life=467 pause_level=0 stance=0 story=219 x=2609 y=1012 z=-2066",
+        "[Route] status: complete "
+      ]
+    },
+    {
+      "name": "ninja",
+      "recording": {
+        "path": "data/native/effects-v15-ninja-final/manifest.json",
+        "sha256": "14eaeb8446d9e564a22831bc9ab366c013b8ee67a088600418f34251db20c32d"
+      },
+      "movie": {
+        "path": "data/native/effects-v15-ninja-final/movie.mgst",
+        "sha256": "d5a1f0cbc3d9e72a4bc0b8e736cbf292fa2e2277a584fe7df16a67b1f7b6f63d"
+      },
+      "result": {
+        "path": "data/native/effects-v15-ninja-lens/result.json",
+        "sha256": "637f61bf21a9acaf50dfbc1ab38feb1329b2ca033130eed1c6c3b3261b680504"
+      },
+      "metrics": {
+        "path": "data/native/effects-v15-ninja-lens/metrics.json",
+        "sha256": "80bf375a091d486d4704ed028f4903d3c211bd1393f1bee4210a954b1083583a"
+      },
+      "trace": {
+        "path": "data/native/effects-v15-ninja-lens/effects.jsonl",
+        "sha256": "99f465b8bce33034b82fa08be5de72a4dd952fa9842f57b69d7f33e5881d7235"
+      },
+      "verified_vblanks": 1375,
+      "native_frame_count": 58,
+      "native_frames_identical": [
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2112.ppm",
+          "sha256": "492ecba9dc137db4cf6ad874d382827730118961316208b66ba0e8d717ac8b0f"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2136.ppm",
+          "sha256": "f960eac2cdd266ad4e455fb912d35936d9b8c3a5dd01cfe45b5a62dad07031e8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2160.ppm",
+          "sha256": "57ebd4f0c6bb6ad594bbe36632438bc60ebf1461b1f360324a7d9d1a0eb0f375"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2184.ppm",
+          "sha256": "fb7ef465994d0b8e13a379806c5ca741479260a1622928f068a6ff4fac0760ab"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2208.ppm",
+          "sha256": "33e432d6b7341226036f6c59625f7b7cdc516d3adba99c95471e9f43e61b6327"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2232.ppm",
+          "sha256": "61f29881f300e2ba098f21b22daf12be8cb9ae8c680bcd5554cc909b00935562"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2256.ppm",
+          "sha256": "925894ab8146f29b0039cf660f9c9e9366245291ffe2978ed5b77c82d8307ed0"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2280.ppm",
+          "sha256": "d6836fb02a6ef545708e5a3c8fcfabfd502986d2e4ea4e0276efe28d23300ed4"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2304.ppm",
+          "sha256": "bc7a5693df9e31010d57235c4d8374f3c7b09dd084876361c7bacd8158523b08"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2328.ppm",
+          "sha256": "a319fdbe73ab79dab65ff43202835b53d10caffc80d261163633502840998816"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2352.ppm",
+          "sha256": "4d0f1256112b21568ce9daca69011968675eadb8b96afdf8937d26274b434672"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2376.ppm",
+          "sha256": "15428e41dc15a5f0c2adbd364f3fd7d1c2f4e602dbde9afd9b956be22aa556d8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2400.ppm",
+          "sha256": "15428e41dc15a5f0c2adbd364f3fd7d1c2f4e602dbde9afd9b956be22aa556d8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2424.ppm",
+          "sha256": "15428e41dc15a5f0c2adbd364f3fd7d1c2f4e602dbde9afd9b956be22aa556d8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2448.ppm",
+          "sha256": "15428e41dc15a5f0c2adbd364f3fd7d1c2f4e602dbde9afd9b956be22aa556d8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2472.ppm",
+          "sha256": "15428e41dc15a5f0c2adbd364f3fd7d1c2f4e602dbde9afd9b956be22aa556d8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2496.ppm",
+          "sha256": "15428e41dc15a5f0c2adbd364f3fd7d1c2f4e602dbde9afd9b956be22aa556d8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2520.ppm",
+          "sha256": "15428e41dc15a5f0c2adbd364f3fd7d1c2f4e602dbde9afd9b956be22aa556d8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2544.ppm",
+          "sha256": "15428e41dc15a5f0c2adbd364f3fd7d1c2f4e602dbde9afd9b956be22aa556d8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2568.ppm",
+          "sha256": "15428e41dc15a5f0c2adbd364f3fd7d1c2f4e602dbde9afd9b956be22aa556d8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2592.ppm",
+          "sha256": "15428e41dc15a5f0c2adbd364f3fd7d1c2f4e602dbde9afd9b956be22aa556d8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2616.ppm",
+          "sha256": "15428e41dc15a5f0c2adbd364f3fd7d1c2f4e602dbde9afd9b956be22aa556d8"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2640.ppm",
+          "sha256": "dad3ff25bf92bdb9e460539f7aaf5e92fefed7bb5187be70ab9ca1fcd304db59"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2664.ppm",
+          "sha256": "db69ef7feb546ab985a15858d603cc0c9d08173ef8a6a4a229c2328eebff806c"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2688.ppm",
+          "sha256": "97b1aa1d3f63c135ecfb0ca2ecd804bf4639a028330cb937e88519390e730e14"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2712.ppm",
+          "sha256": "fe051377b0a4af4cda7cf4000753149ebd862f92aa9ab2c9e011ff3f90fc3072"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2736.ppm",
+          "sha256": "9a5fff02bae3c89e55637ef67c8fb425ba364beda9694c5538970da056a37aa4"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2760.ppm",
+          "sha256": "a78c751c3f55893470a78ce24542dab8c325822ccd454b357fffab0ca182cb52"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2784.ppm",
+          "sha256": "18877182a6d71f853c4f793954930ca8ffd73c77ac5067f2ea085ad380a4edc1"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2808.ppm",
+          "sha256": "efc18248ec6fbac32ededd4b440e75d07aeddee17d1a2b78fb00b4e4f287b1aa"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2832.ppm",
+          "sha256": "0c2166659eb791e033d9c46119c6b38c943c4c7395bb78e0f021ae31241e297f"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2856.ppm",
+          "sha256": "c72cfc11eab3121d0aa60a93e534edac47762f78a58a5be0fadd6aefa0b07a1e"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2880.ppm",
+          "sha256": "fad582d5c7e6be4f4e68c7297d468979227921111c1c65fd25c01159d8c6d029"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2904.ppm",
+          "sha256": "3df687b0cd619d206e1ff57d517e8cae9c38524df77a001a40ae678d0c62b5d4"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2928.ppm",
+          "sha256": "ad06a1f8f48758cb7d1cd2282a551476c0ed107d47c08ee9ac942709fe2878f1"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2952.ppm",
+          "sha256": "38bfb4f875fa7fa828af60c25d323eb551ddc9d5eb3e25c231d65f762ebaf878"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-2976.ppm",
+          "sha256": "ecc773ae2ace2553ccbf7e8f4127a022f0b6281e57cccf8ffd38e8a4a50fcd6d"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3000.ppm",
+          "sha256": "3aedb4204c6827e8251c078a2c1f192a2e849e8d3ceb0f4ac65a8a90d08bc617"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3024.ppm",
+          "sha256": "c94d76bc93188925a0c68c3847142bce053911435a56df40b72701b4dc7cfe48"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3048.ppm",
+          "sha256": "1ebd8fcd59da73dcba0b5fbfddd66449688bb1dcfd2544b7bee3c0fbeb1f18d0"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3072.ppm",
+          "sha256": "75793c160feb2284cebd1d3d4c329d22f2edea79b5e2636b850003ef216dda13"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3096.ppm",
+          "sha256": "d805053cf8f4017e40d7e04de0e61f036d3c0432423c806442c4bdb20d7786df"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3120.ppm",
+          "sha256": "226c155c59ed1b12ddbb00a5c866f9034b4e799264fd1c5eb3ff72fc80b7a056"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3144.ppm",
+          "sha256": "88299cd886bd8bb89ad933e827b7982fb86d963ddb1e4569df8b19530b860440"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3168.ppm",
+          "sha256": "9aed648dd064477061e020f132b9e9a8ae604553f83113cdb1060d2311b15389"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3192.ppm",
+          "sha256": "8a593145c76e3fbf7d6669eb6e8ab41fee282a3aef9bb0b801e9219ddb437953"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3216.ppm",
+          "sha256": "9d4643d5a0e328a3c05ec614642cb4c618ab50283418a3a5009ae877cf8aafc0"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3240.ppm",
+          "sha256": "ffc79131accebe0c2a817f430867c17a5a059b9d11da828739115477678d81d9"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3264.ppm",
+          "sha256": "e05c1c85a411893876088df582113eb39f271408a583da8a77de2a9ab896868a"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3288.ppm",
+          "sha256": "1b9bd6fd6ce3563bdce797deeb1d50cfe70db3553a293caef261ed5a6f28d9ef"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3312.ppm",
+          "sha256": "6c14a8105b2b86fb5cbe1fbb8ae82e6458adcc2ee9b12411caefab5cc3d58dee"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3336.ppm",
+          "sha256": "97933f27e3b23b2099653b5dfc3c9ad52f6625609d1b753382fe2f77dae8a6e5"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3360.ppm",
+          "sha256": "5b74a95bb0b2b10d9bd131c77f86384b9e29c66641ad51f5cce7fd5dd7984a0d"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3384.ppm",
+          "sha256": "763ecce6b44619357982b8d14fe05132d9fd151c93ab95081bc545e2dbce6fbc"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3408.ppm",
+          "sha256": "5af0a969ee7fa6d6119bef47dab28b6860f2ee14276b3f97d0c7043ae9784406"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3432.ppm",
+          "sha256": "99c736624f36bb2d704c11e5f2fb5025ab0e497318a9e86ac279105cc423924a"
+        },
+        {
+          "path": "data/native/effects-v15-ninja-lens/native/frame-3456.ppm",
+          "sha256": "0d135e4d72be05c3ad918f5706bb8b4df4b04a5c8f232ada58cbbef62ca0682c"
+        }
+      ],
+      "final_ram_identical": {
+        "path": "data/native/effects-v15-ninja-lens/final-ram.bin",
+        "sha256": "67f93f3ad3c39d51bf5492f48da54982d1dcd7425fb698826b46d852363a9478"
+      },
+      "game_state": {
+        "stage": "s08c",
+        "player_position": [
+          -9500,
+          0,
+          6000
+        ],
+        "game_status": 2147483680,
+        "load_request": 0,
+        "player_status": 0,
+        "alert_mode": 0,
+        "alert_level": 0,
+        "pause_level": 0,
+        "control": 0,
+        "difficulty": 1,
+        "disc": 1,
+        "life": 384,
+        "max_life": 384,
+        "weapon": 0,
+        "item": 17,
+        "stance": 0,
+        "weapons": [
+          24,
+          151,
+          9,
+          11,
+          -1,
+          -1,
+          6,
+          7,
+          5,
+          -1
+        ],
+        "items": [
+          1,
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          3,
+          -1,
+          -1,
+          -1,
+          3,
+          -1,
+          1,
+          1,
+          -1,
+          -1,
+          -1
+        ]
+      },
+      "game_errors": [],
+      "interpreter_counters": {},
+      "executor_downgrades": 7,
+      "downgrade_reasons": {
+        "host.renderer.vulkan_replay_bake_reject.incomplete_precision_provenance": 7
+      },
+      "source_camouflage_faces": 75164,
+      "gpu_camouflage_draws": 16222,
+      "route_log": [
+        "[Route] move south-corridor vblank=2100 elapsed=1 attempts=1 stage=s08c difficulty=1 game_over_timer=0 life=384 stance=0 story=75 x=2750 y=1016 z=-6500",
+        "[Route] satisfied south-corridor vblank=2133 elapsed=33 attempts=1 stage=s08c difficulty=1 game_over_timer=0 life=384 stance=0 story=75 x=2625 y=1044 z=-7697",
+        "[Route] move cross-below-corridor vblank=2134 elapsed=1 attempts=1 stage=s08c difficulty=1 game_over_timer=0 life=384 stance=0 story=75 x=2625 y=1044 z=-7697",
+        "[Route] satisfied cross-below-corridor vblank=2241 elapsed=107 attempts=1 stage=s08c difficulty=1 game_over_timer=0 life=384 stance=0 story=75 x=-2680 y=1064 z=-7835",
+        "[Route] move trigger-laboratory-cinematic vblank=2242 elapsed=1 attempts=1 stage=s08c difficulty=1 game_over_timer=0 life=384 stance=0 story=75 x=-2680 y=1064 z=-7835",
+        "[Route] satisfied trigger-laboratory-cinematic vblank=2571 elapsed=329 attempts=1 stage=s08c difficulty=1 game_over_timer=0 life=384 stance=0 story=76 x=-9500 y=0 z=6000",
+        "[Route] satisfied live-optical-camouflage vblank=2854 elapsed=282 attempts=0 stage=s08c actor_kogaku2_count=1 difficulty=1 game_over_timer=0 life=384 stance=0 story=76 x=-9500 y=0 z=6000",
+        "[Route] satisfied original-camouflage-ends vblank=3474 elapsed=619 attempts=0 stage=s08c actor_kogaku2_count=0 difficulty=1 game_over_timer=0 life=384 stance=0 story=76 x=-9500 y=0 z=6000",
+        "[Route] status: complete "
+      ]
+    }
+  ],
+  "c4_spatial": {
+    "drawn_phases": 23,
+    "all_source_geometry": true,
+    "all_source_artwork": true,
+    "radius_range": [
+      500,
+      2330
+    ],
+    "original_raise_retained_as_metadata": 2000,
+    "all_seven_captures_byte_identical_after_camo_fix": true,
+    "observed": "Blast remains between the containers with light on adjacent scene surfaces; consumes one C4, original blast actor appears/disappears, life stays 467."
+  },
+  "ninja": {
+    "trigger": "mv_s08b in retail s08c HZD starts story 75->76 while the current stage name remains s08c. Observe original kogaku2 creation and destruction instead of waiting for a premature stage switch.",
+    "active_actor_gate_vblank": 2854,
+    "inactive_actor_gate_vblank": 3474,
+    "observed": "Broader scene refraction follows the original animated silhouette and disappears on the original reveal. Final RAM and all native reference images match the input recording.",
+    "initial_vulkan_failure": {
+      "path": "data/native/effects-v15-ninja-vulkan/result.json",
+      "sha256": "78273780036744b7ec6d6f8c51b42f9b44ac975f7b8b98fcc789ddacec5f30e9"
+    },
+    "failure": "Presentation draw requires original source geometry and material at movie frame 757. Missing runtimeTexture declaration for authenticated camouflage source faces.",
+    "intermediate_visual_issue": "Material fix alone rendered the Ninja almost invisible. The final shader restores the authored wide lens response rather than inventing a colored opaque outline."
+  },
+  "gallery": {
+    "path": "data/presentation/effects-review-20261005-v15/index.html",
+    "manifest": {
+      "path": "data/presentation/effects-review-20261005-v15/manifest.json",
+      "sha256": "c0b7493c79d32d1b1ff1346b9b4fd062353fd4fba10aed35d7283416f55b0877"
+    },
+    "pairs": 17,
+    "resolution": [
+      3840,
+      2160
+    ],
+    "sampling_vblanks": {
+      "c4": 8,
+      "ninja": 24
+    }
+  },
+  "limitations": [
+    "Ninja route still reports seven Vulkan preparation rejections (incomplete_precision_provenance); complete source presentation across the whole transition is NOT certified. These must be localized before that claim.",
+    "C4 and one Ninja reveal do not certify missiles, custom boss blastoff geometry, equipped Snake stealth or all later Ninja phases.",
+    "Furnace fall and red-alert scene reviews remain open. Furnace actor/bounds exist in s13a; CHARA_REDALERT is registered in s08a. NewRedAlert2 also drives neutral environment flashes (e.g. s11g), so the constructor name alone is not evidence of a red alarm.",
+    "C4 volume and lighting retain the V14 visible-depth limitations. Camouflage lens follows a visual contract, not physical light transport.",
+    "Gallery playback is sampled at 7.5 images/s for C4 and 2.5 images/s for Ninja, not a renderer performance measurement."
+  ]
+}

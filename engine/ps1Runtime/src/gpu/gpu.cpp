@@ -4,6 +4,7 @@
 #include "runtime/games/mgs_mesh_replay.h"
 #include "runtime/games/mgs_profile.h"
 #include "runtime/games/mgs_screen_effects.h"
+#include "runtime/games/mgs_surface_effects.h"
 #include "runtime/gpu/display_geometry.h"
 #include "runtime/memory.h"
 #include "runtime/metrics.h"
@@ -282,6 +283,9 @@ void GPU::configureEnhancedPresentation(uint32_t scale, bool trueColor,
 
 void GPU::configureReplay(ReplayConfig config) {
   std::lock_guard<std::recursive_mutex> timelineLock(gpuTimelineMutex_);
+  {
+    std::lock_guard lock(displayMutex_);photoPresentations_.clear();
+  }
   config.internalScale = std::max(config.internalScale, 1u);
   replayRecorder_.configure(config);
   activeReplayPacketSequence_ = replay::UNASSIGNED_PACKET_SEQUENCE;
@@ -310,6 +314,9 @@ void GPU::clearDepthBuffer() {
 void GPU::reset() { resetState(true); }
 
 void GPU::resetState(bool clearVideoMemory) {
+  {
+    std::lock_guard lock(displayMutex_);photoPresentations_.clear();
+  }
   ++mutationSerial_;
   // A GP1 reset can interrupt the data phase of GP0(A0). Preserve every
   // source pixel already accepted by native VRAM before resetting either
@@ -538,6 +545,9 @@ GPU::GuestState GPU::guestState() const {
 
 void GPU::loadGuestState(const GuestState &state) {
   std::lock_guard<std::recursive_mutex> timelineLock(gpuTimelineMutex_);
+  {
+    std::lock_guard lock(displayMutex_);photoPresentations_.clear();
+  }
   replaySourceMeshCommand_ = UINT32_MAX;
   ++mutationSerial_;
   gpuStat_ = state.gpuStat;
@@ -642,7 +652,15 @@ void GPU::snapshotDisplayBuffer(uint64_t latchFrame) {
     replayLatch.display.pal = (gpuStat_ & (1u << 20)) != 0;
     replayLatch.display.interlaced = (gpuStat_ & (1u << 22)) != 0;
     replayLatch.display.oddField = (gpuStat_ & (1u << 31)) != 0;
+    replayLatch.mgsPhotoCapture=games::mgs::consumePhotoCaptureEvent();
     displayReplayFrame_ = replayRecorder_.sealAndPublish(replayLatch);
+    if(replayLatch.mgsPhotoCapture) {
+      if(photoPresentations_.size()==8) {
+        photoPresentations_.pop_front();
+        metrics::count("mgs.effects.photo.unpresented_queue_overflow");
+      }
+      photoPresentations_.push_back({displaySnapshot_,displayReplayFrame_,displayVram_});
+    }
   }
 
   int displayWidth = 320;
@@ -1022,6 +1040,12 @@ GPU::DisplayCopyStatus GPU::copyDisplayVRAMIfChanged(
     std::vector<Color16> &destination, uint64_t knownContentRevision,
     DisplayState *state, replay::CrashReplayFramePtr *replayFrame) const {
   std::lock_guard<std::mutex> lock(displayMutex_);
+  if(replayFrame && !photoPresentations_.empty()) {
+    auto photo=std::move(photoPresentations_.front());photoPresentations_.pop_front();
+    if(state) *state=photo.state;
+    *replayFrame=std::move(photo.frame);destination=std::move(photo.native);
+    return DisplayCopyStatus::Copied;
+  }
   if (state != nullptr)
     *state = displaySnapshot_;
   if (replayFrame != nullptr)
@@ -3189,7 +3213,8 @@ bool GPU::capturePolygonPacket(const Vertex *vertices,
                                std::size_t vertexCount, uint16_t clut,
                                uint16_t tpage, PGXPSemanticDecision semantic,
                                uint8_t validMask, bool textured, bool gouraud,
-                               bool rawTexture, bool blend) {
+                               bool rawTexture, bool blend,
+                               std::vector<replay::DrawPacket> *collected) {
   if (!replayRecorder_.enabled() || vertices == nullptr || colors == nullptr ||
       vertexCount < 3 || vertexCount > 4 ||
       activeReplayPacketSequence_ == replay::UNASSIGNED_PACKET_SEQUENCE)
@@ -3523,7 +3548,11 @@ bool GPU::capturePolygonPacket(const Vertex *vertices,
   games::mgs::bindScreenEffect(packet, commandSourceQueue_.empty()
                                            ? UINT32_MAX
                                            : commandSourceQueue_.front());
-  replayRecorder_.recordDraw(std::move(packet), replayNativeVram());
+  if(collected) collected->push_back(std::move(packet));
+  else {
+    games::mgs::bindInterfaceGeometry(packet,commandSourceQueue_.empty() ? UINT32_MAX : commandSourceQueue_.front());
+    replayRecorder_.recordDraw(std::move(packet), replayNativeVram());
+  }
   return true;
 }
 
@@ -4906,6 +4935,9 @@ void GPU::executeLine() {
   // have authenticated signed projections. CPU Bresenham remains untouched.
   // A polyline or an unproven endpoint retains atomic native PaintPixels.
   const std::size_t lastWord = gouraud ? 3u : 2u;
+  const bool sourceLine = replayRecorder_.enabled() && !polyline &&
+      vertexCount==2u && !commandSourceQueue_.empty() &&
+      games::mgs::hasSourceSurfaceGeometry(commandSourceQueue_.front());
   bool projectedLine = replayRecorder_.enabled() &&
                        replayRecorder_.config().pgxp && !polyline &&
                        (opcode & 0xecu) == 0x40u && vertexCount == 2u;
@@ -4930,6 +4962,7 @@ void GPU::executeLine() {
         resolved[0].projectionContext == resolved[1].projectionContext &&
         resolved[0].nearDepth == resolved[1].nearDepth;
   }
+  projectedLine |= sourceLine;
   bool projectedLineCaptured = false;
   if (projectedLine) {
     const Vertex a = decodeVertex(1u, PGXPSemanticDecision{});
@@ -4968,6 +5001,49 @@ void GPU::executeLine() {
         PGXPSemanticDecision{}, 0x0fu, false, gouraud, false, blend);
     if (projectedLineCaptured)
       metrics::count("host.gpu.projected_line_captured");
+  }
+  if(!projectedLineCaptured && games::mgs::active() && replayRecorder_.enabled() && vertexCount>=2) {
+    std::vector<replay::DrawPacket> ribbons;
+    for(size_t segment=0;segment+1<vertexCount;++segment) {
+      const size_t w0=gouraud ? segment*2+1 : segment+1;
+      const size_t w1=gouraud ? (segment+1)*2+1 : segment+2;
+      const auto decode=[&](size_t word) {
+        return Vertex{decodeSigned11(commandQueue_[word])+drawOffsetX_,
+                      decodeSigned11(commandQueue_[word]>>16)+drawOffsetY_};
+      };
+      const Vertex a=decode(w0),b=decode(w1);
+      // Preserve the native oversized-line rejection and endpoint convention.
+      if(std::abs(b.x-a.x)>=1024 || std::abs(b.y-a.y)>=512) continue;
+      const double dx=b.x-a.x,dy=b.y-a.y,length=std::hypot(dx,dy);
+      const double tx=length>0 ? dx/length : 1,ty=length>0 ? dy/length : 0;
+      std::array<Vertex,4> corners{a,a,b,b};
+      std::array<Color24,4> colors{};
+      std::array<std::array<double,2>,4> xy{};
+      for(unsigned k=0;k<4;++k) {
+        const double end=k<2 ? -0.5 : 0.5,side=k&1 ? 0.5 : -0.5;
+        xy[k]={corners[k].x+0.5+end*tx-side*ty,corners[k].y+0.5+end*ty+side*tx};
+        corners[k].x=int(std::lround(xy[k][0]));corners[k].y=int(std::lround(xy[k][1]));
+        const uint32_t rgb=commandQueue_[gouraud ? (segment+(k>=2))*2 : 0];
+        colors[k]={uint8_t(rgb),uint8_t(rgb>>8),uint8_t(rgb>>16)};
+      }
+      if(!capturePolygonPacket(corners.data(),nullptr,colors.data(),4,0,currentTexpage_,
+          PGXPSemanticDecision::intrinsicScreen2D(),0,false,gouraud,false,blend,&ribbons)) break;
+      auto &packet=ribbons.back();
+      for(unsigned k=0;k<4;++k) {
+        auto &v=packet.vertices[k];
+        // screen2DPresentationX owns aspect/recentering; apply only the
+        // fractional ribbon correction after that shared transform.
+        const double scale=games::crash3::horizontalProjectionScale();
+        v.x+= (xy[k][0]-corners[k].x)*scale;
+        v.y=xy[k][1];
+      }
+      games::mgs::bindInterfaceGeometry(packet,commandSourceQueue_.empty() ? UINT32_MAX : commandSourceQueue_.front());
+    }
+    if(!ribbons.empty()) {
+      metrics::count("mgs.presentation.vector_line_segments",ribbons.size());
+      replayRecorder_.recordScreenLineGroup(std::move(ribbons));
+      projectedLineCaptured=true;
+    }
   }
   for (std::size_t vertexIndex = 0; !projectedLine && vertexIndex < vertexCount;
        ++vertexIndex) {

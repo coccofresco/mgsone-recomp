@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "scope": "Correct spatial composition of the input-driven s15a grenade scenario following user review. Native reference is the runtime PSX framebuffer, not a new donor run.",
+  "supersedes": {
+    "evidence": "docs/mgs-effects-v13-evidence.json",
+    "portion": "Explosion ordering-depth shortcut and its full-silhouette validation. Flashbang lens fix remains valid.",
+    "reason": "Larger bright coverage did not prove correct occlusion. Treating raise=2000 as physical depth made the fireball appear pasted over the panel."
+  },
+  "source": [
+    {
+      "path": ".local/effects-research/mgs-upstream/source/bullet/blast.c",
+      "sha256": "3a16bcb6317f80e71d2ebaa43694b1923725e614e5253f9b966c18ad605127f5"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/anime/animconv/anime.c",
+      "sha256": "a1ed8d98bbb9e655aa2b95ff69711169516dcf873236bfce56858c151e916d09"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/libdg/prim.c",
+      "sha256": "04d4728b5a213c6b60cafefc9f4fae88b62bea263bb60cd061f2c4d8e391a3f1"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/libdg/sort.c",
+      "sha256": "029134ad0a22f52ee7ab6d317818940611593c362c2e870a0b8292970b82806e"
+    }
+  ],
+  "live_layout": {
+    "path": ".local/effects-v14-grenade-layout.json",
+    "sha256": "80bd27ce813c469eada820ec4f6da8f538b767d9ea053d8acb082cbd4dad4d56"
+  },
+  "observed_emitter": {
+    "world_position": [
+      2865,
+      100,
+      -8750
+    ],
+    "rectangle_at_vblank_3128": [
+      1700,
+      1700,
+      3400,
+      3400
+    ],
+    "ordering_raise": 2000,
+    "note": "Read from the original anime.c actor and blast.c target; presentation does not move either."
+  },
+  "implementation": [
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+      "sha256": "cfdebff8a1171ea46451ea8ab4fb7cb92f8212a1f7f2f39876282fbaa78ad8ee"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+      "sha256": "2f7367742db88491d079590d3257f07bb3d16ba50276dac0a37393135db6c63a"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_surface_effects.cpp",
+      "sha256": "e6ac1bbb7600f8a61e10cc82df84040b552cde83e5931afdff76e6e336503bba"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp",
+      "sha256": "7a5fe04fbf3dddb2fa71e106e841d296086f1ef7e463fec7aebf64c167d81a1c"
+    }
+  ],
+  "behavior": [
+    "Authenticated centered DG rectangles supply live half-extents. The host retains raise as metadata but does not use it to move blast depth.",
+    "Source unit-quad transforms provide center and extents in camera space; analytic perspective ray/ellipsoid intersection determines the visible path before the scene surface. The atlas still controls shape, palette, phase and fade.",
+    "Dense emissive response varies continuously with visible path length. Foreground geometry fully outside the volume blocks it. A surface crossing the volume leaves a partial plume.",
+    "One existing scene-color/depth snapshot supplies a restrained material-modulated local light, gated by surface orientation and distance. No extra pass, copy or ray marching.",
+    "Non-centered/invalid/camera allocations do not invent a radius. Missing source geometry uses conservative plane/orthographic volume handling; generic ordering offsets cannot punch an explosion through a wall."
+  ],
+  "runtime": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "sha256": "3694472efc0307136b77a5442aac31da132678551727dc0277449a79b6dcf467"
+  },
+  "shaders": [
+    {
+      "path": "build/ps1Runtime/shaders/replay_copy_scratch.frag.spv",
+      "sha256": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_native_expand.frag.spv",
+      "sha256": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_opaque_textured.frag.spv",
+      "sha256": "69a20aa4ef0dd6b650434e428f5d60770882a5e18d581b8c81a02aa9d99e754e"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_opaque_untextured.frag.spv",
+      "sha256": "763311851dd0f2e913e822b03087e379ee102aeedb036ca1a8d65cb493559b37"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_precise.frag.spv",
+      "sha256": "5547aa3830d6cfdda66de2a239073fadef1499558643014e1efa4a9ccbf04cbe"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_precise.vert.spv",
+      "sha256": "e4bdb5ad46b968a59cf2ce824aec373dfb2f7b0c3331730c3a0f119dcd6c00b4"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_seed.frag.spv",
+      "sha256": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_semi_textured.frag.spv",
+      "sha256": "0163a5f694fec41904342a45b6efafb60ab6041f5afafb6936f8ede87c07e487"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_owner.frag.spv",
+      "sha256": "ff93339ddaa8e3d94047a29f3d4fef5fb720000c7af1074cc6bc3923d7a5d513"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_precise.vert.spv",
+      "sha256": "82b30a4c0b1ea3cb0d4ceda857d29ce076d0fd3c18fe37b61b4d75524990025f"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_stack.frag.spv",
+      "sha256": "534f57f99f8bfccfc95e12ae40318a3bb1ad3ebc0894a97c14a0358ac0e84b62"
+    }
+  ],
+  "validation": {
+    "tests_passed": 367,
+    "suites": 28,
+    "test_log": {
+      "path": ".local/effects-v14-final-tests.log",
+      "sha256": "336bbda3fcc6ebfefaacf7e965de8e61164f3c1b4a7f5e8c151d490c4a8aa8ef"
+    },
+    "regressions": [
+      "ExplosionVolumeUsesLiveCenteredExtentNotOrderingOffset",
+      "OptInExplosionVolumeOccludesAgainstGeometryWithoutOrderingBypass"
+    ],
+    "gpu_cases": "Foreground wall, surface through center, background wall, partial front cap, zero raise, missing radius behind/in front of wall; native VRAM compared in each case.",
+    "replay_vblanks": 120,
+    "native_frame_count": 16,
+    "native_frames_identical": [
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-0.ppm",
+        "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3088.ppm",
+        "sha256": "57d0cd1f8097797a0b8ef2f36c2ad46e876d03c1602c8d437f6d2f21543f641f"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3096.ppm",
+        "sha256": "87c0db01c3c3a7ff54a370903a7522ed5550338eff5699d1f2f5fc74cbd86039"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3104.ppm",
+        "sha256": "70dfde630df9159ec3a70e57e19a57a71887ac51559c29d527481b0d1c3c38a2"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3112.ppm",
+        "sha256": "4c162136ac22ddef24e1de21c3d4e240a80c18e5b4602c25a57ffecd5d8f14f9"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3120.ppm",
+        "sha256": "0d91b29871cb03aa65f502a28239af919a85523038a1a145de0fe938f27a2f16"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3128.ppm",
+        "sha256": "4fa0517b927a49d766c8dbefa08e2b49cecb5a7f03b92589e7fa89170a0422c8"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3136.ppm",
+        "sha256": "20bfc511d970a91662ad85b75f06bf465c25520ad6c9c00a9216d0428b4a14d7"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3144.ppm",
+        "sha256": "a947d180380c93ef1d827b1d8dee6c9a025d80752089bc69905864d3dff04f83"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3152.ppm",
+        "sha256": "7b9164cbbfba40ffd08405e63835263bb9782336502b652f2272a0844e400b4e"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3160.ppm",
+        "sha256": "22a82c9ed91ffd7f3ea909928eeda280f36ce5e699b08d35b9c0f1fd1c841edd"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3168.ppm",
+        "sha256": "8ac3fbb75eef3a136da295f24fe198c64e1f97d91280d743b313843bc53daafd"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3176.ppm",
+        "sha256": "6086349bf2685730fe50d9db29283594613a333957dedc7bf1e986a96d694a99"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3184.ppm",
+        "sha256": "92567e8a94e7be02b51c4b469b2197444d3c6948e01bf15579b19723d44e5e73"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3192.ppm",
+        "sha256": "4edbb8ec738af3c81092e0035b94730730f3f64f644ad45d11d22f73872df500"
+      },
+      {
+        "path": "data/native/effects-v14-grenade-spatial/native/frame-3200.ppm",
+        "sha256": "803cc515837d173ec2a38000d96ba17430dd7578a7a699d34f14e881da38ce6b"
+      }
+    ],
+    "final_ram_identical": {
+      "path": "data/native/effects-v14-grenade-spatial/final-ram.bin",
+      "sha256": "59c92ec603948c52e669a306602c23937ecdaa9bc0ea8e4eaf575afcd98326e0"
+    },
+    "unmodified_modern_frames_outside_blast": [
+      3112,
+      3120,
+      3176
+    ],
+    "protected_saves": {
+      "path": ".local/tas-protected.sha256",
+      "sha256": "5414ea1b5bfa9556900c4c540bb0392f2dfe435caf980612e0f22a2f7ddfda8e"
+    }
+  },
+  "run": {
+    "path": "data/native/effects-v14-grenade-spatial",
+    "result": {
+      "path": "data/native/effects-v14-grenade-spatial/result.json",
+      "sha256": "ceb04741bae28a4cee8972b71b53a240aa4ee17758e9d34ef7e375260f3b0c31"
+    },
+    "metrics": {
+      "path": "data/native/effects-v14-grenade-spatial/metrics.json",
+      "sha256": "1c44e3021c6484d24d72f88ced7e2d757f79cd6eafc96b8bdf6292aea1ac6d28"
+    },
+    "trace": {
+      "path": "data/native/effects-v14-grenade-spatial/explosion.jsonl",
+      "sha256": "8b0c2cf1915eb5f19c90e991574906920734254c426b77a59fda557bdb16078a"
+    },
+    "game_errors": [],
+    "interpreter_counters": {},
+    "executor_downgrades": 0
+  },
+  "live_provenance": {
+    "drawn_phases": 23,
+    "all_source_geometry": true,
+    "all_source_artwork": true,
+    "live_radius_min": 500,
+    "live_radius_max": 2330
+  },
+  "gallery": {
+    "path": "data/presentation/effects-review-20261005-v14/index.html",
+    "manifest": {
+      "path": "data/presentation/effects-review-20261005-v14/manifest.json",
+      "sha256": "7b1966fca9a89312f55a72cb0506f7042912c265864a6293ba026c40ba612342"
+    },
+    "sample_interval_vblanks": 8
+  },
+  "limitations": [
+    "Ellipsoidal presentation volume with authored artwork, not a fluid simulation.",
+    "Only this retail grenade scene was visually reviewed; C4/Stinger/Nikita, boss explosions and other placements still need their scene checks.",
+    "The surface light uses the visible depth buffer; off-screen occluders and secondary light bounces are not reconstructed.",
+    "Native and modern particle projections differ; bright-area coverage is not accepted as a spatial correctness criterion."
+  ]
+}

@@ -1,0 +1,275 @@
+{
+  "format": "mgs-tas-route-1",
+  "source_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757",
+  "source_url": "https://tasvideos.org/3462S",
+  "description": "USA Normal checkpoint after the Meryl cut-in: adapt source shooting and movement macros; collect ammunition on depletion; stop only when the original GCL story flag confirms victory (29). Input only; timing and repetition are adapted from the Extreme reference.",
+  "steps": [
+    {
+      "name": "await-next-attackers",
+      "guard": {
+        "stage": "s03d",
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "guards_in_room": {
+          "min": 1
+        },
+        "game_status": 0
+      },
+      "max_frames": 600
+    },
+    {
+      "name": "engage-next-wave",
+      "guard": {
+        "stage": "s03d",
+        "life": {
+          "min": 1
+        }
+      },
+      "when": {
+        "guards_in_room": {
+          "min": 1
+        },
+        "game_status": 0,
+        "socom_ammo": {
+          "min": 1
+        }
+      },
+      "until": {
+        "guards_in_room": 0
+      },
+      "abort_when": {
+        "socom_ammo": 0,
+        "guards_in_room": {
+          "min": 1
+        }
+      },
+      "action": {
+        "source_frames": [
+          26865,
+          26866
+        ],
+        "minimum_hold": 18,
+        "settle_frames": 4
+      },
+      "attempts": 14,
+      "max_frames": 600
+    },
+    {
+      "name": "collect-second-ammunition",
+      "guard": {
+        "stage": "s03d",
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "socom_ammo": {
+          "min": 12
+        }
+      },
+      "action": {
+        "source_frames": [
+          25676,
+          25678
+        ],
+        "minimum_hold": 30,
+        "settle_frames": 4
+      },
+      "max_frames": 80
+    },
+    {
+      "name": "face-incoming-guards",
+      "guard": {
+        "stage": "s03d",
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "x": {
+          "max": 7450
+        }
+      },
+      "action": {
+        "source_frames": [
+          26922,
+          26985
+        ]
+      },
+      "max_frames": 100
+    },
+    {
+      "name": "await-third-group",
+      "guard": {
+        "stage": "s03d",
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "guards_in_room": {
+          "min": 1
+        },
+        "game_status": 0
+      },
+      "max_frames": 900
+    },
+    {
+      "name": "raise-and-fire",
+      "guard": {
+        "stage": "s03d",
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "socom_ammo": {
+          "max": 16
+        }
+      },
+      "action": {
+        "source_frames": [
+          26696,
+          26713
+        ],
+        "settle_frames": 4
+      },
+      "attempts": 2,
+      "max_frames": 80
+    },
+    {
+      "name": "source-rapid-fire",
+      "guard": {
+        "stage": "s03d",
+        "life": {
+          "min": 1
+        }
+      },
+      "when": {
+        "game_status": 0,
+        "guards_in_room": {
+          "min": 1
+        },
+        "socom_ammo": {
+          "min": 1
+        }
+      },
+      "until": {
+        "guards_in_room": 0
+      },
+      "abort_when": {
+        "socom_ammo": 0,
+        "guards_in_room": {
+          "min": 1
+        }
+      },
+      "action": {
+        "source_frames": [
+          26865,
+          26868
+        ],
+        "minimum_hold": 4,
+        "minimum_release": 4
+      },
+      "attempts": 24,
+      "max_frames": 600
+    },
+    {
+      "name": "use-ammunition-before-collecting-drop",
+      "guard": {
+        "stage": "s03d",
+        "life": {
+          "min": 1
+        }
+      },
+      "when": {
+        "guards_in_room": {
+          "min": 1
+        },
+        "game_status": 0,
+        "socom_ammo": {
+          "min": 1
+        }
+      },
+      "until": {
+        "socom_ammo": 0
+      },
+      "action": {
+        "source_frames": [
+          26865,
+          26868
+        ],
+        "minimum_hold": 4,
+        "minimum_release": 4
+      },
+      "attempts": 32,
+      "max_frames": 900
+    },
+    {
+      "name": "recover-dropped-ammunition",
+      "guard": {
+        "stage": "s03d",
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "socom_ammo": {
+          "min": 12
+        }
+      },
+      "action": {
+        "source_frames": [
+          27084,
+          27130
+        ],
+        "settle_frames": 4
+      },
+      "attempts": 1,
+      "max_frames": 100
+    },
+    {
+      "name": "finish-prison-ambush",
+      "guard": {
+        "stage": "s03d",
+        "life": {
+          "min": 1
+        }
+      },
+      "when": {
+        "guards_in_room": {
+          "min": 1
+        },
+        "game_status": 0,
+        "socom_ammo": {
+          "min": 1
+        }
+      },
+      "until": {
+        "story": {
+          "min": 29
+        }
+      },
+      "abort_when": {
+        "socom_ammo": 0,
+        "guards_alive": {
+          "min": 1
+        }
+      },
+      "action": {
+        "source_frames": [
+          26865,
+          26868
+        ],
+        "minimum_hold": 4,
+        "minimum_release": 4
+      },
+      "attempts": 100,
+      "max_frames": 3600
+    }
+  ],
+  "entry_checkpoint": "data/tas/campaign/prison-ambush-meryl-01"
+}

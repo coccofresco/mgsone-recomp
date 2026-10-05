@@ -53,6 +53,14 @@ struct alignas(16) DrawUniforms {
   std::array<int32_t, 4> mgsTextureOrigin{};
   std::array<uint32_t, 8> mgsPalette{};
   std::array<std::array<float, 4>, 4> mgsWeights{};
+  std::array<std::array<float, 4>, 4> mgsNormals{};
+  std::array<std::array<float, 4>, 3> mgsLightDirections{};
+  std::array<std::array<float, 4>, 3> mgsLightColors{};
+  std::array<float, 4> mgsAmbient{};
+  std::array<std::array<float, 4>, 4> mgsWorldPositions{};
+  std::array<uint32_t, 4>
+      mgsPointLights{}; // word offset, count; upload-relative
+  std::array<std::array<float, 4>, 4> mgsSurfaceEffect{};
 };
 
 // Binding offsets for replay_precise.vert:
@@ -342,7 +350,14 @@ struct alignas(16) VisibilityStackRecord {
 static_assert(std::is_standard_layout_v<DrawUniforms>);
 static_assert(std::is_trivially_copyable_v<DrawUniforms>);
 static_assert(alignof(DrawUniforms) == 16);
-static_assert(sizeof(DrawUniforms) == 448);
+static_assert(sizeof(DrawUniforms) == 768);
+static_assert(offsetof(DrawUniforms, mgsSurfaceEffect) == 704);
+static_assert(offsetof(DrawUniforms, mgsWorldPositions) == 624);
+static_assert(offsetof(DrawUniforms, mgsPointLights) == 688);
+static_assert(offsetof(DrawUniforms, mgsNormals) == 448);
+static_assert(offsetof(DrawUniforms, mgsLightDirections) == 512);
+static_assert(offsetof(DrawUniforms, mgsLightColors) == 560);
+static_assert(offsetof(DrawUniforms, mgsAmbient) == 608);
 static_assert(offsetof(DrawUniforms, mgsViewRows) == 96);
 static_assert(offsetof(DrawUniforms, mgsPointBytes) == 288);
 static_assert(offsetof(DrawUniforms, mgsProjection) == 304);

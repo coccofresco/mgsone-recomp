@@ -505,6 +505,26 @@ void CrashReplayRecorder::recordNoOp(uint8_t opcode) {
   markPacketRecorded(opcode);
 }
 
+void CrashReplayRecorder::recordScreenLineGroup(std::vector<DrawPacket> packets) {
+  requireEnabled();
+  if(!surfaceSeeded_ || cpuUpload_.active || packets.empty())
+    throw std::invalid_argument("screen line group requires an idle seeded timeline");
+  const uint8_t opcode=packets.front().opcode;
+  for(const auto &p:packets)
+    if(p.opcode!=opcode || (opcode&0xe0u)!=0x40u || p.route!=PacketRoute::Screen2D ||
+       p.textured || p.vertexCount!=4 || p.indexCount!=6 || p.validMask)
+      throw std::invalid_argument("screen line group contains a non-UI ribbon");
+  flushPendingPaintRect();
+  bool first=true;
+  for(auto &packet:packets) {
+    if(!first) packet.packetSequence=nextPacketSequence_++;
+    first=false;
+    packet.nativeRead={};
+    builder_.record(std::move(packet));
+  }
+  markPacketRecorded(opcode);
+}
+
 void CrashReplayRecorder::recordPresentationDraw(
     DrawPacket packet, std::span<const Color16> nativeVram) {
   requireEnabled();

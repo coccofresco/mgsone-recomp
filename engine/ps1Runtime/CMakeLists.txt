@@ -135,6 +135,10 @@ foreach(shader_source IN LISTS PS1RECOMP_VULKAN_SHADER_SOURCES)
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_asset_storage.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_original_texture.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_screen_texture.glsl"
+        "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_crt.glsl"
+        "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_lighting.glsl"
+        "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_surface_effects.glsl"
+        "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/games/mgs_bubble_shapes.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_depth_vertex.glsl"
         "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/replay_depth_fragment.glsl")
     if(shader_name STREQUAL "replay_precise.vert" OR
@@ -225,6 +229,7 @@ add_library(ps1Runtime_lib STATIC
     src/gpu/modern_replay_execution_plan.cpp
     src/gpu/modern_replay_vulkan_bake.cpp
     src/games/mgs_screen_effects.cpp
+    src/games/mgs_surface_effects.cpp
     src/gpu/modern_replay_vulkan_copy.cpp
     src/gpu/modern_replay_vulkan_diagnostics.cpp
     src/gpu/modern_replay_depth_family.cpp
@@ -240,6 +245,8 @@ add_library(ps1Runtime_lib STATIC
     src/input/memory_card_files.cpp
     src/input/input.cpp
     src/input/input_script.cpp
+    src/input/tas_movie.cpp
+    src/input/tas_route.cpp
     src/mdec/mdec.cpp
     src/timers/timers.cpp
     src/save_state.cpp

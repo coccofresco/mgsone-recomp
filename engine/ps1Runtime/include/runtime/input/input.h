@@ -143,6 +143,11 @@ public:
   // retained until this boundary, so a complete host tap cannot disappear
   // between two guest VBlanks.
   void latchVBlank();
+  // TAS input is visible only at the recorded VBlank boundary, including
+  // analog axes. Live host events cannot mutate a sample already published.
+  void setFrameSampling(bool enabled);
+  std::array<PortSnapshot, 2> latchedSample() const;
+  void setMovieSample(const std::array<PortSnapshot, 2> &sample);
   uint16_t buttonState(int port = 0) const;
   uint16_t latchedButtonState(int port = 0) const;
 
@@ -182,6 +187,8 @@ private:
   };
 
   PortState ports_[2];
+  std::array<PortSnapshot, 2> latchedSample_{};
+  bool frameSampling_ = false;
   mutable std::mutex portMutex_;
 
   // SIO state

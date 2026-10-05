@@ -1,5 +1,7 @@
 #include "runtime/games/crash3_profile.h"
 #include "runtime/games/crash3_screen_composition.h"
+#include "runtime/games/mgs_profile.h"
+#include "runtime/games/mgs_surface_effects.h"
 #include "runtime/gpu/gpu.h"
 #include "runtime/gpu/modern_replay_execution_plan.h"
 #include "runtime/gpu/modern_replay_preflight.h"
@@ -141,6 +143,38 @@ GPU::ReplayConfig captureConfig(bool pgxp = false) {
 }
 
 } // namespace
+
+TEST(GpuModernReplayCaptureTest, MgsUiLinesAndPolylinesKeepNativePixelsAndCommandCoverage) {
+  struct Cleanup {~Cleanup(){ps1::games::mgs::configure(false,false);}} cleanup;
+  ps1::games::mgs::configure(true,false);
+  ps1::games::mgs::captureSurfaceEffects({});
+  for(uint8_t opcode=0x40;opcode<0x60;++opcode) {
+    SCOPED_TRACE(int(opcode));
+    GPU native,modern;modern.configureReplay(captureConfig());
+    const bool gouraud=opcode&16,polyline=opcode&8;
+    std::vector<uint32_t> words{command(opcode,255,128,32),xy(10,10)};
+    if(gouraud) words.push_back(rgb(32,128,255));
+    words.push_back(xy(39,28));
+    if(polyline) {
+      if(gouraud) words.push_back(rgb(128,255,32));
+      words.push_back(xy(18,50));words.push_back(0x50005000);
+    }
+    submit(native,words);submit(modern,words);
+    EXPECT_TRUE(sameNativeVram(native,modern));
+    modern.snapshotDisplayBuffer(1);
+    const auto frame=modern.tryConsumeReplay();ASSERT_TRUE(frame);
+    EXPECT_TRUE(frame->latch().complete);
+    EXPECT_TRUE(operationsOf<PaintPixels>(*frame).empty());
+    const auto draws=drawsIn(*frame);ASSERT_EQ(draws.size(),polyline ? 2u : 1u);
+    for(size_t i=0;i<draws.size();++i) {
+      EXPECT_EQ(draws[i]->opcode,opcode);
+      EXPECT_EQ(draws[i]->route,PacketRoute::Screen2D);
+      EXPECT_EQ(draws[i]->validMask,0);
+      EXPECT_NE(draws[i]->vertices[0].y,std::round(draws[i]->vertices[0].y));
+      if(i) EXPECT_GT(draws[i]->packetSequence,draws[i-1]->packetSequence);
+    }
+  }
+}
 
 TEST(GpuModernReplayCaptureTest,
      ProjectedPointKeepsSubpixelPositionAndDepthWithoutChangingNativePixel) {

@@ -1,0 +1,1424 @@
+{
+  "schema": 1,
+  "signatures": [
+    {
+      "source": "anime/effect/breath.c",
+      "symbol": "anm_breath_form",
+      "script": "anm_breath_form_script",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Breath",
+      "starts": [
+        7,
+        41
+      ],
+      "bytes": "0049020007002901fe0c00060806060601ff0200010d0c002308ffffff0a0008000801ff0200010d0f0aff38ff3801fe0c00060806060601ff0200010d0c002308ffffff0a0006000601ff0200010d0f",
+      "sha256": "a4fd97b43c32e0d7782c7ff9acab9e4498c48a722e5e2d82a17095684e7c3795"
+    },
+    {
+      "source": "anime/effect/breath.c",
+      "symbol": "anm_unknown_form",
+      "script": "anm_unknown_form_script",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Authored",
+      "starts": [
+        5
+      ],
+      "bytes": "002c01000501fe0c00030806060601ff0200010d0c001008ffffff0a0004000401ff0200010a0004000401ff0200010d0f",
+      "sha256": "d8d55a3979b6a34df70bdf0e5098a5fd54c25a30f957519165f7b8df461e4f63"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "stru_8009F0D4",
+      "script": "animation_data_800124A8",
+      "texture": 57234,
+      "atlas": [
+        2,
+        2,
+        4
+      ],
+      "profile": "Debris",
+      "starts": [
+        9,
+        52,
+        100
+      ],
+      "bytes": "008b0300090034006401fe0200010c000801ff060000ffec00000200010d0c000401ff060000ffec00000afff6fff60200010d0f01fe0afff6fff60200010c001001ff060000ffec00000200010d0c000401ff060000ffec00000afff6fff60200010d0f01fe0a001e001e0200010c001001ff060000ffec00000200010d0c000401ff060000ffec00000afff6fff60200010d0f",
+      "sha256": "759dc04d2732cbfa5bb1493d61601067f07141cb73265edabddf4b19971ea17d"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "stru_8009F0F0",
+      "script": "animation_data_8001253C",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        51,
+        90,
+        116
+      ],
+      "bytes": "008304000b0033005a007401fe01ff080101010c00050802020201ff0200010d0c001401ff0a001e001e08fefefe0200010d0f01fe0afed4fed40c00050802020201ff0200010d0c001401ff0a001e001e08fefefe0200010d0f01fe0aff9cff9c0c000e0afffefffe08fefefe01ff0200010d0f01fe0a01f401f40c001d0a0014001408ffffff01ff0200010d0f",
+      "sha256": "8a81475c0dfdc8d2cf61ee79e9556ee683f5459268a555caebbddbcdac21c11f"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "stru_8009F10C",
+      "script": "animation_data_800125CC",
+      "texture": 58572,
+      "atlas": [
+        2,
+        2,
+        4
+      ],
+      "profile": "Muzzle",
+      "starts": [
+        9,
+        16,
+        27
+      ],
+      "bytes": "001d0300090010001b0903e80200010f07030aff38ff380200010f07030afefcfefc0200010f",
+      "sha256": "7e7667f8d75d6d0da200540f99e4c4fc0dacbffd337bdc4d39449aeef38600da"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "stru_8009F128",
+      "script": "animation_data_800125F4",
+      "texture": 58572,
+      "atlas": [
+        2,
+        2,
+        4
+      ],
+      "profile": "Muzzle",
+      "starts": [
+        9,
+        16,
+        27
+      ],
+      "bytes": "001d0300090010001b0903e80200010f07030afda8fda80200010f07030afc7cfc7c0200010f",
+      "sha256": "27da69bd11b0a425ef5ca7722cbf1bf208779837bef6f68fb0b229b0b067ff31"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "stru_8009F144",
+      "script": "animation_data_8001261C",
+      "texture": 58572,
+      "atlas": [
+        2,
+        2,
+        4
+      ],
+      "profile": "Muzzle",
+      "starts": [
+        5
+      ],
+      "bytes": "00040100050200010f",
+      "sha256": "f94041de53764be737bfb431a9f6f9838420fd9084498da098eba4b7564dfa09"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "anm_gunflash_form",
+      "script": "anm_gunflash_form_script",
+      "texture": 65166,
+      "atlas": [
+        2,
+        2,
+        3
+      ],
+      "profile": "Muzzle",
+      "starts": [
+        5
+      ],
+      "bytes": "00070100050903e80200010f",
+      "sha256": "b0a23217eb7947da8ebc54364cff973e517218bcb53a14c5f6b0fc67e12c233f"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "stru_8009F17C",
+      "script": "animation_data_80012634",
+      "texture": 32332,
+      "atlas": [
+        2,
+        2,
+        4
+      ],
+      "profile": "Debris",
+      "starts": [
+        7,
+        121
+      ],
+      "bytes": "00cb02000700790c000b060000ffec00000200010d0b2b0500000014000086fff60001fff686000a0001000a0c000401ff0200010d060000ffd800000c000401ff0200010d060000000000000c000201ff0b2b0200020d0c000201ff0200020d05000000000000070108d8d8d80c000408f0f0f00200010d0f0c000b060000ffec00000200010d0500000000000086ffec0001ffec860014000100140c000201ff0b2b0200010d0c000401ff0200010d0c000401ff0200020d05000000000000070108d8d8d80c000408f0f0f00200010d0f",
+      "sha256": "4e2c5851fb0290115b13447895408470b0ba2cc24a9dc5f0a7514c8e070977f5"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "stru_8009F198",
+      "script": "animation_data_80012708",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "001901000501fe0c001401ff0200010d0c000a01ff08f9f9f90200010d0f",
+      "sha256": "b15eae4fd0527af9d01a0c5243969537685d0b14e70cf7a0c1e8a22c25700033"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "stru_8009F1B4",
+      "script": "animation_data_80012728",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "002301000501fe0c000a01ff0a005000500200010d0c00050a0050005001ff08f2f2f20200010d0f",
+      "sha256": "92281fb93295764d8fa9cbd6af65738b2bdcd5f621722400661eae92f8ad102f"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "stru_8009F1D0",
+      "script": "animation_data_80012750",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        7,
+        32
+      ],
+      "bytes": "004a020007002001fe0c000501ff0200010d0c000a01ff08f4f4f40200010d0f01fe0c00040a012c012c01ff0200010d0c000a0a0046004601ff0200010d0c000a01ff0a0050005008e7e7e70200010d0f",
+      "sha256": "1bc90127a588d5e07051380157d34ff579c2fa2311e8c0bab8b3389feda13f06"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "stru_8009F1EC",
+      "script": "animation_data_800127A4",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "002701000501fe0c000501ff0a0064006408f6f6f60200010d0c000501ff0a00c800c808f3f3f30200010d0f",
+      "sha256": "9647a426a1832ad3f11aa6e51818edcb985126f80a90fd9623bb6c6afbda4061"
+    },
+    {
+      "source": "anime/effect/bullet.c",
+      "symbol": "stru_8009F208",
+      "script": "animation_data_800127D0",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "003901000501fe0c001401ff0a00010001080505050200010d0c000c01ff0a0005000508fbfbfb0200010d0c000a01ff0a000a000a08fbfbfb0200010d0f",
+      "sha256": "3964f410790ae290f1c8636caae4198ea829fa6fa26b1ccee6cbc80ffce33b5c"
+    },
+    {
+      "source": "anime/effect/fog.c",
+      "symbol": "anm_fog_form",
+      "script": "anm_fog_form_script",
+      "texture": 62228,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "001c01000501fe040000019000000c000901ff0a0014001408e7e7e70200010d0f",
+      "sha256": "eabfb61efd3bfbabb4c733d0534c9b7271461bcb823f2e962feb83ea06277f4e"
+    },
+    {
+      "source": "anime/effect/m1e1.c",
+      "symbol": "anm_caterpiller_smoke_form",
+      "script": "anm_caterpiller_smoke_form_script",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "002701000501fe0c000501ff0a0064006408f1f1f10200010d0c000501ff0a012c012c08e2e2e20200010d0f",
+      "sha256": "37d7c919472fe7b4f9b892272e9d34e71185fc1bc29952308e7f6e905d713977"
+    },
+    {
+      "source": "anime/effect/m1e1.c",
+      "symbol": "stru_8009F758",
+      "script": "animation_data_80013488",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        7,
+        32
+      ],
+      "bytes": "004a020007002001fe0c000501ff0200010d0c000a01ff08fafafa0200010d0f01fe0c00040a012c012c01ff0200010d0c000a0a0046004601ff0200010d0c000a01ff0a0050005008f0f0f00200010d0f",
+      "sha256": "2c27ef053bbf3f41be260efdf6afcdb98ad1e9c7d8120a9ed15ac911c1cadce4"
+    },
+    {
+      "source": "anime/effect/m1e1.c",
+      "symbol": "stru_8009F774",
+      "script": "animation_data_800134DC",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "002c01000501fe0c000501ff0200010d0c000501ff0a000500050200010d0c000f01ff08f0f0f00a000500050200010d0f",
+      "sha256": "6ea4ff3f48b1ae4afbe4025b775646b84247959a57bd9de704d55a5b6d0fa765"
+    },
+    {
+      "source": "anime/effect/m1e1.c",
+      "symbol": "stru_8009F790",
+      "script": "animation_data_80013510",
+      "texture": 9287,
+      "atlas": [
+        2,
+        2,
+        4
+      ],
+      "profile": "Muzzle",
+      "starts": [
+        9,
+        30,
+        56
+      ],
+      "bytes": "0049030009001e003801fe0c00040200010d0c000408ececec0200010d0f01fe0afc18fc180c00040200010d0c000408ececec0200010d0f01fe0afb50fb500c00040200010d0c000408ececec0200010d0f",
+      "sha256": "01d451bad4ee788baebe18ab8763501d013632a7b9b5c6dcd29ff5a4a8e1ccd4"
+    },
+    {
+      "source": "anime/effect/mark.c",
+      "symbol": "anm_mark_form_800C3418",
+      "script": "anm_mark_data_800DFEB4",
+      "texture": 56531,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Exclamation",
+      "starts": [
+        11,
+        94,
+        177,
+        265
+      ],
+      "bytes": "015604000b005e00b1010901000c00040a00640064083219140200010d0a00640064083296aa0200030aff9cff9c08ce6a560200160a012cfe9808cee7ec0200010a012cffe208cee7ec0200010a012cfff40200010afaba00f00200010f01000c00040a00320032083219140200010d0a00320032083296aa0200030affceffce08ce6a560200160a0096ff4c08cee7ec0200010a0096fff108cee7ec0200010a0096fffa0200010afd5d00780200010f0affd8ffd801000c00040a00190019083219140200010d0a00190019083296aa0200030affe7ffe708ce6a560200160a004bffa608cee7ec0200010a004bfff908cee7ec0200010a004bfff90200010afed4003c0200010f0affc4ffc401000c00040a000a000a083219140200010d0a000a000a083296aa0200030afff6fff608ce6a560200160a001effdc08cee7ec0200010a001efffe08cee7ec0200010a001efffe0200010affb0000a0200010f",
+      "sha256": "f1698c93c0e00e711119b427e17dfef4c5187481a1dcc08acb65bcf17575f698"
+    },
+    {
+      "source": "anime/effect/mark.c",
+      "symbol": "anm_mark_form_800C3434",
+      "script": "anm_mark_data_800E0018",
+      "texture": 64211,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Question",
+      "starts": [
+        9,
+        92,
+        175
+      ],
+      "bytes": "00f9030009005c00af01000c00040a00640064082d23140200010d0a0064006408466eaa0200030aff9cff9c08ba92560200160a012cfe9808d3ddec0200010a012cffe208d3ddec0200010a012cfff40200010afaba00f00200010f01000c00040a00320032082d23140200010d0a0032003208466eaa0200030affceffce08ba92560200160a0096ff4c08d3ddec0200010a0096fff108d3ddec0200010a0096fffa0200010afd5d00780200010f01000c00040a00190019083219140200010d0a00190019083296aa0200030affe7ffe708ce6a560200160a004bffa608cee7ec0200010a004bfff908cee7ec0200010a004bfff90200010afed4003c0200010f",
+      "sha256": "05a6823c8b690e561daaf89723163f8955f24ebdc53756e9844ac69f1e704752"
+    },
+    {
+      "source": "anime/effect/mark.c",
+      "symbol": "anm_mark_form_800C3450",
+      "script": "anm_mark_data_800E011C",
+      "texture": 64211,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Question",
+      "starts": [
+        9,
+        92,
+        175
+      ],
+      "bytes": "00f9030009005c00af01000c00040a006400640819262d0200010d0a00640064089662460200030aff9cff9c086a9eba0200160a012cfe9808e7dad30200010a012cffe208e7dad30200010a012cfff40200010afaba00f00200010f01000c00040a00320032082d23140200010d0a0032003208466eaa0200030affceffce08ba92560200160a0096ff4c08d3ddec0200010a0096fff108d3ddec0200010a0096fffa0200010afd5d00780200010f01000c00040a00190019083219140200010d0a00190019083296aa0200030affe7ffe708ce6a560200160a004bffa608cee7ec0200010a004bfff908cee7ec0200010a004bfff90200010afed4003c0200010f",
+      "sha256": "1cb89b1e8165d086bb66c2c8599976539056c01a381d564680caa11044cc1b7e"
+    },
+    {
+      "source": "anime/effect/mark.c",
+      "symbol": "anm_mark_form_800C346C",
+      "script": "anm_mark_data_800E0220",
+      "texture": 6504,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Heart",
+      "starts": [
+        5
+      ],
+      "bytes": "00040100050200010f",
+      "sha256": "f94041de53764be737bfb431a9f6f9838420fd9084498da098eba4b7564dfa09"
+    },
+    {
+      "source": "anime/effect/rcm.c",
+      "symbol": "anm_800C3C04",
+      "script": "anim_data_800E46F8",
+      "texture": 18335,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Glow",
+      "starts": [
+        11,
+        15,
+        24,
+        33
+      ],
+      "bytes": "001f04000b000f001800210200010f0affceffce0200010f0aff9cff9c0200010f0aff6aff6a0200010f",
+      "sha256": "89363b240e61b7b4303356ddc7a9c9b6ebf8a995c0060d9312efc1964a84b135"
+    },
+    {
+      "source": "anime/effect/rcm.c",
+      "symbol": "anm_800C3C20",
+      "script": "anim_data_800E4724",
+      "texture": 18335,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Glow",
+      "starts": [
+        5
+      ],
+      "bytes": "001001000502000108f0f0f00a03e803e80200010f",
+      "sha256": "b56bb3cd1f35031f1b4c91aaca4983b67184aa8b3b2f37dcf7cf2683a22dca16"
+    },
+    {
+      "source": "anime/effect/rcm.c",
+      "symbol": "anm_800C3C3C",
+      "script": "anim_data_800E473C",
+      "texture": 18335,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Glow",
+      "starts": [
+        5
+      ],
+      "bytes": "00080100050c003c0200010d0f",
+      "sha256": "ea63bc6ec372bb7b0eb0da24f958878bc71dd36f333e1d271e6f2e0f72d07cba"
+    },
+    {
+      "source": "anime/effect/rcm.c",
+      "symbol": "anm_800C3C58",
+      "script": "anim_data_800E474C",
+      "texture": 18335,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Glow",
+      "starts": [
+        7,
+        11
+      ],
+      "bytes": "000d020007000b0200010f0afe70fe700200010f",
+      "sha256": "6a90c08fb289a47c0468cd85629c9649f6a842b2014c4b8455f35e8d1827c9a8"
+    },
+    {
+      "source": "anime/effect/rcm.c",
+      "symbol": "anm_800C3C74",
+      "script": "anim_data_800E4760",
+      "texture": 18335,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Glow",
+      "starts": [
+        5
+      ],
+      "bytes": "00040100050200010f",
+      "sha256": "f94041de53764be737bfb431a9f6f9838420fd9084498da098eba4b7564dfa09"
+    },
+    {
+      "source": "anime/effect/rcm.c",
+      "symbol": "anm_800C3C90",
+      "script": "anim_data_800E476C",
+      "texture": 43469,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Glow",
+      "starts": [
+        5
+      ],
+      "bytes": "001301000508c8c8ff0200010c001f08fafaf80200010d0f",
+      "sha256": "fe19f2c24281340c334771cf86173fd88be1ca031ebedfeb3dd6349b423bd54d"
+    },
+    {
+      "source": "anime/effect/rcm2.c",
+      "symbol": "anm_800C32F0",
+      "script": "anim_data_800D13CC",
+      "texture": 18335,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Glow",
+      "starts": [
+        7,
+        26
+      ],
+      "bytes": "0023020007001a020001086a6a6a0c000a08f6f6f60200010d0f086a6a6a0c000508ececec0200010d0f",
+      "sha256": "d369e01de0fec7417096024c0b18aeb0e6de4e448299c45fe0cd9858fcfc86e2"
+    },
+    {
+      "source": "anime/effect/rcm2.c",
+      "symbol": "anm_800C330C",
+      "script": "anim_data_800D13CC",
+      "texture": 18335,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Glow",
+      "starts": [
+        7,
+        26
+      ],
+      "bytes": "0023020007001a020001086a6a6a0c000a08f6f6f60200010d0f086a6a6a0c000508ececec0200010d0f",
+      "sha256": "d369e01de0fec7417096024c0b18aeb0e6de4e448299c45fe0cd9858fcfc86e2"
+    },
+    {
+      "source": "anime/effect/sleep.c",
+      "symbol": "anm_sleep_form",
+      "script": "anm_sleep_form_script",
+      "texture": 63419,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Sleep",
+      "starts": [
+        9,
+        59,
+        109
+      ],
+      "bytes": "0096030009003b006d0800021e0200010c0019080406060a00040004040004001400000200010d0c000f0a00040004040004001400000200010d0f0800021e02000b0c0019080406060a00040004040004001400000200010d0c000f0a00040004040004001400000200010d0f0800021e0200150c0019080406060a00040004040004001400000200010d0c000f0a00040004040004001400000200010d0f",
+      "sha256": "ff76232ea9178bcc7c652dadb0cc4819ed9cf1e3d8f0dfd000040eb5d8a733a3"
+    },
+    {
+      "source": "anime/effect/smoke.c",
+      "symbol": "anm_piyopiyo_form",
+      "script": "anm_piyopiyo_form_script",
+      "texture": 51966,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Star",
+      "starts": [
+        9,
+        230,
+        451
+      ],
+      "bytes": "029703000900e601c30800fcde04006401f4ff530c00030200010d0c00030afe70000004ff9c0000ffe50c00030200010d04ff9c0000001b0c00030200010d0a0190000004ffb7000000490c00030200010d04ffe5000000640c00030200010d0afe70000004001b000000640c00030200010d040049000000490c00030200010d0a019000000400640000001b0c00030200010d0400640000ffe50c00030200010d0afe7000000400490000ffb70c00030200010d04001b0000ff9c0c00030200010d0a0190000004ffe50000ff9c0c00030200010d04ffb70000ffb70c00030200010d0d0f0800fcde04ff3801f400000c00030200010d0c00030afe70000004001b000000640c00030200010d040049000000490c00030200010d0a019000000400640000001b0c00030200010d0400640000ffe50c00030200010d0afe7000000400490000ffb70c00030200010d04001b0000ff9c0c00030200010d0a0190000004ffe50000ff9c0c00030200010d04ffb70000ffb70c00030200010d0afe70000004ff9c0000ffe50c00030200010d04ff9c0000001b0c00030200010d0a0190000004ffb7000000490c00030200010d04ffe5000000640c00030200010d0d0f0800fcde04006401f400ad0c00030200010d0c00030afe7000000400490000ffb70c00030200010d04001b0000ff9c0c00030200010d0a0190000004ffe50000ff9c0c00030200010d04ffb70000ffb70c00030200010d0afe70000004ff9c0000ffe50c00030200010d04ff9c0000001b0c00030200010d0a0190000004ffb7000000490c00030200010d04ffe5000000640c00030200010d0afe70000004001b000000640c00030200010d040049000000490c00030200010d0a019000000400640000001b0c00030200010d0400640000ffe50c00030200010d0d0f",
+      "sha256": "3c0453e7e2c39fcb3953e819c45afe611d04c9f0ed0139c07dba8e9425b04eaf"
+    },
+    {
+      "source": "anime/effect/smoke.c",
+      "symbol": "s00a_dword_800C34C8",
+      "script": "s00a_dword_800E054C",
+      "texture": 16772,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Authored",
+      "starts": [
+        5
+      ],
+      "bytes": "00570100050c001c0a00050005040000000a00000200010d0c00040c00050afff6fff6040000000a00000200010d0200010c00050a000a000a040000000a00000200010d0200010d0c000e0afff6fff6040000000a00000200010d0f",
+      "sha256": "d1474991bad3bffaa674beb9603a379e5744cb9b367d3d0a1cff22156f38d128"
+    },
+    {
+      "source": "anime/effect/smoke.c",
+      "symbol": "s00a_dword_800C34E4",
+      "script": "s00a_dword_800E05A8",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "004101000501fe0c001c01ff0a0002000a040000000a00000200010d0c00040c000501ff040000000a00000200010d0d0c000e01ff0afffcffec040000000a00000200010d0f",
+      "sha256": "5fac09b22812727db88592cc877427de1665d4dc653973a73d34a7769715e188"
+    },
+    {
+      "source": "anime/effect/smoke2.c",
+      "symbol": "s03c_dword_800C33DC",
+      "script": "s03c_dword_800D7B34",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "001501000501fe0c00070a00c800c801ff08f8f8f80200010d0f",
+      "sha256": "9e6506004a7a34712a28860260dffa9f25dc8e4d8002d286eb10232e0f9b36cd"
+    },
+    {
+      "source": "anime/effect/smoke2.c",
+      "symbol": "s03c_dword_800C33F8",
+      "script": "s03c_dword_800D7B50",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        7,
+        28
+      ],
+      "bytes": "0036020007001c01fe0c00070a012c012c01ff08f8f8f80200010d0f01fe0a01f401f408bebebe0200010c000f0a00c800c801ff08f0f0f00200010d0f",
+      "sha256": "d58fce954b99ab62acb98a205d17a99914f0fd87f7e39f375666ffd62c172d3a"
+    },
+    {
+      "source": "anime/effect/smoke3.c",
+      "symbol": "anm_800C370C",
+      "script": "s13a_dword_800E31C8",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "001501000501fe0c000a01ff0a0006000608fafafa0200010d0f",
+      "sha256": "461810cbce3c3f91cb79fa9d0ee1c837f3e40916160a5a055d4eb39073596adb"
+    },
+    {
+      "source": "anime/effect/smoke3.c",
+      "symbol": "anm_800C3728",
+      "script": "s13a_dword_800E31E4",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        44,
+        81,
+        118
+      ],
+      "bytes": "009004000b002c005100760c000501ff0a003200320200010d0c000a01ff0a0064006408f4f4f40200010d0f0800c0c00c000501ff0a003200320200010d0c000a01ff0a0064006408f4fafa0200010d0f08e000e00c000501ff0a003200320200010d0c000a01ff0a0064006408f7f4f70200010d0f08e0e0000c000501ff0a003200320200010d0c000a01ff0a0064006408f7f7f40200010d0f",
+      "sha256": "d46c96ae4e2424996010e5670869cca9a71d843af80d00875e12a0434ed89bc4"
+    },
+    {
+      "source": "anime/effect/smoke3.c",
+      "symbol": "anm_800C3744",
+      "script": "s13a_dword_800E3280",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "002501000508ffffff0c000501ff0a003200320200010d0c000a01ff0a0064006408f4f4f40200010d0f",
+      "sha256": "5cf50bceec9f25bf1f08821ab2ca5352b03d70cea4871d578430cb4afc771c33"
+    },
+    {
+      "source": "anime/effect/smoke3.c",
+      "symbol": "anm_800C3760",
+      "script": "s13a_dword_800E32AC",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "00130100050c000901ff0a0078007808e7e7e70200010d0f",
+      "sha256": "293e0e51b39c3ecb3965fd25280ad8136583e611851144220982b335d65c192f"
+    },
+    {
+      "source": "anime/effect/smoke3.c",
+      "symbol": "anm_800C377C",
+      "script": "s13a_dword_800E32C4",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        7,
+        28
+      ],
+      "bytes": "0036020007001c01fe0c00070a012c012c01ff08f8f8f80200010d0f01fe0a01f401f408bebebe0200010c000f0a00c800c801ff08f0f0f00200010d0f",
+      "sha256": "d58fce954b99ab62acb98a205d17a99914f0fd87f7e39f375666ffd62c172d3a"
+    },
+    {
+      "source": "anime/effect/smoke3.c",
+      "symbol": "anm_800C3798",
+      "script": "s13a_dword_800E3304",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "001501000501fe0c00070affe2ffe201ff08f8f8f80200010d0f",
+      "sha256": "a80c5fe08d15a91af4a99e1289312228592de53059a13ed00cd6906537d9c0f7"
+    },
+    {
+      "source": "anime/effect/smoke4.c",
+      "symbol": "anm_panelsmoke_form",
+      "script": "anm_panelsmoke_form_script",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "003301000501fe0c000401ff0a000a000a0200010d0c002001ff040000001400000200010d0c002f08ffffff01ff0a000a000a0200010d0f",
+      "sha256": "f0f80872002d699ea8e6bcb88f373de59a9d93209ac7fbb45336cb8db6901359"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C3520",
+      "script": "d16e_dword_800D291C",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "001501000501fe0c000a0a00c800c801ff08e7e7e70200010d0f",
+      "sha256": "c7b2e5edd54f5b73346819a983a4659030c45afc1e6badb670e85195a945f254"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C353C",
+      "script": "d16e_dword_800D2938",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "001501000501fe0c00070a00c800c801ff08fcfcfc0200010d0f",
+      "sha256": "aee1b7c6ff2581060bc19e05ad90c5e309ef53351ea4f21881371796f4ccdb83"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C3558",
+      "script": "d16e_dword_800D2954",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "003a01000501fe0c0007040000009600000a012c012c020001040000009600000a012c012c020001040000009600000a012c012c01ff08f0f0f00200010d0f",
+      "sha256": "1acfed592b289c6bc7c826928dcf0a22f8606a71338797c3b99ed78a40780cc2"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C3574",
+      "script": "d16e_dword_800D2994",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        49,
+        92,
+        135
+      ],
+      "bytes": "00a704000b0031005c008701fe0c00070200010a0032003201ff0200010d0c000701ff02000101ff08ffffff0200010d0f0a01f401f401fe0c00070200010a0064006401ff0200010d0c000701ff02000101ff08ffffff0200010d0f0a03e803e801fe0c00070200010a00c8006401ff0200010d0c000701ff02000101ff08ffffff0200010d0f0a07d007d001fe0c00070200010a0190019001ff0200010d0c000701ff02000101ff08ffffff0200010d0f",
+      "sha256": "1c24e4418306b1ebd954b06ba8e78ae4fd80a23bda66d364a3461a89b8c2a6db"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C3590",
+      "script": "d16e_dword_800D2994",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        49,
+        92,
+        135
+      ],
+      "bytes": "00a704000b0031005c008701fe0c00070200010a0032003201ff0200010d0c000701ff02000101ff08ffffff0200010d0f0a01f401f401fe0c00070200010a0064006401ff0200010d0c000701ff02000101ff08ffffff0200010d0f0a03e803e801fe0c00070200010a00c8006401ff0200010d0c000701ff02000101ff08ffffff0200010d0f0a07d007d001fe0c00070200010a0190019001ff0200010d0c000701ff02000101ff08ffffff0200010d0f",
+      "sha256": "1c24e4418306b1ebd954b06ba8e78ae4fd80a23bda66d364a3461a89b8c2a6db"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C35AC",
+      "script": "d16e_dword_800D2A48",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "003a01000501fe0c0007040000009600000a012c012c020001040000009600000a012c012c020001040000009600000a012c012c01ff08fcfcfc0200010d0f",
+      "sha256": "29f1610543da38b500e8c675d879488bd7fa330ca116b875a8ebef317940865f"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C35C8",
+      "script": "d16e_dword_800D2A48",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "003a01000501fe0c0007040000009600000a012c012c020001040000009600000a012c012c020001040000009600000a012c012c01ff08fcfcfc0200010d0f",
+      "sha256": "29f1610543da38b500e8c675d879488bd7fa330ca116b875a8ebef317940865f"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C35E4",
+      "script": "d16e_dword_800D2A88",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        50,
+        94,
+        138
+      ],
+      "bytes": "00ab04000b0032005e008a01fe0c000f0a0032003201ff0200010d0c001e01ff0200010d0c000f01ff08f0f0f00200010d0f0a00fa00fa01fe0c000f0a0046004601ff0200010d0c001e01ff0200010d0c000f01ff08f0f0f00200010d0f0a01f401f401fe0c000f0a005a005a01ff0200010d0c001e01ff0200010d0c000f01ff08f0f0f00200010d0f0a02ee02ee01fe0c000f0a006e006e01ff0200010d0c001e01ff0200010d0c000f01ff08f0f0f00200010d0f",
+      "sha256": "720f20e9083f056e8648173f05dc277b6e7790d9577efc0c0084c5105e96feb0"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C3600",
+      "script": "d16e_dword_800D2B40",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        50,
+        94,
+        138
+      ],
+      "bytes": "00ab04000b0032005e008a01fe0c000f0a0032003201ff0200010d0c001e01ff0200010d0c000f01ff08ffffff0200010d0f0a00fa00fa01fe0c000f0a0046004601ff0200010d0c001e01ff0200010d0c000f01ff08ffffff0200010d0f0a01f401f401fe0c000f0a005a005a01ff0200010d0c001e01ff0200010d0c000f01ff08ffffff0200010d0f0a02ee02ee01fe0c000f0a006e006e01ff0200010d0c001e01ff0200010d0c000f01ff08ffffff0200010d0f",
+      "sha256": "f863215248351224e02b6db57a92f69e32a39bbb71e4b8849c88564b900b8ca3"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C361C",
+      "script": "d16e_dword_800D2BF8",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        54,
+        102,
+        150
+      ],
+      "bytes": "00bb04000b00360066009608ffffff01fe0c000f0a0032003201ff0200010d0c001e01ff0200010d0c000f01ff08f0f0f00200010d0f08ffffff0a00fa00fa01fe0c000f0a0046004601ff0200010d0c001e01ff0200010d0c000f01ff08f0f0f00200010d0f08ffffff0a01f401f401fe0c000f0a005a005a01ff0200010d0c001e01ff0200010d0c000f01ff08f0f0f00200010d0f08ffffff0a02ee02ee01fe0c000f0a006e006e01ff0200010d0c001e01ff0200010d0c000f01ff08f0f0f00200010d0f",
+      "sha256": "9995b7e99dc75f3d6ef4a5d8231492593c31dd2c1a2a15a7da1a00c1668c5533"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C3638",
+      "script": "d16e_dword_800D2CC0",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        41,
+        76,
+        111
+      ],
+      "bytes": "008704000b0029004c006f01fe0c00070a0064006401ff0200010d0c000301ff08c0c0c00200010d0f0a00fa00fa01fe0c00070a0096009601ff0200010d0c000301ff08c0c0c00200010d0f0a01f401f401fe0c00070a00c800c801ff0200010d0c000301ff08c0c0c00200010d0f0a02ee02ee01fe0c00070a00fa00fa01ff0200010d0c000301ff08c0c0c00200010d0f",
+      "sha256": "89344ce273b1d4adbc142e052ad3426ce4a91094d60bb71776fb5c632d38b7e1"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C3654",
+      "script": "d16e_dword_800D2D54",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        41,
+        76,
+        111
+      ],
+      "bytes": "008704000b0029004c006f01fe0c00070a0064006401ff0200010d0c000301ff08fcfcfc0200010d0f0a00fa00fa01fe0c00070a0096009601ff0200010d0c000301ff08fcfcfc0200010d0f0a01f401f401fe0c00070a00c800c801ff0200010d0c000301ff08fcfcfc0200010d0f0a02ee02ee01fe0c00070a00fa00fa01ff0200010d0c000301ff08fcfcfc0200010d0f",
+      "sha256": "288eab2a91f52686563325c475bbec35d82066218138dc5cc1a6518e94e3325f"
+    },
+    {
+      "source": "anime/effect/smoke_ln.c",
+      "symbol": "d16e_dword_800C3670",
+      "script": "d16e_dword_800D2DE8",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "002a01000501fe0c00020200010d0a03e803e80c00070a0064006401ff0200010d0c000301ff08c0c0c00200010d0f",
+      "sha256": "c4789559c9b8c9c9a13262137ae963b8fd48a3c02b08eebde10d45650884f4c4"
+    },
+    {
+      "source": "anime/effect/socom.c",
+      "symbol": "anm_800C3B78",
+      "script": "anim_data_800CC124",
+      "texture": 58572,
+      "atlas": [
+        2,
+        2,
+        4
+      ],
+      "profile": "Muzzle",
+      "starts": [
+        9,
+        16,
+        27
+      ],
+      "bytes": "001d0300090010001b090bb80200010f07030aff38ff380200010f07030afe98fefc0200010f",
+      "sha256": "7b3e9908107f34064a1191818dd3cc0bf953678ad4440e541e73df2314d65e93"
+    },
+    {
+      "source": "anime/effect/socom.c",
+      "symbol": "anm_800C3B94",
+      "script": "anim_data_800CC14C",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "00130100050c000701ff0a0046004608f0f0f00200010d0f",
+      "sha256": "e843dbd845a2df411d6edb10ec54b8791602609bd8262b4ff28bba53613d996b"
+    },
+    {
+      "source": "anime/effect/socom.c",
+      "symbol": "anm_800C3BB0",
+      "script": "anim_data_800CC164",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        30,
+        54,
+        78
+      ],
+      "bytes": "005b04000b001e0036004e0c000701ff0a00c800c808f0f0f00200010d0f0a019001900c000701ff0a012c012c08f0f0f00200010d0f0a032003200c000701ff0a0190019008f0f0f00200010d0f0a04b004b00c000701ff0a01f401f408f0f0f00200010d0f",
+      "sha256": "2053037a33a05ca12fa83de3d3d0acdb61a3046c9c17bd8e1cdaaa1dfdaee1b3"
+    },
+    {
+      "source": "anime/effect/socom.c",
+      "symbol": "anm_800C3BCC",
+      "script": "anim_data_800CC1CC",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        34,
+        62,
+        90
+      ],
+      "bytes": "006b04000b0022003e005a08ffffff0c000701ff0a00c800c808f0f0f00200010d0f08ffffff0a019001900c000701ff0a012c012c08f0f0f00200010d0f08ffffff0a032003200c000701ff0a0190019008f0f0f00200010d0f08ffffff0a04b004b00c000701ff0a01f401f408f0f0f00200010d0f",
+      "sha256": "67e4fc9d0d1015362df53bbbeef994b22dadc9dc36209a5327e9ab3368f6029a"
+    },
+    {
+      "source": "anime/effect/socom.c",
+      "symbol": "anm_800C3BE8",
+      "script": "anim_data_800CC244",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        30,
+        54,
+        78
+      ],
+      "bytes": "005b04000b001e0036004e0c000701ff0a00c800c808fcfcfc0200010d0f0a019001900c000701ff0a012c012c08fcfcfc0200010d0f0a032003200c000701ff0a0190019008fcfcfc0200010d0f0a04b004b00c000701ff0a01f401f408fcfcfc0200010d0f",
+      "sha256": "da440b771decec25f2a9806095b64d49f628dd9df853042061c2c1d3dae93fd4"
+    },
+    {
+      "source": "bullet/blast.c",
+      "symbol": "anm_blast_single_form",
+      "script": "anm_blast_single_form_script",
+      "texture": 44178,
+      "atlas": [
+        4,
+        4,
+        16
+      ],
+      "profile": "Explosion",
+      "starts": [
+        5
+      ],
+      "bytes": "003b01000501000200010c000201ff0a04b004b00200010d0c000601ff0200010d0c000701ff0a0064006408f8f8f80200010a0050005008f8f8f80200010d0f",
+      "sha256": "9b53c3e17b4a9d6a868b6ba3f657819213a00a31a29fc1cf9dd224a20dffef8d"
+    },
+    {
+      "source": "bullet/blast.c",
+      "symbol": "anm_blast_random_form",
+      "script": "anm_blast_random_form_script",
+      "texture": 44178,
+      "atlas": [
+        4,
+        4,
+        16
+      ],
+      "profile": "Explosion",
+      "starts": [
+        5
+      ],
+      "bytes": "003b01000501000200010c000401ff0a04b004b00200010d0c000c01ff0200010d0c000801ff0a0064006408f8f8f80200010a0050005008f8f8f80200010d0f",
+      "sha256": "c891a48f8964262220c6769d7162f905dfeeb05af407af00c126b4a0393114da"
+    },
+    {
+      "source": "bullet/blast.c",
+      "symbol": "anm_blast_mini_form",
+      "script": "anm_blast_mini_form_script",
+      "texture": 44178,
+      "atlas": [
+        4,
+        4,
+        16
+      ],
+      "profile": "Explosion",
+      "starts": [
+        5
+      ],
+      "bytes": "003b01000501000200010c000201ff0a025802580200010d0c000601ff0200010d0c000701ff0a0032003208f8f8f80200010a0028002808f8f8f80200010d0f",
+      "sha256": "81e12836208880bc36142c9697979b5755df8bc5005f07be2ba9e57888e029b2"
+    },
+    {
+      "source": "bullet/blast.c",
+      "symbol": "anm_blast_minimini_form",
+      "script": "anm_blast_minimini_form_script",
+      "texture": 44178,
+      "atlas": [
+        4,
+        4,
+        16
+      ],
+      "profile": "Explosion",
+      "starts": [
+        5
+      ],
+      "bytes": "003b01000501000200010c000201ff0a00c800c80200010d0c000601ff0200010d0c000701ff0a0014001408f8f8f80200010a0014001408f8f8f80200010d0f",
+      "sha256": "77d847c1eeb39dd9649e95a665733ae4220bcc232060e235918c135d20e975e8"
+    },
+    {
+      "source": "bullet/blast.c",
+      "symbol": "anm_blast_high_form",
+      "script": "anm_blast_high_form_script",
+      "texture": 44178,
+      "atlas": [
+        4,
+        4,
+        16
+      ],
+      "profile": "Explosion",
+      "starts": [
+        11,
+        75,
+        144,
+        217
+      ],
+      "bytes": "011704000b004b009000d901000200010c000201ff0a04b004b00200010d0c000601ff0a00c800c80200010d0c000701ff0a0064006408f8f8f80200010a0050005008f8f8f80200010d0f010002000101000200010c000201ff0a03e803e80200010d0c000601ff0a00b400b40200010d0c000701ff0a0064006408f8f8f80200010a0050005008f8f8f80200010d0f0c000201000200010d01000200010c000201ff0a032003200200010d0c000601ff0a00a000a00200010d0c000701ff0a0064006408f8f8f80200010a0050005008f8f8f80200010d0f0c000301000200010d01000200010c000201ff0a025802580200010d0c000601ff0a008c008c0200010d0c000701ff0a0064006408f8f8f80200010a0050005008f8f8f80200010d0f",
+      "sha256": "9b8693190d0fa23942f8a9ae9f21aa59f924580815bbc722888d316ef6c10db6"
+    },
+    {
+      "source": "okajima/blood.c",
+      "symbol": "anm_blood_form",
+      "script": "anm_blood_form_script",
+      "texture": 31572,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Blood",
+      "starts": [
+        5
+      ],
+      "bytes": "002a01000501fe0200010800b0b00c000501ff0a006400640200010d0c000501ff0a001e001e08e8f8f80200010d0f",
+      "sha256": "1303e27dd3f62a5b2b6bfced8ae88a4ea08bc37c4a74ce3058c6b50c17ecf918"
+    },
+    {
+      "source": "okajima/stngrnd.c",
+      "symbol": "anm_stn_g_sonic_form",
+      "script": "anm_stn_g_sonic_form_script",
+      "texture": 19692,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Ring",
+      "starts": [
+        5
+      ],
+      "bytes": "001f01000501000c00040a01f401f40200010d0c00070a01f401f408f0f0f00200010d0f",
+      "sha256": "83fa91d84ff127b8b3b42190a883443b81baf29179985969bf270d5b7bcd1251"
+    },
+    {
+      "source": "okajima/stngrnd.c",
+      "symbol": "anm_stun_g_center_form",
+      "script": "anm_stun_g_center_form_script",
+      "texture": 21926,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Glow",
+      "starts": [
+        5
+      ],
+      "bytes": "001f01000501000c00050a025802580200010d0c00090a001e001e08eeeeee0200010d0f",
+      "sha256": "0f140be8b691d55752fb4638e2a20fb7b1dfe7cd182b0dc6ae7e28a1feb84941"
+    },
+    {
+      "source": "overlays/s11d/anime/effect/rope.c",
+      "symbol": "anm_dmgsmoke1_form",
+      "script": "anm_dmgsmoke1_form_script",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        5
+      ],
+      "bytes": "001501000501fe0c00070a00c800c801ff08f8f8f80200010d0f",
+      "sha256": "9e6506004a7a34712a28860260dffa9f25dc8e4d8002d286eb10232e0f9b36cd"
+    },
+    {
+      "source": "overlays/s19b/anime/effect/janime2.c",
+      "symbol": "s19b_dword_800C33E0",
+      "script": "s19b_dword_800DDA3C",
+      "texture": 57234,
+      "atlas": [
+        2,
+        2,
+        4
+      ],
+      "profile": "Debris",
+      "starts": [
+        9,
+        52,
+        100
+      ],
+      "bytes": "008b0300090034006401fe0200010c000801ff060000fff600000200010d0c000401ff060000fff600000afffbfffb0200010d0f01fe0afffbfffb0200010c001001ff060000fff600000200010d0c000401ff060000fff600000afffbfffb0200010d0f01fe0a000f000f0200010c001001ff060000fff600000200010d0c000401ff060000fff600000afffbfffb0200010d0f",
+      "sha256": "aadb831199280bfaf4ce1fd7bac9387ab24cd793626f03792414158082260872"
+    },
+    {
+      "source": "overlays/s19b/anime/effect/janime2.c",
+      "symbol": "s19b_dword_800C33FC",
+      "script": "s19b_dword_800DDAD0",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        51,
+        90,
+        116
+      ],
+      "bytes": "008304000b0033005a007401fe01ff080101010c00050802020201ff0200010d0c001401ff0a000f000f08fefefe0200010d0f01fe0aff6aff6a0c00050802020201ff0200010d0c001401ff0a000f000f08fefefe0200010d0f01fe0affceffce0c000e0affffffff08fefefe01ff0200010d0f01fe0a00fa00fa0c001d0a000a000a08ffffff01ff0200010d0f",
+      "sha256": "3fe5e054d84fb507281295502e1aae1daaaf0e1d378811d63769888b1fa496a1"
+    },
+    {
+      "source": "overlays/s19b/anime/effect/janime2.c",
+      "symbol": "s19b_dword_800C3418",
+      "script": "s19b_dword_800DDB60",
+      "texture": 65166,
+      "atlas": [
+        2,
+        2,
+        3
+      ],
+      "profile": "Muzzle",
+      "starts": [
+        5
+      ],
+      "bytes": "00070100050901f40200010f",
+      "sha256": "0557301182e2502f64d1ec36a3d68ba9e6fa9dc6a0adb6e80fd385f2dac8766c"
+    },
+    {
+      "source": "overlays/s19b/anime/effect/janime2.c",
+      "symbol": "s19b_dword_800C3434",
+      "script": "s19b_dword_800DDB60",
+      "texture": 50716,
+      "atlas": [
+        2,
+        2,
+        3
+      ],
+      "profile": "Muzzle",
+      "starts": [
+        5
+      ],
+      "bytes": "00070100050901f40200010f",
+      "sha256": "0557301182e2502f64d1ec36a3d68ba9e6fa9dc6a0adb6e80fd385f2dac8766c"
+    },
+    {
+      "source": "overlays/s19b/anime/effect/janime2.c",
+      "symbol": "s19b_dword_800C3450",
+      "script": "s19b_dword_800DDB6C",
+      "texture": 31572,
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "profile": "Blood",
+      "starts": [
+        5
+      ],
+      "bytes": "002a01000501fe0200010800b0b00c000501ff0a003200320200010d0c000501ff0a000f000f08e8f8f80200010d0f",
+      "sha256": "ffb1367c1ff33694ac50dba6fdb31ab3ca416459c0b402dd015f18583664c748"
+    },
+    {
+      "source": "overlays/s19b/anime/effect/janime2.c",
+      "symbol": "s19b_dword_800C346C",
+      "script": "s19b_dword_800DDB9C",
+      "texture": 20781,
+      "atlas": [
+        8,
+        4,
+        30
+      ],
+      "profile": "Smoke",
+      "starts": [
+        11,
+        51,
+        90,
+        116
+      ],
+      "bytes": "008304000b0033005a007401fe01ff080101010c00050801010101ff0200010d0c001401ff0a000f000f08ffffff0200010d0f01fe0aff6aff6a0c00050802020201ff0200010d0c001401ff0a000f000f08fefefe0200010d0f01fe0affceffce0c000e0affffffff08fefefe01ff0200010d0f01fe0a00fa00fa0c001d0a000a000a08ffffff01ff0200010d0f",
+      "sha256": "7a25cfcc128df0039e168cb2172a84534ed264a39a9cd156d08008ac8fb10220"
+    }
+  ],
+  "excluded": [
+    {
+      "source": "overlays/s11d/anime/effect/rope.c",
+      "symbol": "anm_dmgsmoke2_form",
+      "reason": "Decomp byte array has an out-of-bounds script directory"
+    }
+  ],
+  "runtime_constructed": [
+    {
+      "source": "kojo/sstorm.c",
+      "profile": "SnowStorm",
+      "program_hex": "001001000501fe0c000001ff080000000200010d0f",
+      "mutable_byte_offsets": [
+        8,
+        9
+      ],
+      "mutable_meaning": "native lifetime",
+      "textures": [
+        "snow_ex1",
+        "snow_ex2",
+        "snow_ex3"
+      ],
+      "atlas": [
+        1,
+        1,
+        1
+      ],
+      "validation": "All other program bytes, script start and cursor must match"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 #pragma once
 #include "runtime/games/mgs_asset_cache.h"
+#include "runtime/gpu/modern_replay.h"
 #include <array>
 #include <memory>
 #include <vector>
@@ -28,6 +29,8 @@ struct SceneInstance {
   uint32_t asset = ~0u;
   bool visible = false;
   bool deformed = false;
+  bool stageLighting = false;
+  std::vector<gpu::replay::OriginalPointLight> pointLights;
   ScenePoseResult pose;
   std::vector<SceneModel> models;
 };
@@ -60,3 +63,4 @@ void reconstructScenePoses(const Memory &memory, SceneSnapshot &scene);
 }
 // USA recipe instruction override, executed before any PSX bounding/culling.
 void mgsCaptureSceneBeforeBounds(recomp_context *ctx);
+void mgsBeforeChannelUnit(recomp_context *ctx);

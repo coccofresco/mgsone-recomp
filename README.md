@@ -6,9 +6,25 @@ Le immagini italiane e il relativo audit restano disponibili come confronto.
 
 Stato: **avvio nativo USA verificato**, dai loghi Konami attraverso l’intro
 fino al menu iniziale, con presentazione Vulkan e temporizzazione NTSC.
-È verificato anche il **gameplay nel molo iniziale**, con movimento di Snake
-e apertura del Codec. Sono ricompilati `title`, `opening`, `d00a`, `s00a` e
-`s01a`; il passaggio all’eliporto e i salvataggi dal gioco restano da validare.
+La campagna verificata in **Normal** arriva dal molo attraverso eliporto, hangar e DARPA
+fino alla **vittoria nello scontro B1 con Meryl**. Sono ricompilati 73 candidati
+di overlay della campagna; Ocelot, i salvataggi dal gioco e il cambio disco
+restano da validare. Le [macro TAS adattive](docs/mgs-tas-routes.md) eseguono
+azioni in una sessione nativa continua, sincronizzandole sullo stato del gioco.
+La partita continua in Extreme è temporaneamente accantonata. La verifica
+attuale usa [scenari indipendenti](docs/mgs-tas-routes.md#independent-scenario-checks):
+**24 salvataggi Normal dei due dischi, su 20 scenari**, caricati dal menu originale,
+con controllo stabile e prova di abbassarsi/rialzarsi. Tutti passano nella recomp
+senza interprete e coincidono con SwanStation per avanzamento, vita, inventario
+e posizione finale. Questa copertura non certifica gli scontri completi o il
+cambio disco. Le [verifiche del secondo disco](docs/mgs-tas-routes.md#disc-2-scenario-workflow)
+includono 10 salvataggi e brevi prove Vulkan a 3840×2160 negli 8 scenari distinti,
+con correzione del crash di `s15a` e del percorso delle mesh nelle scene con nebbia.
+Le [prove mirate da checkpoint](docs/mgs-tas-routes.md#checkpoint-situations)
+verificano anche menu, equipaggiamento, cambio stanza e danno/rialzata contro Liquid,
+confrontando recomp e SwanStation senza ripetere la campagna.
+Il precedente replay continuo dall’avvio all’eliporto in Extreme
+resta conservato (17.588 VBlank, vita piena, nessuna allerta).
 **F5/F9 ora salvano e ripristinano anche dopo il riavvio del runtime.**
 Non è ancora un port completo.
 
@@ -20,6 +36,9 @@ un modello di budget CPU nativo equivalente esattamente al 165%.
 - [Stato, verifiche e limiti del runtime](docs/mgs-runtime-progress.md)
 - [Controlli e memory card persistenti](docs/mgs-input-memory-card.md)
 - [Savestate nativi: tasti, formato e verifiche](docs/mgs-savestates.md)
+- [Registrazione TAS, replay verificabile e checkpoint di regressione](docs/mgs-tas.md)
+- [Macro TAS adattive e avanzamento per traguardi](docs/mgs-tas-routes.md)
+- [Donor: aggiornamenti verificati il 3 ottobre 2026](docs/donor-updates-2026-10-03.md)
 - [Migrazione ai moduli C della decompilazione e stream originali](docs/mgs-decomp-native-core.md)
 - [Intro Vulkan, rifrazione continua e verifiche del dettaglio UHD](docs/mgs-intro-presentation.md)
 - [Visori, dissolvenze, scie e aloni nativi Vulkan](docs/mgs-screen-effects.md)
@@ -59,6 +78,16 @@ per gli opachi, senza ereditare la suddivisione PS1. Il percorso include le mesh
 articolate, l'illuminazione dalle normali originali, le palette animate e i
 monitor composti a runtime. Altre scene, famiglie LOD e interpolazione richiedono
 ulteriori verifiche e sviluppo.
+
+Gli [adattatori degli effetti](docs/mgs-screen-effects.md) coprono le 60 schede
+del censimento, con materiali per pixel, particelle semantiche, ottiche sulla
+scena Vulkan e interfaccia vettoriale. La verifica di tutte le scene e delle
+combinazioni di gameplay resta distinta dal completamento degli adattatori;
+le prove sono registrate nel [rapporto](docs/mgs-effects-adapter-evidence.json).
+Il [confronto C4/Ninja](data/presentation/effects-review-20261005-v15/index.html)
+mostra le ultime scene PSX/Vulkan in 4K; le
+[evidenze V15](docs/mgs-effects-v15-evidence.json) documentano la correzione
+del materiale della mimetica e le verifiche ancora aperte.
 
 ## Base riutilizzata
 

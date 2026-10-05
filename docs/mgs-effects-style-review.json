@@ -1,0 +1,2742 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "criterion": "Reimplementazione moderna lato Vulkan, con resa generale simile all’originale: significato, silhouette, palette, intensità relativa, durata e leggibilità.",
+  "scope": "Revisione individuale di tutte le 60 schede, inclusi dossier sovrapposti dei boss; non sono 60 effetti indipendenti né 60 scene certificate.",
+  "baseline": "docs/mgs-effects-optics-v6-evidence.json",
+  "upstream": {
+    "repository": "https://github.com/FoxdieTeam/mgs_reversing",
+    "commit": "7b66372bcf156249560c90918d9472a47aabf3c5",
+    "source_tree_sha256": "67e6c165bb7f3671be2b44e8613689c39ef2e62c06cc8f12aaacab45a951dd41",
+    "runtime_donor_commit_unchanged": "217509eae471629b1a53633b816c61adfef9ed5c"
+  },
+  "catalog": {
+    "path": "docs/mgs-effects-catalog.json",
+    "sha256": "11abd196f4e52e39b841e7810b136865017b700c693ed4623adcc02dc7966a92"
+  },
+  "summary": {
+    "entries_reviewed": 60,
+    "decisions": {
+      "revised": 27,
+      "shared_revision": 11,
+      "retained": 22
+    },
+    "families_with_submission_evidence_this_revision": 17,
+    "representative_runs": 7,
+    "all_variants_visually_verified": false
+  },
+  "preserved": "Simulazione, RAM del gioco, clock, traiettorie, danni e logica originali; presentazione 3840x2160 16:9, normali/luci per pixel e RGB8/float senza dithering PSX. Taratura V6 di acqua, bolle, scafo, CRT e neve conservata.",
+  "validation": {
+    "tests_passed": 359,
+    "suites": 28,
+    "log": {
+      "path": ".local/effects-v7-final-tests.log",
+      "sha256": "5e41156a4827a7d96779ef50369f6d8c79178ecea87555d1321d8063727426cf"
+    },
+    "filter": "Mgs*:*Vulkan*:*ModernReplay*",
+    "opt_in_vulkan": true,
+    "new_or_extended_regressions": [
+      "RetailBillboardsPreserveAnimatedUvAndSourceTexture",
+      "OptInGpuVisorRetainsSubpixelEdgesAndNativeVram: palette termica calda e separazione dei livelli luminosi NVG",
+      "OptInGpuFadeEndpointsAndEnvelopeUseTrueColor: dissolvenza additiva/sottrattiva nei livelli intermedi e risposta allarme aggiornata"
+    ],
+    "asset_audits": [
+      "scripts/mgs_effects_catalog.py --check --require-adapters",
+      "scripts/mgs_bubble_layouts.py --check",
+      "scripts/mgs_animation_signatures.py --check"
+    ],
+    "protected_saves_manifest": {
+      "path": ".local/tas-protected.sha256",
+      "sha256": "5414ea1b5bfa9556900c4c540bb0392f2dfe435caf980612e0f22a2f7ddfda8e"
+    }
+  },
+  "implementation": [
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_original_texture.glsl",
+      "sha256": "65ece6895e72b7eb515b3272712122bc9c07b14eb49f35c50e6181f0479eac32"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+      "sha256": "287b9b7f41a17644c4d6d1dc68df50a88018353ddbd97c56fd57e90077746092"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+      "sha256": "d72baadcca799b4d5c277b5a8f7b42530c9fa1483fa3f9e9154740f17dd1a363"
+    },
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+      "sha256": "9e8e8a946101a057f3f599848c7ad1c30936c75d1aea7c069fc91b1e72821776"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_asset_cache.cpp",
+      "sha256": "27535cec2e9ee05ae9f5dee96e492e0e2d98ac99946a0804253cba6f9db78fb1"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp",
+      "sha256": "33183d363ef73d4de64d3529073774c6f585dc4630440fac7dd2f5259d544600"
+    }
+  ],
+  "build": {
+    "runtime": {
+      "path": "build/ps1Runtime/ps1Runtime",
+      "sha256": "f77bb0d523b319ab6707d477dd314a3661323b9e275c1dd6ebe652850bda7b41"
+    },
+    "log": {
+      "path": ".local/effects-v7-final-build.log",
+      "sha256": "2feff1832cc5f782f4d55598602a42ee116c2531cbd3063f2f5b41019f344393"
+    },
+    "spirv": [
+      {
+        "path": "build/ps1Runtime/shaders/replay_copy_scratch.frag.spv",
+        "sha256": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_native_expand.frag.spv",
+        "sha256": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_opaque_textured.frag.spv",
+        "sha256": "a8dc84e448e6b07576266376fffaeb95741e8f399b973fdd2fbd36bcc4ae228b"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_opaque_untextured.frag.spv",
+        "sha256": "1ad61c0131f36069cfa4698b502552ed4bb5effe04ec53ec071bb3fea98cc38d"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_precise.frag.spv",
+        "sha256": "dda613122c25b63fc65261aa20228b927ed8b85214c43d534434ddd085b0686c"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_precise.vert.spv",
+        "sha256": "e4bdb5ad46b968a59cf2ce824aec373dfb2f7b0c3331730c3a0f119dcd6c00b4"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_seed.frag.spv",
+        "sha256": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_semi_textured.frag.spv",
+        "sha256": "54ec210dad4d5733a5f3ed663eac2b94f8c5dc6aaeed544b5f64e75cbd892586"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_owner.frag.spv",
+        "sha256": "ff93339ddaa8e3d94047a29f3d4fef5fb720000c7af1074cc6bc3923d7a5d513"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_precise.vert.spv",
+        "sha256": "82b30a4c0b1ea3cb0d4ceda857d29ce076d0fd3c18fe37b61b4d75524990025f"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_stack.frag.spv",
+        "sha256": "534f57f99f8bfccfc95e12ae40318a3bb1ad3ebc0894a97c14a0358ac0e84b62"
+      }
+    ]
+  },
+  "captures": [
+    {
+      "id": "thermal",
+      "path": "data/native/effects-v7-thermal",
+      "result": {
+        "path": "data/native/effects-v7-thermal/result.json",
+        "sha256": "a50c503832f8580f113e81aac684069ddbb14ec4e562b5228bfd9af599143bbf"
+      },
+      "manifest": {
+        "path": "data/native/effects-v7-thermal/manifest.json",
+        "sha256": "f3022e9909fd15b2473a159273b3a6bfaf3e81678f3f1bb430d041e4d4b53170"
+      },
+      "metrics": {
+        "path": "data/native/effects-v7-thermal/metrics.json",
+        "sha256": "0f4766698717e07bb5afc1815a8a961627cb4c1fce9b8557f5e48704297e8e37"
+      },
+      "gpu_effect_submissions": {
+        "mgs.effects.gpu.kind.2": 151,
+        "mgs.effects.gpu.kind.26": 131,
+        "mgs.effects.gpu.kind.7": 132,
+        "mgs.screen_effect.pass.gas_haze": 68,
+        "mgs.screen_effect.pass.thermal_vision": 64
+      },
+      "renderer_downgrades": 0
+    },
+    {
+      "id": "final-night",
+      "path": "data/native/effects-v7-final-night",
+      "result": {
+        "path": "data/native/effects-v7-final-night/result.json",
+        "sha256": "dd58e47cf51137a5be19b07c11d2228f0f2b23aa782c11818bb2aa25894127bf"
+      },
+      "manifest": {
+        "path": "data/native/effects-v7-final-night/manifest.json",
+        "sha256": "83a21fb77df455caebaea0584240c4f60d9bf7bb5fe82f037b3ab5d2fc41c102"
+      },
+      "metrics": {
+        "path": "data/native/effects-v7-final-night/metrics.json",
+        "sha256": "a1afa395d727d8d3a150bcedd6f7c0186115dcefbda594787885472d13937150"
+      },
+      "gpu_effect_submissions": {
+        "mgs.effects.gpu.kind.2": 182,
+        "mgs.effects.gpu.kind.26": 143,
+        "mgs.effects.gpu.kind.7": 144,
+        "mgs.screen_effect.pass.gas_haze": 144,
+        "mgs.screen_effect.pass.night_vision": 64
+      },
+      "renderer_downgrades": 0
+    },
+    {
+      "id": "panorama",
+      "path": "data/native/effects-v7-panorama",
+      "result": {
+        "path": "data/native/effects-v7-panorama/result.json",
+        "sha256": "0868d95971de6e456856904e62a1f4e78e4e74881f8fbc67781db4048e67214d"
+      },
+      "manifest": {
+        "path": "data/native/effects-v7-panorama/manifest.json",
+        "sha256": "76e894073241ff78d63b46a37b8e38fdec13a60141ef0a2257b599104115e746"
+      },
+      "metrics": {
+        "path": "data/native/effects-v7-panorama/metrics.json",
+        "sha256": "93da82d2f8c0c849d385734f58c933af78d0bbb1355730deddc5cefb9a05cbd7"
+      },
+      "gpu_effect_submissions": {
+        "mgs.effects.gpu.kind.11": 108,
+        "mgs.effects.gpu.kind.2": 233,
+        "mgs.effects.gpu.kind.26": 59,
+        "mgs.effects.gpu.kind.3": 180,
+        "mgs.effects.gpu.kind.30": 14841,
+        "mgs.effects.gpu.kind.37": 5192,
+        "mgs.effects.gpu.kind.7": 180
+      },
+      "renderer_downgrades": 0
+    },
+    {
+      "id": "snow",
+      "path": "data/native/effects-v7-snow",
+      "result": {
+        "path": "data/native/effects-v7-snow/result.json",
+        "sha256": "6c2af900036b0d41baedfa2db802294a2d443da71ca8f69661457f8ca17950e0"
+      },
+      "manifest": {
+        "path": "data/native/effects-v7-snow/manifest.json",
+        "sha256": "5aded9b226021515fc9ac4a22f7f18b0f399b511e3e286dfd5340e561d199923"
+      },
+      "metrics": {
+        "path": "data/native/effects-v7-snow/metrics.json",
+        "sha256": "20367b3773ea4d6dbae2e3d4b416cd44975a4fc2a4bfaec2a343169e332a24df"
+      },
+      "gpu_effect_submissions": {
+        "mgs.effects.gpu.kind.2": 20,
+        "mgs.effects.gpu.kind.26": 59,
+        "mgs.effects.gpu.kind.30": 5595,
+        "mgs.effects.gpu.kind.7": 240
+      },
+      "renderer_downgrades": 0
+    },
+    {
+      "id": "disc2",
+      "path": "data/native/effects-v7-disc2",
+      "result": {
+        "path": "data/native/effects-v7-disc2/result.json",
+        "sha256": "b4e3b54d1b361c75f0b8e1db5541502e1f6e2722347fe4609cda6062907e24b8"
+      },
+      "manifest": {
+        "path": "data/native/effects-v7-disc2/manifest.json",
+        "sha256": "fecbe51ea186ddd1a8b8785267d7f19de4c54b60564f382b3b653df7932ac706"
+      },
+      "metrics": {
+        "path": "data/native/effects-v7-disc2/metrics.json",
+        "sha256": "9031fcb5d173ef7f493eab8bbfe53da6f4e1b40a96c8f5260ab6eb4dca780dc4"
+      },
+      "gpu_effect_submissions": {
+        "mgs.effects.gpu.kind.26": 58
+      },
+      "renderer_downgrades": 0
+    },
+    {
+      "id": "intro",
+      "path": "data/native/effects-v7-final-intro",
+      "result": {
+        "path": "data/native/effects-v7-final-intro/result.json",
+        "sha256": "aa915de667c4deb1cb77f0c6d4580ee05117021caf0ed453857095882330994e"
+      },
+      "manifest": {
+        "path": "data/native/effects-v7-final-intro/manifest.json",
+        "sha256": "dd0a749331aa00422c9584df68e24f169dabc61fe017442627ef2180d4689627"
+      },
+      "metrics": {
+        "path": "data/native/effects-v7-final-intro/metrics.json",
+        "sha256": "4041d17f10b7e743a2192bfc8a0f3356b679fe0fd3df2bbc675b77d5007b3ddd"
+      },
+      "gpu_effect_submissions": {
+        "mgs.effects.gpu.kind.15": 28026,
+        "mgs.effects.gpu.kind.25": 9614,
+        "mgs.screen_effect.pass.fade_black": 6,
+        "mgs.screen_effect.pass.night_vision": 32,
+        "mgs.screen_effect.pass.water_view": 300,
+        "mgs.screen_effect.pass.zoom_blur": 261
+      },
+      "renderer_downgrades": 0
+    },
+    {
+      "id": "trails",
+      "path": "data/native/effects-v7-final-trails",
+      "result": {
+        "path": "data/native/effects-v7-final-trails/result.json",
+        "sha256": "4a57a098f28abdbab345509668b6566c5dbffe92091528eddc924388f3bfc2e0"
+      },
+      "manifest": {
+        "path": "data/native/effects-v7-final-trails/manifest.json",
+        "sha256": "ad98c0bfce9703fd37bea58100c997e4d68ba9992291878d9dd8e1e4439722f2"
+      },
+      "metrics": {
+        "path": "data/native/effects-v7-final-trails/metrics.json",
+        "sha256": "e0f07ba855b6a06a27a08cf77666682da6db8cf3d9de0fb804d3f1078a4421d4"
+      },
+      "gpu_effect_submissions": {
+        "mgs.screen_effect.pass.cinematic_red_tint": 86,
+        "mgs.screen_effect.pass.fade_black": 59,
+        "mgs.screen_effect.pass.gas_haze": 142,
+        "mgs.screen_effect.pass.temporal_blur": 139
+      },
+      "renderer_downgrades": 0
+    }
+  ],
+  "gallery": "data/presentation/effects-review-20261005-v7/index.html",
+  "limitations": [
+    "Revisione del sorgente/adattatore e revisione visiva sono livelli diversi: observed_runs documenta soltanto le famiglie effettivamente inviate alla GPU.",
+    "I frame sono coppie PSX/Vulkan dalla stessa run e dallo stesso VBlank; il lato PSX è il framebuffer nativo del runtime, non una nuova registrazione SwanStation.",
+    "Le run rappresentative non provano tutte le combinazioni, fasi dei boss, danni del vetro, specchi o transizioni di equipaggiamento; i relativi scenari restano da estendere.",
+    "La run disco 2 osserva solo le ombre tra gli effetti classificati: non certifica REX, Liquid o la fuga in jeep.",
+    "Le primitive senza asset originale associabile conservano il ripiego analitico; il conteggio della famiglia da solo non prova un binding completo a tutti i PCX.",
+    "Il disegno delle texture originali conserva il dettaglio disponibile negli asset: filtro continuo e illuminazione non inventano nuove immagini ad alta risoluzione.",
+    "Le catture final-intro/final-trails includono la correzione delle dissolvenze. Final-night include la correzione NVG; le altre run precedono questi due ritocchi, che non cambiano gli effetti attivi nei rispettivi scenari."
+  ],
+  "effects": [
+    {
+      "id": "water_view",
+      "title": "Ottica subacquea",
+      "decision": "retained",
+      "finding": "Le strisce di wt_view sono un mezzo tecnico: ciò che conta è la scena blu scura e deformata, senza perdere le sagome.",
+      "action": "Conservata la taratura V6: rifrazione continua contenuta e assorbimento da profondità; nessuna nuova caustica procedurale.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/wt_area.c",
+          "sha256": "a3023394f8c807841ea738104fa9bb548832b12f7ca9351cc1bc4bd86d2fef5f"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/wt_area2.c",
+          "sha256": "747053657b9607b5ed5f65173130ab4e625940603ef554f28e508c44d09cc8ac"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/wt_view.c",
+          "sha256": "2a2e3f5392a3c54ead234461973fac81164787c00dcaf596ad6cc2d72578aaaa"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+          "anchor": "WaterRefraction"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "mgs_water_color"
+        }
+      ],
+      "prior_validation_scope": "intro_checkpoint",
+      "observed_runs": [
+        {
+          "run": "intro",
+          "submissions": {
+            "mgs.screen_effect.pass.water_view": 300
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "furnace_heat",
+      "title": "Calore della fonderia e immersione nel metallo",
+      "decision": "retained",
+      "finding": "Furnace riusa WaterView2 ma con bounds e colore da metallo caldo: il riuso del costruttore non implica acqua.",
+      "action": "Conservato il campo ascendente separato, senza colore blu o caustiche. Rimane da osservare la caduta nel metallo in una scena USA.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/melt_die.c",
+          "sha256": "7c7205ed0f093fcad47bcd65e5fab3447c5f87b078d19aec8355a808b655f081"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/furnace.c",
+          "sha256": "29d09fc538b92580e872d0a60af523fe4ebecb0aae363ca80186400e226dd55e"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/wt_view.c",
+          "sha256": "2a2e3f5392a3c54ead234461973fac81164787c00dcaf596ad6cc2d72578aaaa"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+          "anchor": "furnaceHeat"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "mgs_water_color"
+        }
+      ],
+      "prior_validation_scope": "cpu_owner_fixture",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "night_vision",
+      "title": "Visore notturno",
+      "decision": "revised",
+      "finding": "Goggle raddoppia già la palette; ScnMask aggiunge verde. Nella prova con equipaggiamento il secondo guadagno cancellava pareti e pavimento.",
+      "action": "Ridotti il secondo guadagno e il bloom; curva morbida sulle alte luci e grana visibile comandata dal tempo originale. CRT verde cinematico V6 conservato separatamente.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/equip/gglmng.c",
+          "sha256": "47b37a84b2f0053d8f7416eb53b02f6b0e7d1719d1a455796a010287e05f36d3"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/equip/gglsight.c",
+          "sha256": "6136a417d862bd1e6d22395d57c933fdfdef988da20897d898a5d6b94f7e87f3"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/goggle.c",
+          "sha256": "9ee804202dc6b709c9599f4c17eb55bb328a9e309b812a1e25d0f72dfc53c6dc"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/scn_mask.c",
+          "sha256": "9ed234b5bc718ed281be8390b1a46b8578fd8f44f3e30de98c5878d2fb09db1f"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+          "anchor": "NightVision"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "mgs_screen_effect"
+        }
+      ],
+      "prior_validation_scope": "s15a_actual_equipment_input_run_intro_crt_and_gpu_fixture",
+      "observed_runs": [
+        {
+          "run": "final-night",
+          "submissions": {
+            "mgs.screen_effect.pass.night_vision": 64
+          }
+        },
+        {
+          "run": "intro",
+          "submissions": {
+            "mgs.screen_effect.pass.night_vision": 32
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "cinematic_red_tint",
+      "title": "Dominante rossa cinematografica",
+      "decision": "retained",
+      "finding": "GoggleIR nell’intro è un trattamento video rosso, non una misura di temperatura.",
+      "action": "Conservato il CRT rosso V6: base cromatica leggibile, banda video ridotta, bloom e disturbo. Nessun falso calore aggiunto agli attori cinematici.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/goggleir.c",
+          "sha256": "bada28567cdded14b062b26ad06fb7d0877faa069180ac0a40767e170139cbad"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/scn_mask.c",
+          "sha256": "9ed234b5bc718ed281be8390b1a46b8578fd8f44f3e30de98c5878d2fb09db1f"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+          "anchor": "CinematicRedTint"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "mgs_screen_effect"
+        }
+      ],
+      "prior_validation_scope": "intro_checkpoint_and_gpu_fixture",
+      "observed_runs": [
+        {
+          "run": "trails",
+          "submissions": {
+            "mgs.screen_effect.pass.cinematic_red_tint": 86
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "thermal_vision",
+      "title": "Visore termico e materiali IR",
+      "decision": "revised",
+      "finding": "PaletteConvert produce toni rossi caldi, mentre il vecchio shader inventava blu, magenta e giallo.",
+      "action": "Palette continua calda ancorata al colore originale; emissione limitata ai materiali IR effettivi. Verificato equipaggiando il vero termico nel magazzino.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/equip/gglmng.c",
+          "sha256": "47b37a84b2f0053d8f7416eb53b02f6b0e7d1719d1a455796a010287e05f36d3"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/libdg/bound.c",
+          "sha256": "b66cfd1db9af9b176a3d0fac6fae4b74880575603bbe2e35a3cbc31499591fb6"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/goggleir.c",
+          "sha256": "bada28567cdded14b062b26ad06fb7d0877faa069180ac0a40767e170139cbad"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/scn_mask.c",
+          "sha256": "9ed234b5bc718ed281be8390b1a46b8578fd8f44f3e30de98c5878d2fb09db1f"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+          "anchor": "ThermalVision"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "mgs_screen_effect"
+        }
+      ],
+      "prior_validation_scope": "s15a_actual_equipment_input_run_and_gpu_fixture",
+      "observed_runs": [
+        {
+          "run": "thermal",
+          "submissions": {
+            "mgs.screen_effect.pass.thermal_vision": 64
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "fade",
+      "title": "Dissolvenze cinematiche",
+      "decision": "revised",
+      "finding": "Nel frame 7440 la scena PSX è già nera ma Vulkan lasciava visibile la stanza: FadeIO sottrae/somma luminosità, non modula la trasparenza.",
+      "action": "Corretta la dissolvenza RGB8 con offset luminoso nativo e clipping continuo, rispettando la scomparsa delle ombre e il montaggio. Test GPU sui livelli intermedi oltre agli estremi.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/fadeio.c",
+          "sha256": "ddfa434d0b3ca1bd9007341d8bb1f9d68d405da5014d868962cfd55a45d3c490"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+          "anchor": "FadeBlack"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "mgs_screen_effect"
+        }
+      ],
+      "prior_validation_scope": "intro_checkpoint_and_gpu_fixture",
+      "observed_runs": [
+        {
+          "run": "intro",
+          "submissions": {
+            "mgs.screen_effect.pass.fade_black": 6
+          }
+        },
+        {
+          "run": "trails",
+          "submissions": {
+            "mgs.screen_effect.pass.fade_black": 59
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "temporal_trails",
+      "title": "Scie e persistenza temporale",
+      "decision": "revised",
+      "finding": "BlurPure modula in modo neutro la storia del framebuffer. La dominante azzurra e lo zoom centrale aggiunti non hanno questo significato.",
+      "action": "Rimosse dominante e espansione radiale inventate; persistenza ridotta e scia orientata da una stima limitata del gradiente. Non sono motion vectors geometrici.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/blurpure.c",
+          "sha256": "81b5a2161a5e99f38f8a99e06a3bcf94deac898bcbeebb6fa59d0a0aced0570d"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+          "anchor": "TemporalBlur"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "mgs_screen_effect"
+        }
+      ],
+      "prior_validation_scope": "intro_run_and_gpu_regressions",
+      "observed_runs": [
+        {
+          "run": "trails",
+          "submissions": {
+            "mgs.screen_effect.pass.temporal_blur": 139
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "zoom_blur",
+      "title": "Zoom, sfasamento e deformazione a quadranti",
+      "decision": "retained",
+      "finding": "Blur usa quattro quadranti per zoom e sfasamento; la divisione in quattro non è parte dell’intenzione visiva.",
+      "action": "Conservato lo shutter continuo a dieci campioni, con variante, crop, fase e profondità della scena corrente per gli effetti successivi.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/blur.c",
+          "sha256": "194a511191edd92a92a42423ce259d295f5a867a24e1f81ed0fbbcf926622a75"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+          "anchor": "ZoomBlur"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "mgs_screen_effect"
+        }
+      ],
+      "prior_validation_scope": "intro_checkpoint_and_cpu_fixture",
+      "observed_runs": [
+        {
+          "run": "intro",
+          "submissions": {
+            "mgs.screen_effect.pass.zoom_blur": 261
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "focus",
+      "title": "Messa a fuoco selettiva",
+      "decision": "retained",
+      "finding": "Focus dispone copie vicino/lontano in funzione di flen e range; la lettura dello shader coincide con queste soglie.",
+      "action": "Conservata la sfocatura da profondità Vulkan e circolo di confusione, con protezione delle silhouette e dell’interfaccia.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/focus.c",
+          "sha256": "8a7522106eefd11eca3c45209a959274a31d99c8cc74dc571d8ce828e5ac446a"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_screen_effects.cpp",
+          "anchor": "Focus"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "nearFocus"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "stun_flash",
+      "title": "Flashbang e abbagliamento",
+      "decision": "revised",
+      "finding": "Stgfd_io alterna bianco e giallo prima del decadimento; usare soltanto il massimo dei canali perde la sequenza cromatica.",
+      "action": "Sovraesposizione morbida guidata dai tre canali originali, con bianco pieno all’estremo. Durata di cecità e logica restano native.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/stgfd_io.c",
+          "sha256": "5e24d66e4198c5978cfd3263d8b8e5d66f0a4da0854d4fe770ac2569e5f0172e"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/stngrnd.c",
+          "sha256": "46c793b6529a6b373905219831e67d36d85d74436ced3f2789e14ff44776bc2c"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+          "anchor": "StunFlash"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "mgs_screen_effect"
+        }
+      ],
+      "prior_validation_scope": "gpu_fixture_real_grenade_pending",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "red_alert",
+      "title": "Lampeggi e lavaggi cromatici d’allarme",
+      "decision": "revised",
+      "finding": "RedAlert controlla RGB, messaggi e modi di composizione; una forte curva esponenziale cambiava troppo il colore percepito.",
+      "action": "Risposta ancorata per il 75% al blend originale e per il 25% alla curva ottica, rispettando sottrazione, semisomma e quarto di somma.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/red_alrt.c",
+          "sha256": "9d3512307be45134609c02eba4b0f6c716cf362e857d18b7d38fd0c097c6a0c1"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+          "anchor": "AlertTint"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "mgs_screen_effect"
+        }
+      ],
+      "prior_validation_scope": "gpu_fixture_scene_pending",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "sepia",
+      "title": "Monocromia e viraggi",
+      "decision": "revised",
+      "finding": "Palette/sepia cambiano soltanto le CLUT previste; il nuovo filtro degli asset rischiava di saltare questa conversione.",
+      "action": "Applicata la stessa conversione monocromatica anche ai materiali filtrati, una sola volta e nella regione CLUT corretta; trasparenza/STP conservati.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/palette.c",
+          "sha256": "4eae77e27792d03809f0eef795b99380dd638d3e8d8ab56e41f924d3652a54a2"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/sepia.c",
+          "sha256": "6b6a62e77b6b998140e95be76280bf43478b3e6c68d41fd18d75c1f51962a46f"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "paletteMode"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "gas_halo",
+      "title": "Aloni e velature di gas",
+      "decision": "retained",
+      "finding": "GasEffect usa un alone giallastro/oliva con RGB interni ed esterni diversi. Non descrive automaticamente un volume di nebbia nell’intera stanza.",
+      "action": "Conservato l’alone ellittico continuo con raggio e colori originali. Riscontrato attivo nelle run dei visori e della cinematica.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/gas_efct.c",
+          "sha256": "67c0121b8998abcc4a6f71a43f0986aaa63a15548f05402f858720ae09ad909c"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/gasdamge.c",
+          "sha256": "52fefab4e0e028ea386b91270795080709c67bb103f5d5659020912fd5eecdcb"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+          "anchor": "GasHaze"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+          "anchor": "mgs_screen_effect"
+        }
+      ],
+      "prior_validation_scope": "s15a_equipment_and_intro_runs_plus_cpu_fixture",
+      "observed_runs": [
+        {
+          "run": "thermal",
+          "submissions": {
+            "mgs.screen_effect.pass.gas_haze": 68
+          }
+        },
+        {
+          "run": "final-night",
+          "submissions": {
+            "mgs.screen_effect.pass.gas_haze": 144
+          }
+        },
+        {
+          "run": "trails",
+          "submissions": {
+            "mgs.screen_effect.pass.gas_haze": 142
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "mosaic",
+      "title": "Mosaico e censura regionale",
+      "decision": "retained",
+      "finding": "Il mosaico è un effetto intenzionale sul contenuto, non una ragione per abbassare la risoluzione dell’intera presentazione.",
+      "action": "Conservate dimensioni e posizioni delle celle vive USA, campionate dalla scena moderna. L’associazione narrativa a Johnny resta non certificata dagli stub Integral.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/mosaic.c",
+          "sha256": "909f14b5a532643a8d0bac30c7ddf4bac6c54e34981ddbb913de120755e6c44c"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "mosaic.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "optical_camo",
+      "title": "Mimetica ottica e rivelazione del corpo",
+      "decision": "revised",
+      "finding": "Kogaku2 usa modulazione verde per Snake e neutra per il Ninja, con soglie di rivelazione. Il precedente bordo ciano era arbitrario.",
+      "action": "Rifrazione più contenuta e colore guidato dalla modulazione nativa, con un debole bordo neutro. Conservate rivelazione, esclusione termica e composizione con specchi.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/equip/kogaku2.c",
+          "sha256": "9cdc08141faad2bbba62bf3896d7ebfc1ee4701e556f8e5757e005ff1f251052"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "kogaku2.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false,
+      "scenario_followup": {
+        "evidence": "docs/mgs-effects-v15-evidence.json",
+        "scope": "Rivelazione del Ninja in s08c; crash del materiale dinamico corretto; sette rifiuti Vulkan nella transizione da localizzare.",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "env_mapping",
+      "title": "Riflessi dipendenti dalle normali",
+      "decision": "retained",
+      "finding": "EnvMap3 lega la texture ambiente alle normali della mesh; l’UV a byte è soltanto il mezzo PSX.",
+      "action": "Conservato il campionamento dell’asset originale con riflessione calcolata per pixel dalle normali, senza riprodurre il troncamento degli UV.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/envmap3.c",
+          "sha256": "527baf047cb3d78a4a07c8dff163346d7d7d2ba433768052ec76c057411d7ecf"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "envmap3.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "planar_mirror",
+      "title": "Specchi e oggetti riflessi",
+      "decision": "retained",
+      "finding": "Mirror esprime riflessione e piano nelle trasformazioni degli oggetti; duplicare una seconda riflessione cambierebbe la scena.",
+      "action": "Conservate mesh e trasformazioni originali in float, clipping del piano e interazione con mimetica. Verifica di una scena completa con specchio ancora aperta.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/mirror.c",
+          "sha256": "1aab17e534811600ba7a0e1f575016c226803ba83e11ad826b70a03a0214b4e1"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "mirror.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "water_surface",
+      "title": "Superficie dell’acqua",
+      "decision": "revised",
+      "finding": "Wsurface anima un materiale reale sulla griglia, con attenuazione ai bordi. Una superficie ciano generica ne perde disegno e variazioni.",
+      "action": "Materiale e UV originali guidano la risposta; rifrazione continua e piccoli riflessi si aggiungono in misura limitata, seguendo trasparenza e inviluppo.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/wsurface.c",
+          "sha256": "6a26c498725a9edbe62c4e594c351c57a37d8eaca01bed4329ffb3688ac4c334"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "wsurface.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "ripples",
+      "title": "Onde concentriche da contatto",
+      "decision": "revised",
+      "finding": "Ripple disegna onde neutre con raggio e durata nativi; otto settori non significano otto onde indipendenti.",
+      "action": "Conservata la deduplicazione in un piano continuo, rimossa la dominante blu e ridotto l’anello secondario aggiunto.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/ripple.c",
+          "sha256": "0b36dffb697be1d61a46e04aec0958fd74c962915a2d4178f5e8e2a2dfe0bf31"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/ripples.c",
+          "sha256": "7b121eec380b34ffb50ebab99ab16c88a74f96e66d4f004fa8e5e38b1f2e96da"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/rsurface.c",
+          "sha256": "cb7e09bbaad1c5fe225ca5e462e3823c3813f3785928a1aa2ab4bb713ddc0827"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "ripple.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "submarine_material",
+      "title": "Scorrimento luminoso sul sottomarino",
+      "decision": "retained",
+      "finding": "SubEfct proietta una trama luminosa originale mediante la rotazione del modello, con STP traslucido sullo scafo.",
+      "action": "Conservata V6: proiezione continua, trama originale, guadagno 1,65 e rinforzo moderato delle alte luci. Nessun reticolo di caustiche inventato.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/sub_efct.c",
+          "sha256": "ef58ad802534500daf20fe13862fc31fcef4439cf82651870e01148af011ac3e"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "sub_efct.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [
+        {
+          "run": "intro",
+          "submissions": {
+            "mgs.effects.gpu.kind.25": 9614
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "distance_fog",
+      "title": "Nebbia di profondità e black fog",
+      "decision": "retained",
+      "finding": "Fog modifica distanza utile e risposta al cambio zoom; oscurare anche HUD o geometria senza profondità sarebbe scorretto.",
+      "action": "Conservata la nebbia per pixel legata all’updater USA e alla mappa, con parametri di profondità e zoom originali.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/fog.c",
+          "sha256": "c0d53a12a692a54783b9a14346ab6ad6c2a8746fd2e13685ba5970ab43648528"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/libdg2.c",
+          "sha256": "b783a7c789fd21c199d0ce7ee1307e78e4dca0c992b4553ced01686a9aed1ebf"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "fogRange"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "snow",
+      "title": "Neve e tormenta",
+      "decision": "retained",
+      "finding": "Posizioni, scale prospettiche e tempi definiscono neve e tormenta; la forma TILE è un vincolo tecnico.",
+      "action": "Conservata la resa morbida già approvata, con posizioni originali e intersezioni da profondità; nessuna nuova simulazione del vento.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/kojo/sstorm.c",
+          "sha256": "38646be70e4e4c5d7c4d6b1baf23f57aef9a94df87ae88836a6ed04d6f1e8c8b"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/snowarea.c",
+          "sha256": "0914d3a16ae86faa025eb99308a9511869097409e7a8d5e7ce0f41591e63d182"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/thing/snow.c",
+          "sha256": "95821c5b9737dbbe21b97b32b9ebe97d9b8c96690b87936e77a2dfcdd0047fab"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "snow.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [
+        {
+          "run": "panorama",
+          "submissions": {
+            "mgs.effects.gpu.kind.30": 14841
+          }
+        },
+        {
+          "run": "snow",
+          "submissions": {
+            "mgs.effects.gpu.kind.30": 5595
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "bubbles",
+      "title": "Bolle e scie subacquee",
+      "decision": "retained",
+      "finding": "I PCX contengono grappoli irregolari, bolle piene e cave; una sfera identica per ogni primitiva ne altera la massa visiva.",
+      "action": "Conservata V6: metà luce/arte originale e metà corpo illuminato, sagome a 6/12/25 gruppi, raise e traiettorie originali.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/bub_d_sn.c",
+          "sha256": "db3a4e521012d4bc67317860259fb04554afb18db7ff763c1360d43db82955c1"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/bubble_p.c",
+          "sha256": "3556b1d3f01af5cdeaabe6c9c46fcb4075b5d5dd2ad761016bbf2b571ff73abe"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/bubble_s.c",
+          "sha256": "ba227a56d9d2614a291f77b6b592b6fc810d619f76a753a60a2c95ab7465b4f2"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/bubble_t.c",
+          "sha256": "2b37b7bf255527548ab6eb8ae8f7b71194d5dc79e03dc60aa86c0be6dcb36c44"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "bubble_s.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [
+        {
+          "run": "intro",
+          "submissions": {
+            "mgs.effects.gpu.kind.15": 28026
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "smoke_steam",
+      "title": "Fumo, vapore, polvere e scie persistenti",
+      "decision": "revised",
+      "finding": "Atlanti diversi e fotogrammi successivi danno identità a vapore, polvere e scie; una nube procedurale unica li appiattiva.",
+      "action": "Ripristinati sagoma, palette e fotogramma degli asset; filtro continuo, intersezioni morbide e variazione volumetrica contenuta al 10%.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/fog.c",
+          "sha256": "bb4c6ed38eb6b3e8ff1f411df94fc26970a0903b930e2981443d68dd38664c8b"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/rcm.c",
+          "sha256": "ae670fac276ca83535d594073900d25d3c324f89565da93e9dfd9c954776c264"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/rcm2.c",
+          "sha256": "4e8b83a3c8531e6b051f14df26c689879bc81514b0cbed471fec00824869693b"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/smoke.c",
+          "sha256": "cb1ede1be735506cc844f5460cec74e4c471fad12fef121df11db206e2bec2a3"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/smoke2.c",
+          "sha256": "8bb7ab6f340ce7498f07d29fc55029643406efda64d380d8fc677ce2da03cce7"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/smoke3.c",
+          "sha256": "bd7b85c9db0c5737cb627b2b3599a90d8994228eb6694fb82f2d660bce6acd78"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/smoke4.c",
+          "sha256": "be46e9874d19f938348f52a105c85647a9192b7633309665fee01a985e6d11a9"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/smoke_ln.c",
+          "sha256": "d6fe730968be0944931003a3f60a5691e2dd2eff0cc299ae19c6369c4aa82a7d"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/chara/rope/dsmoke2.c",
+          "sha256": "b362628a2f326e3dc27154373dde6be37368848313e0922ba52882386d1cc7b7"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/chara/rope/landing.c",
+          "sha256": "30c16cca820bec13f4ad9308088e33d717f69a83a2cdfb3eb885c2bfad14e1e3"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/smoke.c",
+          "sha256": "8d5d3c99d4d3467442d0fceb0badbc97ed35451cdc8e2506586d8c4d2be07320"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/kojo/demothrd.c",
+          "sha256": "f9533cee68e17a76c3284c9ee8235aba0e351ca3a49e44652defef9dd8801e2b"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/smke_ln.c",
+          "sha256": "3477a07298463a71f180c09f43620c3ad4f1e75a0523d3beb2590da5aae5871a"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/smktrgt.c",
+          "sha256": "e2e096f875d159ed407a2fe8f17cb5883d358c7bb8cf6314d7df7bebcf528838"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "animationKind"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "breath_cigarettes",
+      "title": "Condensa del respiro e sigarette",
+      "decision": "shared_revision",
+      "finding": "Condensa e fumo hanno attacchi e animazioni distinti; il solo profilo procedurale non deve cancellarne i fotogrammi.",
+      "action": "Stesso percorso dei materiali animati originali, con volume moderato e profondità moderna. Condensa osservata; accensione e fumo della sigaretta non verificati in questa run.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/breath.c",
+          "sha256": "54eeca126089f309344a092997be2fd23aaf124d7b4595a6bc9c4e4696aeaacb"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/equip/tabako.c",
+          "sha256": "030f4b96d8a22c264e1905289c20c8d9cf8d6638b4ae25a5058de73704017c4d"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "animationKind"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [
+        {
+          "run": "thermal",
+          "submissions": {
+            "mgs.effects.gpu.kind.2": 151
+          }
+        },
+        {
+          "run": "final-night",
+          "submissions": {
+            "mgs.effects.gpu.kind.2": 182
+          }
+        },
+        {
+          "run": "panorama",
+          "submissions": {
+            "mgs.effects.gpu.kind.2": 233
+          }
+        },
+        {
+          "run": "snow",
+          "submissions": {
+            "mgs.effects.gpu.kind.2": 20
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "explosions_fire",
+      "title": "Esplosioni, fiamme e onde d’urto",
+      "decision": "revised",
+      "finding": "Blast e ANIMATION compongono fiamme con sagome e fasi specifiche, non un unico disco luminoso.",
+      "action": "Atlanti originali e fase viva conservati, nucleo luminoso continuo limitato al 12%; corretto anche il mantenimento degli UV nei billboard ricostruiti.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/bullet.c",
+          "sha256": "72c7f58b268fb18af91d48e2befc1b6f7de7c190ca149dc591baa0db2ce4f3e9"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/m1e1.c",
+          "sha256": "6b2cffc6a3665252b44061349a18ca39c945e0a01e21e7ea73fab794f5845e6f"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/bullet/blast.c",
+          "sha256": "3a16bcb6317f80e71d2ebaa43694b1923725e614e5253f9b966c18ad605127f5"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/melt_die.c",
+          "sha256": "7c7205ed0f093fcad47bcd65e5fab3447c5f87b078d19aec8355a808b655f081"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "SurfaceKind::Explosion"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false,
+      "scenario_followup": {
+        "evidence": "docs/mgs-effects-v15-evidence.json",
+        "scope": "C4 fra i container",
+        "all_variants_visually_verified": false
+      }
+    },
+    {
+      "id": "muzzle_flashes",
+      "title": "Vampe delle armi e illuminazione istantanea",
+      "decision": "shared_revision",
+      "finding": "SocomFlash, HeavyFlash e luci delle armi hanno sagome e durate proprie.",
+      "action": "Asset originale come forma e colore, con piccolo rinforzo del nucleo; attacco all’arma e durata invariati.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/bullet.c",
+          "sha256": "72c7f58b268fb18af91d48e2befc1b6f7de7c190ca149dc591baa0db2ce4f3e9"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/socom.c",
+          "sha256": "8f49bef64b8b66e5f3d200ef284a5700c08bbef808f604bbc809becd337a7fb1"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/glight.c",
+          "sha256": "aa945bb9602180e304d7cb7b454ff7828e40d0c71b2c17e7a791d5f11a2f2fb5"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/kojo/famaslit.c",
+          "sha256": "1554feb12e78fa1285c36d6e7c67380cd111970d8f8af6ada3743bd3a060c935"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/weapon/famas.c",
+          "sha256": "8f8bcc1467cc92c9ce100e840b3779c9299eb332478b2788f2cb7e945c85578c"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/weapon/socom.c",
+          "sha256": "025b8d17cde10fe9472adcf79987c66b8b6aefc3032a1f1c6fa97cea21f00114"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "SurfaceKind::Muzzle"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [
+        {
+          "run": "panorama",
+          "submissions": {
+            "mgs.effects.gpu.kind.3": 180
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "projectiles",
+      "title": "Traccianti, missili e traiettorie visibili",
+      "decision": "revised",
+      "finding": "Proiettili e traccianti derivano da segmenti/quad, mentre i missili sono mesh. Il colore arbitrario confonde le varianti.",
+      "action": "Tolte tinte aggiunte dai fasci; asset originale quando associato e profilo continuo lungo l’asse reale altrimenti. Missili sul percorso KMD.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/bullet/amissile.c",
+          "sha256": "2c9ceb5fb5bc0cb042d0e58f6434d67c3673167da238035446c31cfc1a1442ff"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/bullet/rmissile.c",
+          "sha256": "2c99372afc979de42d1256f4d451cc151e44d60ba0575d82e9a016df80532f17"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/chara/hind/hind_bul.c",
+          "sha256": "6f5eb30f9655e2e8d081b7dd3d5fed483e5dc94db9c18eafb2eb436068f6fc5f"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/chara/hind2/hd_bul2.c",
+          "sha256": "4d71ee623e4c97867f76e8937e1824af5f7b4f1d910e8522c1198b73eff6c82d"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/bullet.c",
+          "sha256": "dc59895ee2c51380ce1de2e409aca00a67759e2f14534f8bacbd78dfa77d4998"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/weapon/rcm.c",
+          "sha256": "3962fb074e7dcb052a5a6fcfce44567d33cb2fccc1a54324e7bcb30cb7272d85"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "hind_bul.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "sparks",
+      "title": "Scintille, urti e rimbalzi",
+      "decision": "revised",
+      "finding": "Scintille e rimbalzi usano colori, segmenti e animazioni differenti secondo l’attore.",
+      "action": "Conservati RGB e immagini originali invece di imporre arancio; segmenti continui per le primitive senza texture associata.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/spark.c",
+          "sha256": "8ad11cd4cf1de10e751ac0f7490928d9ec1721be927aeb61e98a6eb2b25df2a4"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/revbullt.c",
+          "sha256": "6f4afecefc5e66168c2e98c8801492335fc7061df6d580946380d5dfedfdc09e"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/spark2.c",
+          "sha256": "8efe77572a8ee40474b5a7af4725e775c272de272e546471e186cde9f8e7ed0d"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "spark.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "electricity",
+      "title": "Archi elettrici, scariche e plasma",
+      "decision": "revised",
+      "finding": "Plasma e scariche condividono tecniche ma non necessariamente colore o disegno; azzurro fisso e pavimento emissivo inventato ne alteravano la resa.",
+      "action": "Texture e inviluppi originali per gli archi; risposta energetica continua moderata e neutra, con dissolvenza fino a zero.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/death_sp.c",
+          "sha256": "45d9435e8588e8650731902de4c92b6825ca100656f0f5bf0c29845f81f2bab6"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/flr_spa.c",
+          "sha256": "587e473ac5a38aab0e5ae25c031d7dd3e56cd3ca0403c026614226227c5e7bca"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/plasma.c",
+          "sha256": "16e29b4b0c66bc811609b27347198b4b7eca6b550f8b24f4be0bf74ce5d980ed"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/plasma_h.c",
+          "sha256": "73dfb9132022131938670282f61b836c07e8a5256ac4770d7f7b37733c8b2d3d"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/wall_spa.c",
+          "sha256": "3fcd947204ec05a5fa49f72f2b87fa1db318cf85c328ce929ce926402ff4a9b3"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/elc_damg.c",
+          "sha256": "eca88e6a277e26ab2150c5d54f85edb97e4cfeb8048bdf4d03233a80694847ff"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/elc_flr.c",
+          "sha256": "b38c6a367d99322a476c230aabd5e584ba72cbda15ec43e86ad9f95a688b7e1d"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "plasma_l.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "blood_spray",
+      "title": "Sangue in aria e gocce",
+      "decision": "shared_revision",
+      "finding": "Gocce, spruzzi e animazioni del sangue hanno disegni e toni propri; lobi generici riducevano la varietà.",
+      "action": "Sagoma e palette degli asset originali, filtro continuo e riflesso limitato al 6%, mantenendo posizione e durata native.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/kojo/blooddrp.c",
+          "sha256": "a79e74da277387df00ff8fc7cdd243de837984e65a697e2d2752418301e16409"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/blood.c",
+          "sha256": "cdbba024110de8552799265c15e9774a19f2359761ba6f645ead57e71b4a9673"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/d_bloodr.c",
+          "sha256": "2d29b74c992e0b5b1fe3af572e79079bc6b8f5f187eb4b25cc19637792f35f6c"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "blooddrp.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "liquid_decals",
+      "title": "Pozze, macchie e cerchi di liquido",
+      "decision": "shared_revision",
+      "finding": "Le macchie dipendono dalla texture e dal suo inviluppo, non da un cerchio rosso standard.",
+      "action": "Forma, colore e dissolvenza originali con ricostruzione continua del materiale e riflesso contenuto.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/blood_bl.c",
+          "sha256": "e2162e12738f2412f8853f2c4a0144b4325d91c8e20203461b39df567187a512"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/blood_cl.c",
+          "sha256": "533c39ac7d2c8cf9ea2f5207d6bb33383c07b7ac2d2e9116a00c57d99f9ca2d3"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/d_bloods.c",
+          "sha256": "545b1b88a48f76886fdd1f83339d5e2276fcb39494fe4c0a058840fe0dc76a03"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "blood_bl.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "glass_shards",
+      "title": "Vetri e frammenti",
+      "decision": "revised",
+      "finding": "Glass usa tre stadi di rottura e due metà; Gsplash usa glass e non è acqua. La rifrazione generica perdeva crepe e buchi.",
+      "action": "Conservati fotogramma, crepe, trasparenza e tinta del vetro; rifrazione e riflessi moderni restano un contributo limitato.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/glass.c",
+          "sha256": "62e29c19eb15bf4e34728a06db162e94015a8924ce0d3494e0107f9368c1b422"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/gsplash.c",
+          "sha256": "93679e843e2f886cee0858cc333acc137bef1061ab6db07534cf2da8af0da6d9"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "gsplash.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "debris",
+      "title": "Detriti, spruzzi e materiali espulsi",
+      "decision": "retained",
+      "finding": "Carta, frammenti e spruzzi non sono la stessa sostanza: Splash usa sangue, Splash2/3 altre immagini.",
+      "action": "Conservati asset e geometria dei frammenti; le gocce beneficiano del percorso condiviso senza sostituire i detriti con una forma generica.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/splash.c",
+          "sha256": "c479f5046b712fdaa7e29011131eace64237bbbf82e23ac82f516c205633db5a"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/splash2.c",
+          "sha256": "82cab5bfbf1b713064e5d6f2518a8274a23a51932a6924975898b1290f44365f"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/splash3.c",
+          "sha256": "abc3e7796f98080f4709973c588437aa82b298d71ed3d7df8a03a9c2b5d88d7d"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/breakobj.c",
+          "sha256": "ddb64f40a27c32bf264a648ad7d8bfbc9b907e024e149386b0bb50ebe57c68eb"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/paper.c",
+          "sha256": "53eb72d0613cbb41ae2feb1876d641e6d219ea754a8c4f96900f63b6050fe033"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/pfall.c",
+          "sha256": "ed1bb47d4e5c84445c21e1b9fd6961f066865913e3c906564de27cd72bd587ee"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "pfall.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "footprints",
+      "title": "Impronte di gameplay e cinematiche",
+      "decision": "revised",
+      "finding": "Asiato usa il disegno della suola originale e un lungo inviluppo di scomparsa; una scarpa procedurale era una sostituzione artistica non richiesta.",
+      "action": "Ripristinata la sagoma dell’impronta originale filtrata, con orientamento e fading nativi. Nessuna modifica alle tracce rilevate dalle guardie.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/asiato.c",
+          "sha256": "2a0fb2b9876f251e733963b8680e585e6cda12d7a9f9288a5267bcef5f7aac91"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/asiato2.c",
+          "sha256": "3ed09714c08995906fdffdbe1648970e6e0171ec12821462728ebaa114f8a701"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/demoasi.c",
+          "sha256": "10c10c9f1d53bc080a3c2368a30f773e870ed4f143004290bde512815df48e8e"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "asiato2.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "shadows",
+      "title": "Ombre dei personaggi",
+      "decision": "shared_revision",
+      "finding": "Shadow muove un modello con texture dedicata e modulazione grigia; un’ellisse generica perde il disegno dell’asset.",
+      "action": "Texture originale filtrata sulla geometria e sull’inviluppo originali. Restano ombre di contatto, senza dichiarare shadow map aggiuntive.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/chara/snake/shadow.c",
+          "sha256": "0c8e2a2d9d3e9d00d8f65843bb04973de66a44c228b1baf2cf4fb2b3a4561133"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/demokage.c",
+          "sha256": "321dc89909931b2195ef6dffd27cdcd76811c7361f3ff7a2606cb56918828c2a"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "demokage.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [
+        {
+          "run": "thermal",
+          "submissions": {
+            "mgs.effects.gpu.kind.26": 131
+          }
+        },
+        {
+          "run": "final-night",
+          "submissions": {
+            "mgs.effects.gpu.kind.26": 143
+          }
+        },
+        {
+          "run": "panorama",
+          "submissions": {
+            "mgs.effects.gpu.kind.26": 59
+          }
+        },
+        {
+          "run": "snow",
+          "submissions": {
+            "mgs.effects.gpu.kind.26": 59
+          }
+        },
+        {
+          "run": "disc2",
+          "submissions": {
+            "mgs.effects.gpu.kind.26": 58
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "lights_glows",
+      "title": "Luci locali, bagliori e lampeggianti",
+      "decision": "revised",
+      "finding": "Lampade, occhi e indicatori hanno texture proprie; il disegno non coincide sempre con un globo circolare.",
+      "action": "Asset emissivi originali con rinforzo del nucleo al massimo del 12%. Restano attive luci .LIT/SHADE per pixel e sorgenti originali.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/eyeflash.c",
+          "sha256": "3b65544fafe062dc8a84076f032cba6439418a08fe2fa991b02a3c8945832140"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/game/lamp.c",
+          "sha256": "59d6412a6ae353e5b4dfa87db8a7f92479e63d4f61d79c5c09a78f8b56cd1e9d"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/kojo/inverlt2.c",
+          "sha256": "47f3490e989789012299c2cd5b5dff00fb4d019434e7793328c265ee087220da"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/libdg/light.c",
+          "sha256": "0172d01bfcc7a4a24cbc7f77f4ca77a529ee17373900f68bda13e5c8600edbe6"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/blink_tx.c",
+          "sha256": "e0c122cb4512c929ce63a32b69339f55e1bb5fa74c8e114a41ac28c6d863f279"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/dog/wolf_eye.c",
+          "sha256": "b57c3c4df9120f6d35ff9daab3f8fb3a5d0b926ea1cc4b2466513058c2fb9494"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/p_lamp.c",
+          "sha256": "79ffdc6f9dcf7d21334d5cc2dc4b422d8aa534466ea3595c6c68289dba53ad2c"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/pato_lmp.c",
+          "sha256": "31c4aa9a216f6efae90a7a280a54d26eeea7a197c141440a9dd860d49a0942b7"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/thing/emitter.c",
+          "sha256": "f5d6be19625ec7b64d5788eee4cd28fdfd3d09331cc5d1d21b45e0ff9e800afe"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "inverlt2.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [
+        {
+          "run": "thermal",
+          "submissions": {
+            "mgs.effects.gpu.kind.7": 132
+          }
+        },
+        {
+          "run": "final-night",
+          "submissions": {
+            "mgs.effects.gpu.kind.7": 144
+          }
+        },
+        {
+          "run": "panorama",
+          "submissions": {
+            "mgs.effects.gpu.kind.7": 180
+          }
+        },
+        {
+          "run": "snow",
+          "submissions": {
+            "mgs.effects.gpu.kind.7": 240
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "searchlights",
+      "title": "Proiettori di ricerca e coni luminosi",
+      "decision": "revised",
+      "finding": "Searchlight conserva forma, RGB e inviluppo del fascio; la scoperta di Snake appartiene al gioco.",
+      "action": "Ridotta l’attenuazione artificiale delle normali; texture e volume originali guidano il fascio continuo. Logica di scoperta invariata.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/searchli.c",
+          "sha256": "6077388b213b4a7abd12ea6dc17e653ddd14a84e455db4017aaf1e68608b99c5"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/lit_mdl.c",
+          "sha256": "35522f6635b8418437cde02f2235a246ee5120c906c8e4ba7129584b9761dbb0"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "lit_mdl.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "lasers",
+      "title": "Laser, sensori infrarossi e puntamento",
+      "decision": "shared_revision",
+      "finding": "Sensori IR e puntamento dipendono dallo stato; i LED delle telecamere non sono laser.",
+      "action": "Fasci continui nel colore originale e risposta energetica senza dominante blu inventata. Visibilità IR e proiezione del puntamento restano native.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/camera.c",
+          "sha256": "3862a5ad8cf0b9cb390b7b96144468d2642c1b575672e29e34e30e9b92650a58"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/camera2.c",
+          "sha256": "096f3fc56a4a6e8901264553adcdbab14ee30d92db86bc0fccec33f1d597c64a"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/l_sight.c",
+          "sha256": "abc4c794817fe929b5e79645fac9e03f32f758dc69aec2e95cdce1cb506640ad"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/guncame.c",
+          "sha256": "1a9a6eb3157add2148b0ebb7152c4b2b85bc506d1d59a15d58796ef7cd112166"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/ir_cens.c",
+          "sha256": "c361ef756de28290d47ce070f38f895c1b80a999478d0f083f8af9ce5b55d2b2"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/weapon/socom.c",
+          "sha256": "025b8d17cde10fe9472adcf79987c66b8b6aefc3032a1f1c6fa97cea21f00114"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "l_sight.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "texture_animation",
+      "title": "Texture scorrevoli e palette animate",
+      "decision": "revised",
+      "finding": "TexScroll e ANIMATION aggiornano UV/palette; il contenuto non deve congelarsi al primo materiale residente.",
+      "action": "Filtro degli asset segue UV e palette vivi; il percorso billboard conserva ora il fotogramma originale invece di sostituire gli UV con 0..128.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/equip/effect.c",
+          "sha256": "ed022c40df12c286d9eba310ada96fb4cd0a8a8f22682f79cbb5503c8f8b7d27"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/libdg/palette.c",
+          "sha256": "537cc7b2146873e900694a8dae116814c7e648e6487be7647b08a3e5a9477846"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/palette.c",
+          "sha256": "4eae77e27792d03809f0eef795b99380dd638d3e8d8ab56e41f924d3652a54a2"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/tex_scrl.c",
+          "sha256": "585ea182cb7c7dbf059d0ef581220d9b3152a114b39fe83a145810b40bead4d2"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_source_material.cpp",
+          "anchor": "fractional coordinates of the source format"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "monitors",
+      "title": "Monitor, display del sottomarino e della base",
+      "decision": "revised",
+      "finding": "Il contenuto e le variazioni dei display sono già animati dal gioco; uno scorrimento luminoso aggiunto alterava i segnali.",
+      "action": "Rimosso lo sfarfallio sinusoidale inventato. Contenuto originale, aggiornamenti dell’atlante verificati e lieve risposta emissiva costante.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/game/evpanel.c",
+          "sha256": "d6410ae7a7b6e8b389675c9b41f40e369106d0ea711029ba2c873f0c0a70990a"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/mg_room.c",
+          "sha256": "c9f59507aeaeba47c070f6ece1357bbc52dace8a51886eb502b74c46290c2536"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/sub_room.c",
+          "sha256": "44ada9bc92b889200382d86272dded539cafea4f1a9dc87f514ecb9a983af67d"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/monitor1.c",
+          "sha256": "cbb7eda6b2bc6a2ce5e85860f570aeeb6a456e55cc36963378b47a2e60ec431c"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/optxtscn.c",
+          "sha256": "4dbaaa77730600e8f91e8ee11369c40ad102f48aa0bd655ba246cdb9bf12f9c9"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/panel.c",
+          "sha256": "4edaa5b37b26dd964184b187be9e5cd43c3acaea9b414980db3fa154ab8c9db4"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "optxtscn.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "sky_panorama",
+      "title": "Cielo e panorami avvolgenti",
+      "decision": "retained",
+      "finding": "Sphere converte direzione della camera in offset delle tile sorgenti; bloccarle a pixel interi causa scatti e bordi tagliati.",
+      "action": "Conservati immagini originali, offset subpixel e dominio completo con clamp. Verificata la run del panorama innevato.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/thing/sphere.c",
+          "sha256": "d341fbadcc69a99c7fc5bed8575f06af4e0f4d73fb27f5415be26e60dbee7aaf"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/thing/sphere2.c",
+          "sha256": "a756497fa5687cff84e30d59abb8bab82a817c8579776980df84541a56980af5"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "sphere.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [
+        {
+          "run": "panorama",
+          "submissions": {
+            "mgs.effects.gpu.kind.37": 5192
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "wind_rings",
+      "title": "Anelli di vento e spostamento d’aria",
+      "decision": "revised",
+      "finding": "WindCircle usa hind_wind01 su un cono segmentato; una serie di anelli blu identici perde trama e unità del campo.",
+      "action": "Texture originale quando associata e campo continuo neutro nel ripiego, con raggio/fase originali e senza duplicare un anello per settore.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/windcrcl.c",
+          "sha256": "f2b59f1eb672a60cfc1ee5cfea61ab1e16a143c6c39772af34f5b4144cbd462b"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "windcrcl.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "ninja_special",
+      "title": "Ninja: lampi, spada e sfera energetica",
+      "decision": "shared_revision",
+      "finding": "Spada, plasma, mimetica e duplicati hanno materiali e inviluppi diversi; non devono diventare tutti una sfera blu.",
+      "action": "Applicate le correzioni condivise di colore, energia e mimetica; pose e geometrie native conservate. Combinazioni di tutte le fasi del boss ancora da osservare.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/animal/ninja/tenmetu.c",
+          "sha256": "f538672678eead942fbc0d9211a2ed19c77a2850d985c91f912bbbe33bc7858a"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/enemy/katana.c",
+          "sha256": "0065600d92526a3e8cf4d17e2c9bbeaf1e54abc743ada82f04c40e81a591016b"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s08b/okajima/p_sphere.c",
+          "sha256": "15e508156de78fa2065bbc867820478aacf69a14cdf404022f66dfb9c4637596"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s08b/okajima/plasma_l.c",
+          "sha256": "69eabbbb4a71f571fcf632138c985091dc34cec49a320f024028f8493d30f142"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "p_sphere.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "mantis_special",
+      "title": "Mantis: HIDEO, telecinesi e onde",
+      "decision": "revised",
+      "finding": "Il backplate HIDEO è nero; aggiungere neve e sweep inventava un altro effetto. Logo e oggetti sono elementi separati.",
+      "action": "Ripristinato nero pieno del backplate; logo originale conservato. Onde/oggetti usano i percorsi condivisi corretti, senza certificare tutte le fasi del boss.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/chara/psyco/mempsy.c",
+          "sha256": "802652fb975bf142129a38f8bd968447c47ff08c2ac3b246e2f99b900e6c8e96"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/chara/psyco/padmng.c",
+          "sha256": "672aaf9596f056fce55be4502eaf743ab4ab7f2876c3506857f6ba9a30f0f0e8"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/chara/psyco/psyobj.c",
+          "sha256": "8facd5fb5c1f9288253ac54bf3c6dbfa3566d4c7478dcca2600c2b781e62849b"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/chara/psyco/sonic.c",
+          "sha256": "dbe11cbfac2dc3c5ec185d6b3f8b530dd80f3307f75f1d08f28b251cd8829678"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s07b/chara/psyco/psyco.c",
+          "sha256": "662a88c2b151ffd649ba7d4007b2cef460511ea6ea503808821c8f1fcf911ac5"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "psyco.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "tank_hind_special",
+      "title": "Tank e Hind: composizione degli effetti",
+      "decision": "revised",
+      "finding": "Blastoff usa billboard con UV animati reali; la ricostruzione float li sovrascriveva e scollegava la texture.",
+      "action": "Conservati UV e texture dei billboard autenticati, insieme alla geometria ricostruita. Fuoco, fumo e traccianti ricevono le correzioni comuni.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/chara/hind2/hind2.c",
+          "sha256": "f2d43ef35151e4582d47f67382879a84c15e5f3aa29b7f94bf0ae2babb2f6d7c"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s05a/kojo/m1e1shel.c",
+          "sha256": "9a191de1a7aedb5b0826855b1e804810a9f1fa1beb07d2baff19d697fe27b2d4"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s05a/kojo/m1e1smke.c",
+          "sha256": "3995fffa232088c3200c253d2893ffccf54d0d26ae8d2a74680e6dc4dccffa94"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s11g/okajima/11g_demo.c",
+          "sha256": "9a1d13512fe408c711c9cb80afc879ff283e39596f00521164427ec90d1a5b5e"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s11g/okajima/blastoff.c",
+          "sha256": "1ba03616408fffdd8a41e3eca3f92d37c73174dbace3267ed19066a64f1bb267"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "blastoff.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "raven_special",
+      "title": "Vulcan Raven e magazzino",
+      "decision": "shared_revision",
+      "finding": "Ombra, proiettili, vampe e sangue restano famiglie distinte anche nell’overlay del boss.",
+      "action": "Correzioni comuni applicate ai materiali e colori, senza cambiare mesh/pose. La run del magazzino non certifica l’intero combattimento Raven.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s15c/okajima/valcan/valcan.c",
+          "sha256": "7a371423d42e8cda0d9aa04791b78a7b26b254322d978abd9fd1d7e87361dde4"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "valcan.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "rex_unknown",
+      "title": "REX: laser, armi e scarichi USA",
+      "decision": "shared_revision",
+      "finding": "Il registry Integral è incompleto; layout USA verificati descrivono laser e scarichi, ma non provano tutte le fasi.",
+      "action": "Laser con RGB originale e risposta energetica neutra; fumo con atlanti originali. Nessun nuovo effetto dedotto dal solo nome DEMO_METALGEARLASER.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/include/charalst.h",
+          "sha256": "c676fb32ac6919d0d741941638d8647589578055d2c73b8e51470e4c8274e806"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/stage/s17a.c",
+          "sha256": "408cbdfce5f46d43c7a61ad24598816e8af4fb7315da26cbc9efc24ceef7f715"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/stage/s17ar.c",
+          "sha256": "408cbdfce5f46d43c7a61ad24598816e8af4fb7315da26cbc9efc24ceef7f715"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "mgrexlzr.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "liquid_garage_unknown",
+      "title": "Liquid e garage: mesh ed emissioni condivise",
+      "decision": "shared_revision",
+      "finding": "B_smoke USA corrisponde a smoke_ln; un nome irrisolto della decompilazione non giustifica un effetto diverso.",
+      "action": "Applicato il percorso condiviso dei fotogrammi del fumo; mesh e pose native conservate. Copertura visiva delle fasi Liquid/garage ancora parziale.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/include/charalst.h",
+          "sha256": "c676fb32ac6919d0d741941638d8647589578055d2c73b8e51470e4c8274e806"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/stage/s18a.c",
+          "sha256": "2c3cb44671c97d4cd71066babcfc922299f83403051a88e5aae51bf149751da3"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/stage/s19a.c",
+          "sha256": "b5437a9f2f333bd942383b2786db94a2667e8a14ea6ae3109c7dd7c7d0e4817c"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "animationKind"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "jeep_variants",
+      "title": "Fuga in jeep: fari, fuoco, vetro e colpi",
+      "decision": "shared_revision",
+      "finding": "Le varianti jeep hanno layout propri anche quando condividono l’aspetto di vetro, sangue, fari e fiamme.",
+      "action": "Ritoccati i profili comuni senza cambiare i layout verificati, con vetro originale e colori delle emissioni. La run disco 2 non è una prova di tutta la fuga.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/anime/effect/janime2.c",
+          "sha256": "020d48f9f6643a93e1b779df7f262d8607fcb9d7d0dfdacf686612ccca02be73"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/takabe/jeep/gsplash3.c",
+          "sha256": "6fe077b192a0d3bda11610486eb388b48f70a4260e94e6277606ed4b07798665"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/takabe/jeep/jblast.c",
+          "sha256": "16c3d94ceef0129b866fa0706ace854f8fbb1c2b7492969cbec7e2d08aeed876"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/takabe/jeep/jblood.c",
+          "sha256": "514a19ddcb62173506f0584efbf8636452a7a082e92e0493b887d815da279c81"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/takabe/jeep/jbullet.c",
+          "sha256": "51891a3b7f9e0d24571657f7a4019218217d030b2dafb6c57ff3f933f4b20781"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/takabe/jeep/jdrumfir.c",
+          "sha256": "ae36ece0d2cb29e34a03a3409edf76d1cfeece2b7edd6a4764c3d98957f2e13b"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/takabe/jeep/jdrumsmk.c",
+          "sha256": "324ab169867f9323bd529ab6a30f89ff12196c9c4aa681902f809220f7155301"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/takabe/jeep/jeep_gls.c",
+          "sha256": "4cfd50d827ac8fc7a80f70514a5fea72f82740157bdca689ecf35d7931bdc174"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/takabe/jeep/jlamp.c",
+          "sha256": "5170ef04304a339b1f091cec116f117c78a9acc2a023d6eabda6cb01b55cb63a"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/takabe/jeep/jlamp2.c",
+          "sha256": "998f654affeac728700c959945a93b4f82f126726da0c7ab44e215f6adb58d80"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/takabe/jeep/jspark.c",
+          "sha256": "c22aa9dec161d546e0165f64b8c6498ce2db3df068c48fce0d11376c0d6c1fcb"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/overlays/s19b/takabe/jeep/spark2_m.c",
+          "sha256": "fa622d9410c71bc1f2274a7bd999abe408a0375970bac23cea0915cfd5e37d36"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "jdrumfir.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "head_marks",
+      "title": "Segni di allerta, sonno e indicatori narrativi",
+      "decision": "revised",
+      "finding": "Punteggiatura, cuori e sonno sono grafica leggibile con disegno e fotogrammi propri, non semplici primitive intercambiabili.",
+      "action": "Ripristinati simboli e fasi degli asset quando associati; filtro continuo e aggancio originale. Evitata la sostituzione universale con glifi procedurali.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/mark.c",
+          "sha256": "32bc5926ad869843eb11edc525443cea6e1d70230c19d6c9e810e60a7330e4d2"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/effect/sleep.c",
+          "sha256": "a0d63c76133b6829b01dadbb41aea8f6bec7f6014a072f87ace46199781da840"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/scn_mark.c",
+          "sha256": "c34623b48ce541d100d3478381096165fd6bef7a6f3f65507c4d11d04c03529a"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "animationKind"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [
+        {
+          "run": "panorama",
+          "submissions": {
+            "mgs.effects.gpu.kind.11": 108
+          }
+        }
+      ],
+      "review_level": "source_adapter_and_representative_run",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "codec_radar",
+      "title": "Codec, interferenze radar e composizione dell’interfaccia",
+      "decision": "retained",
+      "finding": "Radar disturbato, testo e ritratti hanno significato informativo; il filtro non deve rivelare informazioni nascoste.",
+      "action": "Conservati contenuti originali, linee UHD e disturbo verde legato al jamming. Nessuna alterazione dei segnali o del testo Codec.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/menu/radar.c",
+          "sha256": "0beaca1e65e8a1d6aa83d6d292b19e32b48234509cf8fa9fbdf688269c19d6ad"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/menu/radio.c",
+          "sha256": "d6530a5e85119d95c197d709df87b0f1452f52e4fc5cded813f1cb707515cb6d"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/menu/radiofacedraw.c",
+          "sha256": "185f52287e0dfe952bdbfcd3ba69c216a62c4f41e40499fae9ca3e461eed5af4"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/menu/radiomem.c",
+          "sha256": "de244ab36bbf59731703304b5477a032cf2d269f6eafbbd81566dfca29e46525"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/menu/radiotex.c",
+          "sha256": "df918d56e201d56117e920e7e0afe12edb9ec3257ab3229fa8b2cf0df8a211ab"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/okajima/chafgrnd.c",
+          "sha256": "18ded7f72e82c229b86ad92496c5db8ece97bc75874f0d66d10b9f9793f081b3"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "menuman.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "optical_sights",
+      "title": "Mirini e ottiche di equipaggiamento",
+      "decision": "retained",
+      "finding": "Reticoli, aperture e maschere differiscono per equipaggiamento; allargarli indiscriminatamente deforma le ottiche.",
+      "action": "Conservati array SGT originali e proporzioni in 16:9, con bordi di maschera estesi e linee continue. Il lock-on mantiene la proiezione del mondo.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/equip/gglsight.c",
+          "sha256": "6136a417d862bd1e6d22395d57c933fdfdef988da20897d898a5d6b94f7e87f3"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/equip/gmsight.c",
+          "sha256": "dd78d69fbddcdf04d0ee4a3f179a4d7ee83c6935f707b94c201a5e3f0944346a"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/equip/scope.c",
+          "sha256": "32393ad0d992e0aa334c8f74844ba8d10baf179490c4a8fdf17460636d5d7772"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/thing/sgtrect3.c",
+          "sha256": "0a4041a994426ec3d1da2946ccc50511ee8e55f5c7b6f1cf88e79e79c01ee079"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/thing/sight.c",
+          "sha256": "96215d03adc76a39332e8c48805d9331a0bc118c940edf0fb8d7e0df1548ce15"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/weapon/rfsight.c",
+          "sha256": "1a97c289565c2f385ef07e9e78728ed7b828bf069fdd2cff1c4c5bd1f27ad7de"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/weapon/stnsight.c",
+          "sha256": "062782bd9f7186968c933e72ccbb0ec73e35448349859b716c3ae735f0901284"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "bindInterfaceGeometry"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "camera_shake",
+      "title": "Scuotimenti e tagli della camera",
+      "decision": "retained",
+      "finding": "CamShake e ShakeModel cambiano trasformazioni, non applicano un filtro al framebuffer.",
+      "action": "Conservate trasformazioni e deformazioni native prima della proiezione float, senza oscillazioni o clock aggiuntivi.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/camshake.c",
+          "sha256": "032d1844993372202626dbeda0ed1a6cd29417cb9e95b85d2923a01e87a38409"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/cat_in.c",
+          "sha256": "94ddaab11937927048660adb4d4ca7498e025fe9f5ef566d657df5b69466c879"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/shakemdl.c",
+          "sha256": "04dd962c77633213cf90f7a52256415de1b15d1aaa2c3628c8cc68144c3cc9f3"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_mesh_replay.cpp",
+          "anchor": "displacement"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "cinema_bands",
+      "title": "Bande cinematografiche e aperture",
+      "decision": "retained",
+      "finding": "Cinema definisce aperture, bande e ordine di composizione; la resa moderna non deve modificare il montaggio.",
+      "action": "Conservati crop, inviluppi e geometria; composizione RGB8 alla risoluzione finale.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/cinema.c",
+          "sha256": "1d832cefa26833d3cfe8e14a7ac0b2a9d9f4406d4a04b3ad6004b7d599cb9217"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/cineutil.c",
+          "sha256": "d415ac56c916887c1fb41c54c7c9eb2eaae3fc258aa0a978e74bb3d28180c8ce"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/gpu/gpu.cpp",
+          "anchor": "capturePolygonPacket"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "titles_gameover",
+      "title": "Titoli, game over, telop e cambio disco",
+      "decision": "retained",
+      "finding": "Titoli e transizioni mescolano lettering, immagini e geometria animata, distinti dai filmati MDEC.",
+      "action": "Conservati contenuto e tempi originali; linee e gradienti continui. L’intera sequenza game over/cambio disco non è stata rivista visivamente in questa sessione.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/game/over.c",
+          "sha256": "90955d302314a80a1d5fd3b5d75b32c4e3b072978e83b20e3b102dd0542d1345"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/onoda/abst/ab_ch.c",
+          "sha256": "dfa7a52160a8aed48e91ce24cea84f6bbbdad7e34fba18ed54de3bc95dc9c534"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/onoda/abst/ab_demo1.c",
+          "sha256": "1c93551d4ae52c3361217cef8bfbf64cb6241a1cd36a4c76e79143eb18a024a1"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/onoda/abst/ab_demo2.c",
+          "sha256": "c07cc18fe572c136a9ea782f78976eccd00b2e9b0d90c854820f7c025c381929"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/onoda/abst/abst.c",
+          "sha256": "b007a909a6efaf2943ad68bc8d71b66fb519347b55b83fc363c92a6ed45a87ab"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/onoda/change/change.c",
+          "sha256": "d78623f16d2d6db514be29168aa1197b3f442b6dfe035196134c2bc82e16c768"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/onoda/change/met_logo.c",
+          "sha256": "29419669f7aa5f78df137fd6109f39425e1e64528e70264b6e8488e2992d3b64"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/onoda/open/open.c",
+          "sha256": "4b2be4dca444f6af50443502d984749ea6040421333c78e78cd6fe4232469e54"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/onoda/preope/pre_met1.c",
+          "sha256": "8a8f48bbdbef7020aa024421c85cace8cf04c3c680dda245187100cca287f402"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/onoda/preope/pre_met2.c",
+          "sha256": "02bca3289b1fdd27cd228f70629f99b39fc6585590663c8bd3cdb80b29203b2e"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/onoda/preope/preope.c",
+          "sha256": "da5ffe467e93a798654fc20ef9eae63a0d1ad7c3a40a53c1825bae3b380d9036"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/ed_telop.c",
+          "sha256": "4aadd882411e464a61ee93ace48363ff399b363bd06fc4dbeae0d9d2f6740acf"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/ending2.c",
+          "sha256": "3b215c27a8da3fb5ae17357bb3c6fe331ed55d800069498288418dae8f047862"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/takabe/telop.c",
+          "sha256": "3c34908ebe8688ad27b356b6f285f33558a87e5e2d8dc3315480b4006a098de3"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/gpu/gpu.cpp",
+          "anchor": "recordScreenLineGroup"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "photo_camera",
+      "title": "Fotocamera e acquisizioni della scena",
+      "decision": "retained",
+      "finding": "Il JPEG/album nativo ha semantica di gioco, mentre l’immagine della presentazione può conservare il dettaglio moderno.",
+      "action": "Conservato lo scatto aggiuntivo RGB8 Vulkan sulla transizione jpegcam; album, fantasmi e salvataggi restano gestiti dal gioco.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/equip/jpegcam.c",
+          "sha256": "29e1b2a17291f3c5b85882541350851c535e9ffed0e5f02c0f8d917416f71b4d"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/gpu/renderer_vulkan.cpp",
+          "anchor": "mgsPhotoCapture"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "procedural_geometry",
+      "title": "Mantelli e deformazioni delle mesh",
+      "decision": "retained",
+      "finding": "Cape fornisce una superficie deformabile originale; i limiti di luce per vertice non ne definiscono la forma.",
+      "action": "Conservati vertici vivi e normali condivise, con luce per pixel. Nessuna simulazione del tessuto parallela.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/onoda/s04b/cape.c",
+          "sha256": "8eb4dfaa6e68663ce1904b62ec966602f725ecc64503ca8f37f1d2b5c5983f82"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "cape.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "animation_vm",
+      "title": "Motore comune degli effetti animati",
+      "decision": "revised",
+      "finding": "Le firme complete identificano le animazioni, ma la procedura grafica precedente poteva ignorare il fotogramma effettivamente selezionato.",
+      "action": "77 firme e VM native conservate; la nuova valutazione dei materiali usa l’atlante e gli UV vivi, mantenendo le differenze fra programmi e fasi.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/animconv/anime.c",
+          "sha256": "a1ed8d98bbb9e655aa2b95ff69711169516dcf873236bfce56858c151e916d09"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/anime/animconv/anime.h",
+          "sha256": "bdd44965895d12377afc4e6c58e3d13db0c176ff055837bf8617f4066ed0e8d0"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/kojo/demoexec.c",
+          "sha256": "ae5ba29b0e129a8d30bc337ffa43f39a6442cb758a24ddb8b645cac2f7ad618f"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/kojo/demoscrn.c",
+          "sha256": "06b792ffd2d5c0cad42aa0c4ab9f0b21f44da912a185299d1c2b725b2e0c3508"
+        },
+        {
+          "path": ".local/effects-research/mgs-upstream/source/kojo/demothrd.c",
+          "sha256": "f9533cee68e17a76c3284c9ee8235aba0e351ca3a49e44652defef9dd8801e2b"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "animationSignatures"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    },
+    {
+      "id": "pose_afterimage",
+      "title": "Duplicati temporali delle pose del Ninja",
+      "decision": "revised",
+      "finding": "Bunsin2 conserva 32 campioni di pose/matrici e modula njatrans in modo neutro, fino alla scomparsa.",
+      "action": "Rimossa la tinta ciano e il bordo additivo indipendente dalla dissolvenza. Palette, pose storiche e inviluppo originali con risposta delle normali moderata.",
+      "source_files": [
+        {
+          "path": ".local/effects-research/mgs-upstream/source/animal/ninja/bunsin2.c",
+          "sha256": "353ef28331de1df74cdcdc47b7402fcd4138423aa0710fc7e6b4b63a1a94feb6"
+        }
+      ],
+      "adapter_references": [
+        {
+          "file": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+          "anchor": "bunsin2.c"
+        },
+        {
+          "file": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+          "anchor": "mgs_surface_texel"
+        }
+      ],
+      "prior_validation_scope": "targeted_cpu_and_vulkan_regressions; representative_scenes_only",
+      "observed_runs": [],
+      "review_level": "source_and_adapter",
+      "all_variants_visually_verified": false
+    }
+  ],
+  "latest_scenario_followup": "docs/mgs-effects-v15-evidence.json"
+}

@@ -1,5 +1,24 @@
 # MGS USA native boot
 
+## Vulkan effect adapters — 2026-10-04
+
+All 60 overlapping effect dossiers now have renderer adapters. The shared
+paths cover screen optics, original-geometry materials, semantic animation
+particles, dynamic DG_MDL and affine interface geometry. Lighting is evaluated
+per pixel and presentation color uses RGB8 without PSX dithering. Native
+simulation, VRAM and guest readbacks remain authoritative.
+
+Validation: 352 passing tests in 28 suites, including Vulkan, plus six real
+checkpoint runs (1,680 VBlanks) at 3840×2160 with no renderer downgrades. The
+heliport panorama exposed and now verifies a fix to affine source geometry
+classification. The photo test verifies the exact shutter frame despite
+multiple queued VBlanks. Personal savestate/card hashes are unchanged.
+
+See [adapter evidence](mgs-effects-adapter-evidence.json) and
+[effect contracts](mgs-effects-catalog.json). `mgs_effects_catalog.py --check
+--require-adapters` passes. `--require-complete` still fails deliberately:
+every boss phase and effect combination has not been visually certified.
+
 ## Verified target and result
 
 Primary target: the user's USA v1.0 ZIPs, extracted under `data/discs/usa`
@@ -19,8 +38,19 @@ accelerated diagnostic reached 4,000 VBlanks; it is not the timing reference.
 
 Initial boot is established, and the input follow-up reaches controllable
 dock gameplay with manual Codec opening. This is not a fully verified port.
-The compiled overlays now include `title`, `opening`, `d00a`, `s00a` and `s01a`.
-The heliport transition, in-game saves and disc switching still need validation.
+The first verified overlay ranges were `title`, `opening`, `d00a`, `s00a` and
+`s01a`. Compilation now includes 73 campaign candidates; see
+[campaign validation](mgs-campaign.md) for actual progression and fixes.
+The Extreme campaign now reaches Ocelot's defeat, the post-Baker sequence and
+the return to the tank hangar through adapted original TAS inputs. PSXjin
+provides the separately observed first-disc reference; this is not yet native
+validation through the disc change. Independent retail LOAD GAME checks now
+pass for 24 Normal saves across 20 stages on both discs, with matching
+SwanStation semantic results and no native interpreter calls. Disc 2 adds ten
+saves across eight stages and 180-VBlank Vulkan probes at 3840×2160 for each
+distinct stage; see [scenario checks](mgs-tas-routes.md#disc-2-scenario-workflow).
+Creating new in-game memory-card saves, complete fights and disc switching
+still need validation; see [reference and native milestones](mgs-tas-reference.md).
 The final accelerated gameplay probe completed 20,000 VBlanks with no
 interpreter fallback counters; movement and manual Codec captures were inspected.
 See [input and memory-card implementation](mgs-input-memory-card.md) and
@@ -52,7 +82,8 @@ Machine-readable results are in [mgs-native-boot-evidence.json](mgs-native-boot-
   VSync callbacks are delivered once per elapsed VBlank, including idle waits.
 - BIOS kernel allocation, stable syscall table pointers and minimal memory-card
   presence/sector transactions cover startup. Persistent card images and BIOS
-  file operations now have regression coverage; in-game save/load is pending.
+  file operations now have regression coverage. Retail loading is verified on
+  both discs; creating new saves through the game's save UI remains pending.
 - The original CD, GTE, DrawOTagEnv and ResetGraph routines are compiled.
   ResetGraph must initialize SDK-private GPU information: the inherited HLE
   no-op caused native SetDrawEnv to emit an invalid drawing area.

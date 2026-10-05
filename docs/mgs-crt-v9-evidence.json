@@ -1,0 +1,704 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "revision": "v9_rgb_phosphors",
+  "changes": [
+    "Three independently modulated RGB phosphors replace the monochrome grille in all five authenticated CRT profiles.",
+    "One triad per native-domain pixel, 78% aperture per subpixel, equal mean energy per channel.",
+    "Analytical footprint integration and contrast fade near Nyquist.",
+    "Existing beam, bloom, palette and simulation unchanged; zero additional texture reads, attachments or render passes."
+  ],
+  "implementation": [
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_crt.glsl",
+      "sha256": "d2e641d749555b7658378ac386566796e8832ff31800b916406500e89668ac54"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp",
+      "sha256": "8fa3c6d6a06d7df13b31ab6cde1e4b08cd5e9f8a71a95e9540d4f82769555226"
+    }
+  ],
+  "shader_builds": {
+    "v8": [
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_semi_textured.frag.spv",
+        "sha256": "80523433a104c63fe16ba34ba40b196686c2925a08a21d8cd005de7763a82d75"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_semi_untextured.frag.spv",
+        "sha256": "86b3d895a31caedc3d8a5792204570ad080e94e9db0116be7829359df1eda8f7"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_sidecar.vert.spv",
+        "sha256": "fc3e657161228d4c4727f9e7321de3616d15d29d2119ba23cdb30538665a0f28"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_sidecar_midpoint.comp.spv",
+        "sha256": "057c63e6f77128188fc31315e7c7d85d2ce784156e155493f36848324e2fd24e"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_sidecar_midpoint_fp32.comp.spv",
+        "sha256": "4c89786f7b30d8e36934e11f9524830cf0a8fd9617adfb98a66954f7730d3db6"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_sidecar_model_pulled.vert.spv",
+        "sha256": "869ccb090b473ce142019fb3db8745f180791a97385850c2c69b202bca182363"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_sidecar_opaque.frag.spv",
+        "sha256": "df5d5014a3e68b395e967386392e8886bf3ecb6d1004ad18e38b2942dbe762c7"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_sidecar_pulled.vert.spv",
+        "sha256": "1797000ac54cb5a2b5909e71eb753513efbdbba7a2287ce6fa0b5d50eecdb9c9"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_sidecar_pulled_interpolated.vert.spv",
+        "sha256": "f490b4fe3766b3ff46fd2d0ce9ed834ed839b81fb774cd7137c31597ae22119a"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_sidecar_raw_pulled.vert.spv",
+        "sha256": "2a90c29328b2bc594135bbd90d503601d92d0023062758b9cdd32ea4f5de41b4"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_sidecar_semi_interlock.frag.spv",
+        "sha256": "184b23ff49259ab02c8b28faaca8778ebf0a7b462a6030b11b5ca9211ea271ae"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_sidecar_semi_textured.frag.spv",
+        "sha256": "2e62e333ae1b835e5395963f0d5ada82e4339fe5c3bb3155dbc85ecbadba6cdb"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/crash3_sidecar_semi_untextured.frag.spv",
+        "sha256": "a164427920290aa8f0159c18960d09d5416d2db27e44fdb667dc3aaa8a44e794"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/present_fullscreen.vert.spv",
+        "sha256": "b07e8466fb11e9dc18c71f0839d211f30bf5a12d6973d79b4f0b864cc700bf3d"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/present_native.frag.spv",
+        "sha256": "66a0ec8e54a941db47279aa4050a03c19e9740af8c5f389762a48383ca47d6e6"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/present_replay.frag.spv",
+        "sha256": "582f2958d5a1ad31cb4d411d9aa1110be14e8001db87c4117e40e159d5001b41"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/present_replay_depth.frag.spv",
+        "sha256": "a507331efe81866cb5b6a362d27d3174d6634d12767d6c17499020e7b131abd5"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/present_replay_temporal.frag.spv",
+        "sha256": "8f46ffe6ac971910d174fdd47e91f2a0496e701a5655e34fc27f8a2baa64041b"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/present_rgba.frag.spv",
+        "sha256": "1bdbb621042e22ea51c58b9357d99043b1519510f9e3b15fd7a394fca4e073cf"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/replay_copy_scratch.frag.spv",
+        "sha256": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/replay_native_expand.frag.spv",
+        "sha256": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/replay_opaque_textured.frag.spv",
+        "sha256": "95162bb85089db442442612ad3e3ecad92bffdbe54e1804572110ede6217ec6a"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/replay_opaque_untextured.frag.spv",
+        "sha256": "1798018e7aeafb45efafb9d3cb7842572aad473b68fb807200b5b66f75cd5589"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/replay_precise.frag.spv",
+        "sha256": "157fcda8907cb84259336f4a68f52a9d11068771691b06e64c82265f10b0ef9e"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/replay_precise.vert.spv",
+        "sha256": "e4bdb5ad46b968a59cf2ce824aec373dfb2f7b0c3331730c3a0f119dcd6c00b4"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/replay_seed.frag.spv",
+        "sha256": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/replay_semi_textured.frag.spv",
+        "sha256": "49ce8f93440d470f7d3425290f0260ad739314017360a51dde8c8f9e6c59d23f"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/replay_visibility_owner.frag.spv",
+        "sha256": "ff93339ddaa8e3d94047a29f3d4fef5fb720000c7af1074cc6bc3923d7a5d513"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/replay_visibility_precise.vert.spv",
+        "sha256": "82b30a4c0b1ea3cb0d4ceda857d29ce076d0fd3c18fe37b61b4d75524990025f"
+      },
+      {
+        "path": ".local/crt-v9-before/shaders/replay_visibility_stack.frag.spv",
+        "sha256": "534f57f99f8bfccfc95e12ae40318a3bb1ad3ebc0894a97c14a0358ac0e84b62"
+      }
+    ],
+    "v9": [
+      {
+        "path": "build/ps1Runtime/shaders/crash3_semi_textured.frag.spv",
+        "sha256": "80523433a104c63fe16ba34ba40b196686c2925a08a21d8cd005de7763a82d75"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_semi_untextured.frag.spv",
+        "sha256": "86b3d895a31caedc3d8a5792204570ad080e94e9db0116be7829359df1eda8f7"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar.vert.spv",
+        "sha256": "fc3e657161228d4c4727f9e7321de3616d15d29d2119ba23cdb30538665a0f28"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_midpoint.comp.spv",
+        "sha256": "057c63e6f77128188fc31315e7c7d85d2ce784156e155493f36848324e2fd24e"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_midpoint_fp32.comp.spv",
+        "sha256": "4c89786f7b30d8e36934e11f9524830cf0a8fd9617adfb98a66954f7730d3db6"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_model_pulled.vert.spv",
+        "sha256": "869ccb090b473ce142019fb3db8745f180791a97385850c2c69b202bca182363"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_opaque.frag.spv",
+        "sha256": "df5d5014a3e68b395e967386392e8886bf3ecb6d1004ad18e38b2942dbe762c7"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_pulled.vert.spv",
+        "sha256": "1797000ac54cb5a2b5909e71eb753513efbdbba7a2287ce6fa0b5d50eecdb9c9"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_pulled_interpolated.vert.spv",
+        "sha256": "f490b4fe3766b3ff46fd2d0ce9ed834ed839b81fb774cd7137c31597ae22119a"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_raw_pulled.vert.spv",
+        "sha256": "2a90c29328b2bc594135bbd90d503601d92d0023062758b9cdd32ea4f5de41b4"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_interlock.frag.spv",
+        "sha256": "184b23ff49259ab02c8b28faaca8778ebf0a7b462a6030b11b5ca9211ea271ae"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_textured.frag.spv",
+        "sha256": "2e62e333ae1b835e5395963f0d5ada82e4339fe5c3bb3155dbc85ecbadba6cdb"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_untextured.frag.spv",
+        "sha256": "a164427920290aa8f0159c18960d09d5416d2db27e44fdb667dc3aaa8a44e794"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_fullscreen.vert.spv",
+        "sha256": "b07e8466fb11e9dc18c71f0839d211f30bf5a12d6973d79b4f0b864cc700bf3d"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_native.frag.spv",
+        "sha256": "66a0ec8e54a941db47279aa4050a03c19e9740af8c5f389762a48383ca47d6e6"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_replay.frag.spv",
+        "sha256": "582f2958d5a1ad31cb4d411d9aa1110be14e8001db87c4117e40e159d5001b41"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_replay_depth.frag.spv",
+        "sha256": "a507331efe81866cb5b6a362d27d3174d6634d12767d6c17499020e7b131abd5"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_replay_temporal.frag.spv",
+        "sha256": "8f46ffe6ac971910d174fdd47e91f2a0496e701a5655e34fc27f8a2baa64041b"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_rgba.frag.spv",
+        "sha256": "1bdbb621042e22ea51c58b9357d99043b1519510f9e3b15fd7a394fca4e073cf"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_copy_scratch.frag.spv",
+        "sha256": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_native_expand.frag.spv",
+        "sha256": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_opaque_textured.frag.spv",
+        "sha256": "fa3a8d60b59f6a243b97f7647968496e04cb74246a61d97572a5d19b50678f62"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_opaque_untextured.frag.spv",
+        "sha256": "108205c3a029d85be8d242055c6a4e8127db1b22ed8064ed1c360805757dcbca"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_precise.frag.spv",
+        "sha256": "8ef8ec1ad08566c9ab6ad37c9eab4adf1b8d752fea40f4def4419bf34d5aefcd"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_precise.vert.spv",
+        "sha256": "e4bdb5ad46b968a59cf2ce824aec373dfb2f7b0c3331730c3a0f119dcd6c00b4"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_seed.frag.spv",
+        "sha256": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_semi_textured.frag.spv",
+        "sha256": "e0f38fc5358c89dad034c0a4753587c55eb8f1323b228f9f3edbd81c62ee2a6b"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_owner.frag.spv",
+        "sha256": "ff93339ddaa8e3d94047a29f3d4fef5fb720000c7af1074cc6bc3923d7a5d513"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_precise.vert.spv",
+        "sha256": "82b30a4c0b1ea3cb0d4ceda857d29ce076d0fd3c18fe37b61b4d75524990025f"
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_stack.frag.spv",
+        "sha256": "534f57f99f8bfccfc95e12ae40318a3bb1ad3ebc0894a97c14a0358ac0e84b62"
+      }
+    ]
+  },
+  "validation": {
+    "tests": 360,
+    "suites": 28,
+    "passed": 360,
+    "failed": 0,
+    "skipped": 0,
+    "vulkan_integration": true,
+    "log": {
+      "path": ".local/crt-v9-tests-final.log",
+      "sha256": "a3e469830a83de900e6ea549c2f0e366c0957f825916c85c4c384a2aa8d33764"
+    },
+    "filter": "Mgs*:*Vulkan*:*ModernReplay*",
+    "checks": [
+      "Independent spatial R/G/B peaks over a uniform input",
+      "Cinematic red/green and gameplay NVG/IR scan and phosphor contrast",
+      "Subpixel geometry compared at matching phosphor phases",
+      "Cinematic grade averaged over a complete RGB triad",
+      "Pause and save-state rewind",
+      "Native VRAM equality",
+      "Protected quicksave and both memory cards unchanged"
+    ],
+    "protected_saves": {
+      "path": ".local/crt-v9-protected.log",
+      "sha256": "47928750547a87d628691b664cbc1aa2c409fafc917061523b7125a2d0cba221"
+    },
+    "catalog": {
+      "path": ".local/crt-v9-catalog-check.log",
+      "sha256": "6725940cd502d9b2a65b2b619e9b7083323b36a12d20f558ff319009c60de373",
+      "adapters_complete": true,
+      "complete_scene_coverage": false
+    }
+  },
+  "runs": [
+    {
+      "name": "red-focus",
+      "directory": "data/native/crt-v9-red-focus-after",
+      "baseline_directory": "data/native/crt-v8-red-focus-after",
+      "manifest": {
+        "path": "data/native/crt-v9-red-focus-after/manifest.json",
+        "sha256": "84f3977a7cb4a1c5eeab1dfc9ddc2f01367467515ad4eb4b8c1f300cc3f586fb"
+      },
+      "metrics": {
+        "path": "data/native/crt-v9-red-focus-after/metrics.json",
+        "sha256": "7e322a5b85a07f20a186793c25b91078aa5c00d028f5e1a0b6aa30b8cbf256c6"
+      },
+      "native_captures": [
+        {
+          "path": "data/native/crt-v9-red-focus-after/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884",
+          "v8_reference": "data/native/crt-v8-red-focus-after/native/frame-0.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-red-focus-after/native/frame-7680.ppm",
+          "sha256": "fda0d03875f79089df362f36a314865561e084c7fa2a0f48b411e70a851128da",
+          "v8_reference": "data/native/crt-v8-red-focus-after/native/frame-7680.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-red-focus-after/native/frame-7690.ppm",
+          "sha256": "7048c1740611f2a519665f87ac86b190ac62ee95f559265bb64ef58b8a7f09f4",
+          "v8_reference": "data/native/crt-v8-red-focus-after/native/frame-7690.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-red-focus-after/native/frame-7700.ppm",
+          "sha256": "7bd5cc904df497ba2c23228e2ab8113e2422b1a9afd5572d8bfc8947fae4f15d",
+          "v8_reference": "data/native/crt-v8-red-focus-after/native/frame-7700.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-red-focus-after/native/frame-7710.ppm",
+          "sha256": "51d89f12dc0396203e81570ee9cef85175a42d0fbe673db15de03cfb48bd9f2e",
+          "v8_reference": "data/native/crt-v8-red-focus-after/native/frame-7710.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-red-focus-after/native/frame-7720.ppm",
+          "sha256": "51d89f12dc0396203e81570ee9cef85175a42d0fbe673db15de03cfb48bd9f2e",
+          "v8_reference": "data/native/crt-v8-red-focus-after/native/frame-7720.ppm",
+          "identical": true
+        }
+      ],
+      "renderer_downgrades": 0,
+      "codec_bindings": 0
+    },
+    {
+      "name": "green-focus",
+      "directory": "data/native/crt-v9-green-focus-after",
+      "baseline_directory": "data/native/crt-v8-green-focus-after",
+      "manifest": {
+        "path": "data/native/crt-v9-green-focus-after/manifest.json",
+        "sha256": "54d6abe27d0ce89b96df5cd5616c6f1a55e7a4fc2419f188aa42b835a0a2bb5d"
+      },
+      "metrics": {
+        "path": "data/native/crt-v9-green-focus-after/metrics.json",
+        "sha256": "4230ab00adfb1cee2b6d855c4b847124c9cf101e063e719f0e9531ef6a0332ae"
+      },
+      "native_captures": [
+        {
+          "path": "data/native/crt-v9-green-focus-after/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884",
+          "v8_reference": "data/native/crt-v8-green-focus-after/native/frame-0.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-green-focus-after/native/frame-10160.ppm",
+          "sha256": "905eea2e0c3468a28cff5b5ce5f5d660aeecc2e570d52763573a7b83cb3d9a32",
+          "v8_reference": "data/native/crt-v8-green-focus-after/native/frame-10160.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-green-focus-after/native/frame-10170.ppm",
+          "sha256": "e9f903aa20064f50ebff02d0443cec645ba1b8b5c8a846dec7fdd4dcc8e44655",
+          "v8_reference": "data/native/crt-v8-green-focus-after/native/frame-10170.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-green-focus-after/native/frame-10180.ppm",
+          "sha256": "a98470cec418987c2443f43d052088b6bc7a2d6c322cfd867aa51faca1b12985",
+          "v8_reference": "data/native/crt-v8-green-focus-after/native/frame-10180.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-green-focus-after/native/frame-10190.ppm",
+          "sha256": "9ae41bf8a8d32de92110bc0bf3077959a2839cbf0d56e0070c9a7bac3791d7dd",
+          "v8_reference": "data/native/crt-v8-green-focus-after/native/frame-10190.ppm",
+          "identical": true
+        }
+      ],
+      "renderer_downgrades": 0,
+      "codec_bindings": 0
+    },
+    {
+      "name": "night",
+      "directory": "data/native/crt-v9-night-after",
+      "baseline_directory": "data/native/crt-v8-night-after",
+      "manifest": {
+        "path": "data/native/crt-v9-night-after/manifest.json",
+        "sha256": "c1c7c8e510f23de47d80e3d67b5b783266153c1a8c5819e8cfc998e26fa2bdc3"
+      },
+      "metrics": {
+        "path": "data/native/crt-v9-night-after/metrics.json",
+        "sha256": "1a80449f17c4e49cce2d5998ca92ca994de12b8e04b02164ed541e67dcb484c6"
+      },
+      "native_captures": [
+        {
+          "path": "data/native/crt-v9-night-after/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884",
+          "v8_reference": "data/native/crt-v8-night-after/native/frame-0.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-night-after/native/frame-2400.ppm",
+          "sha256": "277dda6afdc3b68d26f578b5f680b08fb9c636aea615d0d02d44f060f36c3b10",
+          "v8_reference": "data/native/crt-v8-night-after/native/frame-2400.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-night-after/native/frame-2460.ppm",
+          "sha256": "eb2c897a3f7e4bf6d119331be962241504f0c7752c5cca9d3c80aeb0daece9a0",
+          "v8_reference": "data/native/crt-v8-night-after/native/frame-2460.ppm",
+          "identical": true
+        }
+      ],
+      "renderer_downgrades": 0,
+      "codec_bindings": 0
+    },
+    {
+      "name": "thermal",
+      "directory": "data/native/crt-v9-thermal-after",
+      "baseline_directory": "data/native/crt-v8-thermal-after",
+      "manifest": {
+        "path": "data/native/crt-v9-thermal-after/manifest.json",
+        "sha256": "7f79abaa9979c630638148e2ab505bcd553d3332bf0603dec79a9dd542c178fe"
+      },
+      "metrics": {
+        "path": "data/native/crt-v9-thermal-after/metrics.json",
+        "sha256": "4dd7c9df9aaa75a8732b606174e36ae56b6488f7f95a31a5ff0377d7c49538e2"
+      },
+      "native_captures": [
+        {
+          "path": "data/native/crt-v9-thermal-after/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884",
+          "v8_reference": "data/native/crt-v8-thermal-after/native/frame-0.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-thermal-after/native/frame-2400.ppm",
+          "sha256": "f403337fbccea9b43dacede39c69c4c4315ec8de542c6abcc2909b6f10d671b8",
+          "v8_reference": "data/native/crt-v8-thermal-after/native/frame-2400.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-thermal-after/native/frame-2460.ppm",
+          "sha256": "25ad83e86a528042d9d419953c7be708d3015f01bf3f7c3ee848d4c3271fbbdb",
+          "v8_reference": "data/native/crt-v8-thermal-after/native/frame-2460.ppm",
+          "identical": true
+        }
+      ],
+      "renderer_downgrades": 0,
+      "codec_bindings": 0
+    },
+    {
+      "name": "codec-fixed",
+      "directory": "data/native/crt-v9-codec-fixed-after",
+      "baseline_directory": "data/native/crt-v8-codec-fixed-after",
+      "manifest": {
+        "path": "data/native/crt-v9-codec-fixed-after/manifest.json",
+        "sha256": "c38f5624dfdcac82e5def699b33f1e74ce079dbc6c85d1488e6e8dce79c1c87f"
+      },
+      "metrics": {
+        "path": "data/native/crt-v9-codec-fixed-after/metrics.json",
+        "sha256": "faa5b431f8cfba08bcf1adcf980ca0e9323fcd6b41637d42e6d556da7cbe32bb"
+      },
+      "native_captures": [
+        {
+          "path": "data/native/crt-v9-codec-fixed-after/native/frame-0.ppm",
+          "sha256": "12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884",
+          "v8_reference": "data/native/crt-v8-codec-fixed-after/native/frame-0.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-codec-fixed-after/native/frame-53040.ppm",
+          "sha256": "617425b096e616284eb0d2d69404ba2c903512e31e20f67c82cd796713b92cba",
+          "v8_reference": "data/native/crt-v8-codec-fixed-after/native/frame-53040.ppm",
+          "identical": true
+        },
+        {
+          "path": "data/native/crt-v9-codec-fixed-after/native/frame-53100.ppm",
+          "sha256": "711c04560092654282d6ac061a2aa346b4b81f6e2443418390b24494818e4077",
+          "v8_reference": "data/native/crt-v8-codec-fixed-after/native/frame-53100.ppm",
+          "identical": true
+        }
+      ],
+      "renderer_downgrades": 0,
+      "codec_bindings": 118
+    }
+  ],
+  "gallery": {
+    "path": "data/presentation/crt-review-20261005-v9/manifest.json",
+    "sha256": "4a344f25dcb5c76cfb3a3bd6bb08db1f40a091406b7af995578ce59cc53252f1"
+  },
+  "benchmark": {
+    "gpu": "NVIDIA GeForce RTX 4060",
+    "trials": [
+      {
+        "variant": "before",
+        "trial": 1,
+        "path": ".local/crt-v9-bench-before-1.json",
+        "sha256": "64c555a821765b94dd7b49769d7a3fd717929ef6407fbcbf6a79913fbca730d2",
+        "result": {
+          "internal_scale": 12,
+          "window": [
+            3840,
+            2160
+          ],
+          "warmup_frames": 24,
+          "measured_frames": 96,
+          "profiles": [
+            {
+              "name": "cinematic_red",
+              "total_ns": 275190784,
+              "samples": 96
+            },
+            {
+              "name": "cinematic_green",
+              "total_ns": 267509408,
+              "samples": 96
+            },
+            {
+              "name": "night_vision",
+              "total_ns": 284405408,
+              "samples": 96
+            },
+            {
+              "name": "thermal_vision",
+              "total_ns": 277355264,
+              "samples": 96
+            }
+          ],
+          "downgrades": 0
+        }
+      },
+      {
+        "variant": "before",
+        "trial": 2,
+        "path": ".local/crt-v9-bench-before-2.json",
+        "sha256": "42d9a8f192431ba2512f41accd2d40c80b5a7726e9654cf74fe0d027e2c77012",
+        "result": {
+          "internal_scale": 12,
+          "window": [
+            3840,
+            2160
+          ],
+          "warmup_frames": 24,
+          "measured_frames": 96,
+          "profiles": [
+            {
+              "name": "cinematic_red",
+              "total_ns": 248181696,
+              "samples": 96
+            },
+            {
+              "name": "cinematic_green",
+              "total_ns": 248132032,
+              "samples": 96
+            },
+            {
+              "name": "night_vision",
+              "total_ns": 269420864,
+              "samples": 96
+            },
+            {
+              "name": "thermal_vision",
+              "total_ns": 273065056,
+              "samples": 96
+            }
+          ],
+          "downgrades": 0
+        }
+      },
+      {
+        "variant": "after",
+        "trial": 1,
+        "path": ".local/crt-v9-bench-after-1.json",
+        "sha256": "7bcdd549370b62aefb8df74e4ffc97514489ae3000c7e015acf66238c7b21c1e",
+        "result": {
+          "internal_scale": 12,
+          "window": [
+            3840,
+            2160
+          ],
+          "warmup_frames": 24,
+          "measured_frames": 96,
+          "profiles": [
+            {
+              "name": "cinematic_red",
+              "total_ns": 263778304,
+              "samples": 96
+            },
+            {
+              "name": "cinematic_green",
+              "total_ns": 281678176,
+              "samples": 96
+            },
+            {
+              "name": "night_vision",
+              "total_ns": 262566656,
+              "samples": 96
+            },
+            {
+              "name": "thermal_vision",
+              "total_ns": 262204512,
+              "samples": 96
+            }
+          ],
+          "downgrades": 0
+        }
+      },
+      {
+        "variant": "after",
+        "trial": 2,
+        "path": ".local/crt-v9-bench-after-2.json",
+        "sha256": "ed06a39a5981a45fa0136e8a37af47a9b4314bc6c00b72fe8c894e62ba5126a9",
+        "result": {
+          "internal_scale": 12,
+          "window": [
+            3840,
+            2160
+          ],
+          "warmup_frames": 24,
+          "measured_frames": 96,
+          "profiles": [
+            {
+              "name": "cinematic_red",
+              "total_ns": 267510400,
+              "samples": 96
+            },
+            {
+              "name": "cinematic_green",
+              "total_ns": 261680032,
+              "samples": 96
+            },
+            {
+              "name": "night_vision",
+              "total_ns": 269608896,
+              "samples": 96
+            },
+            {
+              "name": "thermal_vision",
+              "total_ns": 283659872,
+              "samples": 96
+            }
+          ],
+          "downgrades": 0
+        }
+      }
+    ],
+    "means": [
+      {
+        "profile": "cinematic_red",
+        "before_ms": 2.7258983333333333,
+        "after_ms": 2.7671286666666663,
+        "delta_percent": 1.5125411255861199
+      },
+      {
+        "profile": "cinematic_green",
+        "before_ms": 2.6856325,
+        "after_ms": 2.8299906666666663,
+        "delta_percent": 5.375201806898988
+      },
+      {
+        "profile": "night_vision",
+        "before_ms": 2.8845118333333333,
+        "after_ms": 2.7717476666666667,
+        "delta_percent": -3.9092981128927007
+      },
+      {
+        "profile": "thermal_vision",
+        "before_ms": 2.8667725,
+        "after_ms": 2.8430436666666665,
+        "delta_percent": -0.827719441753183
+      }
+    ],
+    "method": "Fixture ScnMask autenticata, scena fissa, 24 frame di riscaldamento + 96 misurati per profilo, due run per variante, timestamp GPU e readback disabilitato. Costo dell’intero frame di prova, inclusi copia e presentazione: non timestamp del solo shader. Risoluzione interna 12x, sorgente 3840x2688, presentazione 3840x2160. Non è un benchmark della campagna o di altre GPU."
+  },
+  "preview_filtering": {
+    "reason": "Resizing a 4K RGB carrier with browser texture filtering can introduce chromatic moire absent in the full-resolution frame.",
+    "solution": "Previews filtered with Lanczos at 320/640/1280/1920; ResizeObserver picks a size no greater than the displayed width. Original 3840x2160 files and unfiltered 192x120 crops are separate.",
+    "browser_screenshot": ".local/crt-v9-gallery.png"
+  },
+  "limitations": [
+    "Five previously authenticated profiles; does not expand the campaign-wide scanline inventory.",
+    "Performance means are whole synthetic frame timings with two trials per variant; differences span -0.11 to +0.14 ms and do not establish a separate mask cost.",
+    "Original bitmap detail is not reconstructed; the phosphor simulation is presentation-only."
+  ]
+}

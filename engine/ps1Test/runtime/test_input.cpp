@@ -65,6 +65,30 @@ TEST(InputDigital, HeldButtonRemainsLatchedUntilReleaseVBlank) {
   EXPECT_NE(input.latchedButtonState(0) & BTN_CROSS, 0);
 }
 
+TEST(InputTas, PublishesBothButtonsAndAnalogOnlyAtTheVblank) {
+  InputController input;
+  input.setPadType(0, PadType::Analog);
+  input.setFrameSampling(true);
+  input.press(BTN_CROSS);
+  input.setAnalog(0, 0, 255, 64, 192);
+  EXPECT_EQ(input.latchedButtonState(), 0xFFFF);
+  EXPECT_EQ(input.snapshot().ports[0].analogLX, 128);
+  input.release(BTN_CROSS); // a short tap must still occupy one movie frame
+  input.latchVBlank();
+  const auto sample = input.latchedSample();
+  EXPECT_EQ(sample[0].buttons, uint16_t(~BTN_CROSS));
+  EXPECT_EQ(sample[0].analogLY, 255);
+  input.latchVBlank();
+  EXPECT_EQ(input.latchedButtonState(), 0xFFFF);
+  input.press(BTN_START, 1);
+  input.setMovieSample(sample); // playback is authoritative over live input
+  EXPECT_EQ(input.latchedButtonState(1), 0xFFFF);
+  EXPECT_EQ(input.snapshot().ports[0].buttons, uint16_t(~BTN_CROSS));
+  input.reset();
+  EXPECT_EQ(input.latchedSample()[0].buttons, 0xFFFF);
+  EXPECT_EQ(input.snapshot().ports[0].analogLX, 128);
+}
+
 TEST(InputScript, ParsesIntervalsAndCombinesOverlapsPerPort) {
   InputScript script;
   std::string error;
@@ -114,6 +138,10 @@ TEST(InputScript, RejectsMalformedAndUnknownInput) {
   EXPECT_NE(error.find("unknown PS1 button"), std::string::npos);
   EXPECT_FALSE(script.parse("10 12 cross 2\n", &error));
   EXPECT_NE(error.find("port"), std::string::npos);
+  EXPECT_FALSE(script.parse("typo 12 cross\n", &error));
+  EXPECT_FALSE(script.parse("10 12 cross typo\n", &error));
+  EXPECT_FALSE(script.parse("-10 12 cross\n", &error));
+  EXPECT_FALSE(script.parse("10x 12 cross\n", &error));
 }
 
 // Analog Stick Tests

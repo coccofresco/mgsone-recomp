@@ -3,8 +3,12 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <limits>
+#include <map>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace ps1::gpu::replay {
@@ -1011,6 +1015,13 @@ VulkanReplayBakeReason validateDraw(const ReplayExecutionOperation &item,
     return VulkanReplayBakeReason::UnsupportedDrawState;
   }
 
+  // Owned SGT/panorama transforms and analytic line ribbons have genuine
+  // affine subpixel XY. They do not claim a GTE projection or invented depth.
+  const bool sourceScreenXY=packet.route==PacketRoute::Screen2D &&
+      ((packet.opcode&0xe0u)==0x40u ||
+       (packet.surfaceEffect.actor>=0x10000u && packet.surfaceEffect.actor<0x200000u &&
+        (packet.surfaceEffect.kind==MgsSurfaceKind::Authored ||
+         packet.surfaceEffect.kind==MgsSurfaceKind::Panorama)));
   for (std::size_t vertexIndex = 0; vertexIndex < packet.vertexCount;
        ++vertexIndex) {
     const ReplayVertex &vertex = packet.vertices[vertexIndex];
@@ -1042,8 +1053,9 @@ VulkanReplayBakeReason validateDraw(const ReplayExecutionOperation &item,
           vertex.nearSaturated != (vertex.rawDepth < vertex.nearDepth)) {
         return VulkanReplayBakeReason::IncompletePrecisionProvenance;
       }
-    } else if (vertex.x != static_cast<double>(vertex.nativeX) ||
-               vertex.y != static_cast<double>(vertex.nativeY) ||
+    } else if ((!sourceScreenXY &&
+                (vertex.x != static_cast<double>(vertex.nativeX) ||
+                 vertex.y != static_cast<double>(vertex.nativeY))) ||
                vertex.w != CRASH_REPLAY_FALLBACK_W || vertex.preciseXY ||
                vertex.preciseX || vertex.preciseY || vertex.rawDepthValid ||
                vertex.inventedW || vertex.rawDepth != 0.0 ||
@@ -1123,6 +1135,12 @@ vulkan_abi::DrawUniforms drawUniforms(const DrawPacket &packet) noexcept {
     if (packet.originalMesh->thermalEmission && uniforms.mgsProjection[3] != 0)
       uniforms.mgsProjection[3] += 2;
     uniforms.mgsWeights = packet.originalMesh->weights;
+    const auto &lighting = packet.originalMesh->lighting;
+    uniforms.mgsNormals = lighting.normals;
+    uniforms.mgsLightDirections = lighting.directions;
+    uniforms.mgsLightColors = lighting.colors;
+    uniforms.mgsAmbient = lighting.ambient;
+    uniforms.mgsWorldPositions = lighting.positions;
   }
   if (packet.originalTexture) {
     uniforms.mgsTextureData = packet.originalTexture->data;
@@ -1130,6 +1148,7 @@ vulkan_abi::DrawUniforms drawUniforms(const DrawPacket &packet) noexcept {
     uniforms.mgsPalette = packet.originalTexture->palette;
   }
   if (packet.waterEffect[0] != 0) {
+    uniforms.mgsViewRows[4][0] = packet.furnaceHeat ? 1.f : 0.f;
     uniforms.mgsProjection = {float(packet.waterEffect[1]),
                               float(packet.waterEffect[0]),
                               float(packet.submissionId & 0xffffffu), 0};
@@ -1146,6 +1165,8 @@ vulkan_abi::DrawUniforms drawUniforms(const DrawPacket &packet) noexcept {
     // This is metadata only. The render-only ScreenEffect flag is set after
     // the presenter proves that the complete actor pass can be replaced.
   }
+  uniforms.mgsSurfaceEffect = packet.surfaceEffect.parameters;
+  uniforms.mgsSurfaceEffect[0][0] = float(packet.surfaceEffect.kind);
   return uniforms;
 }
 
@@ -1680,8 +1701,22 @@ bakeModernReplayVulkan(const ModernReplayExecutionPlan &plan,
       break;
     }
 
-    if (reason != VulkanReplayBakeReason::None)
+    if (reason != VulkanReplayBakeReason::None) {
+      if(std::getenv("PS1_VULKAN_REPLAY_BAKE_DEBUG")) {
+        if(const auto *p=std::get_if<DrawPacket>(source)) {
+          std::fprintf(stderr,"[ReplayBake] %s ordinal=%zu op=%02x route=%u mask=%u effect=%u owner=%x fallback=%u\n",
+            vulkanReplayBakeReasonName(reason).data(),item.ordinal,p->opcode,unsigned(p->route),p->validMask,
+            unsigned(p->surfaceEffect.kind),p->surfaceEffect.actor,unsigned(p->fallbackReason));
+          for(unsigned k=0;k<p->vertexCount;++k) {
+            const auto &v=p->vertices[k];
+            std::fprintf(stderr,"  v%u xy=%g,%g native=%d,%d w=%g raw=%g near=%g precise=%u%u%u uv=%u rawValid=%u invented=%u reconcile=%u%u nearSat=%u\n",
+              k,v.x,v.y,v.nativeX,v.nativeY,v.w,v.rawDepth,v.nearDepth,v.preciseXY,v.preciseX,v.preciseY,
+              v.preciseUV,v.rawDepthValid,v.inventedW,v.reconciledX,v.reconciledY,v.nearSaturated);
+          }
+        }
+      }
       return failure(reason, item);
+    }
   }
 
   VulkanReplayBakedBatch candidate;
@@ -1696,6 +1731,7 @@ bakeModernReplayVulkan(const ModernReplayExecutionPlan &plan,
   candidate.vertices.reserve(totals.vertices);
   candidate.visibilityOwners.reserve(totals.visibilityOwners);
   candidate.nativeUploadPixels.reserve(totals.uploadPixels);
+  std::map<std::string, uint32_t> pointLightOffsets;
 
   for (std::size_t itemIndex = 0; itemIndex < operations.size(); ++itemIndex) {
     const ReplayExecutionOperation &item = operations[itemIndex];
@@ -1720,10 +1756,29 @@ bakeModernReplayVulkan(const ModernReplayExecutionPlan &plan,
       const DrawPacket &packet = std::get<DrawPacket>(source);
       const uint32_t firstVisibilityOwnerToken =
           static_cast<uint32_t>(candidate.visibilityOwners.size() + 1u);
-      const VulkanReplayBakedDraw draw =
+      VulkanReplayBakedDraw draw =
           bakeDraw(packet, internalScale,
                    static_cast<uint32_t>(candidate.vertices.size()),
                    firstVisibilityOwnerToken);
+      if (packet.originalMesh &&
+          !packet.originalMesh->lighting.pointLights.empty()) {
+        const auto &lights = packet.originalMesh->lighting.pointLights;
+        if (candidate.mgsPointLights.size() > UINT32_MAX / 8u ||
+            lights.size() > UINT32_MAX / 8u - candidate.mgsPointLights.size())
+          return failure(VulkanReplayBakeReason::NumericOverflow, item);
+        static_assert(sizeof(OriginalPointLight) == 32);
+        const std::string key(reinterpret_cast<const char *>(lights.data()),
+                              lights.size() * sizeof(OriginalPointLight));
+        auto [entry, fresh] = pointLightOffsets.try_emplace(
+            key, uint32_t(candidate.mgsPointLights.size()));
+        if (fresh)
+          candidate.mgsPointLights.insert(candidate.mgsPointLights.end(),
+                                          lights.begin(), lights.end());
+        for (unsigned s = 0; s < draw.segmentCount; ++s)
+          draw.segments[s].uniforms.mgsPointLights = {
+              entry->second * 8u, uint32_t(lights.size()), 0, 0};
+        draw.uniforms = draw.segments[0].uniforms;
+      }
       for (std::size_t index = 0; index < packet.indexCount; ++index) {
         candidate.vertices.push_back([&] {
           auto v = bakeVertex(packet.vertices[packet.triangleIndices[index]]);

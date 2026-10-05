@@ -22,9 +22,18 @@ layout(set = 1, binding = 0, std140) uniform CrashReplayDrawState {
   ivec4 mgs_texture_origin;
   uvec4 mgs_palette[2];
   vec4 mgs_weights[4];
+  vec4 mgs_normals[4];
+  vec4 mgs_light_directions[3];
+  vec4 mgs_light_colors[3];
+  vec4 mgs_ambient;
+  vec4 mgs_world_positions[4];
+  uvec4 mgs_point_lights;
+  vec4 mgs_surface_effect[4];
 } u_draw;
 #include "games/mgs_original_texture.glsl"
+#include "games/mgs_lighting.glsl"
 #include "games/mgs_screen_texture.glsl"
+#include "games/mgs_surface_effects.glsl"
 
 layout(location = 0) in vec2 v_uv;
 layout(location = 1) noperspective in vec3 v_color_255;
@@ -98,32 +107,34 @@ uvec3 texelRgb5(uint texel) {
 }
 
 uvec3 expandRgb5(uvec3 rgb5) {
-  return (rgb5 << 3u) | (rgb5 >> 2u);
+  return uvec3(round(mgs_albedo(rgb5)));
 }
 
 uvec3 shadeColor() {
-  return uvec3(clamp(v_color_255, vec3(0.0), vec3(255.0)));
+  return uvec3(clamp(mgs_lighting(v_color_255), vec3(0.0), vec3(255.0)));
 }
 
 void main() {
   uvec3 color;
   bool sourceStp, visible;
-  if (mgs_screen_texel(v_uv, v_color_255, color, sourceStp, visible)) {
+  if (mgs_surface_texel(v_uv, v_color_255, color, sourceStp, visible) ||
+      mgs_screen_texel(v_uv, v_color_255, color, sourceStp, visible)) {
     if (!visible) discard;
   } else {
-    const uint texel = samplePs1Texel(v_uv);
+    const uint texel = samplePs1Texel(mgs_surface_uv(v_uv));
     if (texel == 0u) discard;
     sourceStp = (texel & 0x8000u) != 0u;
     const uvec3 rgb5 = texelRgb5(texel);
     color = (u_draw.texture_state.z & DRAW_RAW_TEXTURE) != 0u
                 ? expandRgb5(rgb5)
-                : min(uvec3(255u), (rgb5 * shadeColor()) >> 4u);
+                : min(uvec3(255u), mgs_modulate(rgb5, v_color_255));
   }
-  color = mgs_thermal_emission(color, v_color_255);
+  color = mgs_surface_color(color,v_uv);
+  color = mgs_thermal_emission(color, mgs_lighting(v_color_255));
   o_color = vec4(vec3(color) * (1.0 / 255.0), 1.0);
   const bool forceMask =
       (u_draw.texture_state.z & DRAW_FORCE_MASK) != 0u;
   o_mask = (sourceStp || forceMask) ? 1u : 0u;
   gl_FragDepth = replay_occlusion_depth();
-  o_surface_depth = replay_surface_depth();
+  o_surface_depth = mgs_screen_output_depth(replay_surface_depth());
 }

@@ -1,0 +1,1954 @@
+{
+  "format": "mgs-disc2-scenes-evidence-1",
+  "date": "2026-10-04",
+  "difficulty": "Normal",
+  "disc": 2,
+  "passed_saves": 10,
+  "distinct_stages": 8,
+  "identity": {
+    "runtime": {
+      "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+      "sha256": "c3502a158384d9b670ac4c75f45ecf6205600a74ca08b7b6a3eda00b519ba155"
+    },
+    "config": {
+      "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-01-s13a-204/native-04/native.toml",
+      "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+    },
+    "exe": {
+      "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+      "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+    },
+    "cue": {
+      "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+      "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+    },
+    "track_0": {
+      "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+      "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+    },
+    "asset_cache": {
+      "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+      "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+    }
+  },
+  "donor": {
+    "runner": {
+      "path": "/home/xander/mgs_recomp/.local/libretro_headless",
+      "sha256": "fac15316d4bc8fd83c18ea0bcbe19b86accb1f9858ad1242ea93e44f883a7a1a"
+    },
+    "core": {
+      "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+      "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+    },
+    "bios": {
+      "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-02-s14e-204/donor-01/work/system/openbios.bin",
+      "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+    },
+    "cue": {
+      "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+      "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+    },
+    "track_0": {
+      "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+      "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+    }
+  },
+  "disc_identity_audit": {
+    "disc2_cue": "data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+    "disc2_track_sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94",
+    "exe_disc1_sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32",
+    "exe_disc2_sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32",
+    "identical_compiled_overlays": [
+      {
+        "stage": "brf",
+        "sha256": "664d803ba3e328f5267e45b9d7c4830b0c5b6b826fe46ab58042a5bcf8c3f10a"
+      },
+      {
+        "stage": "abst",
+        "sha256": "59c750f0ec7335a27c36d37676baad89f385eed239975adacae8cf81981ea97c"
+      },
+      {
+        "stage": "d00a",
+        "sha256": "8d69b08b378fd6124a1390e82097477fde4b71c9161a7d27cdfdb93b422dfb38"
+      },
+      {
+        "stage": "d01a",
+        "sha256": "d790304a09c077a5a0561e4cab5a91443c94c1949c77258f57a1f4b0d3c23fe1"
+      },
+      {
+        "stage": "d03a",
+        "sha256": "07fb4a27dade0f1b27a308287fbb563effbd9a25b04832ea949d122b984e44ca"
+      },
+      {
+        "stage": "d11c",
+        "sha256": "5efe5b5ca33e6705c1f2d5d9a94d45f10bdac49ec3fab4e8b2e82fe91dcc6574"
+      },
+      {
+        "stage": "d16e",
+        "sha256": "287f9c463a61f6fc3fbfa6d088a23f2b7c64ff5814bad2870b2a36aeb8743cc0"
+      },
+      {
+        "stage": "d18a",
+        "sha256": "9e3f1706e50cb8fa867b16f80a426cb779c21241c348165c927abd91267210dd"
+      },
+      {
+        "stage": "rank",
+        "sha256": "26b31361283b6d3fc1ef80c5adf46997ef9c03d3e50aa526d40eca54f3f304d6"
+      },
+      {
+        "stage": "roll",
+        "sha256": "f0f65ae134323cf1b3992c637eb67cde84e7a91466e4677fbc26edaff71f9662"
+      },
+      {
+        "stage": "s00a",
+        "sha256": "0162b192109171aa249343e10340f0756efe2f03694f51b5844cbb20797be96f"
+      },
+      {
+        "stage": "s01a",
+        "sha256": "bd046ff36bc34bb60f845d6139be04ac0c000e0f526746209acbeb4fa354e84b"
+      },
+      {
+        "stage": "s02a",
+        "sha256": "feb0e1b001dba2587379a9f76ec9fa9efaa1ed34a980ceb30594420f43cef31e"
+      },
+      {
+        "stage": "s02b",
+        "sha256": "8be036197d668bf136d9ae2c0d9e9491518c6799910493a99c87ac5b02f7b7e6"
+      },
+      {
+        "stage": "s02c",
+        "sha256": "3a473c807ee486aaa60e98afa3b81a9330e838d3498527d7eadcdb657b1a0ccd"
+      },
+      {
+        "stage": "s02d",
+        "sha256": "28b4ab15f3b9e50f283a971a61a5cfcc88d6af4bece3d7f0da621e36569f258d"
+      },
+      {
+        "stage": "s02e",
+        "sha256": "2c06ba940810e2e01e4605c56672b4e5e4231a9f9beae913c825b8fc555503bc"
+      },
+      {
+        "stage": "s03a",
+        "sha256": "3405ed9d4cc37361c734368b1b0ed538ae03012135760507316109af98430145"
+      },
+      {
+        "stage": "s03b",
+        "sha256": "6789eb708711d92668d7cd6c36fca063dab2f6e16978b9154496751395439232"
+      },
+      {
+        "stage": "s03c",
+        "sha256": "f11676027817d275ce41fe2392c1728d4a5c27689ec09613ef528b3d72e93564"
+      },
+      {
+        "stage": "s03d",
+        "sha256": "be820132d2e4e571c84021a70f253ad87f034ba5f2eea03bf515a10d4b7c6906"
+      },
+      {
+        "stage": "s03e",
+        "sha256": "3c326558cf34537f323fc4d27d92a735e661ad59921c4178a046b59e5871d522"
+      },
+      {
+        "stage": "s04a",
+        "sha256": "e811375a30271e6429dbc2a4dbcc0815f5684270be69ca77f6ed82ddb955c8de"
+      },
+      {
+        "stage": "s04b",
+        "sha256": "f3231739934940ed127cb39d6567f248ba0ff7c231c8512eaf54f419689806eb"
+      },
+      {
+        "stage": "s04c",
+        "sha256": "ade638ae2a604b0704037be69cf9c92a4434fe55bc5d65dc6544f3c59e166cd4"
+      },
+      {
+        "stage": "s05a",
+        "sha256": "878a8677c88f845cc11a51c8c0bf532ed7980173f34d886624fdae21a3d3a234"
+      },
+      {
+        "stage": "s06a",
+        "sha256": "f371e706301c9cab2855e99c103003c973429a40c85a3caad61b1f092ed4f583"
+      },
+      {
+        "stage": "s07a",
+        "sha256": "594066830197b9642ad08862e563d2acb5018d502e6e7f6af61f46d4459ac3f9"
+      },
+      {
+        "stage": "s07b",
+        "sha256": "bfabdf6d8504528ea6728325eb3206c57606bb164b98e4eee73884ef8fe58734"
+      },
+      {
+        "stage": "s07c",
+        "sha256": "26f281ca5023d3d8b3d431abd469ee78fa4b24faf37eb45bdeab5a689c369980"
+      },
+      {
+        "stage": "s08a",
+        "sha256": "0456773b95f04c8ad38f523dc40b68d2b2eab337452fb1687868b068d30505b8"
+      },
+      {
+        "stage": "s08b",
+        "sha256": "4c261d48e7499e4bcdaf1191b31e1f60d0218a272b46db18461055a7f4954d38"
+      },
+      {
+        "stage": "s08c",
+        "sha256": "8bebe4b4213ec125a8f0881ace4b0e9991f7172bdbc1511fce356b275c63bd12"
+      },
+      {
+        "stage": "s09a",
+        "sha256": "8767a47b25c594747740707355c560e0a57b7edcaaad97cb5f2874b35a1feab4"
+      },
+      {
+        "stage": "s10a",
+        "sha256": "97f4b70b74fce55883a5a11642c64ba6a54b62e258e60d984774d1368cb80826"
+      },
+      {
+        "stage": "s11a",
+        "sha256": "9359e71aa53149198191293c7dd961e7024701334de34b9a896cf4b1a8fd6028"
+      },
+      {
+        "stage": "s11b",
+        "sha256": "4baab53fe923bab47f7dd380b14d221d247ba39b87a7720e64bf347530419ae5"
+      },
+      {
+        "stage": "s11c",
+        "sha256": "7e198639d78b51fc4d47038aab10996f326eb55543ead2a35e195d68d3e2a204"
+      },
+      {
+        "stage": "s11d",
+        "sha256": "eabd7e35363ec4f287aec7e3b4c1c79de345858c4a1af30e513e7b45238d11d8"
+      },
+      {
+        "stage": "s11e",
+        "sha256": "039ca961edbef47b554947a7f5025f18ee3204a5ee5ca93764d7f331679f374f"
+      },
+      {
+        "stage": "s11g",
+        "sha256": "6290cfd486f95dd49769bc2dcbe52b54e7f9c9434382bc7d6e3e86ffc63a540e"
+      },
+      {
+        "stage": "s11h",
+        "sha256": "2be9c1ed907a53afee0fc5044b2787eb741d31fb39a24c6cd6994c46c262fbee"
+      },
+      {
+        "stage": "s11i",
+        "sha256": "ff0f4ffdcf759cc95f89eb9e54078d6550c116ede9bf11a679348aeb4e45310c"
+      },
+      {
+        "stage": "s12a",
+        "sha256": "399273a3a502ce4da69dea8555c1df133ad6cc82f6a4a361ca82fe67e18ff4de"
+      },
+      {
+        "stage": "s12b",
+        "sha256": "76530d2a40d8259906bd4bffa37d8c530f8292f2f6a6e23ea6162fcd0dea5352"
+      },
+      {
+        "stage": "s12c",
+        "sha256": "aa141c14b53bfa9cfbaa71bfd3613c64baa34766ad31cada402eddec633c3dbb"
+      },
+      {
+        "stage": "s13a",
+        "sha256": "73a8bc5c00f7c8bfcc2105c3e38add7ac53dbe93ebd7df2506334822ddae1a08"
+      },
+      {
+        "stage": "s14e",
+        "sha256": "98f8f965747d05059ad76f7d6d6190494f71aa8b10709283c812c170b5e488b1"
+      },
+      {
+        "stage": "s15a",
+        "sha256": "b46833b814ded54c3a347d9bb64883cc13ae3220d598c799fcb12b610db24165"
+      },
+      {
+        "stage": "s15b",
+        "sha256": "bb8c3bc2bcfd8c16deb58a9e7d86b76e4ffd7bb660660494eec59abc3c10999c"
+      },
+      {
+        "stage": "s15c",
+        "sha256": "5e00c33723d5132cbda3d1cdb468e00b30d469b92f87bb2f0d0fb3279dbc4f37"
+      },
+      {
+        "stage": "s16a",
+        "sha256": "0cd010a1e4cc41f771265c15e890271ca14e38701873769ed17cd4fb1313e1b6"
+      },
+      {
+        "stage": "s16b",
+        "sha256": "0597bc5d5e7167c9e5bf81c4c7422a4ce6c1e100677620f4420b40237484477a"
+      },
+      {
+        "stage": "s16c",
+        "sha256": "8b55a80d00d8d56661f2cc6f34364446a71cd2d50e99666b2286c6fffa09526d"
+      },
+      {
+        "stage": "s16d",
+        "sha256": "23300766915604366997e581a6d237ca375bd8b04ce1e4e6d8870f6087b4fdc2"
+      },
+      {
+        "stage": "s17a",
+        "sha256": "4044ba8f6086e0c8bbdeb9cbb54ecf57e43d7cd8c493dd408f7be7e742d351e6"
+      },
+      {
+        "stage": "s18a",
+        "sha256": "326cc1cf17cb830e8345b63c654ce73968a9c58a2f0da0790f9f50b36cc4f8b1"
+      },
+      {
+        "stage": "s19a",
+        "sha256": "e9e80c985675b9440b5c46422acf355e2cd770bfaa7030aacb3310ef9bf158c8"
+      },
+      {
+        "stage": "s19b",
+        "sha256": "7a94b594a197ab9345ca35218535cab5e3e18328da3814615ce8e83e29425f80"
+      },
+      {
+        "stage": "s20a",
+        "sha256": "9ddf5e4b4c07fe7490a93731b67e8748cf042dcfbaf005fc7a72990ee7df6b63"
+      },
+      {
+        "stage": "option",
+        "sha256": "48b7964387d87fd0c66ce602a88d6c858b5e89abd30e049a304c98b28838f19b"
+      },
+      {
+        "stage": "preope",
+        "sha256": "53bd8aafac8c28539b58b68e08a5c85811d5c7bf921c456006c33a647225d024"
+      },
+      {
+        "stage": "s00aa",
+        "sha256": "11c52f4528f64be94a986092c768350c857f26b49e35e425478cc32bc7ff14c5"
+      },
+      {
+        "stage": "s04br",
+        "sha256": "11143104f864058eb029768a9b2efadbabcfd77b788822770becf6456fa140c2"
+      },
+      {
+        "stage": "s08br",
+        "sha256": "43b0deaddc3889d920e501b5ff61421f19e407150eae9281da3c2391cc3e89a2"
+      },
+      {
+        "stage": "s08cr",
+        "sha256": "cb65664db1cf81a0e0784e5553260789a4be19cdf7c88cc437bc69d1a8944b98"
+      },
+      {
+        "stage": "s10ar",
+        "sha256": "ecd0c0c6f942ee124b213dfdbcc5350bc3067f5435bdffd0fb81c0f5b06ffc30"
+      },
+      {
+        "stage": "s17ar",
+        "sha256": "95357ef128b8d7d5c69884595a45aa501039b78c5c2b558ae14f715a390298b1"
+      },
+      {
+        "stage": "d00aa",
+        "sha256": "9b755eedbaa0dcb18bb0806bf45c1aaef25e6f0998b9d876c4df0fe9164c7982"
+      },
+      {
+        "stage": "title",
+        "sha256": "8a909480158d16c1f6849df915751ce927335d0d6df5a7849a5bc20fdd042c71"
+      },
+      {
+        "stage": "opening",
+        "sha256": "359a5fffcf6555bb40861beea2d576691770fbe015d524d1395b2101c1884db8"
+      },
+      {
+        "stage": "change",
+        "sha256": "d06543015baf02c8b4e6f30fe39e6bcd4786d7a0b6e6e2c80e2b482e1ead2844"
+      },
+      {
+        "stage": "ending",
+        "sha256": "46e2ba0401dfc0b368927df8dddb9d9b685d715bea958d8225a63a1861f4fa74"
+      }
+    ],
+    "scope": "Executable and compiled story overlays are identical; runtime disc content remains separately mounted."
+  },
+  "source_archive_sha256": "a5ae365e5791dc7169f562ca1af9aeaed1c8f45fad268bd23070c4b9aca62893",
+  "source_url": "https://www.reddit.com/r/metalgearsolid/comments/qyv2ma/metal_gear_solid_1_save_files_for_duckstation/",
+  "source_card": {
+    "path": ".local/gameplay-validation-research/usa-cards/Metal Gear Solid (USA) (Disc 2)_1.mcd",
+    "sha256": "1f1b195d075c9ce712148a5614701faee3d72594fc175b9ce9452810b2726d21"
+  },
+  "excluded_card_blocks": [
+    {
+      "block": 11,
+      "stage": "rank",
+      "reason": "completed-game result; not a controllable gameplay save"
+    }
+  ],
+  "compared_fields": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "life",
+    "max_life",
+    "stance",
+    "weapon",
+    "item",
+    "weapons",
+    "items",
+    "x",
+    "z",
+    "game_over_timer"
+  ],
+  "scope_exclusions": [
+    "complete fights",
+    "complete traversals",
+    "all disc 2 rooms",
+    "disc swap",
+    "continuous campaign",
+    "creation of new in-game memory-card saves",
+    "complete visual equivalence"
+  ],
+  "fixes": [
+    {
+      "kind": "overlay prologue discovery",
+      "detail": "Do not split a function at a heuristic stack prologue in a branch delay slot; explicit call/config entries remain authoritative.",
+      "fault": {
+        "stage": "s15a",
+        "function": "0x800D5D70",
+        "false_entry": "0x800D5D84",
+        "unmapped_branch_target": "0x800D5D90",
+        "callsite_return": "0x800D6E3C",
+        "branch_word": "0x10400003",
+        "delay_slot_word": "0x27BDFFE8"
+      },
+      "removed_false_entries": 44,
+      "affected_overlays": 35,
+      "removed_prologues": [
+        [
+          "usa_brf",
+          "800E2E30"
+        ],
+        [
+          "usa_d00a",
+          "800D11A0"
+        ],
+        [
+          "usa_d00aa",
+          "800D1190"
+        ],
+        [
+          "usa_d01a",
+          "800CA24C"
+        ],
+        [
+          "usa_d16e",
+          "800C8A64"
+        ],
+        [
+          "usa_s00a",
+          "800D1600"
+        ],
+        [
+          "usa_s00aa",
+          "800D13C4"
+        ],
+        [
+          "usa_s01a",
+          "800D4354"
+        ],
+        [
+          "usa_s02a",
+          "800D36F0"
+        ],
+        [
+          "usa_s02b",
+          "800D392C"
+        ],
+        [
+          "usa_s02c",
+          "800D36E4"
+        ],
+        [
+          "usa_s02d",
+          "800D38E8"
+        ],
+        [
+          "usa_s02e",
+          "800D36E4"
+        ],
+        [
+          "usa_s03b",
+          "800C8994"
+        ],
+        [
+          "usa_s03b",
+          "800C8B5C"
+        ],
+        [
+          "usa_s03b",
+          "800C8CFC"
+        ],
+        [
+          "usa_s03d",
+          "800D6ED0"
+        ],
+        [
+          "usa_s04a",
+          "800D33E8"
+        ],
+        [
+          "usa_s06a",
+          "800D356C"
+        ],
+        [
+          "usa_s07a",
+          "800D3258"
+        ],
+        [
+          "usa_s09a",
+          "800DD310"
+        ],
+        [
+          "usa_s10a",
+          "800D0E34"
+        ],
+        [
+          "usa_s10ar",
+          "800D0E34"
+        ],
+        [
+          "usa_s11a",
+          "800C97F0"
+        ],
+        [
+          "usa_s11a",
+          "800D4F70"
+        ],
+        [
+          "usa_s11a",
+          "800D6BF0"
+        ],
+        [
+          "usa_s11c",
+          "800CD064"
+        ],
+        [
+          "usa_s11d",
+          "800CC0F4"
+        ],
+        [
+          "usa_s11e",
+          "800D1BA4"
+        ],
+        [
+          "usa_s11e",
+          "800DCB1C"
+        ],
+        [
+          "usa_s11i",
+          "800D3A70"
+        ],
+        [
+          "usa_s12b",
+          "800D37C4"
+        ],
+        [
+          "usa_s12c",
+          "800D37B8"
+        ],
+        [
+          "usa_s13a",
+          "800D1A20"
+        ],
+        [
+          "usa_s14e",
+          "800D0D30"
+        ],
+        [
+          "usa_s14e",
+          "800D5A78"
+        ],
+        [
+          "usa_s14e",
+          "800D5AC4"
+        ],
+        [
+          "usa_s15a",
+          "800D5D84"
+        ],
+        [
+          "usa_s15c",
+          "800D1ABC"
+        ],
+        [
+          "usa_s15c",
+          "800E06A0"
+        ],
+        [
+          "usa_s16c",
+          "800D0F90"
+        ],
+        [
+          "usa_s16d",
+          "800D13AC"
+        ],
+        [
+          "usa_s19a",
+          "800CA0E8"
+        ],
+        [
+          "usa_s19a",
+          "800D95A0"
+        ]
+      ],
+      "new_symbols": [],
+      "failed_before": {
+        "path": "data/scenarios/usa-normal/cases/d2-03-s15a-219/native-01/result.json",
+        "sha256": "6b1b60f70e23dee0bd83587236f7858df944e5682306fe435d4f8f00091ff2a1"
+      },
+      "fixed_after": {
+        "path": "data/scenarios/usa-normal/cases/d2-03-s15a-219/native-04/result.json",
+        "sha256": "fbd0f71f0d726e9f5f834d39ee8dc2330090058d720118ecbc1d1b7160ed1277"
+      }
+    },
+    {
+      "kind": "source mesh capture with replacement channel callbacks",
+      "dispatcher": "0x80018780",
+      "bound_slot": "0x8009FAAC",
+      "sort_slot": "0x8009FAC0",
+      "source": ".local/mgs_reversing/source/overlays/s12c/takabe/fog.c",
+      "observed_fog_callbacks": [
+        "0x800D83E0",
+        "0x800D7D7C"
+      ],
+      "detail": "Capture at common DG_ChanlUnits dispatch rather than default Bound/Sort function entries; original callbacks and guest instructions still execute."
+    },
+    {
+      "kind": "disc-specific scenario bootstrap",
+      "detail": "Use selected CUE in an output-local configuration for both native bootstrap and recording; fingerprint actual disc data tracks."
+    },
+    {
+      "kind": "scenario control contracts",
+      "detail": "Account for original s17a story transition to 255, Snake18 posture bit, and release mission-log Circle before cutscene control handoff."
+    }
+  ],
+  "scenarios": [
+    {
+      "case": "d2-01-s13a-204",
+      "block": 1,
+      "stage": "s13a",
+      "saved_story": 204,
+      "control_story": 204,
+      "status": "complete",
+      "native_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-01-s13a-204/native-04/result.json",
+        "sha256": "d7d4b45f0599178254c5fc1ad9db3956b18f5ab4f3840d901daeefb6464aaf32"
+      },
+      "donor_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-01-s13a-204/donor-01/result.json",
+        "sha256": "c1863afe6409b26be26a06ab4c1abd53054a4aee32d57a6de10d1f8507b983a7"
+      },
+      "native_frames": 2094,
+      "donor_frames": 3226,
+      "checks": [
+        "retail-save-load",
+        "stable-control",
+        "crouch",
+        "stand"
+      ],
+      "donor_media_fingerprint": "cue-only: first run preceded donor data-track fingerprinting",
+      "route_sha256": "c411ccf52d6d71214e593829538dcdf34d33ce067869782c3d17c0835fc4ad5d",
+      "card_sha256": {
+        "card1.mcd": "28700168cd32ebeb2d03a9cad70fe84a210b4a77d443ccd8ee752fb0ab0b6339",
+        "card2.mcd": "4849179b5fffcfe4398408f68ce6f500b703cf333c9418ef37d4719ff1680d79"
+      },
+      "differences": {},
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "final_state": {
+        "stage": "s13a",
+        "story": 204,
+        "difficulty": 1,
+        "disc": 2,
+        "life": 216,
+        "max_life": 704,
+        "stance": 0,
+        "weapon": 8,
+        "item": 17,
+        "weapons": [
+          192,
+          376,
+          35,
+          24,
+          6,
+          -1,
+          14,
+          7,
+          11,
+          23
+        ],
+        "items": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          5,
+          0,
+          4,
+          1,
+          6,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          0
+        ],
+        "x": 7724,
+        "z": 10932,
+        "game_over_timer": 0
+      },
+      "native_terminal_ram_sha256": "1a96bd852c5b9076b533571d7e21fe4610dec2563c67f96ac6345849f21f12ce",
+      "donor_terminal_ram_sha256": "28a1be9c2eb0929a33a05b09aef82c76f7edc1158739c8c3616894a1f4ca8121"
+    },
+    {
+      "case": "d2-02-s14e-204",
+      "block": 2,
+      "stage": "s14e",
+      "saved_story": 204,
+      "control_story": 204,
+      "status": "complete",
+      "native_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-02-s14e-204/native-04/result.json",
+        "sha256": "544b32bb2376e534402eb65465d7af73d356efc732e3103aeb28fdb4e4dfcd27"
+      },
+      "donor_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-02-s14e-204/donor-01/result.json",
+        "sha256": "c91c81c873ba5562b7d3f14f47bd6978cf572de6213c26acd3b19c691089d618"
+      },
+      "native_frames": 2138,
+      "donor_frames": 3240,
+      "checks": [
+        "retail-save-load",
+        "stable-control",
+        "crouch",
+        "stand"
+      ],
+      "donor_media_fingerprint": "cue-and-data-track",
+      "route_sha256": "4176e78d92442e07c3f47902f482d1bce176318c8e91ab373eecf16b71ad2ad3",
+      "card_sha256": {
+        "card1.mcd": "baee66abaf3c83ed555b06e0f452adef2711c81bfe080021b33fd0bc55443d5a",
+        "card2.mcd": "4849179b5fffcfe4398408f68ce6f500b703cf333c9418ef37d4719ff1680d79"
+      },
+      "differences": {},
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "final_state": {
+        "stage": "s14e",
+        "story": 204,
+        "difficulty": 1,
+        "disc": 2,
+        "life": 408,
+        "max_life": 704,
+        "stance": 0,
+        "weapon": -1,
+        "item": 17,
+        "weapons": [
+          192,
+          376,
+          35,
+          28,
+          16,
+          -1,
+          16,
+          12,
+          13,
+          31
+        ],
+        "items": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          5,
+          0,
+          4,
+          1,
+          6,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          0
+        ],
+        "x": -209,
+        "z": 13232,
+        "game_over_timer": 0
+      },
+      "native_terminal_ram_sha256": "ad3d1f695886564642e49aa3fe7557724815f1b09e291ea97f0867fc98ff99e7",
+      "donor_terminal_ram_sha256": "e4534103887a8ae8dfa4613b10c7b873395b66188945578ad4271ce6ec05aa06"
+    },
+    {
+      "case": "d2-03-s15a-219",
+      "block": 3,
+      "stage": "s15a",
+      "saved_story": 219,
+      "control_story": 219,
+      "status": "complete",
+      "native_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-03-s15a-219/native-04/result.json",
+        "sha256": "fbd0f71f0d726e9f5f834d39ee8dc2330090058d720118ecbc1d1b7160ed1277"
+      },
+      "donor_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-03-s15a-219/donor-01/result.json",
+        "sha256": "b40c859cca6f7a941eaa83c6a95c21cb8285eb0d65eae0e992cef7baad7e6bfc"
+      },
+      "native_frames": 2023,
+      "donor_frames": 3157,
+      "checks": [
+        "retail-save-load",
+        "stable-control",
+        "crouch",
+        "stand"
+      ],
+      "donor_media_fingerprint": "cue-and-data-track",
+      "route_sha256": "c6f5770e01ae31c1ef327e762f319378186317d97c126551070e638e684f88d9",
+      "card_sha256": {
+        "card1.mcd": "e2b68f2afedab8063b0465e87c9658ae650300799bab046fe93d5840f0b04dd5",
+        "card2.mcd": "4849179b5fffcfe4398408f68ce6f500b703cf333c9418ef37d4719ff1680d79"
+      },
+      "differences": {},
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "final_state": {
+        "stage": "s15a",
+        "story": 219,
+        "difficulty": 1,
+        "disc": 2,
+        "life": 467,
+        "max_life": 768,
+        "stance": 0,
+        "weapon": -1,
+        "item": 8,
+        "weapons": [
+          192,
+          351,
+          35,
+          17,
+          16,
+          -1,
+          13,
+          8,
+          13,
+          31
+        ],
+        "items": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          0,
+          0,
+          4,
+          1,
+          7,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          0
+        ],
+        "x": 2938,
+        "z": -5737,
+        "game_over_timer": 0
+      },
+      "native_terminal_ram_sha256": "fca41acb7591ef9f8ea3a5d12fb1d9159a0af2249d20ee06c8343a5035254975",
+      "donor_terminal_ram_sha256": "34dc014897c0f732f8063054b0e2575fa11aadbd1b24593a7d2f2b8731835a2f"
+    },
+    {
+      "case": "d2-04-s16a-237",
+      "block": 4,
+      "stage": "s16a",
+      "saved_story": 237,
+      "control_story": 237,
+      "status": "complete",
+      "native_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-04-s16a-237/native-04/result.json",
+        "sha256": "7e041ebc1c8f093a919bfd57b1e8c7a2af9fdab416f55f73eb8edd2e6afb4fd3"
+      },
+      "donor_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-04-s16a-237/donor-01/result.json",
+        "sha256": "a00bd36e3cd05db706e8aeb0ca9a05f6dbed09d24ee0e5b13ffbced8c71a98c0"
+      },
+      "native_frames": 2279,
+      "donor_frames": 3428,
+      "checks": [
+        "retail-save-load",
+        "stable-control",
+        "crouch",
+        "stand"
+      ],
+      "donor_media_fingerprint": "cue-and-data-track",
+      "route_sha256": "38f02387f8537d139fc786a9cd3dcc0bd56443742a42d3c5c75598314a4de10b",
+      "card_sha256": {
+        "card1.mcd": "244fc4e75ee38d37cd049318f57a4ec55acdc6b3d193f97c998701d6a3469c84",
+        "card2.mcd": "4849179b5fffcfe4398408f68ce6f500b703cf333c9418ef37d4719ff1680d79"
+      },
+      "differences": {},
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "final_state": {
+        "stage": "s16a",
+        "story": 237,
+        "difficulty": 1,
+        "disc": 2,
+        "life": 371,
+        "max_life": 768,
+        "stance": 0,
+        "weapon": -1,
+        "item": -1,
+        "weapons": [
+          216,
+          451,
+          35,
+          17,
+          31,
+          -1,
+          13,
+          8,
+          20,
+          30
+        ],
+        "items": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          1,
+          0,
+          4,
+          -1,
+          7,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          0
+        ],
+        "x": 10333,
+        "z": -2302,
+        "game_over_timer": 0
+      },
+      "native_terminal_ram_sha256": "98e6816f5da9a46ffa353846e34cf636cd9a79c76bcd49fd60d0267235ccc262",
+      "donor_terminal_ram_sha256": "f7ee270ee0e555fb8f7f71ccfc21c562b2da6d581da69591826ddb0acc2308c5"
+    },
+    {
+      "case": "d2-05-s16d-240",
+      "block": 5,
+      "stage": "s16d",
+      "saved_story": 240,
+      "control_story": 240,
+      "status": "complete",
+      "native_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-05-s16d-240/native-04/result.json",
+        "sha256": "a36c932c6eedaf87d5dac2a36cca97e343dcfb7a3a8263db9ab275f0aa348c33"
+      },
+      "donor_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-05-s16d-240/donor-01/result.json",
+        "sha256": "926eed761513d14d8070279d26624cd5610035688a272564896fdd4801c2fb13"
+      },
+      "native_frames": 2147,
+      "donor_frames": 3292,
+      "checks": [
+        "retail-save-load",
+        "stable-control",
+        "crouch",
+        "stand"
+      ],
+      "donor_media_fingerprint": "cue-and-data-track",
+      "route_sha256": "ca22e748edfa977a3657ff431af7700186f92f4be29828d01c1ae57d27dfbce9",
+      "card_sha256": {
+        "card1.mcd": "0ced25ef26ebb640ece0d025b71540d5a79ea823da94fcac9740fbd81d8be133",
+        "card2.mcd": "4849179b5fffcfe4398408f68ce6f500b703cf333c9418ef37d4719ff1680d79"
+      },
+      "differences": {},
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "final_state": {
+        "stage": "s16d",
+        "story": 240,
+        "difficulty": 1,
+        "disc": 2,
+        "life": 372,
+        "max_life": 768,
+        "stance": 0,
+        "weapon": -1,
+        "item": 17,
+        "weapons": [
+          216,
+          451,
+          35,
+          29,
+          35,
+          -1,
+          15,
+          8,
+          19,
+          26
+        ],
+        "items": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          3,
+          0,
+          4,
+          1,
+          7,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          0
+        ],
+        "x": -6800,
+        "z": 7900,
+        "game_over_timer": 0
+      },
+      "native_terminal_ram_sha256": "9b269e29bbaf87f0f2a939084896f93d9f66c7a8ba047556f7b50f29ddb0eff4",
+      "donor_terminal_ram_sha256": "bb4b3601a22273cb3203776e74faf59cc67152f61fd5078e95af6eafd6fa3ce0"
+    },
+    {
+      "case": "d2-06-s16d-246",
+      "block": 6,
+      "stage": "s16d",
+      "saved_story": 246,
+      "control_story": 246,
+      "status": "complete",
+      "native_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-06-s16d-246/native-04/result.json",
+        "sha256": "ca90a6b501214f140b508cbd3dc2886afd0bdba70cf205d487bc5428d28c936b"
+      },
+      "donor_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-06-s16d-246/donor-01/result.json",
+        "sha256": "bd8f60d30a33e9217ceb4fdd955f285eeb62d88ed6b2f1906297320d4a21c63f"
+      },
+      "native_frames": 2142,
+      "donor_frames": 3292,
+      "checks": [
+        "retail-save-load",
+        "stable-control",
+        "crouch",
+        "stand"
+      ],
+      "donor_media_fingerprint": "cue-and-data-track",
+      "route_sha256": "8ec46049244c19d1f9681650dee1ed945f6cbbe900c6b9d6e1754cca0822c273",
+      "card_sha256": {
+        "card1.mcd": "d1971591494ed9fe72609958aff947fdf01d33ca253b329e14fec3f43e01e9ef",
+        "card2.mcd": "4849179b5fffcfe4398408f68ce6f500b703cf333c9418ef37d4719ff1680d79"
+      },
+      "differences": {},
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "final_state": {
+        "stage": "s16d",
+        "story": 246,
+        "difficulty": 1,
+        "disc": 2,
+        "life": 412,
+        "max_life": 768,
+        "stance": 0,
+        "weapon": -1,
+        "item": 17,
+        "weapons": [
+          217,
+          451,
+          35,
+          32,
+          35,
+          -1,
+          15,
+          8,
+          19,
+          30
+        ],
+        "items": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          4,
+          0,
+          4,
+          1,
+          7,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          0
+        ],
+        "x": -6800,
+        "z": 7900,
+        "game_over_timer": 0
+      },
+      "native_terminal_ram_sha256": "f32102cb54810e8a922c9f50ab4e7adbc2de53cc1654b2229cb42c068ca7985c",
+      "donor_terminal_ram_sha256": "65acdd914c5916a53115b02f42fe526f054051d98b2984ed954458375de73848"
+    },
+    {
+      "case": "d2-07-s16d-246",
+      "block": 7,
+      "stage": "s16d",
+      "saved_story": 246,
+      "control_story": 246,
+      "status": "complete",
+      "native_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-07-s16d-246/native-04/result.json",
+        "sha256": "3544d5823d97963d115ec73be5ac3e28808a19e0dbe77463b166a1b59490f329"
+      },
+      "donor_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-07-s16d-246/donor-01/result.json",
+        "sha256": "cb3b1d356e7e4c7f3a380261eb2cfc9ec0497a55391db240ccfafcfd15f26840"
+      },
+      "native_frames": 2245,
+      "donor_frames": 3292,
+      "checks": [
+        "retail-save-load",
+        "stable-control",
+        "crouch",
+        "stand"
+      ],
+      "donor_media_fingerprint": "cue-and-data-track",
+      "route_sha256": "8ec46049244c19d1f9681650dee1ed945f6cbbe900c6b9d6e1754cca0822c273",
+      "card_sha256": {
+        "card1.mcd": "8f46f4567478b7bbc122bf873985f2152ae536bc93bac89380ddcf021efede30",
+        "card2.mcd": "4849179b5fffcfe4398408f68ce6f500b703cf333c9418ef37d4719ff1680d79"
+      },
+      "differences": {},
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "final_state": {
+        "stage": "s16d",
+        "story": 246,
+        "difficulty": 1,
+        "disc": 2,
+        "life": 412,
+        "max_life": 768,
+        "stance": 0,
+        "weapon": -1,
+        "item": 17,
+        "weapons": [
+          217,
+          451,
+          35,
+          32,
+          35,
+          -1,
+          15,
+          8,
+          19,
+          30
+        ],
+        "items": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          4,
+          0,
+          4,
+          1,
+          7,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          0
+        ],
+        "x": -6800,
+        "z": 7900,
+        "game_over_timer": 0
+      },
+      "native_terminal_ram_sha256": "75d06661987b51edfafe4fb384a12cdb039045b0cc2ab6b1297901fbfc09dd29",
+      "donor_terminal_ram_sha256": "bab61b20aa6756d6e7825d05bf46933f6f5dffa521c9a253c9315499ad3353fe"
+    },
+    {
+      "case": "d2-08-s17a-253",
+      "block": 8,
+      "stage": "s17a",
+      "saved_story": 253,
+      "control_story": 255,
+      "status": "complete",
+      "native_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-08-s17a-253/native-04/result.json",
+        "sha256": "70ce8dc6e2cdfd5342082efb6e952887616d72477c7f8a3fb9e0c053c120882f"
+      },
+      "donor_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-08-s17a-253/donor-02/result.json",
+        "sha256": "f5137ada6bd439920aec947dc14648ed0282e39ce7dc655440eb5c4ccc06becf"
+      },
+      "native_frames": 4106,
+      "donor_frames": 5246,
+      "checks": [
+        "retail-save-load",
+        "stable-control",
+        "crouch",
+        "stand"
+      ],
+      "donor_media_fingerprint": "cue-and-data-track",
+      "route_sha256": "a0132d1fade1ba85eb8bc9ad41ca37f2b52ef9b14fd3134c5c19c5b098a1824d",
+      "card_sha256": {
+        "card1.mcd": "7aae156b050bd0d96edddff22817c0f2483915e8af415a1378df9c958e3ff0f7",
+        "card2.mcd": "4849179b5fffcfe4398408f68ce6f500b703cf333c9418ef37d4719ff1680d79"
+      },
+      "differences": {},
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "final_state": {
+        "stage": "s17a",
+        "story": 255,
+        "difficulty": 1,
+        "disc": 2,
+        "life": 768,
+        "max_life": 768,
+        "stance": 0,
+        "weapon": -1,
+        "item": -1,
+        "weapons": [
+          217,
+          451,
+          35,
+          32,
+          33,
+          -1,
+          15,
+          8,
+          17,
+          30
+        ],
+        "items": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          5,
+          0,
+          4,
+          -1,
+          7,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          0
+        ],
+        "x": 1198,
+        "z": 279,
+        "game_over_timer": 0
+      },
+      "native_terminal_ram_sha256": "af8055108ebfe5b3730674f69843a767d26b3d3d91c95e16559d3d5925f65160",
+      "donor_terminal_ram_sha256": "3c48c776296bd91a53409e12ff1061cec5e247595aaf49443819e484f0b648ab"
+    },
+    {
+      "case": "d2-09-s18a-277",
+      "block": 9,
+      "stage": "s18a",
+      "saved_story": 277,
+      "control_story": 277,
+      "status": "complete",
+      "native_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-09-s18a-277/native-04/result.json",
+        "sha256": "6ad25508be5be63ab1465e95d50f429eb83f128a23ce7ce3efc12685d96b94cf"
+      },
+      "donor_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-09-s18a-277/donor-03/result.json",
+        "sha256": "b48b36ee2aa9359fcfe6e435d9749269450b3b01b6cc38d2fad1fa3540b28cec"
+      },
+      "native_frames": 4270,
+      "donor_frames": 5224,
+      "checks": [
+        "retail-save-load",
+        "stable-control",
+        "duck",
+        "recover"
+      ],
+      "donor_media_fingerprint": "cue-and-data-track",
+      "route_sha256": "9a91aa9b1f12585cee32f3124658621222bce71b0ce9b68943b1d2ce435c7491",
+      "card_sha256": {
+        "card1.mcd": "d3b1d99590698fb792021355aa7bc748e6a2a33178b2ac7b44943961fa8a76a9",
+        "card2.mcd": "4849179b5fffcfe4398408f68ce6f500b703cf333c9418ef37d4719ff1680d79"
+      },
+      "differences": {},
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "final_state": {
+        "stage": "s18a",
+        "story": 277,
+        "difficulty": 1,
+        "disc": 2,
+        "life": 768,
+        "max_life": 768,
+        "stance": 0,
+        "weapon": -1,
+        "item": -1,
+        "weapons": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "items": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "x": 3700,
+        "z": -200,
+        "game_over_timer": 0
+      },
+      "native_terminal_ram_sha256": "f624edc9a6f0b5a681883045bd86ab0e6dbd9840a26123c2627e625e5966a034",
+      "donor_terminal_ram_sha256": "8cdbb65818aba0a8bdbc52fc536af3e77618d67b72237c7896321b3180750714"
+    },
+    {
+      "case": "d2-10-s19a-283",
+      "block": 10,
+      "stage": "s19a",
+      "saved_story": 283,
+      "control_story": 283,
+      "status": "complete",
+      "native_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/result.json",
+        "sha256": "7a4122dc9cb1a673100541de73f892b11ab421737f3da37f980eb7ae94580c44"
+      },
+      "donor_result": {
+        "path": "data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/result.json",
+        "sha256": "1b613b58a8d7067939c2d2559ba3b1d1e316e598b7dc3afffa7bbe0296e93100"
+      },
+      "native_frames": 2280,
+      "donor_frames": 3408,
+      "checks": [
+        "retail-save-load",
+        "stable-control",
+        "crouch",
+        "stand"
+      ],
+      "donor_media_fingerprint": "cue-and-data-track",
+      "route_sha256": "6b40f4e31151a4b8615b17257a9a1a48e19bd1a375bddb1950af2e055bd45036",
+      "card_sha256": {
+        "card1.mcd": "0288812876e69f99ef52a78258125f596ddcf30a0d5315080641b3f1ee85dff6",
+        "card2.mcd": "4849179b5fffcfe4398408f68ce6f500b703cf333c9418ef37d4719ff1680d79"
+      },
+      "differences": {},
+      "native_private_interpreter_calls": {},
+      "native_errors": [],
+      "final_state": {
+        "stage": "s19a",
+        "story": 283,
+        "difficulty": 1,
+        "disc": 2,
+        "life": 768,
+        "max_life": 768,
+        "stance": 0,
+        "weapon": -1,
+        "item": -1,
+        "weapons": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "items": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "x": 15500,
+        "z": -3000,
+        "game_over_timer": 0
+      },
+      "native_terminal_ram_sha256": "a292bd6d941d2545e5bab0cb3c2bae37ec7176136449f7f21f23f7f983693862",
+      "donor_terminal_ram_sha256": "99997f58fcb6bbc1941cde0e91b11bb15dc67125d458dc65835d4589e9f12722"
+    }
+  ],
+  "vulkan_checkpoint_probes": [
+    {
+      "case": "d2-01-s13a-204",
+      "result": {
+        "path": "data/scenarios/usa-normal/cases/d2-01-s13a-204/vulkan-01/result.json",
+        "sha256": "ff97b1e35b5ae8d1f0d295674630d582b2a33bc48783310c6c5d4ef2441a1a5c"
+      },
+      "metrics": {
+        "path": "data/scenarios/usa-normal/cases/d2-01-s13a-204/vulkan-01/metrics.json",
+        "sha256": "d48e568cc31362a13ebd224fc60ba8fb7516a3357739743fd71c63a79e405703"
+      },
+      "status": "complete",
+      "frames": 180,
+      "game_ticks": {
+        "initial": 1247,
+        "final": 1337,
+        "delta": 90
+      },
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 90,
+      "original_format_packets": 25454,
+      "complete_instance_captures": 450,
+      "visible_instance_captures": 450,
+      "scene": {
+        "instances": 49,
+        "matched_instances": 49,
+        "models": 145,
+        "source_geometry_faces": 567,
+        "visible_instances": 5
+      },
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": {
+        "path": "data/scenarios/usa-normal/cases/d2-01-s13a-204/vulkan-01/gpu/frame-2220-present-3-ordinary-scanout.ppm",
+        "sha256": "b6fdeeba53770a518aae58e08f39ceb68ad69b085cd2c103af7bdaf1ac383f50"
+      },
+      "final_capture_visually_inspected": true
+    },
+    {
+      "case": "d2-02-s14e-204",
+      "result": {
+        "path": "data/scenarios/usa-normal/cases/d2-02-s14e-204/vulkan-01/result.json",
+        "sha256": "ebe3e36daa6b757e213969c2094dbbf536e2b323b635d6241ab47d066ac9f8bd"
+      },
+      "metrics": {
+        "path": "data/scenarios/usa-normal/cases/d2-02-s14e-204/vulkan-01/metrics.json",
+        "sha256": "85b75bc128ec90b1503b0b4ac22b406e1a49d89642bf88c0af732a6b250b64f2"
+      },
+      "status": "complete",
+      "frames": 180,
+      "game_ticks": {
+        "initial": 1295,
+        "final": 1385,
+        "delta": 90
+      },
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 90,
+      "original_format_packets": 16456,
+      "complete_instance_captures": 1080,
+      "visible_instance_captures": 1080,
+      "scene": {
+        "instances": 16,
+        "matched_instances": 16,
+        "models": 112,
+        "source_geometry_faces": 1619,
+        "visible_instances": 12
+      },
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": {
+        "path": "data/scenarios/usa-normal/cases/d2-02-s14e-204/vulkan-01/gpu/frame-2280-present-3-ordinary-scanout.ppm",
+        "sha256": "2392c38950e79fd208d2888cf9e83a087ace6a007ba9cf5e26754976ababbbcb"
+      },
+      "final_capture_visually_inspected": true
+    },
+    {
+      "case": "d2-03-s15a-219",
+      "result": {
+        "path": "data/scenarios/usa-normal/cases/d2-03-s15a-219/vulkan-01/result.json",
+        "sha256": "8527f57af09a50be57a04eee8b8c0248c45a02f652c55b6be375b99eae64110b"
+      },
+      "metrics": {
+        "path": "data/scenarios/usa-normal/cases/d2-03-s15a-219/vulkan-01/metrics.json",
+        "sha256": "3953fe8b209830cb028fa6f59fc414a4826b411fc0c63ab9801060b9ef30ae19"
+      },
+      "status": "complete",
+      "frames": 180,
+      "game_ticks": {
+        "initial": 1175,
+        "final": 1265,
+        "delta": 90
+      },
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 90,
+      "original_format_packets": 30624,
+      "complete_instance_captures": 8640,
+      "visible_instance_captures": 8640,
+      "scene": {
+        "instances": 96,
+        "matched_instances": 96,
+        "models": 313,
+        "source_geometry_faces": 2607,
+        "visible_instances": 96
+      },
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": {
+        "path": "data/scenarios/usa-normal/cases/d2-03-s15a-219/vulkan-01/gpu/frame-2160-present-3-ordinary-scanout.ppm",
+        "sha256": "49d28a623bf45e5122a2227cf49c1ab8dccdb91b84d140e33f598c024cb57944"
+      },
+      "final_capture_visually_inspected": true
+    },
+    {
+      "case": "d2-04-s16a-237",
+      "result": {
+        "path": "data/scenarios/usa-normal/cases/d2-04-s16a-237/vulkan-01/result.json",
+        "sha256": "d6cad81066c465a4cbb046219d1539665dcd93597e81eac6ab422f76a21c8c38"
+      },
+      "metrics": {
+        "path": "data/scenarios/usa-normal/cases/d2-04-s16a-237/vulkan-01/metrics.json",
+        "sha256": "7a49751276e669882ba3544707e9da9ae122212d47105aec96b4defcf963bcc2"
+      },
+      "status": "complete",
+      "frames": 180,
+      "game_ticks": {
+        "initial": 1331,
+        "final": 1421,
+        "delta": 90
+      },
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 90,
+      "original_format_packets": 26344,
+      "complete_instance_captures": 1620,
+      "visible_instance_captures": 1620,
+      "scene": {
+        "instances": 18,
+        "matched_instances": 18,
+        "models": 75,
+        "source_geometry_faces": 2718,
+        "visible_instances": 18
+      },
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": {
+        "path": "data/scenarios/usa-normal/cases/d2-04-s16a-237/vulkan-01/gpu/frame-2460-present-3-ordinary-scanout.ppm",
+        "sha256": "48e73a90a9d579eea3a27ef22c171305e2694b08999a67558815050d634e2871"
+      },
+      "final_capture_visually_inspected": true
+    },
+    {
+      "case": "d2-05-s16d-240",
+      "result": {
+        "path": "data/scenarios/usa-normal/cases/d2-05-s16d-240/vulkan-01/result.json",
+        "sha256": "7d263bcc31cd929d904d8f7b5c98823469de0a247b92f2cca0e578d5e1f29235"
+      },
+      "metrics": {
+        "path": "data/scenarios/usa-normal/cases/d2-05-s16d-240/vulkan-01/metrics.json",
+        "sha256": "e64db28418747d5c57caaddc08a4e5c56ababe8fc06597affc2bb1419dd1191a"
+      },
+      "status": "complete",
+      "frames": 180,
+      "game_ticks": {
+        "initial": 1284,
+        "final": 1374,
+        "delta": 90
+      },
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 90,
+      "original_format_packets": 62656,
+      "complete_instance_captures": 1440,
+      "visible_instance_captures": 1440,
+      "scene": {
+        "instances": 16,
+        "matched_instances": 16,
+        "models": 80,
+        "source_geometry_faces": 2079,
+        "visible_instances": 16
+      },
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": {
+        "path": "data/scenarios/usa-normal/cases/d2-05-s16d-240/vulkan-01/gpu/frame-2280-present-3-ordinary-scanout.ppm",
+        "sha256": "15d0b0dd7cd45d604f898cbafe304073dbc9a48f533645b7ecf964b956c769ac"
+      },
+      "final_capture_visually_inspected": true
+    },
+    {
+      "case": "d2-08-s17a-253",
+      "result": {
+        "path": "data/scenarios/usa-normal/cases/d2-08-s17a-253/vulkan-01/result.json",
+        "sha256": "a499974a83e0db48396dbacbe249bb96d7d745b5432ef031cd0c1c3bf72e0cd2"
+      },
+      "metrics": {
+        "path": "data/scenarios/usa-normal/cases/d2-08-s17a-253/vulkan-01/metrics.json",
+        "sha256": "67860f2ffa0988474489a8372af964c6ab220f7b9b67e3b092be4f2a9edbe6f9"
+      },
+      "status": "complete",
+      "frames": 180,
+      "game_ticks": {
+        "initial": 2265,
+        "final": 2355,
+        "delta": 90
+      },
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 90,
+      "original_format_packets": 85976,
+      "complete_instance_captures": 2700,
+      "visible_instance_captures": 2700,
+      "scene": {
+        "instances": 33,
+        "matched_instances": 33,
+        "models": 175,
+        "source_geometry_faces": 2704,
+        "visible_instances": 30
+      },
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": {
+        "path": "data/scenarios/usa-normal/cases/d2-08-s17a-253/vulkan-01/gpu/frame-4260-present-3-ordinary-scanout.ppm",
+        "sha256": "b8d077435a13b45e09b4fd70ab3b6ea8c3fa2e8462893fa280376cc8e15a44dc"
+      },
+      "final_capture_visually_inspected": true
+    },
+    {
+      "case": "d2-09-s18a-277",
+      "result": {
+        "path": "data/scenarios/usa-normal/cases/d2-09-s18a-277/vulkan-01/result.json",
+        "sha256": "a3f305b771cfba55cea3f18911bea7b1e8184ddd2c319ee14d9b046a3f517c66"
+      },
+      "metrics": {
+        "path": "data/scenarios/usa-normal/cases/d2-09-s18a-277/vulkan-01/metrics.json",
+        "sha256": "a3a1ddfc42d50d650998943e9be41588cb8a45950d745538dfe4c985e1d9d949"
+      },
+      "status": "complete",
+      "frames": 180,
+      "game_ticks": {
+        "initial": 2429,
+        "final": 2519,
+        "delta": 90
+      },
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 90,
+      "original_format_packets": 74093,
+      "complete_instance_captures": 630,
+      "visible_instance_captures": 630,
+      "scene": {
+        "instances": 8,
+        "matched_instances": 8,
+        "models": 88,
+        "source_geometry_faces": 2640,
+        "visible_instances": 7
+      },
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": {
+        "path": "data/scenarios/usa-normal/cases/d2-09-s18a-277/vulkan-01/gpu/frame-4440-present-3-ordinary-scanout.ppm",
+        "sha256": "0f1ab17e1a34d2540a6c438ff39cc41dcfdfb7062003abf619b053b304bac6af"
+      },
+      "final_capture_visually_inspected": true
+    },
+    {
+      "case": "d2-10-s19a-283",
+      "result": {
+        "path": "data/scenarios/usa-normal/cases/d2-10-s19a-283/vulkan-01/result.json",
+        "sha256": "08f8ca36e6e7f4d53ec6349e10908879e16bc6d90c03492187cdc3ffd7cbd75f"
+      },
+      "metrics": {
+        "path": "data/scenarios/usa-normal/cases/d2-10-s19a-283/vulkan-01/metrics.json",
+        "sha256": "5439c9a5e2f2dbdd1341116041205e0428ff36b26cb842c767d00b1f5de1f6c3"
+      },
+      "status": "complete",
+      "frames": 180,
+      "game_ticks": {
+        "initial": 1336,
+        "final": 1426,
+        "delta": 90
+      },
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 90,
+      "original_format_packets": 18845,
+      "complete_instance_captures": 1530,
+      "visible_instance_captures": 1530,
+      "scene": {
+        "instances": 27,
+        "matched_instances": 27,
+        "models": 150,
+        "source_geometry_faces": 2143,
+        "visible_instances": 17
+      },
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": {
+        "path": "data/scenarios/usa-normal/cases/d2-10-s19a-283/vulkan-01/gpu/frame-2460-present-3-ordinary-scanout.ppm",
+        "sha256": "82b3897046157ab74a23a21dd4ce7efd8fe56cd124bbce3d25989eee5ab97bf6"
+      },
+      "final_capture_visually_inspected": true
+    }
+  ],
+  "vulkan_exact_regressions": [
+    {
+      "case": "ninja",
+      "result": {
+        "path": "data/scenarios/usa-normal/cases/ninja/vulkan-regression-02/result.json",
+        "sha256": "4a008434e55818c028bc315ceceb5bf6943c50ef9d10f47dd7c2887692455f6b"
+      },
+      "metrics": {
+        "path": "data/scenarios/usa-normal/cases/ninja/vulkan-regression-02/metrics.json",
+        "sha256": "6d1544e7bb82561eb8dfe6d1144f6018ee4151a235645c493391f98de748e56c"
+      },
+      "status": "complete",
+      "frames": 180,
+      "game_ticks": {
+        "initial": 1216,
+        "final": 1306,
+        "delta": 90
+      },
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 90,
+      "original_format_packets": 106521,
+      "complete_instance_captures": 1170,
+      "visible_instance_captures": 1170,
+      "scene": {
+        "instances": 13,
+        "matched_instances": 13,
+        "models": 90,
+        "source_geometry_faces": 2626,
+        "visible_instances": 13
+      },
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": {
+        "path": "data/scenarios/usa-normal/cases/ninja/vulkan-regression-02/gpu/frame-2220-present-3-ordinary-scanout.ppm",
+        "sha256": "ef164f809c3ddb2cd2e5199a87f65d6c06c91fdb7fc99ea61765889b5d0688cb"
+      },
+      "final_capture_visually_inspected": false,
+      "kind": "exact-witness-replay",
+      "baseline_result": {
+        "path": "data/scenarios/usa-normal/cases/ninja/vulkan-01/result.json",
+        "sha256": "437d3ae73a72a78a7e25e054269088f683c7aacf02bf1bb14b08d99f3d14aaae"
+      },
+      "baseline_movie": {
+        "path": "data/scenarios/usa-normal/cases/ninja/vulkan-01/movie.mgst",
+        "sha256": "0bc36633ea5d919ec3fcaace1780ceb1922478d4b867b08765b78818ff69b9cb"
+      },
+      "baseline_source_scene_captures": 90,
+      "baseline_original_format_packets": 106521
+    },
+    {
+      "case": "disc-change",
+      "result": {
+        "path": "data/scenarios/usa-normal/cases/disc-change/vulkan-regression-02/result.json",
+        "sha256": "685c423fc13c0bf4ea3e850c5a604f23b3b6c6469daf4beff33a395c26bb8f4b"
+      },
+      "metrics": {
+        "path": "data/scenarios/usa-normal/cases/disc-change/vulkan-regression-02/metrics.json",
+        "sha256": "15e7145edfbdc39fb56c4c6794a93f4beb77a03a7b66fcc038a1b92ce6415a67"
+      },
+      "status": "complete",
+      "frames": 180,
+      "game_ticks": {
+        "initial": 1218,
+        "final": 1308,
+        "delta": 90
+      },
+      "interpreter_counters": {},
+      "errors": [],
+      "source_scene_captures": 90,
+      "original_format_packets": 20114,
+      "complete_instance_captures": 3870,
+      "visible_instance_captures": 3870,
+      "scene": {
+        "instances": 94,
+        "matched_instances": 94,
+        "models": 360,
+        "source_geometry_faces": 2948,
+        "visible_instances": 43
+      },
+      "presentation_size": [
+        3840,
+        2160
+      ],
+      "last_capture": {
+        "path": "data/scenarios/usa-normal/cases/disc-change/vulkan-regression-02/gpu/frame-2220-present-3-ordinary-scanout.ppm",
+        "sha256": "f3f4d49c208ff3d4612c407db23377bb9c5b23a86100346b964f8fd08c0f7dfc"
+      },
+      "final_capture_visually_inspected": true,
+      "kind": "exact-witness-replay",
+      "baseline_result": {
+        "path": "data/scenarios/usa-normal/cases/disc-change/vulkan-01/result.json",
+        "sha256": "f30f50edb583d61e9db03c8ffd716dede2c596fef313ae383b2a24075ed1d934"
+      },
+      "baseline_movie": {
+        "path": "data/scenarios/usa-normal/cases/disc-change/vulkan-01/movie.mgst",
+        "sha256": "fa8c14a6e1bf6cfe4ece0e33d94dace03188951512a165e6eba1f79156489cde"
+      },
+      "baseline_source_scene_captures": 0,
+      "baseline_original_format_packets": 0
+    }
+  ],
+  "tests": {
+    "python_codegen": 7,
+    "python_tas": 36,
+    "python_scenarios": 7,
+    "native_runtime_unique_passed": 77,
+    "native_gpu_opt_in_skipped": 4,
+    "logs": [
+      {
+        "path": ".local/disc2-codegen-tests.log",
+        "sha256": "53bbac9ecacc26ed62093efe7d777de44a2855076628047de1219c0b3b333e24"
+      },
+      {
+        "path": ".local/disc2-python-tas-tests.log",
+        "sha256": "54883c8409e6a35a3475b37523a06d9233d32199c9d4b52c5f7678b6a5e3c90f"
+      },
+      {
+        "path": ".local/disc2-python-scenario-tests.log",
+        "sha256": "74c03fc16fde9a2dfeff03db0ec8f472a5a8dfed04e9e982a912b4b7f64faee3"
+      },
+      {
+        "path": ".local/disc2-runtime-tests.log",
+        "sha256": "fdbe6bd3a2b8619c1e1ab51d947759024fda265573f389c97ed54a06ef34b3db"
+      },
+      {
+        "path": ".local/disc2-original-fixture-tests.log",
+        "sha256": "c7f50e6b02b8e63b019075c9041ac7b9996a1338d469f925238b3792c4a445f8"
+      }
+    ]
+  },
+  "visual_review": {
+    "contact_sheet": {
+      "path": ".local/disc2-contact-sheet.jpg",
+      "sha256": "8e57fb0aa88a8fe23dc77b19240147053f4b007b0fbfe27a9422b02287928fa6"
+    },
+    "detail": "Final 4K presentation capture of each sampled Disc 2 stage inspected at reduced size; no obvious missing scene geometry in these views."
+  },
+  "protected_user_state": "quick_slot_0 and both personal cards verified unchanged"
+}

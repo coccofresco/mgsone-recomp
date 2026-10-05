@@ -1,0 +1,358 @@
+{
+  "format": "mgs-tas-evidence-1",
+  "date": "2026-10-03",
+  "git_base": "9672b31710df6f36db25521832ec6b5ea7da84da",
+  "runtime_sha256": "2776f4e92bcd268caf4b9945009b28ee3a8efd83e94fa1df0eb203a69de5736d",
+  "launcher_sha256": "a1b6ff22d02094cd68784313e67f55b5ee5161a15c63f7d14409d13be91d4c88",
+  "identity": {
+    "runtime": {
+      "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+      "sha256": "69eba221a2794532f853305c3ae08dc3f8522d179f248afcedd883a317d5403d"
+    },
+    "config": {
+      "path": "/home/xander/mgs_recomp/data/mgs.usa.native.toml",
+      "sha256": "fb15cd3e7d5ae3b7f703196fb97a9006a825cc4fa8ad5554d473027ae56a1521"
+    },
+    "exe": {
+      "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+      "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+    },
+    "cue": {
+      "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+      "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+    },
+    "track_0": {
+      "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+      "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+    },
+    "asset_cache": {
+      "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+      "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+    }
+  },
+  "identity_note": "Recordings originated on the runtime fingerprint in identity; final replays explicitly allowed runtime changes while retaining all other identity/state checks.",
+  "unit_and_integration_tests": {
+    "passed": 381,
+    "suites": 28,
+    "log": ".local/tas-final-tests.log",
+    "sha256": "96c5ed2239f2ea8ed3f22f8b676b3d83eb3e669177eca0f217fc9f74992b5434",
+    "includes": [
+      "TAS gates, malformed movies and first-desync retention",
+      "Input latching, analog and short taps",
+      "Savestates and native thread continuations",
+      "HLE VSync queries, waits and pause longer than timeout",
+      "Memory cards, DMA, MGS source meshes and Vulkan replay"
+    ]
+  },
+  "routes": {
+    "boot_to_dock": {
+      "directory": "data/tas/boot-replay-pause-fix",
+      "result_sha256": "71f0c220227b23d4e6e329b71346bd0619c05165452601789922bdf5c4d78b75",
+      "status": "complete",
+      "returncode": 0,
+      "timeout": false,
+      "movie_frames": 17000,
+      "completed_frames": 17000,
+      "terminal_boundary": 13968655,
+      "elapsed_seconds": 341.748,
+      "runtime_sha256": "2776f4e92bcd268caf4b9945009b28ee3a8efd83e94fa1df0eb203a69de5736d",
+      "game_ticks": {
+        "initial": 0,
+        "final": 8891,
+        "delta": 8891
+      },
+      "interpreter_counters": {},
+      "game_errors": [],
+      "checkpoints": [
+        {
+          "file": "states/checkpoint_000003600_vblank_3607.ps1s",
+          "sha256": "bb040c9849771434195c3d71965a5c9fb9736ad19c24159cb916bc67d3f4da82"
+        },
+        {
+          "file": "states/checkpoint_000007200_vblank_7207.ps1s",
+          "sha256": "631cd9a92f42ea563aed8b228bb0223b70ce2ef8778470f90b5615ef95f49538"
+        },
+        {
+          "file": "states/checkpoint_000010800_vblank_10807.ps1s",
+          "sha256": "475f1670ad75af1ed30799f7371fdc255ac7785a04d0427271a9d668821d1c9d"
+        },
+        {
+          "file": "states/checkpoint_000014400_vblank_14407.ps1s",
+          "sha256": "c36bc2cdabfacb5b47b2889fb9bd191e198ea7510ee5a64a13f99681049bc8f8"
+        }
+      ],
+      "final_ram_sha256": "f0c4f8e4340e6ccc86e22ddcf8a0dd0917d5ce9a90e268626e72800ee7b62cab",
+      "stage_name_at_0x800b7500": "s00a",
+      "native_final_image": "data/tas/boot-replay-pause-fix/native/frame-17007.ppm",
+      "endpoint_note": "Dock (s00a) opening sequence, paused by recorded Start input; not an assertion that the dock was completed."
+    },
+    "dock_vulkan": {
+      "directory": "data/tas/dock-replay-pause-fix",
+      "result_sha256": "b9f0ad81938da31488bd8b386a28f86714e762f0cc02a40ce666553a964e3a81",
+      "status": "complete",
+      "returncode": 0,
+      "timeout": false,
+      "movie_frames": 1500,
+      "completed_frames": 1500,
+      "terminal_boundary": 735138,
+      "elapsed_seconds": 49.766,
+      "runtime_sha256": "2776f4e92bcd268caf4b9945009b28ee3a8efd83e94fa1df0eb203a69de5736d",
+      "game_ticks": {
+        "initial": 43573,
+        "final": 44304,
+        "delta": 731
+      },
+      "interpreter_counters": {},
+      "game_errors": [],
+      "checkpoints": [],
+      "final_ram_sha256": "2ab4a5aa7e010dcc8f4cbe1a6e2fa6b058e229eb8cf68c77fb85d55d2cb770b1",
+      "visual_note": "Movement at dock and Codec interaction visible in Vulkan captures.",
+      "gpu_images": [
+        {
+          "path": "data/tas/dock-replay-pause-fix/gpu/frame-97200-present-1-ordinary-scanout.ppm",
+          "size": [
+            3840,
+            2160
+          ],
+          "sha256": "5150e89d2341e0ae75fbada2048edabe24d3b802d9b47e98a9571afcfc28a279"
+        },
+        {
+          "path": "data/tas/dock-replay-pause-fix/gpu/frame-97500-present-2-ordinary-scanout.ppm",
+          "size": [
+            3840,
+            2160
+          ],
+          "sha256": "5598888340fa4926e0d048b6514ceb03a9ffe1666214951458eeba622e818c77"
+        },
+        {
+          "path": "data/tas/dock-replay-pause-fix/gpu/frame-97800-present-3-ordinary-scanout.ppm",
+          "size": [
+            3840,
+            2160
+          ],
+          "sha256": "cd72e472fd2b01edcd920d53007152b19fad2d29277096b4cd344f4a770fee35"
+        },
+        {
+          "path": "data/tas/dock-replay-pause-fix/gpu/frame-98100-present-4-ordinary-scanout.ppm",
+          "size": [
+            3840,
+            2160
+          ],
+          "sha256": "8593fc9d3010004db6194c4b939a20cba6d9004ebba773b8cc707bd3e05c7f3f"
+        },
+        {
+          "path": "data/tas/dock-replay-pause-fix/gpu/frame-98400-present-5-ordinary-scanout.ppm",
+          "size": [
+            3840,
+            2160
+          ],
+          "sha256": "0fbae81e1a4053bb4526c6ee11b0344b0564b4b30171ee6d4e3d1134a68cc951"
+        }
+      ]
+    },
+    "dock_headless_different_pacing": {
+      "directory": "data/tas/dock-clock-corrected/replay-20261003-152133",
+      "result_sha256": "1e2acb7ddfd6071a1b6b197cef59727f696f597966b0e2461ae489e4dddca624",
+      "status": "complete",
+      "returncode": 0,
+      "timeout": false,
+      "movie_frames": 1500,
+      "elapsed_seconds": 13.836,
+      "runtime_sha256": "69eba221a2794532f853305c3ae08dc3f8522d179f248afcedd883a317d5403d",
+      "interpreter_counters": {},
+      "game_errors": [],
+      "completed_frames": 1500,
+      "terminal_boundary": 735138,
+      "checkpoints": [],
+      "final_ram_sha256": "2ab4a5aa7e010dcc8f4cbe1a6e2fa6b058e229eb8cf68c77fb85d55d2cb770b1"
+    },
+    "checkpoint_branch": {
+      "directory": "data/tas/dock-branch-verified/replay-20261003-152632",
+      "result_sha256": "1db407935e99e500e8a1e069f4fbe22b18ae89f2bb4ff6bb8161d599568d6195",
+      "status": "complete",
+      "returncode": 0,
+      "timeout": false,
+      "movie_frames": 600,
+      "elapsed_seconds": 6.926,
+      "runtime_sha256": "69eba221a2794532f853305c3ae08dc3f8522d179f248afcedd883a317d5403d",
+      "game_ticks": {
+        "initial": 43855,
+        "final": 44155,
+        "delta": 300
+      },
+      "interpreter_counters": {},
+      "game_errors": [],
+      "completed_frames": 600,
+      "terminal_boundary": 464827,
+      "checkpoints": [],
+      "final_ram_sha256": "0a818705d0da37effdf496ada93fb13b55433afb93c625716edd7be790c6f054"
+    }
+  },
+  "failure_and_recovery_probes": {
+    "intentional_desync": {
+      "directory": "data/tas/dock-desync-verified/replay-20261003-152502",
+      "result_sha256": "3c8d5b2f6fd34a9977612cbff9e34625b04abec537b7bf029d07ec353d6b6f60",
+      "status": "failed",
+      "returncode": 42,
+      "timeout": false,
+      "movie_frames": 1500,
+      "elapsed_seconds": 3.67,
+      "runtime_sha256": "69eba221a2794532f853305c3ae08dc3f8522d179f248afcedd883a317d5403d",
+      "game_ticks": {
+        "initial": 43573,
+        "final": 43620,
+        "delta": 47
+      },
+      "interpreter_counters": {},
+      "game_errors": [],
+      "desync_checkpoint": "/home/xander/mgs_recomp/data/tas/dock-desync-verified/replay-20261003-152502/states/desync.ps1s",
+      "completed_frames": 100,
+      "terminal_boundary": 2808,
+      "checkpoints": [],
+      "final_ram_sha256": "635c1e20a18352c34ec1ec06faa060f9f706a5a7f4e9dda9dc343ef00211af3a",
+      "mutation": "Expected main RAM hash XOR 1 at movie frame 101; copied fixture manifest updated intentionally to test runtime state checking.",
+      "detected_at_frame": 101,
+      "expected_failure": true
+    },
+    "invalid_initial_state": {
+      "directory": "data/tas/invalid-state-final",
+      "result_sha256": "26a20644049455bbfe0e67f5cf25f5d7e34df179a5f4f52035b5925a80fd51a3",
+      "status": "failed",
+      "returncode": 42,
+      "timeout": false,
+      "movie_frames": 0,
+      "elapsed_seconds": 3.216,
+      "runtime_sha256": "fbfbecc5cf9b0756fb9d71a72423a58ff4579356627c20d82a5734d489ec461f",
+      "interpreter_counters": {},
+      "game_errors": [],
+      "completed_frames": 0,
+      "terminal_boundary": 0,
+      "checkpoints": [],
+      "final_ram_sha256": "aff1d6d028cb0b0922fa8a504b0adaa280a50988101fdbb2c0ac2271248c28ee",
+      "expected_failure": true,
+      "mutation": "Isolated initial state truncated to four-byte PS1S header."
+    },
+    "recovered_prefix": {
+      "directory": "data/tas/recovered-prefix-pause-fix",
+      "result_sha256": "d6cdccdc7c1740a17e80cee15ee4ec2d1c269d60d124d7e4c420e46e8e93a26b",
+      "status": "complete",
+      "returncode": 0,
+      "timeout": false,
+      "movie_frames": 120,
+      "completed_frames": 120,
+      "terminal_boundary": 3398,
+      "elapsed_seconds": 6.103,
+      "runtime_sha256": "2776f4e92bcd268caf4b9945009b28ee3a8efd83e94fa1df0eb203a69de5736d",
+      "game_ticks": {
+        "initial": 43573,
+        "final": 43630,
+        "delta": 57
+      },
+      "interpreter_counters": {},
+      "game_errors": [],
+      "checkpoints": [],
+      "final_ram_sha256": "d14eb7173b60e60ccc698fe8eee2fa12e0ba64f92fc8e5f2a51c2d3d0b44b83e",
+      "fixture": "Copy of dock movie truncated after 121 complete F rows followed by malformed partial row.",
+      "coverage": "First 120 inputs only; last input and failed tail are excluded."
+    },
+    "wrong_executable_fingerprint": "Rejected before destination/runtime creation; data/tas/identity-rejection-fixture",
+    "unsupported_recovery_header": "Rejected before destination creation; data/tas/recovery-bad-header",
+    "bounded_timeout": {
+      "directory": "data/tas/boot-replay-final",
+      "result_sha256": "5939bd45d35b667bd3ae2b6dae762b05d72010d2fdc5adc059719384aa5d64e8",
+      "status": "failed",
+      "returncode": 42,
+      "timeout": true,
+      "movie_frames": 17000,
+      "elapsed_seconds": 212.187,
+      "runtime_sha256": "fbfbecc5cf9b0756fb9d71a72423a58ff4579356627c20d82a5734d489ec461f",
+      "game_ticks": {
+        "initial": 0,
+        "final": 8638,
+        "delta": 8638
+      },
+      "interpreter_counters": {},
+      "game_errors": [],
+      "completed_frames": 16493,
+      "terminal_boundary": 13465131,
+      "checkpoints": [
+        {
+          "file": "states/checkpoint_000003600_vblank_3607.ps1s",
+          "sha256": "3bb990543b5acf63f30862788e0891172a066672bce5985abead096d24b8afd7"
+        },
+        {
+          "file": "states/checkpoint_000007200_vblank_7207.ps1s",
+          "sha256": "6bbfdeb2f19a94383e9b12dd95bd16920b81b35201db319ce46dac1650ca97f4"
+        },
+        {
+          "file": "states/checkpoint_000010800_vblank_10807.ps1s",
+          "sha256": "88df03f57d736ac2b6ce501b70c691ca0525931edbb6781f12d1bb1e903d5bc6"
+        },
+        {
+          "file": "states/checkpoint_000014400_vblank_14407.ps1s",
+          "sha256": "e1593f7383dbccf88729f468f75a2d1f815a3bde139afcc4c9c3491d5c2266e4"
+        }
+      ],
+      "final_ram_sha256": "97db87e484da816fbb2a22770243f81b78e12fe08c7172d740c9c9e7b291cc96"
+    }
+  },
+  "donor": {
+    "revision": "7f69c199ed88d5723f71dd3a6e9c1b7a45b535a6",
+    "instrumented_core_sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b",
+    "harness_sha256": "8223bf6507e40544748571a15df769b3dfe147ca694b0bf3dbee362a2974391a",
+    "runs": [
+      "data/tas/donor-final-oracle-1",
+      "data/tas/donor-final-oracle-2"
+    ],
+    "result": {
+      "returncode": 0,
+      "frames": 4000,
+      "options": {
+        "swanstation_GPU_Renderer": "Software",
+        "swanstation_CPU_ExecutionMode": "Interpreter",
+        "swanstation_BIOS_PatchFastBoot": "true",
+        "swanstation_CPU_Overclock": "165"
+      },
+      "bios": "built-in OpenBIOS",
+      "sha256": "3d809046ee12274bc908f60a19388f8a513bdebe73977c7854a7498648ae8afb",
+      "matches_previous_pair": true
+    },
+    "all_4000_ram_and_input_samples_identical": true,
+    "input_export": {
+      "frames": 1500,
+      "ports": 2,
+      "intervals": 9,
+      "all_samples_match": true,
+      "movie_sha256": "03216a1393ff206901e22fe228f77df26215e9e469e126b8ba97eccb52984971",
+      "export_sha256": "8d92241bc0506c903fb2241ec5f03bb831fbcbd51021728dc33493dc5bb6f719"
+    },
+    "note": "Independent OpenBIOS/software/interpreter/165% oracle. No native/emulator state equivalence or frame alignment asserted."
+  },
+  "protected_user_files": [
+    {
+      "path": "savestates/quick_slot_0.ps1s",
+      "before_sha256": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+      "after_sha256": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953"
+    },
+    {
+      "path": "data/memory_cards/card1.mcd",
+      "before_sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0",
+      "after_sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+    },
+    {
+      "path": "data/memory_cards/card2.mcd",
+      "before_sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0",
+      "after_sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+    }
+  ],
+  "limitations": [
+    "Not a full-game playability certification.",
+    "Only title, opening, d00a, s00a and s01a overlays currently compiled.",
+    "Boot movie starts at earliest resumable checkpoint, VBlank 7, not power-on frame zero.",
+    "Witness covers main RAM and native boundary/PC; other device/CPU/scratch/VRAM state is not fully hashed.",
+    "Vulkan capture dimensions verify 4K output, not complete visual fidelity.",
+    "Bosses, subsequent stages, both-disc playthrough, in-game card saves and disc swap remain unverified.",
+    "Branches are separate recordings; recovered prefixes exclude their last input and the failed tail.",
+    "Wall-clock durations are diagnostic run costs, not gameplay FPS benchmarks."
+  ]
+}

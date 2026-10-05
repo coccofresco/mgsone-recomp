@@ -27,6 +27,13 @@ layout(set = 1, binding = 0, std140) uniform CrashReplayDrawState {
   ivec4 mgs_texture_origin;
   uvec4 mgs_palette[2];
   vec4 mgs_weights[4];
+  vec4 mgs_normals[4];
+  vec4 mgs_light_directions[3];
+  vec4 mgs_light_colors[3];
+  vec4 mgs_ambient;
+  vec4 mgs_world_positions[4];
+  uvec4 mgs_point_lights;
+  vec4 mgs_surface_effect[4];
 } u_draw;
 #include "games/mgs_original_mesh.glsl"
 

@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "upstream_commit": "0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7",
+  "primary_documentation": "https://docs.libretro.com/shader/crt_royale/",
+  "findings": [
+    "The full Royale preset has 12 passes: source linearization, vertical and horizontal scanline reconstruction, phosphor mask, brightpass and separable bloom, then final geometry/encoding.",
+    "Royale also multiplies a phosphor mask, but it does so on reconstructed electron intensity in linear light; the subsequent bloom is computed from that phosphor emission. It is not a decorative RGB overlay on an otherwise unchanged final image.",
+    "The upstream documentation explicitly calls its phosphor bloom an approximation that deliberately spreads light further than an exact physical simulation to restore brightness."
+  ],
+  "implementation_choice": "Independent bounded analytical reconstruction of neighboring RGB emitters, using the same signal/emission/diffusion ordering. Not a port of the Royale preset or a claim of exact physical equivalence. No upstream shader code is copied into the runtime.",
+  "sources": [
+    {
+      "path": ".local/crt-research/crt/shaders/crt-royale/src/bloom-functions.h",
+      "sha256": "8bc5450359a056ff8dbd9b2504f467687aefb8018af7cc44cc2f222c61c3d0c3",
+      "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/crt-royale/src/bloom-functions.h"
+    },
+    {
+      "path": ".local/crt-research/crt/shaders/crt-royale/src/crt-royale-bloom-approx.h",
+      "sha256": "50d5af04fa770560fac17a3f00bbfcab417ad87cc7fa702cdea0b2da78261c80",
+      "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/crt-royale/src/crt-royale-bloom-approx.h"
+    },
+    {
+      "path": ".local/crt-research/crt/shaders/crt-royale/src/crt-royale-bloom-approx.slang",
+      "sha256": "9e531b3c3046fe41c6576f5c2ab836442bcc258d0d4ed3f0669631592fc154e4",
+      "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/crt-royale/src/crt-royale-bloom-approx.slang"
+    },
+    {
+      "path": ".local/crt-research/crt/shaders/crt-royale/src/crt-royale-bloom-horizontal-reconstitute.slang",
+      "sha256": "89a64e73f93bb3d6d6156114784b3b9e2a5b8289ca58fdaca06ee177bdebe5bb",
+      "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/crt-royale/src/crt-royale-bloom-horizontal-reconstitute.slang"
+    },
+    {
+      "path": ".local/crt-research/crt/shaders/crt-royale/src/crt-royale-first-pass-linearize-crt-gamma-bob-fields.slang",
+      "sha256": "08d609d05ff1e6ca793c0969a1f1c393f2960eb3c734c43235428eb5fa94f2a0",
+      "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/crt-royale/src/crt-royale-first-pass-linearize-crt-gamma-bob-fields.slang"
+    },
+    {
+      "path": ".local/crt-research/crt/shaders/crt-royale/src/crt-royale-mask-resize-horizontal.slang",
+      "sha256": "966b8d1de40773a9f68e33dc9e7420e62511c7dbb30fed1f80b3426a9e74896e",
+      "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/crt-royale/src/crt-royale-mask-resize-horizontal.slang"
+    },
+    {
+      "path": ".local/crt-research/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask.h",
+      "sha256": "87439a49f06ba4bcbdfd2fa38b55c0e444ebe3958f6f8653edf5b1dc80ada0d2",
+      "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask.h"
+    },
+    {
+      "path": ".local/crt-research/crt/shaders/crt-royale/src/crt-royale-scanlines-vertical-interlacing.slang",
+      "sha256": "a93600fa01fe13c9a76868dad47e6901389721efa66db8aa3cf71448184f1fe2",
+      "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/crt-royale/src/crt-royale-scanlines-vertical-interlacing.slang"
+    }
+  ],
+  "runtime_budget": {
+    "additional_passes": 0,
+    "additional_attachments": 0,
+    "source_samples_per_fullscreen_fragment": 16,
+    "neighboring_cells": 4,
+    "wide_scatter_cells": 4,
+    "codec_cells": 4,
+    "codec_texture_access": "Original 8-bit palette/index source at fixed cell coordinates, clamped to the authenticated portrait; center STP retained."
+  },
+  "differences_from_v9": [
+    "Output RGB comes only from a sum of emitter contributions, with cell-level exposure, noise and spectral response. No continuous-picture-times-grille path remains.",
+    "Both source-footprint integration and diffusion operate in linear light with a gamma-2 approximation.",
+    "Two distinct half-cell bars with the same integrated cell signal must produce identical reconstructed output; the same bars remain distinct in V9.",
+    "Original simulation, timing, palettes and native VRAM execution are unaffected."
+  ],
+  "limitations": [
+    "Gaussian beam cores and compact tent diffusion are bounded optical approximations, not a full physical or electrical CRT model.",
+    "Four enclosing cells reconstruct the local emission and diffusion, with four distant cell samples for wide glare. Source reconstruction uses two footprint samples per cell, not exact integration of arbitrarily small detail.",
+    "No persistent phosphor history, lens curvature, convergence fault or interlace synthesis is added.",
+    "Only the five previously authenticated video profiles are covered; no whole-campaign scanline inventory is claimed."
+  ],
+  "optimization": "The final model uses four enclosing emitters and a unit-sum compact diffusion kernel. This preserves cell reconstruction while avoiding a 3x3 Gaussian diffusion sum in every UHD fragment.",
+  "runtime_budget_revision": "V10 historical; see v11_extension for the current Codec composition.",
+  "v11_extension": {
+    "evidence": "docs/mgs-crt-v11-evidence.json",
+    "grid": [
+      854,
+      480
+    ],
+    "codec": "Uses full-interface screen reconstruction before dialogue instead of the V10 local portrait path. One added pass and snapshot copy; no new attachments. PTT/MEMORY and frequency belong to the interface; conversation text stays outside the CRT.",
+    "other_profiles": "Same analytical emitter model and pass budget; source footprint follows the new cell pitch."
+  },
+  "v12_extension": {
+    "evidence": "docs/mgs-crt-v12-evidence.json",
+    "grid": [
+      426,
+      240
+    ],
+    "change": "User-selected intermediate CRT density, shared by all five profiles. Keeps V11 whole-interface Codec composition before dialogue and the same emitter, bloom and pass budgets. Presentation stays 3840x2160; guest rendering is unchanged."
+  }
+}

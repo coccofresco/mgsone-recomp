@@ -1,0 +1,63 @@
+{
+  "format": "mgs-tas-route-1",
+  "name": "s15a-grenade-visual-probe",
+  "source": "menu/weapon.c owned weapons sorted by ID, verified NO ITEM -> SOCOM -> FAMAS -> GRENADE on the same seed; linkvar.h GM_GrenadeFlag linkvar[19]. Inputs only.",
+  "steps": [
+    {
+      "name": "select-grenade",
+      "until": {
+        "weapon": 2,
+        "pause_level": 0
+      },
+      "stable_frames": 12,
+      "guard": {
+        "stage": "s15a",
+        "story": 219,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "action": {
+        "sequence": "r2:30,r2+left:6,r2:24,r2+left:6,r2:24,r2+left:6,r2:24,wait:30"
+      },
+      "max_frames": 240
+    },
+    {
+      "name": "throw-one-grenade",
+      "until": {
+        "gcl_11800026": 34
+      },
+      "guard": {
+        "stage": "s15a",
+        "story": 219,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "action": {
+        "sequence": "wait:12,square:30,wait:30"
+      },
+      "max_frames": 180
+    },
+    {
+      "name": "observe-detonation-and-settle",
+      "until": {
+        "weapon": 2,
+        "pause_level": 0,
+        "gcl_11800026": 34
+      },
+      "stable_frames": 540,
+      "guard": {
+        "stage": "s15a",
+        "story": 219,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 600
+    }
+  ]
+}

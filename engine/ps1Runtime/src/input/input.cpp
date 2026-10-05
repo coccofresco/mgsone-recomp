@@ -157,6 +157,7 @@ void InputController::reset() {
   for (auto &p : ports_) {
     p = PortState{};
   }
+  latchedSample_ = {};
   joyData_ = 0;
   joyStat_ = 0x05; // TX ready, TX not empty
   joyMode_ = 0;
@@ -178,6 +179,8 @@ InputController::Snapshot InputController::snapshot() const {
     state.ports[port].analogRX = ports_[port].analogRX;
     state.ports[port].analogRY = ports_[port].analogRY;
     state.ports[port].padType = ports_[port].padType;
+    if (frameSampling_)
+      state.ports[port] = latchedSample_[port];
   }
   state.joyData = joyData_;
   state.joyStat = joyStat_;
@@ -214,6 +217,7 @@ bool InputController::restore(const Snapshot &state) {
     ports_[port].analogRX = state.ports[port].analogRX;
     ports_[port].analogRY = state.ports[port].analogRY;
     ports_[port].padType = state.ports[port].padType;
+    latchedSample_[port] = state.ports[port];
   }
   joyData_ = state.joyData;
   joyStat_ = state.joyStat;
@@ -234,7 +238,8 @@ void InputController::press(uint16_t btn, int port) {
     // Make a press visible immediately to SIO/PadRead and remember its edge
     // until at least one VBlank has published it. This handles SDL batches
     // containing both KEYDOWN and KEYUP for a short tap.
-    ports_[port].latchedButtons &= ~btn;
+    if (!frameSampling_)
+      ports_[port].latchedButtons &= ~btn;
     ports_[port].pendingPresses |= newlyPressed;
   }
 }
@@ -254,16 +259,48 @@ void InputController::setScriptedButtons(uint16_t pressedMask, int port) {
   const uint16_t after = ports_[port].buttons & ~pressedMask;
   ports_[port].scriptedButtons = pressedMask;
   const uint16_t newlyPressed = before & ~after;
-  ports_[port].latchedButtons &= after;
+  if (!frameSampling_)
+    ports_[port].latchedButtons &= after;
   ports_[port].pendingPresses |= newlyPressed;
 }
 
 void InputController::latchVBlank() {
   std::lock_guard lock(portMutex_);
-  for (auto &port : ports_) {
+  for (unsigned i = 0; i < 2; ++i) {
+    auto &port = ports_[i];
     port.latchedButtons =
         (port.buttons & ~port.scriptedButtons) & ~port.pendingPresses;
     port.pendingPresses = 0;
+    latchedSample_[i] = {port.latchedButtons, port.analogLX, port.analogLY,
+                         port.analogRX,       port.analogRY, port.padType};
+  }
+}
+
+void InputController::setFrameSampling(bool enabled) {
+  latchVBlank();
+  std::lock_guard lock(portMutex_);
+  frameSampling_ = enabled;
+}
+
+std::array<InputController::PortSnapshot, 2>
+InputController::latchedSample() const {
+  std::lock_guard lock(portMutex_);
+  return latchedSample_;
+}
+
+void InputController::setMovieSample(
+    const std::array<PortSnapshot, 2> &sample) {
+  std::lock_guard lock(portMutex_);
+  latchedSample_ = sample;
+  for (unsigned i = 0; i < 2; ++i) {
+    auto &port = ports_[i];
+    port.buttons = port.latchedButtons = sample[i].buttons;
+    port.scriptedButtons = port.pendingPresses = 0;
+    port.analogLX = sample[i].analogLX;
+    port.analogLY = sample[i].analogLY;
+    port.analogRX = sample[i].analogRX;
+    port.analogRY = sample[i].analogRY;
+    port.padType = sample[i].padType;
   }
 }
 
@@ -383,6 +420,14 @@ uint8_t InputController::processSioTransfer(uint8_t dataIn) {
     std::lock_guard lock(portMutex_);
     port = ports_[selectedPort_];
     port.buttons = port.latchedButtons;
+    if (frameSampling_) {
+      const auto &sample = latchedSample_[selectedPort_];
+      port.analogLX = sample.analogLX;
+      port.analogLY = sample.analogLY;
+      port.analogRX = sample.analogRX;
+      port.analogRY = sample.analogRY;
+      port.padType = sample.padType;
+    }
   }
 
   switch (sioState_) {

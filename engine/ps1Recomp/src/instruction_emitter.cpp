@@ -1361,6 +1361,7 @@ std::string InstructionEmitter::emitFunction(const RecompFunction &func) const {
   // words as data comments until the next branch target label.
   bool reachable = true;
   int skipAfterJump = 0;
+  bool fallsThrough = false;
 
   for (size_t i = 0; i < numInstr; ++i) {
     uint32_t addr = func.address + static_cast<uint32_t>(i * 4);
@@ -1388,6 +1389,8 @@ std::string InstructionEmitter::emitFunction(const RecompFunction &func) const {
     }
 
     Instruction inst = MipsDecoder::decode(func.instructions[i]);
+    fallsThrough = inst.id != InstrId::JR && inst.id != InstrId::J &&
+                   inst.id != InstrId::BREAK;
     std::string code = emitInstruction(inst, addr);
 
     if (inst.id == InstrId::JAL) {
@@ -1639,6 +1642,16 @@ std::string InstructionEmitter::emitFunction(const RecompFunction &func) const {
               "recomp_resume_dispatch(rdram, ctx, ctx->r31); return; }\n";
     result += "    return;\n";
   };
+
+  // Discovery may split a routine at a late stack prologue or at a second
+  // callable entry. Reaching the end of that fragment is an architectural
+  // fall-through, never an implicit JR $ra. Preserve the live registers and
+  // return address while continuing into the next fragment, before any OOB
+  // labels (otherwise a not-taken branch could enter its taken target).
+  if (fallsThrough) {
+    result += "    // Sequential continuation across a discovered boundary.\n";
+    emitOobDispatch(func.address + static_cast<uint32_t>(numInstr * 4));
+  }
 
   // Always use recomp_dispatch for OOB -- we can't trust that the target
   // corresponds to a known function.

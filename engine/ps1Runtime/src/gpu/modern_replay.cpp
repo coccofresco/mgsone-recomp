@@ -72,14 +72,19 @@ void validate(const DrawPacket &operation) {
   const bool screenRectangle = (operation.opcode & 0xe0u) == 0x60u &&
                                operation.route == PacketRoute::Screen2D;
   const bool projectedPoint = operation.opcode == 0x68u && !screenRectangle;
+  const bool sourceBillboard = operation.opcode==0x60u &&
+      operation.surfaceEffect.kind==MgsSurfaceKind::Snow &&
+      operation.surfaceEffect.actor>=0x10000u;
   const bool projectedLine = (operation.opcode & 0xecu) == 0x40u;
+  const bool screenLine = (operation.opcode&0xe0u)==0x40u &&
+                         operation.route==PacketRoute::Screen2D;
   if ((operation.opcode & 0xE0u) != 0x20u && !projectedPoint &&
-      !projectedLine && !screenRectangle) {
+      !projectedLine && !screenRectangle && !sourceBillboard && !screenLine) {
     throw std::invalid_argument("DrawPacket opcode is not a polygon command");
   }
   // Authenticated points and fixed lines lower to camera-facing quads.
   // Retain their real command identity; intrinsic 2D stays on native paint.
-  if ((projectedPoint || projectedLine) &&
+  if ((projectedPoint || (projectedLine && !screenLine) || sourceBillboard) &&
       (operation.route != PacketRoute::Projected3D ||
        operation.validMask != 0x0fu ||
        operation.fallbackReason != PacketFallbackReason::None)) {
@@ -122,9 +127,13 @@ void validate(const DrawPacket &operation) {
     throw std::invalid_argument(
         "DrawPacket indices must encode one or two triangles");
   }
-  const bool opcodeTextured = (operation.opcode & 0x04u) != 0;
+  // Bit 2 is not a texture flag in the GP0 line family. PsyQ's SetLineF4
+  // uses alias 0x4c for Codec portrait borders; treating it as a polygon
+  // texture flag rejects otherwise valid modern UI ribbons.
+  const bool opcodeTextured = (operation.opcode & 0xe0u) != 0x40u &&
+                              (operation.opcode & 0x04u) != 0;
   const bool opcodeQuad =
-      (operation.opcode & 0x08u) != 0 || projectedLine || screenRectangle;
+      (operation.opcode & 0x08u) != 0 || projectedLine || screenRectangle || sourceBillboard || screenLine;
   const bool opcodeGouraud =
       (operation.opcode & 0x10u) != 0 && !screenRectangle;
   const bool opcodeBlended = (operation.opcode & 0x02u) != 0;

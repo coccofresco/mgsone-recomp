@@ -663,6 +663,22 @@ TEST(GpuModernReplayVulkanBakeTest,
                     static_cast<float>(CRASH_REPLAY_FALLBACK_W));
 }
 
+TEST(GpuModernReplayVulkanBakeTest, SubpixelScreenGeometryRequiresLineOrOwnedSource) {
+  auto packet=precisePacket(1,true,false);makeScreen2D(packet);
+  packet.vertices[0].x+=0.25;
+  EXPECT_EQ(bakeModernReplayVulkan(makePlan(packet),4,feedbackFeatures()).reason,
+            VulkanReplayBakeReason::IncompletePrecisionProvenance);
+  for(auto kind:{MgsSurfaceKind::Panorama,MgsSurfaceKind::Authored}) {
+    packet.surfaceEffect.kind=kind;packet.surfaceEffect.actor=0x170000;
+    EXPECT_TRUE(bakeModernReplayVulkan(makePlan(packet),4,feedbackFeatures()).accepted());
+  }
+  packet.surfaceEffect={};packet.opcode=0x40;packet.gouraud=false;
+  EXPECT_TRUE(bakeModernReplayVulkan(makePlan(packet),4,feedbackFeatures()).accepted());
+  packet.vertices[0].rawDepthValid=true;
+  EXPECT_EQ(bakeModernReplayVulkan(makePlan(packet),4,feedbackFeatures()).reason,
+            VulkanReplayBakeReason::IncompletePrecisionProvenance);
+}
+
 TEST(GpuModernReplayVulkanBakeTest,
      FeedbackBoundsArePaddedClippedAndSafeForExtremeFiniteCoordinates) {
   DrawPacket clipped = precisePacket(1);
@@ -1827,6 +1843,11 @@ TEST(GpuModernReplayVulkanBakeTest,
   packet.originalMesh->sourceRecovery = true;
   packet.originalMesh->projection = {320, 160, 112, 1};
   packet.originalMesh->viewRows[0] = {1, 0, 0, 30};
+  auto &lighting = packet.originalMesh->lighting;
+  lighting.normals[0] = {0, 0, 1, 0};
+  lighting.directions[0] = {0, 0, .5f, 0};
+  lighting.colors[0] = {512, 0, 0, 0};
+  lighting.ambient = {10, 20, 30, 1};
   const auto result =
       bakeModernReplayVulkan(makePlan(packet), 4, feedbackFeatures());
   ASSERT_TRUE(result.accepted());
@@ -1837,6 +1858,10 @@ TEST(GpuModernReplayVulkanBakeTest,
   EXPECT_TRUE(draw.sourceRecovery);
   EXPECT_EQ(draw.segments[0].uniforms.mgsViewRows,
             packet.originalMesh->viewRows);
+  EXPECT_EQ(draw.segments[0].uniforms.mgsNormals, lighting.normals);
+  EXPECT_EQ(draw.segments[0].uniforms.mgsLightDirections, lighting.directions);
+  EXPECT_EQ(draw.segments[0].uniforms.mgsLightColors, lighting.colors);
+  EXPECT_EQ(draw.segments[0].uniforms.mgsAmbient, lighting.ambient);
   for (unsigned i = 0; i < 6; ++i)
     EXPECT_FLOAT_EQ(result.batch.vertices[i].positionNative[0],
                     float(packet.triangleIndices[i]));

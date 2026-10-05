@@ -49,6 +49,13 @@ layout(set = 1, binding = 0, std140) uniform CrashReplayDrawState {
   ivec4 mgs_texture_origin;
   uvec4 mgs_palette[2];
   vec4 mgs_weights[4];
+  vec4 mgs_normals[4];
+  vec4 mgs_light_directions[3];
+  vec4 mgs_light_colors[3];
+  vec4 mgs_ambient;
+  vec4 mgs_world_positions[4];
+  uvec4 mgs_point_lights;
+  vec4 mgs_surface_effect[4];
 } u_draw;
 #include "games/mgs_original_mesh.glsl"
 
@@ -65,6 +72,9 @@ layout(push_constant) uniform ReplayPresentationDepthState {
 // Default smooth interpolation plus clip W implements
 //   sum(lambda * UV/W) / sum(lambda/W).
 layout(location = 0) out vec2 v_uv;
+// Perspective interpolation followed by fragment normalization (Phong).
+layout(location = 9) out vec3 v_mgs_world_normal;
+layout(location = 10) out vec3 v_mgs_world_position;
 
 // PS1 Gouraud color is affine in screen space, not perspective-correct.
 // Flat polygons simply submit the same color at all three vertices.
@@ -115,6 +125,15 @@ void main() {
   if (u_draw.mgs_projection.w != 0.0)
     gl_Position = mgs_original_clip(uint(a_position_native.x));
 
+  v_mgs_world_normal = vec3(0.0);
+  v_mgs_world_position = vec3(0.0);
+  if (u_draw.mgs_projection.w != 0.0) {
+    const vec4 weights = u_draw.mgs_weights[uint(a_position_native.x)];
+    for (uint k = 0u; k < 4u; ++k) {
+      v_mgs_world_normal += weights[k] * u_draw.mgs_normals[k].xyz;
+      v_mgs_world_position += weights[k] * u_draw.mgs_world_positions[k].xyz;
+    }
+  }
   v_uv = a_uv;
   v_color_255 = a_color_255;
 }

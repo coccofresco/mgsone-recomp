@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "repository": "https://github.com/libretro/slang-shaders",
+  "commit": "0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7",
+  "selection": "Famiglie consolidate e incluse nella documentazione ufficiale Libretro; non una classifica quantitativa di installazioni, per cui non sono disponibili dati nelle fonti consultate.",
+  "primary_documentation": [
+    {
+      "url": "https://docs.libretro.com/shader/crt/",
+      "finding": "Panoramica ufficiale: Easymode è indicato come popolare e performante, ZFast come prima scelta per dispositivi deboli; Guest e Royale offrono configurazioni più estese."
+    },
+    {
+      "url": "https://docs.libretro.com/shader/crt_royale/",
+      "finding": "Documenta maschere, beam, bloom e i compromessi delle varianti fake-bloom. Le note su hardware storico non sono misure delle prestazioni attuali."
+    }
+  ],
+  "families": [
+    {
+      "name": "ZFast CRT",
+      "preset_passes": 1,
+      "features": "Un campione bilineare, interpolazione delle coordinate e modulazione del fascio dipendente dalla luminosità; griglia monocromatica.",
+      "assessment": "Riferimento principale per contenere il costo. Il bloom ampio richiede una componente aggiuntiva.",
+      "sources": [
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/zfast-crt.slangp",
+          "local_path": ".local/crt-research/crt/zfast-crt.slangp",
+          "sha256": "fa3a7f37344f351572e692bc317a21f89f30628c08c09adc1091e4900f1f8e11"
+        },
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/zfast_crt/zfast_crt_impl.inc",
+          "local_path": ".local/crt-research/crt/shaders/zfast_crt/zfast_crt_impl.inc",
+          "sha256": "e1006274577b85f18ed793856b46f92d5cd6f6207a98af398004644006907bf1"
+        }
+      ]
+    },
+    {
+      "name": "CRT-Pi",
+      "preset_passes": 1,
+      "features": "Un campione, fascio, griglia e risposta gamma, con parametri per luminosità e curvatura.",
+      "assessment": "Altro riferimento leggero; utile la separazione fra luminosità del fascio e luce residua fra righe.",
+      "sources": [
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/crt-pi.slangp",
+          "local_path": ".local/crt-research/crt/crt-pi.slangp",
+          "sha256": "2ca7e2d35c6ac55291409636931cf178315c8c1131710a28c62121babc46d19b"
+        },
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/crt-pi.slang",
+          "local_path": ".local/crt-research/crt/shaders/crt-pi.slang",
+          "sha256": "d62b27e46b22aa0f0a9703ade862f558b7ca08b69f4a2032bbc9d244077642b5"
+        }
+      ]
+    },
+    {
+      "name": "Fakelottes",
+      "preset_passes": 1,
+      "features": "Scanline semplificate, un campione e maschere derivate dalla famiglia Lottes; opzioni compilabili separatamente.",
+      "assessment": "Griglia efficace a basso costo, ma da filtrare e tarare per evitare moiré e dominanti sui video colorati di MGS.",
+      "sources": [
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/fakelottes.slangp",
+          "local_path": ".local/crt-research/crt/fakelottes.slangp",
+          "sha256": "e29ddee6d69f0599984509e949269ef3b22066329a5541436e904b3bc4fa474c"
+        },
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/fakelottes.slang",
+          "local_path": ".local/crt-research/crt/shaders/fakelottes.slang",
+          "sha256": "0b6ed7cd010db604fdc3c8dd9d61b0171c2f326786767feb51a1d7861044138c"
+        }
+      ]
+    },
+    {
+      "name": "CRT-Lottes Fast",
+      "preset_passes": 1,
+      "features": "Un passaggio; ricostruzione di due righe, otto campioni nel ramo normale e due nel ramo opzionale CRTS_2_TAP. Maschera ed esposizione integrate.",
+      "assessment": "Riferimento per ricostruzione del fascio e conservazione delle alte luci. Il suffisso Fast identifica una revisione distinta, non un benchmark universale.",
+      "sources": [
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/crt-lottes-fast.slangp",
+          "local_path": ".local/crt-research/crt/crt-lottes-fast.slangp",
+          "sha256": "0992238001c519503d9e8e750b37b32d30ff380e74a40287863605ae69f9fff0"
+        },
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/crt-lottes-fast.slang",
+          "local_path": ".local/crt-research/crt/shaders/crt-lottes-fast.slang",
+          "sha256": "576eddc662ac4f77909c0c14dbd5a16ac4164e50c67527fff634316f4441c482"
+        }
+      ]
+    },
+    {
+      "name": "CRT-Easymode",
+      "preset_passes": 1,
+      "features": "Un passaggio con otto campioni nel filtro Lanczos predefinito, risposta gamma, larghezza del fascio e maschere regolabili.",
+      "assessment": "Buon riferimento qualitativo per il compromesso fra leggibilità e struttura del tubo.",
+      "sources": [
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/crt-easymode.slangp",
+          "local_path": ".local/crt-research/crt/crt-easymode.slangp",
+          "sha256": "3e624916ca4e3bc8660c0b00b3abcb262b03b2699137a03d8171d936054a1fd5"
+        },
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/shaders/crt-easymode.slang",
+          "local_path": ".local/crt-research/crt/shaders/crt-easymode.slang",
+          "sha256": "cacb1595c7988619c29b46cc283e2140f25cf14a9d104fcf6c28f197ee4b29a3"
+        }
+      ]
+    },
+    {
+      "name": "CRT-Easymode Halation",
+      "preset_passes": 5,
+      "features": "Cinque passaggi separano linearizzazione, sfocatura orizzontale/verticale, soglia e composizione CRT.",
+      "assessment": "Riferimento per diffusione vicina e alone ampio; nel nostro passaggio selettivo i contributi sono approssimati con otto letture fisse.",
+      "sources": [
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/crt-easymode-halation.slangp",
+          "local_path": ".local/crt-research/crt/crt-easymode-halation.slangp",
+          "sha256": "6523d1b38d37a1e6891529b286fd4ca290c2e65ab35028b8a50bbe660cca8625"
+        }
+      ]
+    },
+    {
+      "name": "CRT-Guest Advanced",
+      "preset_passes": 12,
+      "features": "Preset di dodici passaggi con afterglow, luminanza media, linearizzazione, sfocature, bloom e deconvergenza.",
+      "assessment": "Riferimento avanzato. La pipeline completa è più ampia del trattamento locale necessario ai visori e ai video di MGS.",
+      "sources": [
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/crt-guest-advanced.slangp",
+          "local_path": ".local/crt-research/crt/crt-guest-advanced.slangp",
+          "sha256": "eb597473e15639e9dec4f11a18d4a789f5f901e9368816d4e5114b09b51c2d19"
+        }
+      ]
+    },
+    {
+      "name": "CRT-Guest Advanced Fastest",
+      "preset_passes": 5,
+      "features": "Preset di cinque passaggi, LUT di colore, pretrattamento, linearizzazione e due passaggi CRT.",
+      "assessment": "Confronto utile con la famiglia avanzata: Fastest riduce il numero di passaggi, che da solo non misura il costo effettivo.",
+      "sources": [
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/crt-guest-advanced-fastest.slangp",
+          "local_path": ".local/crt-research/crt/crt-guest-advanced-fastest.slangp",
+          "sha256": "90e16aa3ac1bc48129ef5fa7470345ddac9a1b81459d750de521157f97af17a5"
+        }
+      ]
+    },
+    {
+      "name": "CRT-Royale",
+      "preset_passes": 12,
+      "features": "Dodici passaggi, maschere a texture, ricostruzione separata delle righe, bloom, halation e geometria del display.",
+      "assessment": "Riferimento per fascio variabile, fosfori e diffusione. La nostra implementazione usa una risposta analitica condivisa senza importarne la pipeline.",
+      "sources": [
+        {
+          "url": "https://github.com/libretro/slang-shaders/blob/0b3ff0b240f82f4cb5e5d0117f8f2080e2764cf7/crt/crt-royale.slangp",
+          "local_path": ".local/crt-research/crt/crt-royale.slangp",
+          "sha256": "724e0196cf83da1a229bc896e970d639b4cbeb9c41f341e1e5764780fecede96"
+        }
+      ]
+    }
+  ],
+  "integration": {
+    "approach": "Implementazione indipendente di concetti condivisi, senza copiare o vendorizzare shader RetroArch. Riferimenti con commit e hash fissati.",
+    "shader": "engine/ps1Runtime/shaders/games/mgs_crt.glsl",
+    "features": [
+      "Fascio gaussiano con larghezza dipendente dall’intensità.",
+      "Fosfori monocromatici con copertura integrata sul pixel e attenuazione delle scanline sotto il limite di campionamento.",
+      "Modulazione in luce con approssimazione gamma 2, calcolo float e uscita RGB8.",
+      "Bloom vicino e halation ampia, con soglie e dominanti conservate dalla taratura approvata.",
+      "Rumore e jitter cinematici comandati dal clock nativo; pausa e rewind riproducibili."
+    ],
+    "budget": {
+      "additional_passes": 0,
+      "additional_render_targets": 0,
+      "additional_history": 0,
+      "cinematic_texture_reads_before": 54,
+      "cinematic_texture_reads_after": 14,
+      "goggle_texture_reads_before": 9,
+      "goggle_texture_reads_after": 9,
+      "codec_additional_texture_reads": 0
+    },
+    "scope": [
+      {
+        "effect": "Cinematica rossa e verde",
+        "authority": "takabe/scn_mask.c: 112 TILE alternati, riuso da DMO/goggle/goggleir",
+        "mode": "CRT completo, segnale intenzionalmente limitato a 320x112, bloom e halation."
+      },
+      {
+        "effect": "NVG e termico di gameplay",
+        "authority": "takabe/goggle.c e takabe/goggleir.c chiamano NewNightVisionScreen, stesso raster ScnMask",
+        "mode": "Fascio e griglia condivisi sulla scena moderna, con ottica/palette specifica e dettagli subpixel preservati."
+      },
+      {
+        "effect": "Video Codec",
+        "authority": "menu/radiofacedraw.c: ritratto 52x89, crossfade e riga mobile dword_800AB6E0",
+        "mode": "Risposta CRT locale sui due riquadri autenticati; scansione mobile e contenuto originali, nessun postprocess sul testo."
+      }
+    ],
+    "source_audit_exclusions": [
+      "wt_view usa strisce per deformare acqua/calore: le strisce non sono un segnale CRT.",
+      "ending2 carica righe per lo scorrimento dei titoli; radiotex, libdg/loader e font usano righe di palette.",
+      "radar draw_console/draw_long_console disegnano righe di pseudotesto; radio disegna una scala di sintonia, non un raster video.",
+      "gglsight ha indicatori SCAN/MODE e una linea di misura; HIDEO usa un backplate nero. Non sono una prova di scanline CRT aggiuntive.",
+      "Monitor generici e superfici del mondo conservano il proprio contenuto: la sola presenza di una texture o di una riga non attiva il CRT."
+    ],
+    "limitation": "Il censimento è vincolato ai sorgenti decompilati e ai layout USA verificati; contenuti non decompilati o scanline impresse nei bitmap richiedono una prova dedicata."
+  },
+  "performance": "Conteggi statici e numero di passaggi descrivono il budget, non sostituiscono misure GPU. Le misure A/B del runtime sono in docs/mgs-crt-v8-evidence.json.",
+  "rgb_follow_up": {
+    "revision": "v9",
+    "evidence": "docs/mgs-crt-v9-evidence.json",
+    "description": "Triadi RGB al posto della griglia monocromatica V8, con integrazione del footprint e attenuazione a bassa risoluzione. Nessun campione o passaggio aggiuntivo."
+  }
+}

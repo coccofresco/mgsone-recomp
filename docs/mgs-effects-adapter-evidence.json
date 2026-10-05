@@ -1,0 +1,566 @@
+{
+  "schema": 1,
+  "date": "2026-10-04",
+  "kind": "adapter_implementation_and_targeted_validation_not_full_campaign_certification",
+  "scope": "MGS PSX USA 1.0, Vulkan presentation only; native logic/VRAM remain authoritative",
+  "git_branch": "presentation/source-meshes",
+  "git_head": "9672b31710df6f36db25521832ec6b5ea7da84da",
+  "working_tree": "Includes pre-existing uncommitted work; this report is not a commit.",
+  "upstream": {
+    "repository": "https://github.com/FoxdieTeam/mgs_reversing",
+    "commit": "7b66372bcf156249560c90918d9472a47aabf3c5",
+    "source_tree_sha256": "67e6c165bb7f3671be2b44e8613689c39ef2e62c06cc8f12aaacab45a951dd41",
+    "runtime_donor_commit_unchanged": "217509eae471629b1a53633b816c61adfef9ed5c"
+  },
+  "adapter_status": {
+    "dossiers": 60,
+    "implemented": 60,
+    "partial": 0,
+    "missing": 0,
+    "distinct_surface_profiles": 41,
+    "complete_static_animation_signatures": 77,
+    "runtime_constructed_animation_profiles": 1,
+    "all_scenes_visually_certified": false,
+    "dossiers_overlap": true
+  },
+  "build": {
+    "targets": [
+      "ps1Runtime",
+      "ps1Runtime_tests"
+    ],
+    "command": "cmake --build build --target ps1Runtime ps1Runtime_tests --parallel 4",
+    "runtime": {
+      "path": "build/ps1Runtime/ps1Runtime",
+      "sha256": "d9f16dda8adecb91019bf7972633b4bb3e054958ffbe9b2dba97eb0faf1dff7a"
+    },
+    "tests": {
+      "path": "build/ps1Test/ps1Runtime_tests",
+      "sha256": "a1fe3c306fa8037ef41ebe13c80d31be19f7df8704a018b139fbb5738a87f928"
+    },
+    "log": {
+      "path": ".local/adapters-build.log",
+      "sha256": "0b4562aa2dc952a69658a3d002b76ef256b6a7d299cbe3da19621ae8b30dd1d8"
+    }
+  },
+  "regression": {
+    "tests": 352,
+    "suites": 28,
+    "failed": 0,
+    "skipped": 0,
+    "log": {
+      "path": ".local/adapters-tests.log",
+      "sha256": "9ee92a301e748f2197aeebb94c9a8aac4932c4c2999cda8caede8cc8b158fd1d"
+    },
+    "command": "env PS1_RUN_VULKAN_INTEGRATION=1 PS1_VULKAN_HIDDEN_WINDOW=1 PS1_TEST_MGS_ASSET_CACHE=data/presentation/usa-source/assets.mgsc PS1_TEST_MGS_USA_EXE=data/assets/usa/disc1/SLUS_005.94 PS1_TEST_MGS_EFFECT_RAM=data/scenarios/situations/quick-items-matrix-01/s15a-quick-item/native/session/final-ram.bin PS1_TEST_MGS_FOG_RAM=data/scenarios/usa-normal/cases/d1-13-s12b-204/native-01/session/final-ram.bin build/ps1Test/ps1Runtime_tests --gtest_filter='Mgs*:*Vulkan*:*ModernReplay*'",
+    "specific_assertions": [
+      "All 77 complete scripts identify; changed byte or atlas rejects; snapshots do not mutate RAM.",
+      "Malformed/cyclic actor lists, stale allocations and wrong opcode/page/CLUT reject.",
+      "Dynamic DG_MDL laser uses original indexed positions/normals and requires its living owner.",
+      "Mirror+Camo compose across both actor-list orderings; plane clipping is retained for reflected surfaces.",
+      "USA mosaic, radar jamming, HIDEO, SGT and dynamic SnowStorm have ownership/activation tests.",
+      "Panorama explicitly owns affine projection; subpixel XY does not invent GTE depth.",
+      "Photo GPU export captures frame 2 even if the producer has advanced to a different frame 3 and empty frame 4; no duplicate export.",
+      "GPU light evaluation is per pixel; RGB8 gradients exceed 32 levels; effect blending accumulates and native VRAM is unchanged.",
+      "3840x2160 raster retains subpixels and fixed16:9 viewport across window resizing."
+    ]
+  },
+  "source_files": [
+    {
+      "path": "engine/ps1Runtime/include/runtime/games/mgs_surface_effects.h",
+      "sha256": "45b7480ec2801ac86283df401646d237868356f050d02a575f8e3c76888b3e8e"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/gpu/gpu.h",
+      "sha256": "d13b48a30e521e650d9c803167542e6c2db4ebc09d7274a0862fd186dcb331a8"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/gpu/modern_replay.h",
+      "sha256": "c7bf0f1dd9a3b865453eb2948821342519c7a2053338b72762d3d9f705affac5"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/gpu/modern_replay_vulkan_abi.h",
+      "sha256": "819b2d7e1408488e8e6dbb581c649fb6eaa0ee00ecf3fa22b8f7d21ac17df7e0"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_lighting.glsl",
+      "sha256": "539cd4a251cc92283d4ae21df9f243169e53f0f48bd97e0e46ae211031e85c17"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_original_texture.glsl",
+      "sha256": "bab925af0f43160a940cbe610a506010bf1efc37e28a819b8645e31472f4df28"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+      "sha256": "963ff7b91a2c177f12585da5ac2e469fc5b6439413421e10abf06ce3a49e8a26"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+      "sha256": "d838f6a8dc940a2d59b7dc1bc47a9dbb03b4ea3845ca2ead58567b3282264217"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/replay_precise.frag",
+      "sha256": "c454d59706f8c41ffad8dab7557c149a995e04b04c6e8a0a2f27990f8e4d5555"
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/replay_precise.vert",
+      "sha256": "c6d6ce1680226c7e454fba629067a9a7c06cce60a3877426904059625eed59d7"
+    },
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_animation_signatures.inc",
+      "sha256": "7129c77de730f266fc0f75939bed0a9e312ad5139aede95e163d7d5930328114"
+    },
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_mesh_replay.cpp",
+      "sha256": "d94a343544a508ba18fbc30f21e41d510c8c08cde54d5eca0c9b3fc668f5da78"
+    },
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_scene.cpp",
+      "sha256": "8f539814c07d6a6f1b9f8c9b9cff65beddf2fff19923723979cd8fcc5f168d5d"
+    },
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_screen_effects.cpp",
+      "sha256": "979e97fd299059c158dffb0136e4574b1066920785d63ea0d4f031ef8e9d2283"
+    },
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_source_material.cpp",
+      "sha256": "452bb11014895fba59a53c76154198a95e25f7c78dedf89afdc6d247dc445b35"
+    },
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+      "sha256": "7d039c0c1ae2be99db6afd1eff3e38dc27c01c525c46cc100fbfd22f10f61cc1"
+    },
+    {
+      "path": "engine/ps1Runtime/src/gpu/gpu.cpp",
+      "sha256": "d146c1c05e2414bd20639a1030ae26d6c3556d3fa25ebcd8766800b38784ea3b"
+    },
+    {
+      "path": "engine/ps1Runtime/src/gpu/modern_replay_recorder.cpp",
+      "sha256": "8bb4aaa4694e07bb1ab1502e529d392a8933a58b53dd2e8d6d46b6bc00f47ced"
+    },
+    {
+      "path": "engine/ps1Runtime/src/gpu/modern_replay_vulkan_bake.cpp",
+      "sha256": "f41b941e897e46267d02666fdccd6ab03df6d78dd2565cfc5f05be8873f5f8df"
+    },
+    {
+      "path": "engine/ps1Runtime/src/gpu/renderer_vulkan.cpp",
+      "sha256": "dcc47784f2434e463ede23bc32d78b457ea331736e1b0f58354a4258e72c694f"
+    }
+  ],
+  "tests_sources": [
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_surface_effects.cpp",
+      "sha256": "788320fa6bd745ff19f2a55ae06c7619b377dc3302a321ac8b7db7cdd8b21389"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_asset_cache.cpp",
+      "sha256": "1daaf536d6d6d9590df7cd75da249dc01228e341e363dab85542a0c292da0508"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_screen_effects.cpp",
+      "sha256": "88c18b6ce445198157889db195b7c7befecefe4e37e9a0b9894a151e1aa6b51a"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp",
+      "sha256": "257fd97c9e917d04f18e29084b87d47b08044d6c3da673a343e48e887eed2ec6"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_bake.cpp",
+      "sha256": "909b2bd6d49b9d519560082df67d1fa4f5e53e0c0323e330ff6bd1259e5b1468"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_gpu_modern_replay_capture.cpp",
+      "sha256": "6ab846146d7b4541b7ccaf91b2fcf82a78f6b6dafc1abe44cedb9aeec0777336"
+    }
+  ],
+  "retail_layout_evidence": {
+    "overlays": [
+      {
+        "path": "data/overlays/usa/s07b.bin",
+        "sha256": "bfabdf6d8504528ea6728325eb3206c57606bb164b98e4eee73884ef8fe58734"
+      },
+      {
+        "path": "data/overlays/usa/s07c.bin",
+        "sha256": "26f281ca5023d3d8b3d431abd469ee78fa4b24faf37eb45bdeab5a689c369980"
+      },
+      {
+        "path": "data/overlays/usa/s12b.bin",
+        "sha256": "76530d2a40d8259906bd4bffa37d8c530f8292f2f6a6e23ea6162fcd0dea5352"
+      },
+      {
+        "path": "data/overlays/usa/s17a.bin",
+        "sha256": "4044ba8f6086e0c8bbdeb9cbb54ecf57e43d7cd8c493dd408f7be7e742d351e6"
+      },
+      {
+        "path": "data/overlays/usa/s17ar.bin",
+        "sha256": "95357ef128b8d7d5c69884595a45aa501039b78c5c2b558ae14f715a390298b1"
+      },
+      {
+        "path": "data/overlays/usa/s18a.bin",
+        "sha256": "326cc1cf17cb830e8345b63c654ce73968a9c58a2f0da0790f9f50b36cc4f8b1"
+      },
+      {
+        "path": "data/overlays/usa/s19a.bin",
+        "sha256": "e9e80c985675b9440b5c46422acf355e2cd770bfaa7030aacb3310ef9bf158c8"
+      },
+      {
+        "path": "data/overlays/usa/s19b.bin",
+        "sha256": "7a94b594a197ab9345ca35218535cab5e3e18328da3814615ce8e83e29425f80"
+      }
+    ],
+    "local_research": [
+      {
+        "path": ".local/effects-retail-actors.json",
+        "sha256": "3b9dbdc7edcbabd504e64b01b4b57fd4ffc9353f087227c8f4343e01efca11e8"
+      },
+      {
+        "path": ".local/animation-ram-identities.json",
+        "sha256": "8513ad96828a0f70ef019b9645f7393cb53dbbd475ed7ec8e3ca416f06c86b96"
+      },
+      {
+        "path": ".local/fog-retail.json",
+        "sha256": "79d1bc67b7f56c9ededf172d7f8429a5420586abd1d80e092396cdf0994325d4"
+      },
+      {
+        "path": ".local/rex-effects-disasm.txt",
+        "sha256": "e10127047176bb28f71c935d5048b33b1c05f913f9396e4edf5cd9b3bfebc0f7"
+      },
+      {
+        "path": ".local/liquid-effects-disasm.txt",
+        "sha256": "f08be43179f078b4427545de1bb033c76534952b546e7169085beed61ded407b"
+      },
+      {
+        "path": ".local/hideo-packets.txt",
+        "sha256": "6507b78e37f87204b0e0265b86e0f449b0f2ec883dc5d73b5f846f6da59545c2"
+      },
+      {
+        "path": ".local/mosaic-packets.txt",
+        "sha256": "531e16d796b8d3f62974950498c2a07a766b937a6bb42a80572c5b2cc7058203"
+      }
+    ],
+    "usa_specific_findings": [
+      "Mosaic exists in retail USA despite the Integral stub: Work allocation+72, nx+80, ny+84, cell+88/+92, active+96, origin+104.",
+      "s07b HIDEO builder 0x800d42b0: psyco black POLY_F4 at Work+0x9d4 with exact 320x224 bounds; logo FT4 at +0x934/+0x984.",
+      "mgrexlzr OBJECT+56; mg_laser OBJECT+0x1a4, glows +0x134/+0x138; mg_smke1/2 primitives+36.",
+      "b_smoke emits the common smoke_ln bytecode with texture 0x512d and atlas 8x4x30.",
+      "Vulcan primitive+0x6f4 is a shadow, camera/camera2/guncame primitives are LEDs; no inferred thermal/laser semantics from names.",
+      "Individual billboard callback requires opcode prefix 00a04021 24c6ffff 8c8b0038 3c0d800b; positions/radius remain native inputs."
+    ]
+  },
+  "scenes": [
+    {
+      "name": "snow_fog",
+      "result": {
+        "path": "data/native/adapters-final-snow/result.json",
+        "sha256": "1199739c59e1ebda4969dfe15c8a27741dd48beb1dd5aa3368fee81e2194227b"
+      },
+      "metrics": {
+        "path": "data/native/adapters-final-snow/metrics.json",
+        "sha256": "77843611fa6af5fabfa859ff076b03bab43fed34818e415ecb854737fff5342f"
+      },
+      "runtime_sha256": "d4292048cfd7e075e3126cb4076b26351a30ef88da5240b4eaa2ca6eccddc652",
+      "frames": 120,
+      "game_ticks": {
+        "initial": 1222,
+        "final": 1282,
+        "delta": 60
+      },
+      "stage": "s12b",
+      "renderer_downgrades": 0,
+      "game_errors": [],
+      "interpreter_counters": {},
+      "observed_effect_counters": {
+        "mgs.effects.gpu.fog": 21634,
+        "mgs.effects.gpu.kind.2": 21,
+        "mgs.effects.gpu.kind.26": 59,
+        "mgs.effects.gpu.kind.30": 5636,
+        "mgs.effects.gpu.kind.7": 240
+      },
+      "captures": [
+        {
+          "path": "data/native/adapters-final-snow/gpu/frame-2100-present-1-ordinary-scanout.ppm",
+          "sha256": "943ebec48759902f9ee3606ac0fd1f11806ea4734ac217be17777e599b89ea1b",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "path": "data/native/adapters-final-snow/gpu/frame-2160-present-2-ordinary-scanout.ppm",
+          "sha256": "885dbb8df93bd9df9cc0d71b7c2991b98e8a67828b5d3aa092501908f246526b",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "scope": "Short stationary checkpoint execution; only submitted effect kinds count as exercised."
+    },
+    {
+      "name": "mirror_stage_inactive",
+      "result": {
+        "path": "data/native/adapters-final-mirror/result.json",
+        "sha256": "e4c20454e91470c30d71a62a949169524cab72a3bce97422dda3bcccdc3fb83a"
+      },
+      "metrics": {
+        "path": "data/native/adapters-final-mirror/metrics.json",
+        "sha256": "7cfdfe1edf46607e6af6266717ab51ec1d71ee96a863c5be54abe17a8467db0e"
+      },
+      "runtime_sha256": "d4292048cfd7e075e3126cb4076b26351a30ef88da5240b4eaa2ca6eccddc652",
+      "frames": 120,
+      "game_ticks": {
+        "initial": 1305,
+        "final": 1365,
+        "delta": 60
+      },
+      "stage": "s07c",
+      "renderer_downgrades": 0,
+      "game_errors": [],
+      "interpreter_counters": {},
+      "observed_effect_counters": {
+        "mgs.effects.gpu.kind.26": 116,
+        "mgs.effects.gpu.kind.7": 59
+      },
+      "captures": [
+        {
+          "path": "data/native/adapters-final-mirror/gpu/frame-2160-present-1-ordinary-scanout.ppm",
+          "sha256": "2647b586d67f45faea54ab486bfa8fd598e44ef4f7bc53db7a0c3cf2599e7d08",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "path": "data/native/adapters-final-mirror/gpu/frame-2220-present-2-ordinary-scanout.ppm",
+          "sha256": "ae1351446173e8e6f8612cf40998c62ee9fe747d9be3e7ab4567f64c47b4e9e4",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "scope": "Short stationary checkpoint execution; only submitted effect kinds count as exercised."
+    },
+    {
+      "name": "panorama",
+      "result": {
+        "path": "data/native/adapters-panorama-verified/result.json",
+        "sha256": "150591237f877305a427ce9b26092342a683837caac5e934c09b7b7a0e88f1db"
+      },
+      "metrics": {
+        "path": "data/native/adapters-panorama-verified/metrics.json",
+        "sha256": "f71d2ae2d47c22a8402876672ee3dc253c96541f829dccfa666b947a85bd3cfa"
+      },
+      "runtime_sha256": "61cf8ec02e427acf3053508ac1e616ac75e1063213a8233428d72545e0226703",
+      "frames": 120,
+      "game_ticks": {
+        "initial": 1260,
+        "final": 1320,
+        "delta": 60
+      },
+      "stage": "s01a",
+      "renderer_downgrades": 0,
+      "game_errors": [],
+      "interpreter_counters": {},
+      "observed_effect_counters": {
+        "mgs.effects.gpu.kind.2": 382,
+        "mgs.effects.gpu.kind.26": 59,
+        "mgs.effects.gpu.kind.3": 180,
+        "mgs.effects.gpu.kind.30": 14782,
+        "mgs.effects.gpu.kind.37": 5192,
+        "mgs.effects.gpu.kind.7": 180
+      },
+      "captures": [
+        {
+          "path": "data/native/adapters-panorama-verified/gpu/frame-2160-present-1-ordinary-scanout.ppm",
+          "sha256": "ec28c699ff9832c52c14841c28025e1bf9a335cfd05cd2c7743d868d53bf495b",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "path": "data/native/adapters-panorama-verified/gpu/frame-2220-present-2-ordinary-scanout.ppm",
+          "sha256": "1b074e8bde8a9e560d50abfac125a8149732f39fc9d5ce9d338cb5b3b74bcc33",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "scope": "Short stationary checkpoint execution; only submitted effect kinds count as exercised."
+    },
+    {
+      "name": "disc2_s14e",
+      "result": {
+        "path": "data/native/adapters-final-disc2/result.json",
+        "sha256": "8918090b3a95021ca22fe1ac914e93115f173a1dcf17ffd90591d9e9ee95b107"
+      },
+      "metrics": {
+        "path": "data/native/adapters-final-disc2/metrics.json",
+        "sha256": "b37eb14eb83e98279af664c00847ff8662f2f4381a128f6f70fa4e52a2d007a9"
+      },
+      "runtime_sha256": "d4292048cfd7e075e3126cb4076b26351a30ef88da5240b4eaa2ca6eccddc652",
+      "frames": 120,
+      "game_ticks": {
+        "initial": 1295,
+        "final": 1355,
+        "delta": 60
+      },
+      "stage": "s14e",
+      "renderer_downgrades": 0,
+      "game_errors": [],
+      "interpreter_counters": {},
+      "observed_effect_counters": {
+        "mgs.effects.gpu.kind.26": 58
+      },
+      "captures": [
+        {
+          "path": "data/native/adapters-final-disc2/gpu/frame-2160-present-1-ordinary-scanout.ppm",
+          "sha256": "1c81d2ba6dfdac161d764b66cedd43c6c2765f7ac6e073b7e8c29f9676ca0014",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "path": "data/native/adapters-final-disc2/gpu/frame-2220-present-2-ordinary-scanout.ppm",
+          "sha256": "9070f877abde698567d5c64f94f7bfbfa6942425031575680bfa50c084d0ea72",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "scope": "Short stationary checkpoint execution; only submitted effect kinds count as exercised."
+    },
+    {
+      "name": "underwater_intro",
+      "result": {
+        "path": "data/native/adapters-final-intro/result.json",
+        "sha256": "3099584cb09019e15f7964fffa997de78dc823718254bc893d2832b99a68ac8a"
+      },
+      "metrics": {
+        "path": "data/native/adapters-final-intro/metrics.json",
+        "sha256": "9fae5d44af86ecdcb46fb2928d648a953bfbd94a7e26db1e9d191ff28ca60770"
+      },
+      "runtime_sha256": "61cf8ec02e427acf3053508ac1e616ac75e1063213a8233428d72545e0226703",
+      "frames": 600,
+      "game_ticks": {
+        "initial": 4762,
+        "final": 5062,
+        "delta": 300
+      },
+      "stage": "opening",
+      "renderer_downgrades": 0,
+      "game_errors": [],
+      "interpreter_counters": {},
+      "observed_effect_counters": {
+        "mgs.effects.gpu.kind.15": 28026,
+        "mgs.effects.gpu.kind.25": 9614,
+        "mgs.screen_effect.pass.fade_black": 6,
+        "mgs.screen_effect.pass.night_vision": 32,
+        "mgs.screen_effect.pass.water_view": 300,
+        "mgs.screen_effect.pass.zoom_blur": 261
+      },
+      "captures": [
+        {
+          "path": "data/native/adapters-final-intro/gpu/frame-9360-present-1-ordinary-scanout.ppm",
+          "sha256": "2896d05fca07edbef57eb16fe65de98a7ed77eff801d18ff9fc422c59b5af96c",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "path": "data/native/adapters-final-intro/gpu/frame-9540-present-2-ordinary-scanout.ppm",
+          "sha256": "37c3b5f70ede2b2b5a4adc01844cce1accb1a0d087334ee6ac9765bf1af8f971",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "path": "data/native/adapters-final-intro/gpu/frame-9720-present-3-ordinary-scanout.ppm",
+          "sha256": "ea6be172cb2ec67680f81787719d287bf78b106e0e476685fd26b4817b577e5b",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "scope": "Short stationary checkpoint execution; only submitted effect kinds count as exercised."
+    },
+    {
+      "name": "red_focus_intro",
+      "result": {
+        "path": "data/native/adapters-final-red-focus/result.json",
+        "sha256": "ec750f1b28ddc6b521e4e24eb9eccb9630fc586f348e174cf2061e5dae4bae75"
+      },
+      "metrics": {
+        "path": "data/native/adapters-final-red-focus/metrics.json",
+        "sha256": "928758a610a29ee3ea088c6f2a982a88a5ac8055e433dfc69f78cade813e90de"
+      },
+      "runtime_sha256": "d9f16dda8adecb91019bf7972633b4bb3e054958ffbe9b2dba97eb0faf1dff7a",
+      "frames": 600,
+      "game_ticks": {
+        "initial": 4483,
+        "final": 4784,
+        "delta": 301
+      },
+      "stage": "opening",
+      "renderer_downgrades": 0,
+      "game_errors": [],
+      "interpreter_counters": {},
+      "observed_effect_counters": {
+        "mgs.effects.gpu.kind.15": 8859,
+        "mgs.effects.gpu.kind.25": 2613,
+        "mgs.screen_effect.pass.cinematic_red_tint": 118,
+        "mgs.screen_effect.pass.fade_black": 30,
+        "mgs.screen_effect.pass.focus": 121,
+        "mgs.screen_effect.pass.night_vision": 136,
+        "mgs.screen_effect.pass.water_view": 178,
+        "mgs.screen_effect.pass.zoom_blur": 39
+      },
+      "captures": [
+        {
+          "path": "data/native/adapters-final-red-focus/gpu/frame-10080-present-3-ordinary-scanout.ppm",
+          "sha256": "a1a3fba904c5047b29011d5d3fe7236cb4553a8cf0de2aff2a81afdb7a8dfb92",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "path": "data/native/adapters-final-red-focus/gpu/frame-9720-present-1-ordinary-scanout.ppm",
+          "sha256": "749530edf81f6355e01bf5dea385e5dd1bdcea3d34d079a429c654607e72abdf",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "path": "data/native/adapters-final-red-focus/gpu/frame-9900-present-2-ordinary-scanout.ppm",
+          "sha256": "3c8c9437603afb8c1b7063a95447a2c5bfbed1866d5bed8e47114779b7d1d615",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "scope": "Short stationary checkpoint execution; only submitted effect kinds count as exercised."
+    }
+  ],
+  "protected_saves": [
+    {
+      "path": "savestates/quick_slot_0.ps1s",
+      "before_sha256": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+      "after_sha256": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953"
+    },
+    {
+      "path": "data/memory_cards/card1.mcd",
+      "before_sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0",
+      "after_sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+    },
+    {
+      "path": "data/memory_cards/card2.mcd",
+      "before_sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0",
+      "after_sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+    }
+  ],
+  "fixed_during_real_validation": [
+    "Snow keeps original GP0 opcode so recorder coverage remains exact.",
+    "Analytic UI ribbons accept fractional affine coordinates without invented projection.",
+    "SORTONLY panorama tiles explicitly use Screen2D; formerly their native-3D fallback triggered full-frame bake downgrades.",
+    "Snow profile changed from purple/star-like particles to soft cool-white flakes.",
+    "Photo shutter latch is queued with matching native snapshot so presentation coalescing cannot silently replace it with a later frame."
+  ],
+  "limits": [
+    "Adapter completion does not certify every boss phase, every equipment combination or a full playthrough of either disc.",
+    "The mirror-stage checkpoint has zero active reflected objects; it is a scene smoke test, not visual mirror validation.",
+    "Full-revision hashes are stored per capture; some representative runs precede the final photo queue fix, which has dedicated GPU regression coverage.",
+    "Photo queue is bounded at eight unpresented shutter events; overflow is explicitly counted.",
+    "Unknown identities fail closed to their original presentation rather than receiving a guessed material.",
+    "Additional shadow maps, motion vectors and 2x interpolation are outside the delivered adapters; original bitmaps/video retain their source detail."
+  ],
+  "audits": {
+    "animation_signatures": "77 full signatures, generated outputs current",
+    "adapter_command": "python3 scripts/mgs_effects_catalog.py --check --require-adapters",
+    "adapter_exit_code": 0,
+    "full_scene_command": "python3 scripts/mgs_effects_catalog.py --check --require-complete",
+    "full_scene_exit_code": 2,
+    "full_scene_result": "Expected failure: scene coverage is explicitly incomplete",
+    "whitespace_check": "git diff --check passed"
+  }
+}

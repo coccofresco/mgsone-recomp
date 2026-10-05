@@ -1,0 +1,342 @@
+{
+  "format": "mgs-tas-route-1",
+  "source_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757",
+  "source_url": "https://tasvideos.org/3462S",
+  "description": "Follow published demolition positions, gate C4 equipment, actual placements and original script wall flags before entering Ocelot.",
+  "reference_evidence": {
+    "path": ".local/tas-reference/reference-ticks-prefix.tsv",
+    "sha256": "ccf28bdd27a67228093803b257fe4dc0e22271aafb1ca20cc937bd0094129574",
+    "frames": [
+      32934,
+      33495
+    ]
+  },
+  "steps": [
+    {
+      "name": "restore-original-c4-equipment",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "weapon": 6
+      },
+      "action": {
+        "source_frames": [
+          33015,
+          33016
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 8
+      },
+      "max_frames": 200,
+      "attempts": 1
+    },
+    {
+      "name": "source-position-32934",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "x": {
+          "min": -8542,
+          "max": -8362
+        },
+        "z": {
+          "min": 10688,
+          "max": 10868
+        }
+      },
+      "action": {
+        "move_to": {
+          "x": -8452,
+          "z": 10778
+        }
+      },
+      "max_frames": 420
+    },
+    {
+      "name": "original-second-c4-placement",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "gcl_1180002e": 2
+      },
+      "action": {
+        "source_frames": [
+          32935,
+          32936
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 35
+      },
+      "max_frames": 300,
+      "attempts": 2
+    },
+    {
+      "name": "source-position-33013",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "x": {
+          "min": -8542,
+          "max": -8362
+        },
+        "z": {
+          "min": 13472,
+          "max": 13652
+        }
+      },
+      "action": {
+        "move_to": {
+          "x": -8452,
+          "z": 13562
+        }
+      },
+      "max_frames": 420
+    },
+    {
+      "name": "original-second-wall-detonation",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "gcl_1403004e": 1
+      },
+      "action": {
+        "source_frames": [
+          33013,
+          33014
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 30
+      },
+      "max_frames": 300,
+      "attempts": 3
+    },
+    {
+      "name": "source-position-33088",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "x": {
+          "min": -6655,
+          "max": -6475
+        },
+        "z": {
+          "min": 11862,
+          "max": 12042
+        }
+      },
+      "action": {
+        "move_to": {
+          "x": -6565,
+          "z": 11952
+        }
+      },
+      "max_frames": 420
+    },
+    {
+      "name": "source-position-33166",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "x": {
+          "min": -2165,
+          "max": -1985
+        },
+        "z": {
+          "min": 11862,
+          "max": 12042
+        }
+      },
+      "action": {
+        "move_to": {
+          "x": -2075,
+          "z": 11952
+        }
+      },
+      "max_frames": 420
+    },
+    {
+      "name": "original-third-c4-placement",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "gcl_1180002e": 1
+      },
+      "action": {
+        "source_frames": [
+          33166,
+          33167
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 35
+      },
+      "max_frames": 300,
+      "attempts": 2
+    },
+    {
+      "name": "source-position-33238",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "x": {
+          "min": 473,
+          "max": 653
+        },
+        "z": {
+          "min": 11872,
+          "max": 12052
+        }
+      },
+      "action": {
+        "move_to": {
+          "x": 563,
+          "z": 11962
+        }
+      },
+      "max_frames": 420
+    },
+    {
+      "name": "original-third-wall-detonation",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "gcl_1404004e": 1
+      },
+      "action": {
+        "source_frames": [
+          33238,
+          33239
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 30
+      },
+      "max_frames": 300,
+      "attempts": 3
+    },
+    {
+      "name": "original-prepare-socom-for-ocelot",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "weapon": 0,
+        "pause_level": 0
+      },
+      "action": {
+        "source_frames": [
+          33240,
+          33261
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 10
+      },
+      "max_frames": 300,
+      "attempts": 3
+    },
+    {
+      "name": "enter-original-ocelot-trigger",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s04b"
+      },
+      "until": {
+        "story": {
+          "min": 37
+        }
+      },
+      "action": {
+        "move_to": {
+          "x": -500,
+          "z": 10500
+        }
+      },
+      "max_frames": 300
+    },
+    {
+      "name": "skip-original-ocelot-intro",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "story": 38,
+        "game_status": {
+          "mask": 3691511808,
+          "eq": 0
+        },
+        "control": {
+          "ne": 0
+        },
+        "x": -500,
+        "z": 10500
+      },
+      "action": {
+        "source_frames": [
+          33330,
+          33471
+        ],
+        "settle_frames": 10
+      },
+      "attempts": 12,
+      "max_frames": 2200
+    }
+  ]
+}

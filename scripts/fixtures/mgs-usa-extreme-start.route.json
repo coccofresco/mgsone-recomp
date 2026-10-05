@@ -1,0 +1,185 @@
+{
+  "format": "mgs-tas-route-1",
+  "source_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757",
+  "source_url": "https://tasvideos.org/3462S",
+  "description": "USA Extreme startup aligned to the source TAS difficulty and embedded completed memory cards. Menu input edges are armed by the verified USA title actor; guest state is read-only.",
+  "steps": [
+    {
+      "name": "skip-startup-films",
+      "until": {
+        "stage": "title",
+        "title_state": 6
+      },
+      "action": {
+        "source_frames": [
+          456,
+          456
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 120
+      },
+      "attempts": 25,
+      "max_frames": 3600
+    },
+    {
+      "name": "open-main-menu",
+      "when": {
+        "stage": "title",
+        "title_state": 6
+      },
+      "until": {
+        "stage": "title",
+        "title_state": 7
+      },
+      "action": {
+        "source_frames": [
+          829,
+          829
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 120
+      },
+      "max_frames": 2700,
+      "attempts": 20
+    },
+    {
+      "name": "select-new-game",
+      "guard": {
+        "stage": "title",
+        "title_state": 7
+      },
+      "until": {
+        "title_selection": 0
+      },
+      "action": {
+        "source_frames": [
+          961,
+          961
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 24
+      },
+      "attempts": 6,
+      "max_frames": 240
+    },
+    {
+      "name": "open-difficulty",
+      "when": {
+        "stage": "title",
+        "title_state": 7,
+        "title_selection": 0
+      },
+      "until": {
+        "stage": "title",
+        "title_state": 21
+      },
+      "action": {
+        "source_frames": [
+          963,
+          963
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 30
+      },
+      "max_frames": 360
+    },
+    {
+      "name": "select-extreme",
+      "guard": {
+        "stage": "title",
+        "title_state": 21
+      },
+      "when": {
+        "title_level": {
+          "max": 2
+        }
+      },
+      "until": {
+        "title_level": 3
+      },
+      "action": {
+        "source_frames": [
+          965,
+          965
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 14
+      },
+      "attempts": 4,
+      "max_frames": 240
+    },
+    {
+      "name": "confirm-new-game",
+      "when": {
+        "stage": "title",
+        "title_state": 21,
+        "title_level": 3
+      },
+      "until": {
+        "stage": "d00a",
+        "difficulty": 3
+      },
+      "action": {
+        "source_frames": [
+          971,
+          971
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 30
+      },
+      "max_frames": 1800
+    },
+    {
+      "name": "opening-cutscene",
+      "when": {
+        "stage": "d00a"
+      },
+      "until": {
+        "stage": "s00a",
+        "difficulty": 3
+      },
+      "action": {
+        "source_frames": [
+          973,
+          978
+        ],
+        "settle_frames": 24
+      },
+      "attempts": 50,
+      "max_frames": 2400
+    },
+    {
+      "name": "opening-codec",
+      "guard": {
+        "stage": "s00a",
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        }
+      },
+      "when": {
+        "pause_level": 1
+      },
+      "until": {
+        "pause_level": 0,
+        "game_status": {
+          "mask": 2148007936,
+          "eq": 0
+        },
+        "control": {
+          "ne": 0
+        }
+      },
+      "action": {
+        "source_frames": [
+          1561,
+          1561
+        ],
+        "minimum_hold": 6,
+        "settle_frames": 14
+      },
+      "attempts": 150,
+      "max_frames": 4800
+    }
+  ]
+}

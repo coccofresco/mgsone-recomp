@@ -1,0 +1,42 @@
+{
+  "format": "mgs-tas-route-1",
+  "name": "s15a-visible-grenade",
+  "source": "Input-only branch from first grenade recovery. Turn toward screen top so the explosion stays in the fixed camera, rather than at its bottom edge.",
+  "steps": [
+    {
+      "name": "throw-into-camera",
+      "until": {
+        "gcl_11800026": 33
+      },
+      "guard": {
+        "stage": "s15a",
+        "weapon": 2,
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "action": {
+        "sequence": "wait:12,up:12,wait:12,square:30,wait:30"
+      },
+      "max_frames": 240
+    },
+    {
+      "name": "observe-blast-recovery",
+      "until": {
+        "pause_level": 0,
+        "weapon": 2,
+        "gcl_11800026": 33
+      },
+      "stable_frames": 400,
+      "guard": {
+        "stage": "s15a",
+        "life": {
+          "min": 1
+        },
+        "game_over_timer": 0
+      },
+      "max_frames": 600
+    }
+  ]
+}

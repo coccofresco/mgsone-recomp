@@ -83,6 +83,9 @@ struct HleConfig {
   /// architectural result and delivered callbacks, so r31 is a valid resume
   /// address for a fresh recomp_dispatch after a timeline load.
   std::function<void(recomp_context *, uint32_t)> stateCheckpoint;
+  // Clock rendezvous at a clock query and inside a blocking HLE wait. The
+  // caller cannot save a portable continuation with this HLE stack suspended.
+  std::function<void(recomp_context *)> clockWaitCheckpoint;
 };
 
 /// Configure the HLE layer for the current game.  Call once from main_host

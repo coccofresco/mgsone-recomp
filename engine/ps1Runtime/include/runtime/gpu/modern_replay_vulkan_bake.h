@@ -329,14 +329,15 @@ struct VulkanReplayBakedBatch {
   // indices have already been expanded, so vkCmdDraw can retain source order
   // without an index buffer or topology reconstruction.
   std::vector<vulkan_abi::Vertex> vertices;
+  std::vector<OriginalPointLight> mgsPointLights;
   std::vector<ReplayVisibilityAuditOwner> visibilityOwners;
   // Native uploads and accepted mutation runs use the same flat R16 arena and
   // therefore remain owned after the source execution plan is released.
   std::vector<uint16_t> nativeUploadPixels;
 
   bool empty() const noexcept {
-    return commands.empty() && vertices.empty() && visibilityOwners.empty() &&
-           nativeUploadPixels.empty();
+    return commands.empty() && vertices.empty() && mgsPointLights.empty() &&
+           visibilityOwners.empty() && nativeUploadPixels.empty();
   }
 };
 

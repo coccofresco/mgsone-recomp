@@ -1,0 +1,49 @@
+{
+  "format": "mgs-situation-1",
+  "name": "s14e-return-s13a",
+  "source": {
+    "stage": "s14e",
+    "script": "ea54.g",
+    "script_sha256": "7f1c2710f83bd3da490462e1757b9e914c8b95c15eb9787f206e344c7a406e37",
+    "load_procedure": "e0ec",
+    "load_byte_offset": 610,
+    "trigger_procedure": "61d8",
+    "trigger_byte_offset": 10059,
+    "hazard": "933d.h",
+    "hazard_sha256": "99322dd9c9464d914b40a3b94af98558bfc837aeea9539ddc63d09673a8a5d37",
+    "trigger": "move_to_s13a",
+    "trigger_bounds_xzy": [-2000, 14500, 0, 2000, 16000, 3000]
+  },
+  "requires": {
+    "stage": "s14e", "story": 204, "disc": 2, "difficulty": 1,
+    "pause_level": 0, "load_request": 0,
+    "x": {"min": -500, "max": 500}, "z": {"min": 13000, "max": 14000},
+    "life": {"min": 1}, "game_over_timer": 0
+  },
+  "preserve": ["story", "difficulty", "disc", "life", "max_life", "weapons", "items", "game_over_timer"],
+  "compare": ["stage", "story", "difficulty", "disc", "life", "max_life", "weapon", "item", "weapons", "items", "x", "y", "z", "pause_level", "game_over_timer"],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "trigger-return-door",
+        "guard": {"life": {"min": 1}, "game_over_timer": 0, "disc": 2},
+        "until": {"load_request": {"ne": 0}},
+        "action": {"move_to": {"x": 0, "z": 15500}},
+        "max_frames": 900
+      },
+      {
+        "name": "next-room-control",
+        "guard": {"life": {"min": 1}, "game_over_timer": 0, "disc": 2},
+        "until": {
+          "stage": "s13a", "story": 204, "pause_level": 0,
+          "control": {"ne": 0}, "load_request": 0,
+          "game_status": {"mask": 3691511808, "eq": 0},
+          "player_status": {"mask": 536870912, "eq": 0}
+        },
+        "stable_frames": 30,
+        "max_frames": 3000
+      }
+    ]
+  }
+}

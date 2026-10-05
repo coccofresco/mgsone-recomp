@@ -466,6 +466,8 @@ enum class ReplayDrawFlag : uint32_t {
   ScreenTexture = 1u << 7,
   WaterRefraction = 1u << 8,
   ScreenEffect = 1u << 9,
+  // Presenter-only RGB8/float modulation; native texture/STP stays untouched.
+  ModernColor = 1u << 10,
 };
 
 constexpr uint32_t replayDrawFlagBit(ReplayDrawFlag flag) {
@@ -484,6 +486,23 @@ struct OriginalTexture {
   std::array<uint32_t, 8> palette{}; // 16 live palette words, two per uint
   bool operator==(const OriginalTexture &) const = default;
 };
+// Unlit source normals and live lighting, never precomputed vertex RGB.
+// Normals are in world space, including the rigid parent at a KMD seam.
+// Light vector length retains the game's attenuation; only normals normalize.
+struct OriginalPointLight {
+  std::array<float, 4> positionRadius{};
+  std::array<float, 4> colorExtent{}; // RGB255 and authored activation extent
+  bool operator==(const OriginalPointLight &) const = default;
+};
+struct OriginalMeshLighting {
+  std::array<std::array<float, 4>, 4> normals{};
+  std::array<std::array<float, 4>, 3> directions{};
+  std::array<std::array<float, 4>, 3> colors{};
+  std::array<float, 4> ambient{}; // RGB255, w=enabled
+  std::array<std::array<float, 4>, 4> positions{};
+  std::vector<OriginalPointLight> pointLights;
+  bool operator==(const OriginalMeshLighting &) const = default;
+};
 struct OriginalMeshGeometry {
   uint32_t textureId = ~0u; // live logical KMD material ID, for PCX provenance
   bool sourceRecovery =
@@ -493,6 +512,7 @@ struct OriginalMeshGeometry {
   bool runtimeTexture =
       false; // verified actor-owned surface, composed in the mutable atlas
   bool thermalEmission = false; // live STATE_THERMG plus DG_FLAG_IRTEXTURE
+  OriginalMeshLighting lighting;
   std::array<std::array<float, 4>, 4> weights{
       {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}};
   std::array<uint32_t, 4> pointBytes{};
@@ -510,13 +530,36 @@ enum class MgsScreenEffectKind : uint32_t {
   FadeBlack,
   FadeWhite,
   TemporalBlur,
-  GasHaze
+  GasHaze,
+  CinematicRedTint,
+  ZoomBlur,
+  StunFlash,
+  AlertTint,
+  Focus,
+  CodecScreen
 };
 struct MgsScreenEffect {
   MgsScreenEffectKind kind = MgsScreenEffectKind::None;
   uint32_t actor = 0, part = 0, parts = 1;
   std::array<std::array<float, 4>, 3> parameters{};
   bool operator==(const MgsScreenEffect &) const = default;
+};
+
+// Continuous presentation profiles. Identity and lifetime come from live
+// actors/animation bytecode; these values never alter guest GPU commands.
+enum class MgsSurfaceKind : uint32_t {
+  None, Smoke, Breath, Muzzle, Explosion, Blood, Ring, Glow,
+  Exclamation, Question, Heart, Sleep, Star, Debris, Authored,
+  Bubble, Spark, Electricity, Liquid, Footprint, Glass, Water,
+  Wind, Camo, Environment, Submarine, Shadow, Afterimage, Cloth,
+  Beam, Snow, Droplet, Ripple, Mosaic, SnowStorm, Energy, Mirror, Panorama,
+  RadarJamming, VolumeLight, Monitor, SignalLoss, CodecVideo
+};
+struct MgsSurfaceEffect {
+  MgsSurfaceKind kind = MgsSurfaceKind::None;
+  uint32_t actor = 0;
+  std::array<std::array<float, 4>, 4> parameters{};
+  bool operator==(const MgsSurfaceEffect &) const = default;
 };
 
 struct DrawPacket {
@@ -550,7 +593,9 @@ struct DrawPacket {
   // Live wt_view.c actor identity/phase. Retained across the producer queue;
   // the modern presenter combines its strips into a continuous water pass.
   std::array<uint32_t, 2> waterEffect{};
+  bool furnaceHeat = false; // authenticated furnace owner of wt_view
   MgsScreenEffect screenEffect{};
+  MgsSurfaceEffect surfaceEffect{};
 
   bool operator==(const DrawPacket &) const = default;
 };
@@ -705,6 +750,7 @@ struct FrameLatch {
   bool complete = true;
   ReplayPolicyState policy;
   DisplayLatchState display;
+  uint64_t mgsPhotoCapture = 0;
 
   bool operator==(const FrameLatch &) const = default;
 };

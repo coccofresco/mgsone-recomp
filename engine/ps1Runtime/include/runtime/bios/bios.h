@@ -82,6 +82,9 @@ public:
   bool canSaveNativeThreads() const { return kernelThreads_.canSnapshot(); }
   void restartNativeThreads() { kernelThreads_.restart(pendingKernelThreads_); }
   void setStateCheckpoint(std::function<void(uint32_t)> checkpoint) { stateCheckpoint_ = std::move(checkpoint); }
+  void setClockCheckpoint(std::function<void(uint32_t, bool)> checkpoint) {
+    clockCheckpoint_ = std::move(checkpoint);
+  }
 
   // Hardware attachment (call after construction)
   void setGPU(gpu::GPU *gpu) { gpu_ = gpu; }
@@ -269,6 +272,7 @@ private:
 
   std::queue<std::pair<uint32_t, uint32_t>> cardEvents_;
   std::function<void(uint32_t)> stateCheckpoint_;
+  std::function<void(uint32_t, bool)> clockCheckpoint_;
   KernelThreads::Snapshot pendingKernelThreads_;
   KernelThreads kernelThreads_{ctx_};
   uint32_t kernelHeapNext_ = 0;

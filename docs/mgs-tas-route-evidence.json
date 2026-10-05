@@ -1,0 +1,239 @@
+{
+  "format": "mgs-tas-route-evidence-1",
+  "date": "2026-10-04",
+  "runtime_sha256": "25ec1c914207c87bf9d2bf65e8a4655c5ff7a808b6b3b64320f7145a5d7aa580",
+  "config_sha256": "02fa60159785f07d4ed7e407463c1dea3cd0e09949ffc0e81f316be824c64c4a",
+  "exe_sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32",
+  "source_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757",
+  "difficulty": "Normal (adapted from Extreme reference)",
+  "milestones": [
+    {
+      "path": "data/tas/routes/b1-milestone-01",
+      "recipe": "scripts/fixtures/mgs-usa-b1-ambush.route.json",
+      "recipe_sha256": "afb5d387de9e194cda64e8c7781342aa7ef7b08c3c3361100fd03f1ce2d75670",
+      "result_sha256": "d04aa565147aa94e8a21e78c1ebaa4fa595a366ade9c848724c6139488adb24c",
+      "initial_state": "data/tas/campaign/prison-ambush-meryl-01/states/checkpoint_000000446_vblank_69565.ps1s",
+      "initial_sha256": "c87a5ae8ea48a66b50b8bc9f59d88ba42d821edea6164bbf25ea5e728b0ef312",
+      "terminal_state": "data/tas/routes/b1-milestone-01/session/states/checkpoint_000002539_vblank_72104.ps1s",
+      "terminal_sha256": "298e89792f4cb3faceba6289bf217a42da14e3fbef0e1b08263f0725f7ec57cc",
+      "terminal_vblank": 72104,
+      "final_state": {
+        "stage": "s03d",
+        "player_position": [
+          5138,
+          1016,
+          -866
+        ],
+        "game_status": 273285120,
+        "load_request": 0,
+        "player_status": 0,
+        "alert_mode": 0,
+        "alert_level": 0,
+        "pause_level": 0,
+        "control": 2148966396,
+        "difficulty": 1,
+        "disc": 1,
+        "life": 256,
+        "max_life": 256,
+        "weapon": 0,
+        "item": 13,
+        "stance": 0,
+        "weapons": [
+          12,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "items": [
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "control_position": [
+          5138,
+          1016,
+          -866
+        ],
+        "story": 29,
+        "pad_origin": 530,
+        "socom_ammo": 12,
+        "guards_alive": 0,
+        "guards_in_room": 0,
+        "x": 5138,
+        "y": 1016,
+        "z": -866,
+        "title_state": null,
+        "title_selection": null,
+        "title_level": null
+      },
+      "checks": {
+        "session": {
+          "result_sha256": "d339ea673a5d639d8cad46ef3932f7e0185d1b5f6d2a316cdea6597b3c772247",
+          "status": "complete",
+          "completed_frames": 2539,
+          "elapsed_seconds": 28.613,
+          "interpreter_counters": {},
+          "game_errors": []
+        },
+        "verified-replay": {
+          "result_sha256": "50f59e86aac3213c2f02a5a7386c19882e536b73d118b9d09c2f0ca68cb1b0a9",
+          "status": "complete",
+          "completed_frames": 2539,
+          "elapsed_seconds": 28.97,
+          "interpreter_counters": {},
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "path": "data/tas/routes/b1-post-milestone-01",
+      "recipe": "scripts/fixtures/mgs-usa-b1-post-ambush.route.json",
+      "recipe_sha256": "504c417b52c1377041ee3dbe0839da8d109ed95c9888b66feb9f2a3b9ac83b76",
+      "result_sha256": "08169dc3dbc24ffcabff5762578d8097a281d4abd092f834ee25bf4c2b84f9ab",
+      "initial_state": "data/tas/routes/b1-milestone-01/session/states/checkpoint_000002539_vblank_72104.ps1s",
+      "initial_sha256": "298e89792f4cb3faceba6289bf217a42da14e3fbef0e1b08263f0725f7ec57cc",
+      "terminal_state": "data/tas/routes/b1-post-milestone-01/session/states/checkpoint_000001216_vblank_73320.ps1s",
+      "terminal_sha256": "a05cfcd6787705fee031a3f9fc9312dc9fc21a53b772f57f1ffb4b8458f90ba3",
+      "terminal_vblank": 73320,
+      "final_state": {
+        "stage": "s03a",
+        "player_position": [
+          3000,
+          1016,
+          500
+        ],
+        "game_status": 0,
+        "load_request": 0,
+        "player_status": 0,
+        "alert_mode": 0,
+        "alert_level": 0,
+        "pause_level": 0,
+        "control": 2148935376,
+        "difficulty": 1,
+        "disc": 1,
+        "life": 256,
+        "max_life": 256,
+        "weapon": 0,
+        "item": 13,
+        "stance": 0,
+        "weapons": [
+          12,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "items": [
+          1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "control_position": [
+          3000,
+          1016,
+          500
+        ],
+        "story": 36,
+        "pad_origin": 0,
+        "socom_ammo": 12,
+        "guards_alive": null,
+        "guards_in_room": null,
+        "x": 3000,
+        "y": 1016,
+        "z": 500,
+        "title_state": null,
+        "title_selection": null,
+        "title_level": null
+      },
+      "checks": {
+        "session": {
+          "result_sha256": "9a0f29ff5c174a46bd37e7f03c79d6ade1b75d010c61d0778e40ddd83908456e",
+          "status": "complete",
+          "completed_frames": 1216,
+          "elapsed_seconds": 10.531,
+          "interpreter_counters": {},
+          "game_errors": []
+        },
+        "verified-replay": {
+          "result_sha256": "70681ec430523146e8ad1f8b4113f0c776c1ae7c66303b6682d6d6b3cb1bfbf2",
+          "status": "complete",
+          "completed_frames": 1216,
+          "elapsed_seconds": 10.58,
+          "interpreter_counters": {},
+          "game_errors": []
+        }
+      }
+    }
+  ],
+  "retained_failures": [
+    {
+      "path": "data/tas/routes/b1-live-03",
+      "kind": "adaptive-ammunition-abort",
+      "resolution": "Collect original dropped ammunition through movement input; integrated into the consolidated recipe."
+    },
+    {
+      "path": "data/tas/routes/b1-post-01",
+      "kind": "recipe-stage-guard",
+      "resolution": "Allow the original s03d to s03b transition."
+    },
+    {
+      "path": "data/tas/routes/b1-post-02",
+      "kind": "recipe-goal-timeout",
+      "resolution": "Final controllable stage is s03a, not s03d; corrected and replayed from the victory checkpoint."
+    }
+  ],
+  "coverage_limit": "B1 ambush victory and post-fight player control. Ocelot and disc change are not validated. Headless diagnostic rendering; these recordings do not certify Vulkan pixels."
+}

@@ -11,11 +11,13 @@
 #include "runtime/psyq/psyq_state.h"
 #include "runtime/timers/timers.h"
 #include <array>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
+#include <thread>
 #include <vector>
 
 using namespace ps1;
@@ -108,6 +110,52 @@ TEST_F(PsyqHleTest, ResetGraphIsNop) {
 }
 
 // VSync
+
+TEST_F(PsyqHleTest, TasCanDeliverClockInsideBlockingWaitWithoutTimeout) {
+  unsigned boundaries = 0;
+  HleConfig cfg;
+  cfg.clockWaitCheckpoint = [&](recomp_context *waiting) {
+    EXPECT_EQ(waiting, &ctx);
+    ++boundaries;
+    psyq_state().vsyncCounter.fetch_add(1);
+  };
+  configure(cfg);
+  ctx.r[A0] = 3;
+  hle_VSync(&ctx);
+  EXPECT_EQ(boundaries, 3u);
+  EXPECT_EQ(ctx.r[V0], 3u * 263u);
+}
+
+TEST_F(PsyqHleTest, TasClockQueryCanRendezvousWithoutForcingAnEdge) {
+  unsigned boundaries = 0;
+  HleConfig cfg;
+  cfg.clockWaitCheckpoint = [&](recomp_context *) { ++boundaries; };
+  configure(cfg);
+  psyq_state().vsyncCounter = 17;
+  ctx.r[A0] = uint32_t(-1);
+  hle_VSync(&ctx);
+  EXPECT_EQ(boundaries, 1u);
+  EXPECT_EQ(ctx.r[V0], 17u);
+}
+
+TEST_F(PsyqHleTest, TasPauseDoesNotExpireMultiVBlankWait) {
+  unsigned boundaries = 0;
+  HleConfig cfg;
+  cfg.clockWaitCheckpoint = [&](recomp_context *) {
+    ++boundaries;
+    if (boundaries == 1)
+      return; // entry query, before the blocking wait
+    if (boundaries == 2)
+      std::this_thread::sleep_for(std::chrono::milliseconds(1100));
+    psyq_state().vsyncCounter.fetch_add(1);
+  };
+  configure(cfg);
+  ctx.r[A0] = 2;
+  hle_VSync(&ctx);
+  EXPECT_EQ(boundaries, 3u);
+  EXPECT_EQ(psyq_state().vsyncCounter.load(), 2u);
+  EXPECT_EQ(ctx.r[V0], 2u * 263u);
+}
 
 TEST_F(PsyqHleTest, VSyncWaitsOneFrame) {
     ctx.r[A0] = 0;
@@ -440,7 +488,9 @@ TEST_F(PsyqHleTest, DrawOTagPresentationObserverSharesTheWholeBatch) {
   mem.write32(0x100c, 0xffffff);
   ctx.r[A0] = 0x80001000;
   hle_DrawOTag(&ctx);
-  EXPECT_EQ(events, (std::vector<uint32_t>{1, 2, 0x1000, 0x100c, 5}));
+  // Source-mesh recovery observes primitive nodes too, not just empty OT
+  // anchors. All callbacks must remain enclosed by the same GPU batch.
+  EXPECT_EQ(events, (std::vector<uint32_t>{1, 2, 0x1000, 0x1004, 0x100c, 5}));
   EXPECT_EQ(gp0Words, (std::vector<uint32_t>{0xe1000400}));
 }
 

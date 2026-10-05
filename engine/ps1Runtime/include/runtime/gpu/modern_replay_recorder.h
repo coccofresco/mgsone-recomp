@@ -114,6 +114,9 @@ public:
   NativeReadDependency prepareNativeRectRead(NativeRect source,
                                              std::span<const Color16> nativeVram);
   void recordDraw(DrawPacket packet, std::span<const Color16> nativeVram);
+  // One original UI line/polyline command, represented by continuous ribbons.
+  // Extra sequence slots belong to presentation; GP0 coverage is counted once.
+  void recordScreenLineGroup(std::vector<DrawPacket> packets);
   // Host-owned source geometry has its own sequence slot, but must not alter
   // observed/required/recorded GP0 coverage or the authoritative native raster.
   void recordPresentationDraw(DrawPacket packet,

@@ -1,0 +1,347 @@
+{
+  "schema": 1,
+  "date": "2026-10-04",
+  "scope": "Presentation refinement following user review of matched intro captures; no full-campaign visual certification.",
+  "previous_evidence": "docs/mgs-effects-adapter-evidence.json",
+  "changes": [
+    "Underwater flow amplitude divided by ten, maximum displacement less than 0.7 native pixel. No caustic or additive veil; stronger shadow contrast and absorption.",
+    "Removed UV-space caustics from submarine material.",
+    "Bubble soft intersections honor signed DG_PRIM.raise from authenticated allocation; geometry and native simulation unchanged.",
+    "DMO red/green masks use a 320x112 camera signal from modern RGB8 attachment, CRT scan lines, guest-timed grain and broad bloom. Gameplay optics stay distinct.",
+    "Snow unchanged; approved comparison reused from previous build."
+  ],
+  "build": {
+    "runtime": {
+      "path": "build/ps1Runtime/ps1Runtime",
+      "sha256": "718f8958311e3c00cc7fac8dc25fe4c715df00a3330b7836538bf44b8c7d8324",
+      "bytes": 342685920
+    },
+    "tests": {
+      "path": "build/ps1Test/ps1Runtime_tests",
+      "sha256": "ef5cd28d816825d7247beec32fe85c014d484c64da52c792a612935130adfbba",
+      "bytes": 15253904
+    },
+    "log": {
+      "path": ".local/effects-refined-final-build.log",
+      "sha256": "dbeb3259d0a19b807186cd77455eb65277ae070704be00c80d118d2fd228f83b",
+      "bytes": 4098
+    },
+    "spirv": [
+      {
+        "path": "build/ps1Runtime/shaders/crash3_semi_textured.frag.spv",
+        "sha256": "80523433a104c63fe16ba34ba40b196686c2925a08a21d8cd005de7763a82d75",
+        "bytes": 6516
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_semi_untextured.frag.spv",
+        "sha256": "86b3d895a31caedc3d8a5792204570ad080e94e9db0116be7829359df1eda8f7",
+        "bytes": 2132
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar.vert.spv",
+        "sha256": "fc3e657161228d4c4727f9e7321de3616d15d29d2119ba23cdb30538665a0f28",
+        "bytes": 3364
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_midpoint.comp.spv",
+        "sha256": "057c63e6f77128188fc31315e7c7d85d2ce784156e155493f36848324e2fd24e",
+        "bytes": 5140
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_midpoint_fp32.comp.spv",
+        "sha256": "4c89786f7b30d8e36934e11f9524830cf0a8fd9617adfb98a66954f7730d3db6",
+        "bytes": 4764
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_model_pulled.vert.spv",
+        "sha256": "869ccb090b473ce142019fb3db8745f180791a97385850c2c69b202bca182363",
+        "bytes": 8684
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_opaque.frag.spv",
+        "sha256": "df5d5014a3e68b395e967386392e8886bf3ecb6d1004ad18e38b2942dbe762c7",
+        "bytes": 5692
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_pulled.vert.spv",
+        "sha256": "1797000ac54cb5a2b5909e71eb753513efbdbba7a2287ce6fa0b5d50eecdb9c9",
+        "bytes": 5044
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_pulled_interpolated.vert.spv",
+        "sha256": "f490b4fe3766b3ff46fd2d0ce9ed834ed839b81fb774cd7137c31597ae22119a",
+        "bytes": 6420
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_raw_pulled.vert.spv",
+        "sha256": "2a90c29328b2bc594135bbd90d503601d92d0023062758b9cdd32ea4f5de41b4",
+        "bytes": 36296
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_interlock.frag.spv",
+        "sha256": "184b23ff49259ab02c8b28faaca8778ebf0a7b462a6030b11b5ca9211ea271ae",
+        "bytes": 7504
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_textured.frag.spv",
+        "sha256": "2e62e333ae1b835e5395963f0d5ada82e4339fe5c3bb3155dbc85ecbadba6cdb",
+        "bytes": 6384
+      },
+      {
+        "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_untextured.frag.spv",
+        "sha256": "a164427920290aa8f0159c18960d09d5416d2db27e44fdb667dc3aaa8a44e794",
+        "bytes": 1928
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_fullscreen.vert.spv",
+        "sha256": "b07e8466fb11e9dc18c71f0839d211f30bf5a12d6973d79b4f0b864cc700bf3d",
+        "bytes": 1104
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_native.frag.spv",
+        "sha256": "66a0ec8e54a941db47279aa4050a03c19e9740af8c5f389762a48383ca47d6e6",
+        "bytes": 4300
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_replay.frag.spv",
+        "sha256": "582f2958d5a1ad31cb4d411d9aa1110be14e8001db87c4117e40e159d5001b41",
+        "bytes": 2888
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_replay_depth.frag.spv",
+        "sha256": "a507331efe81866cb5b6a362d27d3174d6634d12767d6c17499020e7b131abd5",
+        "bytes": 4072
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_replay_temporal.frag.spv",
+        "sha256": "8f46ffe6ac971910d174fdd47e91f2a0496e701a5655e34fc27f8a2baa64041b",
+        "bytes": 4136
+      },
+      {
+        "path": "build/ps1Runtime/shaders/present_rgba.frag.spv",
+        "sha256": "1bdbb621042e22ea51c58b9357d99043b1519510f9e3b15fd7a394fca4e073cf",
+        "bytes": 476
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_copy_scratch.frag.spv",
+        "sha256": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07",
+        "bytes": 2172
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_native_expand.frag.spv",
+        "sha256": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870",
+        "bytes": 1984
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_opaque_textured.frag.spv",
+        "sha256": "1af26eb9c9d21b625ff823cc748a1e0d6cd79944fd437d72a657e9f1baed620c",
+        "bytes": 99152
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_opaque_untextured.frag.spv",
+        "sha256": "619f6185d5ef9b618f2c34db3d4c57a7d34319fe343b47c0e065784379c3bc4e",
+        "bytes": 47916
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_precise.frag.spv",
+        "sha256": "eeccedaf88ef1c1200a10797ce734e3d4f7cc3327800a8cd522591df03276375",
+        "bytes": 140392
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_precise.vert.spv",
+        "sha256": "e4bdb5ad46b968a59cf2ce824aec373dfb2f7b0c3331730c3a0f119dcd6c00b4",
+        "bytes": 12236
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_seed.frag.spv",
+        "sha256": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d",
+        "bytes": 1924
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_semi_textured.frag.spv",
+        "sha256": "81723de0a931694e479a9f0191521a6f77581b8aa674ac148b31fc16c3b6e1fd",
+        "bytes": 100476
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_owner.frag.spv",
+        "sha256": "ff93339ddaa8e3d94047a29f3d4fef5fb720000c7af1074cc6bc3923d7a5d513",
+        "bytes": 9812
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_precise.vert.spv",
+        "sha256": "82b30a4c0b1ea3cb0d4ceda857d29ce076d0fd3c18fe37b61b4d75524990025f",
+        "bytes": 10748
+      },
+      {
+        "path": "build/ps1Runtime/shaders/replay_visibility_stack.frag.spv",
+        "sha256": "534f57f99f8bfccfc95e12ae40318a3bb1ad3ebc0894a97c14a0358ac0e84b62",
+        "bytes": 10664
+      }
+    ]
+  },
+  "sources": [
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_screen_texture.glsl",
+      "sha256": "72cae9bc25f296dfd4b6bdd0c49bfe16435fd20fda88d5638d618f1968c55615",
+      "bytes": 16520
+    },
+    {
+      "path": "engine/ps1Runtime/shaders/games/mgs_surface_effects.glsl",
+      "sha256": "853629cfd14882ae0775418e16662198f5cccb74a2ee02da0e15d3cc682d5bca",
+      "bytes": 13833
+    },
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_surface_effects.cpp",
+      "sha256": "6266d34a924599c8081d955c9b0582d980ff7da753e2677e061f7e42031c527e",
+      "bytes": 42249
+    },
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_screen_effects.cpp",
+      "sha256": "cb33761c83254719b68c09825c38c7c834fc05e60a0a26c920c9cb026bcf8d18",
+      "bytes": 32338
+    }
+  ],
+  "tests_sources": [
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_surface_effects.cpp",
+      "sha256": "2fd50b3e77efd65e8a25f88880d59fcb268d7895d6ec9285f1d02130a03f67d1",
+      "bytes": 15839
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_screen_effects.cpp",
+      "sha256": "a68057d7a95c1799cb66854c42471e8c33a6d6ec561f7290dae30f94f8947340",
+      "bytes": 22409
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_gpu_modern_replay_vulkan_copy.cpp",
+      "sha256": "00d17d9ffd88fce960a51a1b78e9e0f89a9bda612593e3070c0d49fd04b3789c",
+      "bytes": 103276
+    }
+  ],
+  "regression": {
+    "tests": 354,
+    "suites": 28,
+    "failed": 0,
+    "skipped": 0,
+    "log": {
+      "path": ".local/effects-refined-final-tests.log",
+      "sha256": "ff3749599fbcb63ec8bb44a0cf81540d302640d1be206f033f7a64df3a884dbb",
+      "bytes": 104562
+    },
+    "assertions": [
+      "Bubble behind opaque surface is hidden with raise=0 and visible with raise=3000; resetting raise hides it again. Native VRAM is unchanged.",
+      "Signed bubble offset is copied without changing RAM or vertex positions.",
+      "CRT low bandwidth, halo energy outside source, visible scan lines, deterministic rewind/pause, green camera versus gameplay NV, red camera versus gameplay thermal.",
+      "Existing MGS, Vulkan and modern replay suite remains passing."
+    ]
+  },
+  "scenes": [
+    {
+      "name": "underwater",
+      "result": {
+        "path": "data/native/effects-refined-final-underwater/result.json",
+        "sha256": "21004cc164ad2033d516d29aad71225a90351168f3e3138513d092eddcd41d02",
+        "bytes": 2991
+      },
+      "metrics": {
+        "path": "data/native/effects-refined-final-underwater/metrics.json",
+        "sha256": "d717ca43d281ccd2e9309bc1612b0af07b7772b26d4990cc1849c197fa6be419",
+        "bytes": 720892
+      },
+      "vblanks": 600,
+      "status": "complete",
+      "downgrades": 0,
+      "effect_counters": {
+        "mgs.effects.gpu.kind.15": 28026,
+        "mgs.effects.gpu.kind.25": 9614,
+        "mgs.screen_effect.pass.fade_black": 6,
+        "mgs.screen_effect.pass.night_vision": 32,
+        "mgs.screen_effect.pass.water_view": 300,
+        "mgs.screen_effect.pass.zoom_blur": 261
+      }
+    },
+    {
+      "name": "red-focus",
+      "result": {
+        "path": "data/native/effects-refined-final-red-focus/result.json",
+        "sha256": "f109594b37809d9e977ecb28eac52c8e06e5511c82867ecfec361d1c230cdf38",
+        "bytes": 2992
+      },
+      "metrics": {
+        "path": "data/native/effects-refined-final-red-focus/metrics.json",
+        "sha256": "e54b61374b55edffc298fdec00c7444bfee074c4a5c4e428a5566baa7a6e4337",
+        "bytes": 934787
+      },
+      "vblanks": 600,
+      "status": "complete",
+      "downgrades": 0,
+      "effect_counters": {
+        "mgs.effects.gpu.kind.15": 8859,
+        "mgs.effects.gpu.kind.25": 2613,
+        "mgs.screen_effect.pass.cinematic_red_tint": 118,
+        "mgs.screen_effect.pass.fade_black": 30,
+        "mgs.screen_effect.pass.focus": 121,
+        "mgs.screen_effect.pass.night_vision": 136,
+        "mgs.screen_effect.pass.water_view": 178,
+        "mgs.screen_effect.pass.zoom_blur": 39
+      }
+    }
+  ],
+  "gallery": {
+    "path": "data/presentation/effects-comparison-20261004-v2/manifest.json",
+    "sha256": "6562e7b2f91869d6ddde1b8ae81867d9d53605336b92408178eacbbbd8206138",
+    "bytes": 9535
+  },
+  "visual_review": [
+    "Compared native/Vulkan images from the same run at the same VBlank: bubbles visible in underwater 9720; stretched caustics removed; darker seabed; red/green CRT scanlines and bloom visible.",
+    "Pairing is within each run, not a promise that independently scheduled runs preserve byte-identical native frames."
+  ],
+  "brightness_method": "Average weighted display RGB code values after BOX downsampling Vulkan scanout to 320x224. Regions: scene[0,24,320,184], hull[140,110,178,145], seabed[20,100,85,160]. Descriptive comparison, not a radiometric fidelity test.",
+  "brightness": [
+    {
+      "vblank": 9360,
+      "display_code_luma_not_linear_light": {
+        "native": {
+          "scene": 9.697,
+          "hull": 18.807,
+          "seabed": 10.612
+        },
+        "previous": {
+          "scene": 24.775,
+          "hull": 36.403,
+          "seabed": 26.529
+        },
+        "refined": {
+          "scene": 12.323,
+          "hull": 18.438,
+          "seabed": 13.243
+        }
+      }
+    },
+    {
+      "vblank": 9720,
+      "display_code_luma_not_linear_light": {
+        "native": {
+          "scene": 16.006,
+          "hull": 27.75,
+          "seabed": 10.151
+        },
+        "previous": {
+          "scene": 27.179,
+          "hull": 45.376,
+          "seabed": 25.905
+        },
+        "refined": {
+          "scene": 15.982,
+          "hull": 25.646,
+          "seabed": 12.584
+        }
+      }
+    }
+  ],
+  "protected_saves": "savestates/quick_slot_0.ps1s: OK\ndata/memory_cards/card1.mcd: OK\ndata/memory_cards/card2.mcd: OK\n",
+  "limitations": [
+    "Representative intro checkpoints and targeted tests only; other underwater areas and all cinematic cameras are not visually certified.",
+    "No performance benchmark: diagnostic captures and shader correctness only."
+  ]
+}

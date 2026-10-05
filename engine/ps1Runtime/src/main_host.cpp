@@ -34,6 +34,8 @@
 #include <runtime/gpu/renderer_vulkan.h>
 #include <runtime/input/input.h>
 #include <runtime/input/input_script.h>
+#include <runtime/input/tas_movie.h>
+#include <runtime/input/tas_route.h>
 #include <runtime/mdec/mdec.h>
 #include <runtime/memory.h>
 #include <runtime/metrics.h>
@@ -693,8 +695,13 @@ int main(int argc, char *argv[]) {
   input.setPadType(0, runtimeConfig.input.enableAnalog
                           ? ps1::input::PadType::Analog
                           : ps1::input::PadType::Digital);
-  const std::filesystem::path memoryCardDirectory = runtimeConfig.paths.memcardDir.empty()
-      ? std::filesystem::path("data/memory_cards") : std::filesystem::path(runtimeConfig.paths.memcardDir);
+  std::filesystem::path memoryCardDirectory =
+      runtimeConfig.paths.memcardDir.empty()
+          ? std::filesystem::path("data/memory_cards")
+          : std::filesystem::path(runtimeConfig.paths.memcardDir);
+  if (const char *directory = std::getenv("PS1_MEMORY_CARD_DIR");
+      directory && *directory)
+    memoryCardDirectory = directory;
   std::filesystem::create_directories(memoryCardDirectory);
   for (unsigned slot = 0; slot < 2; ++slot) {
     const auto path = memoryCardDirectory / fmt::format("card{}.mcd", slot + 1);
@@ -718,6 +725,42 @@ int main(int argc, char *argv[]) {
                inputScript.intervalCount(), path);
   }
   ps1::SaveStateCoordinator stateCoordinator;
+  ps1::input::TasRoute tasRoute;
+  const char* tasRoutePath = std::getenv("PS1_TAS_ROUTE");
+  const bool tasRouteEnabled = tasRoutePath && *tasRoutePath;
+  if (tasRouteEnabled) {
+    std::string error;
+    if (!mgsProfile || inputScriptEnabled || !std::getenv("PS1_TAS_RECORD") ||
+        std::getenv("PS1_TAS_REPLAY") || !tasRoute.load(tasRoutePath, error)) {
+      fmt::print(stderr, "[Route] invalid recording configuration: {}\n", error);
+      return 1;
+    }
+  }
+  ps1::input::TasMovie tas;
+  const char *tasRecord = std::getenv("PS1_TAS_RECORD");
+  const char *tasReplay = std::getenv("PS1_TAS_REPLAY");
+  if ((tasRecord && *tasRecord) || (tasReplay && *tasReplay)) {
+    const char *stateDir = std::getenv("PS1_DIAGNOSTIC_SAVESTATE_DIR");
+    const char *loadAt = std::getenv("PS1_AUTOLOAD_VBLANK");
+    std::string error;
+    if (!mgsProfile || (tasRecord && tasReplay) ||
+        (tasReplay && inputScriptEnabled) || !stateDir || !loadAt ||
+        std::strtoull(loadAt, nullptr, 0) == 0 ||
+        !std::filesystem::is_regular_file(std::filesystem::path(stateDir) /
+                                          "quick_slot_0.ps1s")) {
+      fmt::print(stderr, "[TAS] Use scripts/mgs_tas.py: MGS, one movie mode, "
+                         "and an isolated initial savestate are required.\n");
+      return 1;
+    }
+    if (!tas.open(tasReplay ? tasReplay : tasRecord, tasReplay != nullptr,
+                  error)) {
+      fmt::print(stderr, "[TAS] {}\n", error);
+      return 1;
+    }
+    input.setFrameSampling(true);
+    fmt::print("[TAS] {} armed; waiting for initial savestate\n",
+               tasReplay ? "replay" : "recording");
+  }
   ps1::mdec::MDEC mdec;
   ps1::cdrom::CdromController cdromCtrl;
   ps1::cdrom::VirtualFs fs;
@@ -818,6 +861,18 @@ int main(int argc, char *argv[]) {
       if (!bios.hasNativeThreadContinuations())
         stateCoordinator.checkpoint(*checkpointCtx, resumePc);
     };
+    if (tas.enabled())
+      hleCfg.clockWaitCheckpoint = [&](recomp_context *waitingCtx) {
+        if (tas.active())
+          tas.checkpoint(waitingCtx->r[31], false);
+      };
+    if (tas.enabled())
+      bios.setClockCheckpoint([&](uint32_t pc, bool resumable) {
+        if (tas.active()) {
+          ctx.pc = pc;
+          tas.checkpoint(pc, resumable);
+        }
+      });
     bios.setStateCheckpoint([&](uint32_t pc) { stateCoordinator.checkpoint(ctx, pc); });
     ps1::psyq::configure(hleCfg);
     psyq_registry_init_defaults();
@@ -1386,6 +1441,37 @@ int main(int argc, char *argv[]) {
   std::optional<std::chrono::steady_clock::time_point> diagnosticLoadEpoch;
   uint64_t diagnosticRestoredVblank = 0u;
   bool running = true;
+  bool tasSaveRequested = false;
+  bool tasStopRequested = false;
+  bool tasPaused = false;
+  bool tasStep = false;
+  const uint64_t tasMaxFrames = diagnosticVblank("PS1_TAS_MAX_FRAMES");
+  const bool tasEndAtCheckpoint =
+      diagnosticVblank("PS1_TAS_END_AT_CHECKPOINT") != 0;
+  const uint64_t tasCheckpointInterval =
+      diagnosticVblank("PS1_TAS_CHECKPOINT_INTERVAL");
+  uint64_t tasLastCheckpoint = UINT64_MAX;
+  const auto saveTasCheckpoint = [&](uint64_t movieFrame, uint64_t vblank) {
+    const auto path = saveStateDirectory /
+                      fmt::format("checkpoint_{:09}_vblank_{}.ps1s",
+                                  movieFrame, vblank);
+    if (audioDevice > 0)
+      SDL_LockAudioDevice(audioDevice);
+    const bool saved = ps1::SaveState::save(
+        path.string(), ctx, memory, gpu, spu, dma, cdromCtrl, timers,
+        irqCtrl, input, &mdec, &bios);
+    if (audioDevice > 0)
+      SDL_UnlockAudioDevice(audioDevice);
+    fmt::print("[TAS] checkpoint {} at movie frame {}: {}\n",
+               saved ? "saved" : "FAILED", movieFrame, path.string());
+    tasSaveRequested = false;
+    tasLastCheckpoint = movieFrame;
+    ps1::metrics::count(saved ? "tas.checkpoint.saved" : "tas.checkpoint.failed");
+  };
+  auto tasNextTick = std::chrono::steady_clock::now() + vblankPeriod;
+  if (tas.enabled())
+    fmt::print("[TAS] F5 checkpoint, F10 pause, F12 advance one VBlank; branch "
+               "from a checkpoint with mgs_tas.py record --state\n");
   while (running) {
     bool diagnosticExitAfterPresent = false;
     // 1. Poll SDL2 Events
@@ -1393,7 +1479,10 @@ int main(int argc, char *argv[]) {
     while (SDL_PollEvent(&event)) {
       switch (event.type) {
       case SDL_QUIT:
-        running = false;
+        if (tas.active() && !tas.replaying())
+          tasStopRequested = true;
+        else
+          running = false;
         break;
       case SDL_KEYDOWN:
         if (ignoreDiagnosticInput) {
@@ -1405,14 +1494,27 @@ int main(int argc, char *argv[]) {
               fmt::print(stderr, "[Window] fullscreen change failed: {}\n", SDL_GetError());
           }
         } else if (event.key.keysym.sym == SDLK_ESCAPE) {
-          running = false;
+          if (tas.active() && !tas.replaying())
+            tasStopRequested = true;
+          else
+            running = false;
         } else if (event.key.keysym.sym == SDLK_F5 && event.key.repeat == 0) {
+          if (tas.enabled()) {
+            tasSaveRequested = true;
+            break;
+          }
           stateWindowId = event.key.windowID;
           const std::string path = saveStatePath();
           if (stateCoordinator.request(ps1::SaveStateCoordinator::Action::Save,
                                        path))
             fmt::print("[SaveState] save requested: slot {}\n", saveStateSlot);
         } else if (event.key.keysym.sym == SDLK_F9 && event.key.repeat == 0) {
+          if (tas.enabled()) {
+            fmt::print(
+                "[TAS] F9 would replace the recorded timeline; use mgs_tas.py "
+                "record --state CHECKPOINT for a new branch.\n");
+            break;
+          }
           stateWindowId = event.key.windowID;
           const std::string path = saveStatePath();
           if (stateCoordinator.request(ps1::SaveStateCoordinator::Action::Load,
@@ -1424,20 +1526,30 @@ int main(int argc, char *argv[]) {
         } else if (event.key.keysym.sym == SDLK_F7 && event.key.repeat == 0) {
           saveStateSlot = (saveStateSlot + 1u) % 10u;
           fmt::print("[SaveState] selected slot {}\n", saveStateSlot);
+        } else if (tas.enabled() && event.key.keysym.sym == SDLK_F10 &&
+                   event.key.repeat == 0) {
+          tasPaused = !tasPaused;
+          fmt::print("[TAS] {} at movie frame {}\n",
+                     tasPaused ? "paused" : "running", tas.frameCount());
+        } else if (tas.enabled() && event.key.keysym.sym == SDLK_F12 &&
+                   event.key.repeat == 0) {
+          tasPaused = true;
+          tasStep = true;
         } else if (!diagnosticHeadless && event.key.keysym.sym == SDLK_F8 &&
                    event.key.repeat == 0) {
           renderer.toggleDepthVisualization();
         } else {
-          mapKeyToButton(event.key.keysym.sym, keyboardMap, input, true);
+          if (!tas.replaying())
+            mapKeyToButton(event.key.keysym.sym, keyboardMap, input, true);
         }
         break;
       case SDL_KEYUP:
-        if (!ignoreDiagnosticInput)
+        if (!ignoreDiagnosticInput && !tas.replaying())
           mapKeyToButton(event.key.keysym.sym, keyboardMap, input, false);
         break;
       case SDL_CONTROLLERBUTTONDOWN:
       case SDL_CONTROLLERBUTTONUP: {
-        if (ignoreDiagnosticInput)
+        if (ignoreDiagnosticInput || tas.replaying())
           break;
         const uint16_t button = controllerButton(event.cbutton.button);
         if (button != 0) {
@@ -1449,7 +1561,7 @@ int main(int argc, char *argv[]) {
         break;
       }
       case SDL_CONTROLLERAXISMOTION: {
-        if (ignoreDiagnosticInput)
+        if (ignoreDiagnosticInput || tas.replaying())
           break;
         const auto axis = static_cast<SDL_GameControllerAxis>(event.caxis.axis);
         if (axis >= 0 && axis < SDL_CONTROLLER_AXIS_MAX)
@@ -1508,6 +1620,11 @@ int main(int argc, char *argv[]) {
                                          &mdec, &bios);
           if (audioDevice > 0)
             SDL_UnlockAudioDevice(audioDevice);
+          if (!succeeded && tas.enabled() &&
+              req.action == ps1::SaveStateCoordinator::Action::Load) {
+            fmt::print(stderr, "[TAS] initial savestate rejected; recording/replay aborted\n");
+            running = false;
+          }
           if (stateWindowId) {
             if (auto *window = SDL_GetWindowFromID(stateWindowId)) {
               const auto message = fmt::format("Metal Gear Solid - {}: {}",
@@ -1526,6 +1643,19 @@ int main(int argc, char *argv[]) {
                     std::memory_order_acquire);
             processedVblanks = restoredVblank;
             scheduledVblanks.store(restoredVblank, std::memory_order_release);
+            if (tas.enabled() && !tas.replaying()) {
+              // A checkpoint preserves the guest's last sample, not a key
+              // physically held by this new recording session. Leave that
+              // latched sample visible until the first recorded clock edge.
+              for (int port = 0; port < 2; ++port) {
+                input.release(0xffffu, port);
+                input.setScriptedButtons(0, port);
+                input.setAnalog(port, 128, 128, 128, 128);
+              }
+            }
+            if (tas.enabled())
+              tas.start(restoredVblank);
+            tasNextTick = std::chrono::steady_clock::now() + vblankPeriod;
             if (exitAfterLoadVblanks != 0) {
               exitAfterLoadTarget =
                   restoredVblank > std::numeric_limits<uint64_t>::max() -
@@ -1672,18 +1802,50 @@ int main(int argc, char *argv[]) {
     // guest time, and is coalesced after this slice. This prevents a slow
     // renderer from firing several callbacks before the game reaches its next
     // blocking VSync.
+    // Hashing/checkpoint I/O parks the guest. Never turn that diagnostic cost
+    // into clock debt: otherwise every next polling instruction receives a
+    // VBlank and the game makes almost no progress despite a matching replay.
     const uint64_t dueVblanks =
-        scheduledVblanks.load(std::memory_order_acquire);
+        tas.active()
+            ? processedVblanks +
+                  (std::chrono::steady_clock::now() >= tasNextTick ? 1u : 0u)
+            : scheduledVblanks.load(std::memory_order_acquire);
     const auto &pacingState = ps1::psyq::psyq_state();
     const uint32_t currentGuestVblank =
         pacingState.vsyncCounter.load(std::memory_order_acquire);
-    const bool guestVblankRequested = ps1::timing::guestVblankRequested(
+    bool guestVblankRequested = ps1::timing::guestVblankRequested(
         pacingState.blockingVSyncPacing.load(std::memory_order_acquire),
         pacingState.blockingVSyncTarget.load(std::memory_order_acquire),
         currentGuestVblank,
         pacingState.autonomousClockWaiters.load(std::memory_order_acquire) +
             (pacingState.cdClockDemand.load(std::memory_order_acquire) ? 1u
                                                                        : 0u));
+    if (tas.active()) {
+      // Native CD polling can need hardware time without a blocking VSync
+      // target (and without going through the HLE CD waiter's demand flag).
+      // The TAS rendezvous itself supplies the safe execution boundary.
+      if (dueVblanks > processedVblanks)
+        tas.requestTick();
+      guestVblankRequested = tas.parked() && (!tasPaused || tasStep);
+      if (tas.failed()) {
+        running = false;
+        continue;
+      }
+      const bool stopMovie = tas.endDue() || tasStopRequested ||
+                             (tasRouteEnabled && (tasRoute.done() || tasRoute.failed())) ||
+                             (tasMaxFrames && tas.frameCount() >= tasMaxFrames);
+      // Campaign recordings can outlast their requested input sequence until
+      // a portable terminal checkpoint exists. Extra guest frames are still
+      // recorded normally; replay always stops at its exact stored witness.
+      if (tas.parked() && stopMovie &&
+          (tas.replaying() || !tasEndAtCheckpoint || tas.canSave())) {
+        if (tas.end(currentGuestVblank, memory.ramPtr(), ps1::Memory::RAM_SIZE) &&
+            tas.canSave() && tasLastCheckpoint != tas.frameCount())
+          saveTasCheckpoint(tas.frameCount(), currentGuestVblank);
+        running = false;
+        continue;
+      }
+    }
     const ps1::timing::VblankSlice vblankSlice = ps1::timing::planVblankSlice(
         processedVblanks, guestVblankRequested ? dueVblanks : processedVblanks,
         maxVblanksPerPresent);
@@ -1702,6 +1864,33 @@ int main(int argc, char *argv[]) {
     bool guestAdvanced = false;
     while (processedVblanks < vblankSlice.end) {
       guestAdvanced = true;
+      if (tas.active()) {
+        const uint64_t movieFrame = tas.frameCount();
+        const bool periodic = tasCheckpointInterval && movieFrame &&
+                              movieFrame % tasCheckpointInterval == 0;
+        if (periodic && tasLastCheckpoint != movieFrame)
+          tasSaveRequested = true;
+        if (tasSaveRequested && tas.canSave() &&
+            tasLastCheckpoint != movieFrame) {
+          saveTasCheckpoint(movieFrame, currentGuestVblank);
+        }
+        if (inputScriptEnabled)
+          inputScript.apply(currentGuestVblank + 1, input);
+        if (tasRouteEnabled) {
+          const auto pads=tasRoute.sample(memory.ramPtr(), ps1::Memory::RAM_SIZE,
+                                          currentGuestVblank + 1);
+          input.setScriptedButtons(pads[0], 0);
+          input.setScriptedButtons(pads[1], 1);
+          for (const auto& event : tasRoute.takeEvents())
+            fmt::print("[Route] {}\n", event);
+        }
+        input.latchVBlank();
+        if (!tas.frame(currentGuestVblank + 1, memory.ramPtr(),
+                       ps1::Memory::RAM_SIZE, input)) {
+          running = false;
+          break;
+        }
+      }
       // Do not mutate the CD controller from the SDL/render thread. Crash 3
       // streams multi-sector pages asynchronously and the controller has one
       // sector buffer; concurrent tick/poll publication can overwrite it and
@@ -1742,8 +1931,11 @@ int main(int argc, char *argv[]) {
       gpu.snapshotDisplayBuffer(newCount);
       ps1::metrics::setTraceFrame(newCount);
 
-      if (inputScriptEnabled) inputScript.apply(newCount, input);
-      input.latchVBlank();
+      if (!tas.active()) {
+        if (inputScriptEnabled)
+          inputScript.apply(newCount, input);
+        input.latchVBlank();
+      }
       if (!mgsProfile) {
         bios.updatePadBuffers();
         ps1::psyq::psyq_pad_refresh_direct_buffers(&ctx);
@@ -1773,6 +1965,12 @@ int main(int argc, char *argv[]) {
         ps1::metrics::dumpJson();
       }
       ++processedVblanks;
+      if (tas.active()) {
+        tasStep = false;
+        tasNextTick = std::chrono::steady_clock::now() + vblankPeriod;
+        tas.release();
+        break; // one native rendezvous per VBlank, regardless of host debt
+      }
       if ((exitVblank != 0 && newCount >= exitVblank) ||
           (exitAfterLoadTarget != 0 && newCount >= exitAfterLoadTarget)) {
         fmt::print("[Main] Diagnostic VBlank {} reached\n", newCount);
@@ -1781,7 +1979,11 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if (guestAdvanced) {
+    if (tas.active()) {
+      // The ordinary ticker is not the TAS clock source. Keep it rebased for
+      // diagnostics without admitting its pulses while the guest was parked.
+      scheduledVblanks.store(processedVblanks, std::memory_order_release);
+    } else if (guestAdvanced) {
       // Processing and latching this edge can overlap a later host edge. Keep
       // one such credit for the next safe VSync boundary; retaining a whole
       // backlog would fast-forward guest callbacks, while discarding the first
@@ -1928,13 +2130,29 @@ int main(int argc, char *argv[]) {
 
     if (g_shutdown_requested) {
       fmt::print("[Main] Shutdown signal received at frame {}\n", frameCount);
-      running = false;
+      if (tas.active() && !tas.replaying()) {
+        tasStopRequested = true;
+        g_shutdown_requested = 0;
+      } else
+        running = false;
     }
 
     // Guest pacing comes exclusively from scheduledVblanks. SDL swap interval
     // may additionally block presentation but can never advance emulation.
   }
 
+  if (tas.failed() && tas.canSave()) {
+    const auto path = saveStateDirectory / "desync.ps1s";
+    if (audioDevice > 0)
+      SDL_LockAudioDevice(audioDevice);
+    const bool saved =
+        ps1::SaveState::save(path.string(), ctx, memory, gpu, spu, dma,
+                             cdromCtrl, timers, irqCtrl, input, &mdec, &bios);
+    if (audioDevice > 0)
+      SDL_UnlockAudioDevice(audioDevice);
+    fmt::print("[TAS] divergence checkpoint {}: {}\n",
+               saved ? "saved" : "FAILED", path.string());
+  }
   if (const char *vramDump = std::getenv("PS1_VRAM_DUMP_PATH")) {
     if (!frameDumpWritten)
       dumpVramPpm(gpu, vramDump);
@@ -1992,6 +2210,22 @@ int main(int argc, char *argv[]) {
 
   // Cleanup
 
+  const bool tasIncomplete = tas.replaying() && !tas.done();
+  tas.finish();
+  const int resultCode = tas.failed() || tasIncomplete ? 42 :
+      (tasRouteEnabled && (tasRoute.failed() || !tasRoute.done()) ? 43 : 0);
+  if (tasRouteEnabled)
+    fmt::print("[Route] status: {} {}\n", tasRoute.failed() ? "failed" :
+               (tasRoute.done() ? "complete" : "incomplete"), tasRoute.error());
+  if (tas.enabled()) {
+    fmt::print("[TAS] {} frame(s), boundary {}, status: {}\n", tas.frameCount(),
+               tas.boundary(),
+               tas.failed()
+                   ? tas.error()
+                   : (tasIncomplete ? "incomplete replay" : "complete"));
+    std::fflush(stdout);
+  }
+
   // Wait for game thread (with timeout)
   stateCoordinator.cancel();
   if (gameThread.joinable()) {
@@ -2020,7 +2254,7 @@ int main(int argc, char *argv[]) {
       gpu.publishMetrics();
       ps1::publishPGXPStageMetrics();
       ps1::metrics::dumpJson();
-      std::_Exit(0);
+      std::_Exit(resultCode);
     }
   }
 
@@ -2039,5 +2273,5 @@ int main(int argc, char *argv[]) {
   SDL_Quit();
 
   fmt::print("Simulation ended after {} frames.\n", frameCount);
-  return 0;
+  return resultCode;
 }

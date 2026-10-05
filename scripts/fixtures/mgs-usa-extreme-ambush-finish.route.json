@@ -1,0 +1,147 @@
+{
+  "format": "mgs-tas-route-1",
+  "source_sha256": "9375a2bf8e9406d79edf7c0eec64f9cf32b3226536396514786c0b638240e757",
+  "source_url": "https://tasvideos.org/3462S",
+  "description": "Resume after the grenade volley, pick up still-live ammunition and re-arm original final-wave firing on actual guard arrivals. Retain the TAS final firing area and direction; skip rank-specific human-shield choreography.",
+  "reference_evidence": {
+    "path": ".local/tas-reference/reference-ticks-prefix.tsv",
+    "sha256": "ccf28bdd27a67228093803b257fe4dc0e22271aafb1ca20cc937bd0094129574",
+    "frames": [
+      29177,
+      29742
+    ]
+  },
+  "steps": [
+    {
+      "name": "original-ammunition-pickup-adjusted-to-live-drop",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s03d",
+        "ambush_phase": 12
+      },
+      "until": {
+        "socom_ammo": {
+          "min": 12
+        }
+      },
+      "action": {
+        "move_to": {
+          "x": 5001,
+          "z": 475
+        }
+      },
+      "max_frames": 260
+    },
+    {
+      "name": "return-to-original-final-wave-pose",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s03d"
+      },
+      "until": {
+        "x": {
+          "min": 4850,
+          "max": 5170
+        },
+        "z": {
+          "min": -380,
+          "max": -180
+        }
+      },
+      "action": {
+        "move_to": {
+          "x": 5019,
+          "z": -281
+        }
+      },
+      "max_frames": 240
+    },
+    {
+      "name": "original-final-wave-facing",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s03d"
+      },
+      "until": {
+        "turn_yaw": 18
+      },
+      "action": {
+        "source_frames": [
+          28126,
+          28126
+        ],
+        "minimum_hold": 6
+      },
+      "max_frames": 80
+    },
+    {
+      "name": "original-re-equip-socom",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s03d"
+      },
+      "until": {
+        "weapon": 0
+      },
+      "action": {
+        "source_frames": [
+          29674,
+          29675
+        ],
+        "minimum_hold": 4,
+        "settle_frames": 4
+      },
+      "max_frames": 80
+    },
+    {
+      "name": "original-last-wave-fire",
+      "guard": {
+        "difficulty": 3,
+        "life": {
+          "min": 1
+        },
+        "stage": "s03d"
+      },
+      "when": {
+        "guards_in_room": {
+          "min": 1
+        },
+        "game_status": 0,
+        "socom_ammo": {
+          "min": 1
+        }
+      },
+      "until": {
+        "story": 29
+      },
+      "abort_when": {
+        "socom_ammo": 0,
+        "guards_alive": {
+          "min": 1
+        }
+      },
+      "action": {
+        "source_frames": [
+          26865,
+          26868
+        ],
+        "minimum_hold": 4,
+        "minimum_release": 4
+      },
+      "attempts": 120,
+      "max_frames": 2000
+    }
+  ]
+}

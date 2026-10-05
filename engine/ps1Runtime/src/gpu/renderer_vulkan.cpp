@@ -884,6 +884,7 @@ struct RendererVulkan::Impl {
       uint32_t scanoutHeight = 0;
       uint64_t guestFrame = 0;
       uint64_t presentationSerial = 0;
+      uint64_t mgsPhotoCapture = 0;
       ReplayDiagnosticPresentation presentation =
           ReplayDiagnosticPresentation::Ordinary;
       replay::VulkanReplayDiagnosticRegion region{};
@@ -1076,6 +1077,7 @@ struct RendererVulkan::Impl {
     std::array<VkDescriptorSet, kFramesInFlight> uniformDescriptorSets{};
     ImageResource screenColorScratch;
     ImageResource screenMaskScratch;
+    ImageResource screenDepthScratch;
     ImageResource destinationColorScratch;
     ImageResource destinationMaskScratch;
     ImageResource copyDestinationMaskScratch;
@@ -1257,6 +1259,7 @@ struct RendererVulkan::Impl {
                  uniformDescriptorSets.begin(), uniformDescriptorSets.end(),
                  [](VkDescriptorSet set) { return set != VK_NULL_HANDLE; }) &&
              screenColorScratch.complete() && screenMaskScratch.complete() &&
+             screenDepthScratch.complete() &&
              destinationColorScratch.complete() &&
              destinationMaskScratch.complete() &&
              copyDestinationMaskScratch.complete() &&
@@ -1305,6 +1308,7 @@ struct RendererVulkan::Impl {
                  uniformDescriptorSets.begin(), uniformDescriptorSets.end(),
                  [](VkDescriptorSet set) { return set == VK_NULL_HANDLE; }) &&
              screenColorScratch.empty() && screenMaskScratch.empty() &&
+             screenDepthScratch.empty() &&
              destinationColorScratch.empty() &&
              destinationMaskScratch.empty() &&
              copyDestinationMaskScratch.empty() && crash3SceneryDepth.empty() &&
@@ -2261,6 +2265,7 @@ struct RendererVulkan::Impl {
   Crash3PresentationCanvasSignature crash3TemporalPendingCanvas{};
   uint8_t replayPreCorrectionDepthValidPages = 0u;
   ReplayReadbackConfig replayReadbackConfig{};
+  uint64_t lastMgsPhotoCapture=0;
   bool replayVisibilityAuditRequested = false;
   bool replayVisibilityAuditActive = false;
   bool replayVisibilityStackRequested = false;
@@ -3507,7 +3512,8 @@ struct RendererVulkan::Impl {
   void ensureReplayDiagnosticReadback(
       FrameContext &frame, const replay::VulkanReplayDiagnosticRegion &region,
       bool reservePreCorrectionDepth, bool visibilityAudit,
-      bool visibilityCandidate, bool visibilityStack, uint32_t frameIndex) {
+      bool visibilityCandidate, bool visibilityStack, uint32_t frameIndex,
+      bool photoCapture=false) {
     auto &readback = frame.diagnosticReadback;
     if (readback.pending)
       throw std::runtime_error(
@@ -3584,7 +3590,7 @@ struct RendererVulkan::Impl {
     if (hostSceneDepthBytes != 0u)
       appendPlane(hostSceneDepthBytes, hostSceneDepthOffset,
                   "host scene depth");
-    if (replayReadbackConfig.temporalMidpoint ||
+    if (photoCapture || replayReadbackConfig.temporalMidpoint ||
         !replayReadbackConfig.colorDumpDirectory.empty()) {
       const VkDeviceSize scanoutPixels =
           static_cast<VkDeviceSize>(scanoutExtent.width) * scanoutExtent.height;
@@ -3814,8 +3820,8 @@ struct RendererVulkan::Impl {
       FrameContext &frame, const DisplayAperture &aperture, uint64_t guestFrame,
       bool liveReanchor, const std::vector<Color16> &nativeSnapshotPixels,
       const replay::VulkanReplayBakedBatch *visibilityBatch,
-      uint32_t frameIndex, bool preCorrectionDepth) {
-    if (!replayReadbackConfig.selects(guestFrame, liveReanchor))
+      uint32_t frameIndex, bool preCorrectionDepth, uint64_t photoCapture=0) {
+    if (!photoCapture && !replayReadbackConfig.selects(guestFrame, liveReanchor))
       return false;
     const auto selected = selectReplayDiagnosticRegion(
         aperture, replayResources.internalScale, visibilityBatch);
@@ -3831,8 +3837,9 @@ struct RendererVulkan::Impl {
         visibilityBatch != nullptr && replayVisibilityStackActive;
     ensureReplayDiagnosticReadback(
         frame, *selected, preCorrectionDepth, visibilityBatch != nullptr,
-        visibilityCandidate, visibilityStack, frameIndex);
+        visibilityCandidate, visibilityStack, frameIndex,photoCapture!=0);
     auto &readback = frame.diagnosticReadback;
+    readback.mgsPhotoCapture=photoCapture;
     readback.guestFrame = guestFrame;
     readback.hasNativeOracle =
         liveReanchor &&
@@ -4468,6 +4475,37 @@ struct RendererVulkan::Impl {
           {base + readback.depthOffset,
            static_cast<std::size_t>(readback.depthBytes),
            static_cast<std::size_t>(scaledWidth) * sizeof(float)}};
+      if(readback.mgsPhotoCapture && readback.hasScanoutColor) {
+        // Additional host photograph. The game's JPEG encoder, ghost code,
+        // card format and CPU readbacks keep their original native image.
+        const char *configured=std::getenv("PS1_MGS_PHOTO_DIRECTORY");
+        const std::filesystem::path directory=configured && *configured
+            ? configured : "data/presentation/photos";
+        std::error_code error;
+        std::filesystem::create_directories(directory,error);
+        const auto stamp=std::chrono::system_clock::now().time_since_epoch().count();
+        const auto path=directory/fmt::format("mgs-photo-{}-{}-{}.ppm",stamp,
+                                               readback.guestFrame,readback.mgsPhotoCapture);
+        std::ofstream file;
+        bool saved=false;
+        if(!error) file.open(path,std::ios::binary|std::ios::trunc);
+        if(file) {
+          file<<"P6\n"<<readback.scanoutWidth<<' '<<readback.scanoutHeight<<"\n255\n";
+          const auto *colors=reinterpret_cast<const Color32 *>(base+readback.scanoutColorOffset);
+          std::vector<uint8_t> row(readback.scanoutWidth*3u);
+          for(uint32_t y=0;y<readback.scanoutHeight;++y) {
+            for(uint32_t x=0;x<readback.scanoutWidth;++x) {
+              const auto c=colors[y*readback.scanoutWidth+x];
+              row[x*3]=c.r;row[x*3+1]=c.g;row[x*3+2]=c.b;
+            }
+            file.write(reinterpret_cast<const char *>(row.data()),row.size());
+          }
+          file.close();
+          saved=bool(file);
+        }
+        metrics::count(saved ? "mgs.effects.photo.saved" : "mgs.effects.photo.save_failed");
+        if(saved) fmt::print("[MGS] Vulkan photograph: {}\n",path.string());
+      }
       if (!replayReadbackConfig.colorDumpDirectory.empty()) {
         const std::string filename =
             replayReadbackConfig.temporalMidpoint
@@ -5901,6 +5939,7 @@ struct RendererVulkan::Impl {
     }
     destroyImageResource(resources.screenColorScratch);
     destroyImageResource(resources.screenMaskScratch);
+    destroyImageResource(resources.screenDepthScratch);
     destroyImageResource(resources.copyDestinationMaskScratch);
     destroyImageResource(resources.destinationMaskScratch);
     destroyImageResource(resources.destinationColorScratch);
@@ -6257,6 +6296,10 @@ struct RendererVulkan::Impl {
         resources.screenMaskScratch, "modern screen mask", screenExtent,
         kReplayMaskFormat, kReplayFeedbackScratchUsage,
         kReplayFeedbackScratchFeatures, VK_IMAGE_ASPECT_COLOR_BIT);
+    createImageResource(
+        resources.screenDepthScratch, "modern screen depth", screenExtent,
+        kReplaySurfaceDepthFormat, kReplayFeedbackScratchUsage,
+        kReplayFeedbackScratchFeatures, VK_IMAGE_ASPECT_COLOR_BIT);
     resources.feedbackSampler = createSampler(VK_FILTER_NEAREST);
     resources.screenSampler = createSampler(VK_FILTER_LINEAR);
 
@@ -6277,7 +6320,7 @@ struct RendererVulkan::Impl {
       feedbackBindings[index].descriptorCount = 1;
       feedbackBindings[index].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     }
-    for (uint32_t binding : {8u, 9u}) {
+    for (uint32_t binding : {8u, 9u, 10u}) {
       VkDescriptorSetLayoutBinding item{};
       item.binding = binding;
       item.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -6305,8 +6348,9 @@ struct RendererVulkan::Impl {
     uniformBindings[1].binding = 1;
     uniformBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     uniformBindings[1].descriptorCount = 1;
-    uniformBindings[1].stageFlags =
-        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+    uniformBindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT |
+                                    VK_SHADER_STAGE_COMPUTE_BIT |
+                                    VK_SHADER_STAGE_FRAGMENT_BIT;
     uniformBindings[2].binding = 2;
     uniformBindings[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     uniformBindings[2].descriptorCount = 1;
@@ -6324,7 +6368,7 @@ struct RendererVulkan::Impl {
 
     std::vector<VkDescriptorPoolSize> poolSizes{
         VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                             crash3SemiInterlockEnabled ? 7u : 6u},
+                             crash3SemiInterlockEnabled ? 8u : 7u},
         VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
                              kFramesInFlight},
         VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -6411,12 +6455,14 @@ struct RendererVulkan::Impl {
       write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       write.pImageInfo = &sceneDepthImage;
     }
-    const std::array<VkDescriptorImageInfo, 2> screenImages{
+    const std::array<VkDescriptorImageInfo, 3> screenImages{
         {{resources.screenSampler, resources.screenColorScratch.view,
           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
          {resources.feedbackSampler, resources.screenMaskScratch.view,
+          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
+         {resources.feedbackSampler, resources.screenDepthScratch.view,
           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}}};
-    for (uint32_t i = 0; i < 2; ++i) {
+    for (uint32_t i = 0; i < 3; ++i) {
       VkWriteDescriptorSet write{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
       write.dstSet = resources.feedbackDescriptorSet;
       write.dstBinding = 8 + i;
@@ -7655,7 +7701,9 @@ struct RendererVulkan::Impl {
                    replay::replayDrawFlagBit(
                        replay::ReplayDrawFlag::WaterRefraction) |
                    replay::replayDrawFlagBit(
-                       replay::ReplayDrawFlag::ScreenEffect)
+                       replay::ReplayDrawFlag::ScreenEffect) |
+                   replay::replayDrawFlagBit(
+                       replay::ReplayDrawFlag::ModernColor)
              : 0u);
     constexpr auto colorFeedback = replay::vulkanReplayFeedbackPlaneBit(
         replay::VulkanReplayFeedbackPlane::Color);
@@ -20000,8 +20048,15 @@ struct RendererVulkan::Impl {
         std::numeric_limits<VkDeviceSize>::max() - rawStaticUploadOffset) {
       return std::nullopt;
     }
-    const VkDeviceSize sceneUploadEnd =
-        rawStaticUploadOffset + rawStaticUploadBytes;
+    const VkDeviceSize pointLightBase =
+        (rawStaticUploadOffset + rawStaticUploadBytes + 15u) &
+        ~VkDeviceSize(15u);
+    const VkDeviceSize pointLightBytes =
+        batch.mgsPointLights.size() * sizeof(replay::OriginalPointLight);
+    if (pointLightBase / 4u > UINT32_MAX ||
+        pointLightBytes / 4u > UINT32_MAX - pointLightBase / 4u)
+      return std::nullopt;
+    const VkDeviceSize sceneUploadEnd = pointLightBase + pointLightBytes;
     const VkDeviceSize stride = replayGeometryResources.uniformStride;
     if (sceneUploadEnd >
         std::numeric_limits<VkDeviceSize>::max() - (stride - 1u)) {
@@ -20040,6 +20095,9 @@ struct RendererVulkan::Impl {
       return std::nullopt;
 
     auto *destination = static_cast<std::byte *>(upload.mapped);
+    if (pointLightBytes)
+      std::memcpy(destination + pointLightBase, batch.mgsPointLights.data(),
+                  pointLightBytes);
     const VkDeviceSize batchVertexBytes =
         batch.vertices.size() * sizeof(replay::vulkan_abi::Vertex);
     if (batchVertexBytes != 0) {
@@ -20263,7 +20321,14 @@ struct RendererVulkan::Impl {
       for (uint32_t segmentIndex = 0; segmentIndex < draw->segmentCount;
            ++segmentIndex) {
         const VkDeviceSize offset = uniformBase + drawIndex * stride;
-        const auto &uniforms = draw->segments[segmentIndex].uniforms;
+        auto uniforms = draw->segments[segmentIndex].uniforms;
+        if (uniforms.mgsPointLights[1]) {
+          if (uniforms.mgsPointLights[0] / 8u > batch.mgsPointLights.size() ||
+              uniforms.mgsPointLights[1] >
+                  batch.mgsPointLights.size() - uniforms.mgsPointLights[0] / 8u)
+            return std::nullopt;
+          uniforms.mgsPointLights[0] += uint32_t(pointLightBase / 4u);
+        }
         std::memcpy(destination + offset, &uniforms, sizeof(uniforms));
         ++drawIndex;
       }
@@ -23622,7 +23687,7 @@ struct RendererVulkan::Impl {
       if (feedbackScratchReady)
         return;
       endRenderPass();
-      std::array<VkImageMemoryBarrier, 5> barriers{};
+      std::array<VkImageMemoryBarrier, 6> barriers{};
       const auto initialize = [](VkImageMemoryBarrier &barrier, VkImage image) {
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.srcAccessMask = 0;
@@ -23644,6 +23709,7 @@ struct RendererVulkan::Impl {
                  replayGeometryResources.copyDestinationMaskScratch.image);
       initialize(barriers[3], replayGeometryResources.screenColorScratch.image);
       initialize(barriers[4], replayGeometryResources.screenMaskScratch.image);
+      initialize(barriers[5], replayGeometryResources.screenDepthScratch.image);
       vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr,
                            0, nullptr, static_cast<uint32_t>(barriers.size()),
@@ -23890,7 +23956,7 @@ struct RendererVulkan::Impl {
                                              auto feedbackPlanes,
                                              VkImage colorScratch,
                                              VkImage maskScratch,
-                                             bool screenSource) {
+                                             bool screenSource, bool depthSource = false) {
       if (area.width == 0 || area.height == 0)
         return false;
       endRenderPass();
@@ -23902,7 +23968,7 @@ struct RendererVulkan::Impl {
         uint32_t bytesPerPixel = 0;
         const char *metric = nullptr;
       };
-      std::array<FeedbackPlaneCopy, 2> copies{};
+      std::array<FeedbackPlaneCopy, 3> copies{};
       uint32_t copyCount = 0;
       if ((feedbackPlanes & replay::vulkanReplayFeedbackPlaneBit(
                                 replay::VulkanReplayFeedbackPlane::Color)) !=
@@ -23922,11 +23988,15 @@ struct RendererVulkan::Impl {
                 ? "host.renderer.mgs_screen.mask_snapshot"
                 : "host.renderer.vulkan_replay_feedback_mask_snapshot"};
       }
+      if (depthSource)
+        copies[copyCount++] = {replayResources.surfaceDepth.image,
+            replayGeometryResources.screenDepthScratch.image, 4,
+            "host.renderer.mgs_screen.depth_snapshot"};
       if (copyCount == 0)
         throw std::runtime_error(
             "Vulkan replay snapshot has no feedback plane");
 
-      std::array<VkImageMemoryBarrier, 4> toTransfer{};
+      std::array<VkImageMemoryBarrier, 6> toTransfer{};
       for (uint32_t index = 0; index < copyCount; ++index) {
         VkImageMemoryBarrier &source = toTransfer[index * 2u];
         source.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -23983,7 +24053,7 @@ struct RendererVulkan::Impl {
             pixels * copies[index].bytesPerPixel);
       }
 
-      std::array<VkImageMemoryBarrier, 4> toUse{};
+      std::array<VkImageMemoryBarrier, 6> toUse{};
       for (uint32_t index = 0; index < copyCount; ++index) {
         VkImageMemoryBarrier &source = toUse[index * 2u];
         source = toTransfer[index * 2u];
@@ -25457,7 +25527,7 @@ struct RendererVulkan::Impl {
                   replay::vulkanReplayFeedbackPlaneBit(
                       replay::VulkanReplayFeedbackPlane::Mask),
               replayGeometryResources.screenColorScratch.image,
-              replayGeometryResources.screenMaskScratch.image, true);
+              replayGeometryResources.screenMaskScratch.image, true, read->depth);
         } else {
           ps1::metrics::count("host.renderer.mgs_screen.snapshot_reused");
         }
@@ -27068,6 +27138,8 @@ struct RendererVulkan::Impl {
           } else if (!liveReplayBatchSupported(baked.batch)) {
             downgrade("unsupported_batch");
           } else {
+            if (games::mgs::active())
+              games::mgs::prepareColorPresentation(baked.batch);
             if (games::mgs::active() &&
                 !environmentSwitchEnabled("PS1_MGS_NATIVE_SCREEN_TEXTURES"))
               games::mgs::prepareScreenReads(
@@ -27507,13 +27579,16 @@ struct RendererVulkan::Impl {
 
     bool recordDiagnosticReadback = false;
     bool recordVisibilityAudit = false;
+    const uint64_t photoCapture=replaySnapshot && replaySnapshot->sealedFrame
+        ? replaySnapshot->sealedFrame->latch().mgsPhotoCapture : 0;
+    const bool newPhoto=photoCapture && photoCapture!=lastMgsPhotoCapture;
     const bool diagnosticCoversFullScanout =
         diagnosticApertureCoversScanout(scanout);
     ps1::metrics::setState(
         "host.renderer.vulkan_replay_readback_scanout_complete",
         diagnosticCoversFullScanout ? 1 : 0);
     if (presentReplayAtlas && diagnosticCoversFullScanout &&
-        replaySnapshot != nullptr && replayReadbackConfig.active) {
+        replaySnapshot != nullptr && (replayReadbackConfig.active || newPhoto)) {
       try {
         const replay::VulkanReplayBakedBatch *visibilityBatch = nullptr;
         if (replayVisibilityAuditActive && replayBatch.has_value() &&
@@ -27530,7 +27605,8 @@ struct RendererVulkan::Impl {
         recordDiagnosticReadback = prepareReplayDiagnosticReadback(
             frame, diagnosticAperture, replaySnapshot->frameNumber,
             liveReanchor, nativeSnapshotPixels, visibilityBatch, currentFrame,
-            preCorrectionDepthRequested);
+            preCorrectionDepthRequested,newPhoto ? photoCapture : 0);
+        if(recordDiagnosticReadback && newPhoto) lastMgsPhotoCapture=photoCapture;
         recordVisibilityAudit =
             recordDiagnosticReadback && visibilityBatch != nullptr;
       } catch (const std::exception &error) {
@@ -28117,10 +28193,22 @@ struct RendererVulkan::Impl {
     if (preparedReplayGeometry.has_value() && replayBatch.has_value()) {
       if (games::mgs::active()) {
         uint64_t originals = 0, cachedTextures = 0, recovered = 0,
-                 rawModels = 0, fullFaces = 0, screenEffects = 0;
+                 rawModels = 0, fullFaces = 0, screenEffects = 0,
+                 perPixelLights = 0, modernColors = 0;
         for (const auto &command : replayBatch->commands) {
           const auto *draw =
               std::get_if<replay::VulkanReplayBakedDraw>(&command.payload);
+          if (draw && draw->segmentCount) {
+            const auto &surface=draw->segments[0].uniforms.mgsSurfaceEffect;
+            const auto kind=uint32_t(surface[0][0]);
+            if(kind) ps1::metrics::count("mgs.effects.gpu.kind."+std::to_string(kind));
+            if(surface[3][2]) ps1::metrics::count("mgs.effects.gpu.fog");
+            if(surface[3][3]) ps1::metrics::count("mgs.effects.gpu.palette");
+            perPixelLights += draw->segments[0].uniforms.mgsAmbient[3] != 0;
+            modernColors += (draw->segments[0].uniforms.textureState[2] &
+                             replay::replayDrawFlagBit(
+                                 replay::ReplayDrawFlag::ModernColor)) != 0;
+          }
           if (draw && draw->segmentCount &&
               draw->segments[0].uniforms.mgsProjection[3] != 0.0f)
             ++originals;
@@ -28143,6 +28231,8 @@ struct RendererVulkan::Impl {
             ++rawModels;
         }
         ps1::metrics::count("mgs.mesh.gpu_submitted_packets", originals);
+        ps1::metrics::count("mgs.lighting.gpu_per_pixel_draws", perPixelLights);
+        ps1::metrics::count("mgs.color.gpu_rgb8_draws", modernColors);
         ps1::metrics::count("mgs.texture.gpu_submitted_packets",
                             cachedTextures);
         ps1::metrics::count("mgs.scene.recovery_gpu_submitted", recovered);
