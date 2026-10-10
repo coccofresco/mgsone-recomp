@@ -5,14 +5,14 @@ body:
     id: build
     attributes:
       label: Build version
-      description: Version from build-info.json or the diagnostics ZIP.
+      description: Commit hash for a source build, or version from build-info.json or the diagnostics ZIP.
     validations:
       required: true
   - type: textarea
     id: system
     attributes:
       label: System and graphics
-      description: Linux distribution, CPU, GPU, driver, X11/Wayland, controller and selected presentation resolution.
+      description: OS version (Linux distribution or Windows), CPU, GPU, driver, X11/Wayland if applicable, controller and selected presentation resolution.
     validations:
       required: true
   - type: textarea

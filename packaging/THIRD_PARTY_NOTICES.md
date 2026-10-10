@@ -51,7 +51,11 @@ FoxdieTeam/mgs_reversing at commit
 `217509eae471629b1a53633b816c61adfef9ed5c`. Its provenance and changes are
 identified in `engine/ps1Runtime/src/games/mgs_decomp/texture.c` and
 `docs/mgs-decomp-native-core.md`; these notices do not assign a new license
-to the upstream work. Verify imported-code notices as part of release review.
+to the upstream work. At publication review on 2026-10-10, no standalone
+license was identified in that upstream snapshot. Do not infer GPL permission
+for this adaptation from the engine's LICENSE; attribution is not a license
+grant. This provenance limitation remains relevant to downstream reuse and
+binary-release review.
 
 No original game disc, executable image, BIOS, extracted assets, memory card
 or savestate is included. The installer requires the user's original USA
