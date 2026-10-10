@@ -8,6 +8,11 @@ A native PC recompilation of *Metal Gear Solid* for PlayStation, with a modern
 Vulkan presentation built around the original game assets. Repository:
 **mgsone-recomp**.
 
+> **AI-MADE PROJECT.** MGSOne-specific development is **AI-generated, under
+> human direction**. The donor projects, third-party libraries and original
+> game are the work of their respective creators; this label applies to the
+> project-specific work built on those foundations.
+
 ## Credit Where It Belongs
 
 Before the shaders, bubbles and increasingly elaborate surveillance cameras:
@@ -61,7 +66,7 @@ Selected decompiled C routines replace it where they have been adapted and
 checked against the USA executable. This is an ongoing migration, not a claim
 that the entire game has already been rewritten in clean C.
 
-**Development of this project is entirely AI-assisted, under human direction.**
+**The project-specific work is AI-made, under human direction.**
 That describes the project-specific work, not the mature donor projects and
 libraries above. As with [TriAevum](https://github.com/coccofresco/TriAevum),
 there is a fair amount of concentrated AI slop here. The regression tests are
