@@ -1,0 +1,25 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+// Godot 4.7.2 / Intel ASSAO edge-aware blur, adapted to bounded texel loads.
+// Copyright and MIT terms: engine/third_party/godot_ssao.
+layout(local_size_x=8,local_size_y=8) in;
+layout(set=0,binding=0) uniform sampler2D u_ao_depth;
+layout(set=0,binding=1) uniform sampler2D u_ao_input;
+layout(rgba8,set=0,binding=2) uniform writeonly image2D u_ao_output;
+#include "mgs_ssao_common.glsl"
+void main() {
+  ivec2 p=ivec2(gl_GlobalInvocationID.xy);
+  if(any(greaterThanEqual(p,ao_size()))) return;
+  vec2 center=texelFetch(u_ao_input,p,0).rg;
+  vec4 edges=ao_unpack_edges(center.y);
+  const ivec2 offsets[4]=ivec2[](ivec2(-1,0),ivec2(1,0),ivec2(0,-1),ivec2(0,1));
+  float sum=center.x*0.5, weight=0.5;
+  for(int i=0;i<4;++i) {
+    ivec2 q=p+offsets[i];
+    if(any(lessThan(q,ivec2(0))) || any(greaterThanEqual(q,ao_size()))) continue;
+    vec2 sample_ao=texelFetch(u_ao_input,q,0).rg;
+    float w=edges[i]*ao_unpack_edges(sample_ao.y)[i^1];
+    sum+=sample_ao.x*w; weight+=w;
+  }
+  imageStore(u_ao_output,p,vec4(sum/weight,center.y,0,0));
+}

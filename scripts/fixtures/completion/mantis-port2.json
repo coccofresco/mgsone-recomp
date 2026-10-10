@@ -1,0 +1,66 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-original-second-controller",
+  "source": "chara/snake/sna_init.c original SnaAct sets PLAYER_SECOND_CONTROLLER=0x08000000 when second GV pad receives status/release and PLAYER_SECOND_AVAILABLE. Supply Right on port2 (avoid entering first-person before prepared hit), observe original status, no RAM patches.",
+  "requires": {
+    "stage": "s07b",
+    "story": 129,
+    "actor_psyco_count": 1,
+    "gcl_12000046": 3,
+    "work_psyco_800d3acc_0844_s16": 9
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000046",
+    "work_psyco_800d3acc_0844_s16"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-second-port-recognition",
+        "until": {
+          "player_status": {
+            "mask": 134250496,
+            "eq": 134217728
+          },
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sampled_game_runs": [
+            [
+              2,
+              0,
+              32
+            ],
+            [
+              2,
+              0,
+              0
+            ]
+          ]
+        },
+        "attempts": 10,
+        "stable_frames": 8,
+        "max_frames": 180,
+        "abort_when": {
+          "life": 0
+        }
+      }
+    ]
+  }
+}

@@ -1,5 +1,6 @@
 #include "runtime/gpu/mgs_asset_cache_vulkan.h"
 #include "runtime/metrics.h"
+#include "runtime/gpu/vulkan_memory_metrics.h"
 #include <cstring>
 #include <fmt/format.h>
 #include <stdexcept>
@@ -18,7 +19,7 @@ struct Buffer {
   ~Buffer() {
     if (mapped) vkUnmapMemory(device, memory);
     if (buffer) vkDestroyBuffer(device, buffer, nullptr);
-    if (memory) vkFreeMemory(device, memory, nullptr);
+    if (memory) ps1::gpu::freeTrackedVulkanMemory(device, memory, nullptr);
   }
   void create(VkPhysicalDevice physical, VkDeviceSize size, VkBufferUsageFlags usage,
               VkMemoryPropertyFlags properties) {
@@ -38,7 +39,7 @@ struct Buffer {
     VkMemoryAllocateInfo allocate{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
     allocate.allocationSize = requirements.size;
     allocate.memoryTypeIndex = selected;
-    checked(vkAllocateMemory(device, &allocate, nullptr, &memory), "allocate buffer");
+    checked(ps1::gpu::allocateTrackedVulkanMemory(device, &allocate, nullptr, &memory), "allocate buffer");
     checked(vkBindBufferMemory(device, buffer, memory, 0), "bind buffer");
   }
   void map() { checked(vkMapMemory(device, memory, 0, VK_WHOLE_SIZE, 0, &mapped), "map buffer"); }
@@ -52,7 +53,7 @@ struct Command {
 }
 MgsAssetGpuCache::~MgsAssetGpuCache() {
   if (buffer_) vkDestroyBuffer(device_, buffer_, nullptr);
-  if (memory_) vkFreeMemory(device_, memory_, nullptr);
+  if (memory_) ps1::gpu::freeTrackedVulkanMemory(device_, memory_, nullptr);
 }
 std::unique_ptr<MgsAssetGpuCache> MgsAssetGpuCache::upload(VkPhysicalDevice physical,
     VkDevice device, VkQueue queue, VkCommandPool pool,

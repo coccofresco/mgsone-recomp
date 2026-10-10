@@ -299,3 +299,38 @@ TEST_F(PsyqPadTest, SecondPortUsesSdkPort10AndFirstPortIsIndependent) {
   hle_libetc_PadGetState(&ctx);
   EXPECT_EQ(ctx.r[V0], 0u);
 }
+
+TEST_F(PsyqPadTest, DisconnectedPortCannotReportHeldButtons) {
+  for (int port = 0; port < 2; ++port) {
+    input.reset();
+    input.press(input::BTN_CROSS | input::BTN_START, port);
+    input.setPadType(port, input::PadType::None);
+    hle_libetc_PadRead(&ctx);
+    EXPECT_EQ(ctx.r[V0], 0xffffffffu);
+  }
+}
+
+TEST_F(PsyqPadTest, TypeQueriesAndBuffersUseTheSameMovieFrameDuringHotplug) {
+  input.setFrameSampling(true);
+  ctx.r[A0] = 0x80120000; ctx.r[A1] = 0x80120100;
+  hle_libetc_PadInitDirect(&ctx);
+  for (int port = 0; port < 2; ++port)
+    for (auto type : {input::PadType::None, input::PadType::Analog,
+                      input::PadType::Digital}) {
+      const auto previous = input.latchedSample()[port];
+      input.setPadType(port, type);
+      for (unsigned boundary = 0; boundary < 2; ++boundary) {
+        if (boundary) input.latchVBlank();
+        const auto expected = boundary ? type : previous.padType;
+        ctx.r[A0] = port * 0x10;
+        hle_libetc_PadGetState(&ctx);
+        EXPECT_EQ(ctx.r[V0], expected == input::PadType::None ? 0u : 6u);
+        ctx.r[A1] = 1;
+        hle_libpad_PadInfoMode(&ctx);
+        EXPECT_EQ(ctx.r[V0], uint8_t(expected) >> 4);
+        psyq_pad_refresh_direct_buffers(&ctx);
+        EXPECT_EQ(mem.read8(0x80120001 + port * 0x100),
+                  expected == input::PadType::None ? 0xff : uint8_t(expected));
+      }
+    }
+}

@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "date": "2026-10-06",
+  "candidate": "0.1.0-alpha.1-dev.2",
+  "status": "local-candidate-not-qualified-for-public-release",
+  "public_release_ready": false,
+  "native_runtime": {
+    "input_sha256": "82ec0357e4713cab7ce335b61dcf34508bb8d8c1d04b96608d10e48e0c2a199e",
+    "packaged_sha256": "c3b6ebc4bae792270412cba9827d111f286d7f3fe4ad79b12a38eea0f0e76277",
+    "abi": {
+      "GLIBC": "GLIBC_2.38",
+      "GLIBCXX": "GLIBCXX_3.4.32",
+      "CXXABI": "CXXABI_1.3.15"
+    }
+  },
+  "tests": {
+    "cpp": {
+      "passed": 1331,
+      "skipped": 31,
+      "failed": 0,
+      "report": "data/validation/steamos-20261006/runtime-tests.json"
+    },
+    "python": {
+      "passed": 173,
+      "failed": 0,
+      "report": "data/validation/steamos-20261006/python-tests-final.log"
+    }
+  },
+  "host_pause": {
+    "returncode": 0,
+    "runtime_sha256": "82ec0357e4713cab7ce335b61dcf34508bb8d8c1d04b96608d10e48e0c2a199e",
+    "abi": {
+      "GLIBC": "GLIBC_2.38",
+      "GLIBCXX": "GLIBCXX_3.4.32",
+      "CXXABI": "CXXABI_1.3.15"
+    },
+    "state_bytes": 3941033,
+    "log": "host-probe-final.log",
+    "pause_hold_ms": 120,
+    "ram_unchanged": true,
+    "guest_vblank_unchanged": true,
+    "sequence": [
+      "pause",
+      "save",
+      "load",
+      "save",
+      "resume"
+    ],
+    "resumed_guest_vblanks": 30
+  },
+  "appimage": {
+    "status": "assembled-and-smoke-tested",
+    "tested_artifact_sha256": "59ca9f31bbeb8bf3dce6c2ffae29a30239df71f353e7a88c6f1b67623072a598",
+    "report": "data/releases/steamos-appimage-20261006-r2/appimage-report.json",
+    "checked_elf_files": 70,
+    "glibc_ceiling": "2.39",
+    "boot": {
+      "guest_vblanks": 1800,
+      "headless": true,
+      "returncode": 0,
+      "uses_isolated_imported_profile": true,
+      "shutdown_fallback_used": true
+    },
+    "frontend": {
+      "backend": "SDL dummy / software renderer",
+      "big_picture": true,
+      "rendered_frames": 15,
+      "returncode": 0,
+      "capture": "data/validation/steamos-20261006/appimage-frontend.png"
+    },
+    "final_assembly_note": "Final artifacts add documentation/staging changes; compare payload hashes and assembly reports. These checks do not verify physical GPU or Steam Input."
+  },
+  "flatpak": {
+    "status": "payload-staged-export-blocked",
+    "runtime": "org.freedesktop.Platform/25.08",
+    "app_id": "io.github.mgsrecomp.MGSRecomp",
+    "app_id_provisional": true,
+    "export_error": "Normal icon-validation sandbox fails: NETLINK_ROUTE Operation not permitted",
+    "log": "data/validation/steamos-20261006/flatpak-build.log",
+    "bundle_produced": false,
+    "sandbox_validation_bypassed": false
+  },
+  "protected_personal_saves": "SHA256 unchanged against .local/tas-protected.sha256",
+  "qualification_remaining": [
+    "SteamOS physical Vulkan and Steam Input/controller tests in Desktop and Gaming Mode",
+    "Flatpak normal export/install/run; AppImage FUSE launch",
+    "Suspend/resume, focus and hotplug on physical hardware",
+    "Full mandatory fights: Mantis later phases, Hind roof-exit entry, jeep combat",
+    "GitHub destination, application identity and publication metadata",
+    "Public source/provenance review and clean baseline build"
+  ],
+  "publication": {
+    "github_remote": null,
+    "published": false
+  },
+  "limitations": [
+    "The native headless runtime reached its target but used the existing 2-second bounded shutdown fallback; graceful game-thread exit is not certified.",
+    "Launcher screenshot is the real packaged SDL UI, not a Vulkan game screenshot.",
+    "No claim of continuous completed campaign or Steam Deck Verified status."
+  ]
+}

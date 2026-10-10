@@ -8,6 +8,30 @@ from mgs_overlay_catalog import BASE, callback_entries, code_extent
 
 
 class OverlayCatalogTest(unittest.TestCase):
+    def test_callback_after_store_or_arithmetic_return_delay_is_callable(self):
+        # USA padmng Die is referenced by GV_SetNamedActor but follows
+        # Act's JR RA / SH, not JR RA / NOP. Both materialized addresses and
+        # pointer tables need to recognize this legal function boundary.
+        for delay in (0xA4A20000, 0x27BD0020, 0x24420001):
+            words = [0x1234, BASE + 16, 0, 0,
+                     0x3C02800C, 0x24445988, 0x03E00008, delay,
+                     0x3C01800C, 0xAC205BF0, 0x03E00008, 0]
+            for table_reference in (False, True):
+                source = list(words)
+                if table_reference:
+                    source[4:6] = [0, 0]
+                payload = struct.pack('<12I', *source)
+                if table_reference:
+                    payload += struct.pack('<I', BASE + 32)
+                with self.subTest(delay=hex(delay), table_reference=table_reference):
+                    self.assertEqual(callback_entries(payload, 48)[0], [BASE + 16, BASE + 32])
+
+    def test_illegal_control_transfer_in_return_delay_does_not_make_callback(self):
+        for delay in (0x03E00008, 0x10000001, 0x08000000, 0x45010000, 0x0000000C):
+            payload = struct.pack('<9I', 1, BASE + 16, 0, 0,
+                                  0x03E00008, delay, 0x03E00008, 0, BASE + 24)
+            self.assertEqual(callback_entries(payload, 32)[0], [BASE + 16])
+
     def test_signed_pointer_materialization_finds_leaf_but_not_interior(self):
         # Actor table, constructor, and callback after its return. Materialize
         # C59A8 with signed low half 0x59A8 and reject interior C59AC.

@@ -35,7 +35,7 @@ EventSystem::Snapshot EventSystem::snapshot() const {
   return state;
 }
 
-bool EventSystem::restore(const Snapshot &state) {
+bool EventSystem::validSnapshot(const Snapshot &state) {
   if (state.events.size() > MAX_EVENTS)
     return false;
 
@@ -53,6 +53,11 @@ bool EventSystem::restore(const Snapshot &state) {
                    }))
     return false;
 
+  return true;
+}
+
+bool EventSystem::restore(const Snapshot &state) {
+  if (!validSnapshot(state)) return false;
   std::lock_guard<std::mutex> eventsLock(eventsMtx_);
   std::lock_guard<std::mutex> callbacksLock(cbMtx_);
   events_ = state.events;

@@ -1,0 +1,207 @@
+{
+  "format": "mgs-promo-60fps-evidence-1",
+  "clips": [
+    {
+      "name": "Intro \u2014 sala di comando",
+      "disc": 1,
+      "frames": 316,
+      "fps": 60,
+      "interpolated_frames": 156,
+      "capture_sha256": "7e552ef245cf34a83801a39d0a604c116a855539bb11c72b73ce693f13cf5b0d"
+    },
+    {
+      "name": "Intro \u2014 lancio",
+      "disc": 1,
+      "frames": 286,
+      "fps": 60,
+      "interpolated_frames": 67,
+      "capture_sha256": "eb223c7669ce85e05a059a94c7975895df3a20b94fb17dc41e9d96cd6d4ca293"
+    },
+    {
+      "name": "Intro \u2014 ripresa rossa",
+      "disc": 1,
+      "frames": 192,
+      "fps": 60,
+      "interpolated_frames": 94,
+      "capture_sha256": "1ac9006a22daff3eff370cf34166f010f4a6612304907da3ba8c94b21dab38d4"
+    },
+    {
+      "name": "Intro \u2014 veicolo subacqueo e bolle",
+      "disc": 1,
+      "frames": 454,
+      "fps": 60,
+      "interpolated_frames": 185,
+      "capture_sha256": "1c5e5d6ec066c83997e124f8416b1ea197884b8f2904cb9a5c87f15fc6ddcc08"
+    },
+    {
+      "name": "Intro \u2014 Snake in immersione",
+      "disc": 1,
+      "frames": 574,
+      "fps": 60,
+      "interpolated_frames": 273,
+      "capture_sha256": "32890faed8c1c330c541b604dae230ad6761eddefdf53d401c413ddc7cc5e660"
+    },
+    {
+      "name": "Intro \u2014 risalita",
+      "disc": 1,
+      "frames": 324,
+      "fps": 60,
+      "interpolated_frames": 138,
+      "capture_sha256": "adeb52bae8758bbb4ca51ea0efbb6ec4ee6fc6a7b434846fdc2d1df6486b27d8"
+    },
+    {
+      "name": "Codec \u2014 Meryl e Snake",
+      "disc": 1,
+      "frames": 480,
+      "fps": 60,
+      "interpolated_frames": 0,
+      "capture_sha256": "d447568d13474cc6940c6546d7d521deef4ec8b89fd15eaa05c42aa393a9c7c9"
+    },
+    {
+      "name": "Psycho Mantis",
+      "disc": 1,
+      "frames": 680,
+      "fps": 60,
+      "interpolated_frames": 337,
+      "capture_sha256": "2a9a0303d0ad013e3931a3a021c5802a7182ca857b0ceb1b445b70ad738fa7d4"
+    },
+    {
+      "name": "Hind \u2014 esplosioni",
+      "disc": 1,
+      "frames": 498,
+      "fps": 60,
+      "interpolated_frames": 230,
+      "capture_sha256": "1ca13d39080ce71e92946be7134dba4cc59a009951da75aad1803ed6338e9c36"
+    },
+    {
+      "name": "Metal Gear REX",
+      "disc": 2,
+      "frames": 572,
+      "fps": 60,
+      "interpolated_frames": 258,
+      "capture_sha256": "45efcc3818e59310334349a911655e1abcccaa121d98c4c2199baa31b8f7ff8f"
+    },
+    {
+      "name": "Fuga in jeep \u2014 fuoco e movimento",
+      "disc": 2,
+      "frames": 444,
+      "fps": 60,
+      "interpolated_frames": 218,
+      "capture_sha256": "50f8252927601c3706296aa4f6780fd27536aba34a3a0913fcfcfa43fb966f0e"
+    },
+    {
+      "name": "Snake \u2014 ripresa calma e dissolvenza",
+      "disc": 1,
+      "frames": 580,
+      "fps": 60,
+      "interpolated_frames": 287,
+      "capture_sha256": "66e6b9697bdd003bdccb3785f432f2e85f1210bc550e7fa00579850150c9472f"
+    }
+  ],
+  "exports": [
+    {
+      "path": "data/media/promo-20261010-60fps/final/MGS_Recomp_Alpha_Promo_1080p60.mp4",
+      "sha256": "370f6ec0d7a46b0230d3e360dab3eb0226d678e691b8514921f2952ae616ee37",
+      "bytes": 105992031,
+      "width": 1920,
+      "height": 1080,
+      "fps": "60/1",
+      "frames": 5400,
+      "duration": "90.000000",
+      "last_frame_rgb_max": 4,
+      "last_20ms_audio_peak": 6.857784740077477e-08,
+      "decoded_without_errors": true,
+      "packet_timestamps": {
+        "count": 5400,
+        "step_seconds": "1/60",
+        "missing_or_repeated": 0
+      }
+    },
+    {
+      "path": "data/media/promo-20261010-60fps/final/MGS_Recomp_Alpha_Promo_4K60.mp4",
+      "sha256": "f1c8ea3ff1d8563efe4929e21b05b5c20ec2d16060498d80675db1203129b8be",
+      "bytes": 308579902,
+      "width": 3840,
+      "height": 2160,
+      "fps": "60/1",
+      "frames": 5400,
+      "duration": "90.000000",
+      "last_frame_rgb_max": 3,
+      "last_20ms_audio_peak": 6.857784740077477e-08,
+      "decoded_without_errors": true,
+      "packet_timestamps": {
+        "count": 5400,
+        "step_seconds": "1/60",
+        "missing_or_repeated": 0
+      }
+    }
+  ],
+  "interpolated_frames_in_edit": 2243,
+  "native_invariance": {
+    "format": "mgs-interpolation-check-1",
+    "passed": true,
+    "failures": [],
+    "evidence": {
+      "off": {
+        "intermediates": 0,
+        "checkpoint": "data/validation/interpolation-20261010/off/states/checkpoint_000000180_vblank_4982.ps1s",
+        "checkpoint_sha256": "7f062500d5f2b157a98da7b11a21a2d5f7a9d7589591d47942d0b1e61284b843",
+        "metrics_sha256": "d87605ce16c52932b53a26f2ce69ff0792f5089869c275cf16d9ad2881300414",
+        "log_sha256": "28307beff14ab6abab124def8a9f318ffc64a1ea82cb67d6eb080248fd47740b"
+      },
+      "on": {
+        "intermediates": 88,
+        "checkpoint": "data/validation/interpolation-20261010/on/states/checkpoint_000000180_vblank_4982.ps1s",
+        "checkpoint_sha256": "8db2a159cd99fa07d0a73aa0a57ff59fbcec953ef2e2e620c04e6fbc9464ea09",
+        "metrics_sha256": "f964e3b1543ba18c29cf6c1001c9ceb9216c0c6fd212e26ecda19fcdb9ae1ade",
+        "log_sha256": "08ce01debae8c711549c13c786195e74e718736462a23d35d54063cb0fcfe5f6"
+      },
+      "cpu": {
+        "identical": true,
+        "bytes": 460,
+        "sha256": [
+          "a30228fd5712be7b2a67ad70a73e470f38ce33ba813f827dbec8cb2923cb7ed1",
+          "a30228fd5712be7b2a67ad70a73e470f38ce33ba813f827dbec8cb2923cb7ed1"
+        ]
+      },
+      "ram": {
+        "identical": true,
+        "bytes": 2097152,
+        "sha256": [
+          "ed04f3432550c44bec020ed5ad092e8994c0d4af49f4be13cd9b619c54ece889",
+          "ed04f3432550c44bec020ed5ad092e8994c0d4af49f4be13cd9b619c54ece889"
+        ]
+      },
+      "scratchpad": {
+        "identical": true,
+        "bytes": 1024,
+        "sha256": [
+          "5df2ec7117477273066335bd425cac87cf2b0231c562e67ef3f2053114526f1c",
+          "5df2ec7117477273066335bd425cac87cf2b0231c562e67ef3f2053114526f1c"
+        ]
+      },
+      "vram_raw16": {
+        "identical": true,
+        "bytes": 1048576,
+        "sha256": [
+          "3ce39157c53e39e001ea94859e62377068730441de19c28556e8645a14cbd718",
+          "3ce39157c53e39e001ea94859e62377068730441de19c28556e8645a14cbd718"
+        ]
+      }
+    },
+    "limits": "One deterministic route; not full-game or realtime performance certification."
+  },
+  "tests": {
+    "cpp_selected_passed": 78,
+    "python_passed": 205,
+    "python_skipped": 5
+  },
+  "runtime_sha256": "d54f34ac114d2c0c6bbb8fd264907378757fde389a9c2f148dd8cea7bd77a8b3",
+  "limitations": [
+    "TAS native invariance is established for the 180-VBlank proof route, not the entire game.",
+    "Codec and other discrete 2D animation retain their original keyframes; no optical interpolation.",
+    "20 Hz phase generation covered by unit tests; selected promo shots used 30 Hz geometry.",
+    "Capture under validation/readback is not a real-time performance benchmark.",
+    "Mantis and Hind sequences use documented post-damage synthetic scenario fixtures."
+  ]
+}

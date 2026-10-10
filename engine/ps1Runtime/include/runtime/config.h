@@ -84,6 +84,11 @@ struct GameConfig {
   // Exact opt-in. An empty value keeps every game-specific hook inert.
   std::string profile;
   bool widescreen16x9 = false;
+  // Applied only by the MGS profile; false restores simulated CD data timing.
+  bool fastLoading = true;
+  // Presentation only; the authoritative software raster remains native 1x.
+  int presentationHeight = 2160;
+  bool ambientOcclusion = true;
   bool presentationDepthCorrections = false;
   // Horizontal host-geometry admission margin in presentation pixels. The
   // final Vulkan viewport is unchanged and clips pixels outside the image.

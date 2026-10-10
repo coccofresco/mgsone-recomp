@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "date": "2026-10-06",
+  "candidate": "0.1.0-alpha.1-dev.3",
+  "status": "automated-passed-physical-qualification-pending",
+  "public_release_ready": false,
+  "input_runtime_sha256": "02976d524b9fb0f7b01e004dd9191e8a0ecb04c63a29d0f6ba36247732e3badd",
+  "input_frontend_sha256": "2f264af5bbce120b9ec6acde7ccf1561c1ef3b688ffda5e145b49dfdf0fd6161",
+  "runtime_abi": {
+    "GLIBC": "GLIBC_2.38",
+    "GLIBCXX": "GLIBCXX_3.4.32",
+    "CXXABI": "CXXABI_1.3.15"
+  },
+  "controller_tests": {
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0,
+    "report": "data/validation/controllers-20261006/controller-tests.json",
+    "transport": "SDL virtual devices; no physical USB/Bluetooth or running Steam client"
+  },
+  "mappings": {
+    "linux_entries": 743,
+    "real_db_profiles_tested": [
+      "Xbox360USB",
+      "XboxOneUSB",
+      "XboxSeriesUSB",
+      "DualShock4USB",
+      "DualShock4BT",
+      "DualSenseUSB",
+      "DualSenseBT",
+      "SwitchProBT",
+      "SwitchProUSB",
+      "EightBitDoPro2BT"
+    ],
+    "database_sha256": "f6cb9252c3c3790c3513c7d279e5b4b37b0d75d739f6a573f3a55471914fbde6",
+    "upstream_commit": null
+  },
+  "runtime_tests": {
+    "passed": 1331,
+    "skipped": 31,
+    "failed": 0,
+    "report": "data/validation/controllers-20261006/runtime-tests.json"
+  },
+  "python_tests": {
+    "passed": 175,
+    "failed": 0,
+    "report": "data/validation/controllers-20261006/python-tests.log",
+    "steam_child_environment_preserved": true
+  },
+  "native_pause_probe": {
+    "returncode": 0,
+    "runtime_sha256": "02976d524b9fb0f7b01e004dd9191e8a0ecb04c63a29d0f6ba36247732e3badd",
+    "sequence": [
+      "pause",
+      "save",
+      "load",
+      "save",
+      "resume"
+    ],
+    "real_game": true
+  },
+  "implementation": [
+    "One SDL handle selection shared by gameplay and ImGui",
+    "Recognize Steam virtual raw GUID; explicit device choice preserved",
+    "Preserve Steam/SDL environment across launcher and runtime",
+    "Sample combined host state; neutral release after remap, reconnect or pause",
+    "Database included alongside both executables; persistent GUID/deadzone/button prompts"
+  ],
+  "physical_steam_input_qualified": false,
+  "physical_controller_models_qualified": [],
+  "flatpak_export_status": "Normal sandbox export blocked by NETLINK_ROUTE in this environment; staging only",
+  "not_implemented": [
+    "Rumble output from original game",
+    "Gyro actions",
+    "Steam Input API action sets or dynamic Steam glyphs"
+  ],
+  "artifacts": "See data/releases/controllers-20261006 and data/validation/controllers-20261006/package-verification.json for final assembly hashes and artifact-specific checks.",
+  "native_frontend_handoff": {
+    "status": "passed",
+    "backend": "SDL dummy/software",
+    "native_release_acknowledged": true,
+    "native_reopen_acknowledged": true,
+    "frontend_exitcode": 0
+  }
+}

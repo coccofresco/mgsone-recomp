@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Independent USA scene checks through retail memory-card loading.
 
-Save payloads are never edited. Each case uses isolated cards and reports only
-load/control coverage, not a completed fight or a continuous campaign.
+Ordinary cases load unchanged retail payloads. Explicit synthetic_phase cases
+carry their own provenance and route. Each case uses isolated cards and reports
+only its stated contract, not a completed fight or a continuous campaign.
 """
 import argparse
 import functools
@@ -15,10 +16,12 @@ import shutil
 import struct
 import subprocess
 import sys
+import tomllib
 import zlib
 
 from mgs_tas import CONFIG, ROOT, identity, sha256, write_json
-from mgs_tas_route import compile_route, snapshot
+from mgs_tas_route import check, compile_route, snapshot
+from mgs_loading_check import texture_witness
 
 
 def card_entries(card):
@@ -168,7 +171,10 @@ def run(args):
     cue = args.cue or ROOT / f'data/discs/usa/disc{entry["disc"]}/Metal Gear Solid (USA) (Disc {entry["disc"]}) (v1.0).cue'
     cue = cue.resolve(strict=True)
     output.mkdir(parents=True, exist_ok=False)
-    recipe = load_recipe(entry, not args.load_only)
+    phase = entry.get('synthetic_phase')
+    recipe = phase['route'] if phase else load_recipe(entry, not args.load_only)
+    if phase and (not phase.get('source') or not phase.get('scope')):
+        raise ValueError('synthetic phase requires source and explicit coverage scope')
     write_json(output / 'recipe.json', recipe)
     route = output / 'route.mgsr'
     route.write_text(compile_route(recipe, [], {}))
@@ -180,7 +186,7 @@ def run(args):
             # Mount the selected image in an isolated config; the user's
             # normal launcher configuration stays untouched.
             config = output / 'native.toml'
-            config.write_text(config_with_cue(CONFIG.read_text(), cue))
+            config.write_text(config_with_cue(getattr(args, 'config', CONFIG).read_text(), cue))
             boot = output / 'boot'
             subprocess.run([sys.executable, str(ROOT / 'scripts/mgs_tas.py'),
                             'bootstrap', str(boot), '--cards', str(case / 'cards'), '--config', str(config)],
@@ -192,6 +198,8 @@ def run(args):
                        '--native-route', str(route), '--headless', '--end-at-checkpoint',
                        '--period-us', str(args.period_us), '--native-every', '600',
                        '--checkpoint-interval', '1200', '--timeout', str(args.timeout), '--trace-private']
+            if getattr(args, 'trace_loading', False):
+                command.append('--trace-loading')
         else:
             session = output / 'session'
             work = output / 'work'
@@ -211,7 +219,7 @@ def run(args):
                 track = cue.parent / name
                 binaries[f'track_{index}'] = dict(path=str(track), sha256=sha256(track))
             command = [str(args.donor_runner.resolve()), str(ROOT / '.local/swanstation/swanstation_libretro.so'),
-                       str(cue.resolve()), '19000', 'swanstation_GPU_Renderer=Software',
+                       str(cue.resolve()), str(sum(s.get('max_frames', 3600) for s in recipe['steps']) + 60), 'swanstation_GPU_Renderer=Software',
                        'swanstation_CPU_ExecutionMode=Interpreter', 'swanstation_BIOS_PatchFastBoot=true',
                        'swanstation_BIOS_PathNTSCU=openbios.bin', 'swanstation_CPU_Overclock=165',
                        'swanstation_MemoryCards_Card1Type=Shared', 'swanstation_MemoryCards_Card2Type=Shared']
@@ -243,14 +251,15 @@ def run(args):
                   engine=args.engine, returncode=code, scenario=entry,
                   route_sha256=sha256(route), session=str(session), binaries=binaries,
                   failures=failures,
-                  expected_control=control_expected(entry),
-                  checks=['retail-save-load', 'stable-control'] + ([] if args.load_only else [s['name'] for s in recipe['steps'][-2:]]),
-                  scope='Only these scene checks; no boss completion or campaign continuity claim.')
+                  expected_control=recipe['steps'][-1]['until'] if phase else control_expected(entry),
+                  checks=[s['name'] for s in recipe['steps']] if phase else ['retail-save-load', 'stable-control'] + ([] if args.load_only else [s['name'] for s in recipe['steps'][-2:]]),
+                  scope=phase['scope'] if phase else 'Only these scene checks; no boss completion or campaign continuity claim.')
     if (session / 'final-ram.bin').exists():
         report['final_ram_sha256'] = sha256(session / 'final-ram.bin')
-        state = snapshot((session / 'final-ram.bin').read_bytes())
+        report['textures'] = texture_witness((session / 'final-ram.bin').read_bytes())
+        state = snapshot((session / 'final-ram.bin').read_bytes(), recipe['steps'][-1]['until'])
         report['final_state'] = state
-        matches = all(state[k] == v for k, v in control_expected(entry).items())
+        matches = check(recipe['steps'][-1]['until'], state) if phase else all(state[k] == v for k, v in control_expected(entry).items())
         if not matches:
             report['status'] = 'failed'
             failures.append('terminal stage/story/difficulty/disc differs from scenario contract')
@@ -263,12 +272,23 @@ def run(args):
 
 
 def config_with_cue(text, cue):
+    disc = tomllib.loads(text).get('disc', {})
+    selected = str(cue.resolve())
+    # Preserve the complete seamless set when booting directly from disc 2.
+    # Merely replacing cue_path would register disc 2 twice and lose disc 1.
+    additional = None
+    if 'additional_cues' in disc:
+        additional = list(dict.fromkeys(str(Path(p).resolve()) for p in
+                         [disc.get('cue_path', ''), *disc['additional_cues']] if p and str(Path(p).resolve()) != selected))
     sections = re.split(r'(?=^\[)', text, flags=re.M)
     replaced = 0
     for index, section in enumerate(sections):
         if section.startswith('[disc]\n'):
             sections[index], count = re.subn(r'^cue_path\s*=.*$',
-                lambda _: 'cue_path = ' + json.dumps(str(cue.resolve())), section, flags=re.M)
+                lambda _: 'cue_path = ' + json.dumps(selected), section, flags=re.M)
+            if additional is not None:
+                sections[index] = re.sub(r'^additional_cues\s*=.*$',
+                    lambda _: 'additional_cues = ' + json.dumps(additional), sections[index], flags=re.M)
             replaced += count
     if replaced != 1:
         raise ValueError('expected exactly one disc cue in native configuration')
@@ -290,11 +310,22 @@ def compare(native, donor):
                          'donor': donor.get('final_state', {}).get(key)}
                    for key in fields
                    if native.get('final_state', {}).get(key) != donor.get('final_state', {}).get(key)}
+    textures = {}
+    for engine, result in (('native', native), ('donor', donor)):
+        ram = Path(result.get('session', '')) / 'final-ram.bin'
+        if result.get('session') and ram.is_file():
+            if sha256(ram) != result.get('final_ram_sha256'):
+                raise ValueError('scenario RAM witness changed')
+            textures[engine] = texture_witness(ram.read_bytes())
+        else:
+            textures[engine] = result.get('textures')
+    if not all(textures.values()) or textures['native'] != textures['donor']:
+        differences['textures'] = textures
     return dict(format='mgs-scene-comparison-1',
                 status='complete' if not differences and native['status'] == donor['status'] == 'complete' else 'needs-review',
                 stage=native['scenario']['stage'], story=native['scenario']['story'],
                 native_status=native['status'], donor_status=donor['status'],
-                differences=differences, compared_fields=fields,
+                differences=differences, compared_fields=fields + ('textures',),
                 scope=native['scope'])
 
 
@@ -313,6 +344,9 @@ def main():
     execute.add_argument('--engine', choices=('native', 'donor'), default='native')
     execute.add_argument('--donor-runner', type=Path, default=ROOT / '.local/libretro_headless')
     execute.add_argument('--cue', type=Path, help='override selected disc image for either engine')
+    execute.add_argument('--config', type=Path, default=CONFIG,
+                         help='base native configuration (copied into the isolated run)')
+    execute.add_argument('--trace-loading', action='store_true')
     execute.add_argument('--period-us', type=int, default=2000)
     execute.add_argument('--timeout', type=int, default=120)
     execute.add_argument('--load-only', action='store_true')

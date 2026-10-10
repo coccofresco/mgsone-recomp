@@ -280,6 +280,9 @@ struct VulkanReplayBakedDrawSegment {
 };
 
 struct VulkanReplayBakedDraw {
+  std::array<uint64_t, 4> mgsTemporalIdentity{};
+  std::array<float, 16> mgsTemporalCamera{};
+  uint32_t mgsTemporalFrame = 0;
   // Legacy packet-wide view retained while the live opaque executor migrates
   // to segments.  It mirrors the complete vertex span and first segment.
   uint32_t firstVertex = 0;

@@ -64,7 +64,43 @@ def actor_variable(field):
     return match[1] + '.c' if match else None
 
 
-def actor_counts(ram):
+def work_variable(field):
+    """Read-only live Work view, bound to a unique filename and original Act."""
+    match = re.fullmatch(r'work_([a-z0-9_]{1,48})_([0-9a-f]{8})_([0-9a-f]{4})(?:_p([0-9a-f]{4}))?_([su])(8|16|32)', field)
+    if not match:
+        return None
+    name, act, offset, indirect, sign, bits = match.groups()
+    act, offset, width = int(act, 16), int(offset, 16), int(bits) // 8
+    indirect = int(indirect, 16) if indirect is not None else None
+    if (not 0x80010000 <= act < 0x80200000 or act % 4 or offset >= 0x4000
+            or (indirect is not None and (indirect >= 0x4000 or indirect % width))
+            or offset % (4 if indirect is not None else width)):
+        return None
+    return name + '.c', act, offset, indirect, sign == 's', width
+
+
+def read_work(ram, nodes, variable):
+    name, act, offset, indirect, signed, width = variable
+    actors = nodes.get(name, [])
+    if len(actors) != 1:
+        return None
+    base = actors[0]
+    if struct.unpack_from('<I', ram, base + 8)[0] != act:
+        return None
+    address = base + offset
+    if address > len(ram) - (4 if indirect is not None else width):
+        return None
+    if indirect is not None:
+        pointer = struct.unpack_from('<I', ram, address)[0]
+        if not 0x80010000 <= pointer <= 0x801fffff or pointer % 4:
+            return None
+        address = (pointer & 0x1fffffff) + indirect
+        if address > len(ram) - width:
+            return None
+    return int.from_bytes(ram[address:address + width], 'little', signed=signed)
+
+
+def actor_counts(ram, nodes=None):
     """Read complete USA GV actor lists; malformed lists mean unknown, not zero."""
     if len(ram) != 2097152:
         return None
@@ -88,6 +124,8 @@ def actor_counts(ram):
                     return None
                 label = ram[name:end].decode('ascii', errors='replace')
                 counts[label] = counts.get(label, 0) + 1
+                if nodes is not None:
+                    nodes.setdefault(label, []).append(actor & 0x1fffffff)
             previous, actor = actor, word(actor + 4)
         if word(tail) != previous:
             return None
@@ -166,7 +204,7 @@ def snapshot(ram, observations=()):
     # heap address or Integral Work layout. USA OpenAct 800D272C reads +0xA48;
     # its case-7 switch reads +0xA4C. Integral uses +0xA74/+0xA78 instead.
     result['title_state'] = result['title_selection'] = result['title_level'] = None
-    if result['stage'] == 'title':
+    if result['current_stage'] == 'title':
         marker = struct.pack('<I', 0x800D26E0)
         start = 0
         matches = []
@@ -183,8 +221,23 @@ def snapshot(ram, observations=()):
                                  ('title_level', 0x24B8)]:
                 result[name] = struct.unpack_from('<i', ram, matches[0] + offset)[0]
     watchers = watcher_actors(ram) if any(watcher_variable(f) for f in observations) else {}
-    actors = actor_counts(ram) if any(actor_variable(f) for f in observations) else None
+    movie_fields = {'movie_frame', 'movie_total_frames'}
+    nodes = {}
+    actors = actor_counts(ram, nodes) if result['current_stage'] == 'd18a' or any(actor_variable(f) or work_variable(f) or f in movie_fields for f in observations) else None
+    result.update(movie_frame=None, movie_total_frames=None)
+    movies = nodes.get('movie.c', [])
+    if actors is not None and len(movies) == 1 and result['current_stage'] == 'd18a':
+        base = movies[0]
+        if base <= len(ram) - 108:
+            act = struct.unpack_from('<I', ram, base + 8)[0]
+            info = struct.unpack_from('<I', ram, base + 32)[0] & 0x1fffffff
+            if act in (0x800c79ac, 0x800c7718) and 0x10000 <= info <= len(ram) - 8:
+                result['movie_frame'] = struct.unpack_from('<H', ram, base + 62)[0]
+                result['movie_total_frames'] = struct.unpack_from('<H', ram, info + 2)[0]
     for field in observations:
+        work = work_variable(field)
+        if work:
+            result[field] = read_work(ram, nodes, work) if actors is not None else None
         actor = actor_variable(field)
         if actor:
             result[field] = actors.get(actor, 0) if actors is not None else None
@@ -221,7 +274,7 @@ OPERATORS = frozenset(('eq', 'ne', 'min', 'max', 'mask'))
 def check(conditions, state):
     """All named predicates must match. A missing actor never satisfies ne."""
     for field, expected in conditions.items():
-        if field not in FIELDS and not gcl_variable(field) and not watcher_variable(field) and not actor_variable(field):
+        if field not in FIELDS and not gcl_variable(field) and not watcher_variable(field) and not actor_variable(field) and not work_variable(field):
             raise ValueError(f'unknown observation: {field}')
         value = state.get(field)
         if value is None:
@@ -461,11 +514,11 @@ def run_checkpoint_driver(args):
 
 def compile_route(recipe, movie, metadata):
     lines = ['MGSROUTE 1']
-    supported = {'stage', 'game_status', 'load_request', 'game_over_timer', 'player_status', 'pause_level', 'alert_mode', 'alert_level',
+    supported = {'stage', 'current_stage', 'game_status', 'load_request', 'game_over_timer', 'player_status', 'pause_level', 'alert_mode', 'alert_level',
                  'control', 'difficulty', 'disc', 'life', 'max_life', 'weapon', 'item',
                  'stance', 'story', 'x', 'y', 'z', 'yaw', 'turn_yaw', 'pad_origin', 'socom_ammo',
                  'guards_alive', 'guards_in_room', 'ambush_phase', 'ambush_kills',
-                 'title_state', 'title_selection', 'title_level'}
+                 'movie_frame', 'movie_total_frames', 'title_state', 'title_selection', 'title_level'}
     if recipe.get('format') != 'mgs-tas-route-1' or not recipe.get('steps'):
         raise ValueError('unsupported or empty route')
     for step in recipe['steps']:
@@ -482,7 +535,7 @@ def compile_route(recipe, movie, metadata):
             lines.append(f'STABLE {stable}')
         for key, command in [('when', 'WHEN'), ('until', 'UNTIL'), ('guard', 'GUARD'), ('abort_when', 'ABORT')]:
             for field, expected in step.get(key, {}).items():
-                if field not in supported and not gcl_variable(field) and not watcher_variable(field) and not actor_variable(field):
+                if field not in supported and not gcl_variable(field) and not watcher_variable(field) and not actor_variable(field) and not work_variable(field):
                     raise ValueError(f'observation not supported by persistent runner: {field}')
                 predicates = expected if isinstance(expected, dict) else {'eq': expected}
                 if set(predicates) - OPERATORS or not set(predicates) & (OPERATORS - {'mask'}):
@@ -493,7 +546,7 @@ def compile_route(recipe, movie, metadata):
                 for op, value in predicates.items():
                     if op == 'mask':
                         continue
-                    if field == 'stage':
+                    if field in ('stage', 'current_stage'):
                         if op not in ('eq', 'ne') or not isinstance(value, str) or not re.fullmatch('[a-z0-9_]{1,8}', value):
                             raise ValueError('invalid stage predicate')
                     elif not isinstance(value, int):

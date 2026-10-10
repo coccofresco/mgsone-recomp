@@ -1,0 +1,290 @@
+{
+  "format": "mgs-windows-alpha-1",
+  "date": "2026-10-09",
+  "status": "passed-under-wine",
+  "native_windows_certified": false,
+  "release_archive": "data/releases/windows-20261009/mgs-recomp-0.1.0-alpha.1-dev.4-windows-x86_64.zip",
+  "runtime_sha256": "88d05adf132c3c5d2d00c5be395c0f308d960365f58740225f1876c6052954c1",
+  "source_branch": "presentation/source-meshes",
+  "host": {
+    "wine": "Proton Experimental Wine 11.0",
+    "gpu": "NVIDIA GeForce RTX 4060",
+    "driver": "610.57.04",
+    "vulkan": "1.4.341",
+    "os": "Linux"
+  },
+  "dependencies": {
+    "path": "packaging/windows/dependencies.json",
+    "sha256": "8e88422bc5ae99b25fbde9129db9be16a3c22a03ff347aa90da1fcf5c2559325"
+  },
+  "features": [
+    "same 160 native game shards as Linux",
+    "native Win32 guest fibers",
+    "original-asset 3840x2160 Vulkan at fixed 16:9",
+    "same per-pixel lighting, RGB8 presentation, effects and distance-scaled AO (intensity 2.25)",
+    "native SDL controller frontend and Steam shortcut lifetime tracking",
+    "atomic savestates and rotating backups; shared Linux/Windows state format",
+    "automatic disc switch and original media validation",
+    "bundled Python and SDL; no game data or BIOS"
+  ],
+  "units": {
+    "windows_core": {
+      "tests": 77,
+      "failures": 0,
+      "receipt": {
+        "path": "data/validation/windows-20261009-evidence/windows-unit.json",
+        "sha256": "febbfc843c48d4a08745a9822aa9b385076ac23b949b115857714a07a118c2f9"
+      }
+    },
+    "windows_controllers": {
+      "tests": 25,
+      "failures": 0,
+      "receipt": {
+        "path": "data/validation/windows-20261009-evidence/windows-controller.json",
+        "sha256": "acca112513d45a79a0a256aa6b766e7013b156339b99bdf0a4d5d505c5129f65"
+      }
+    },
+    "windows_launcher": {
+      "tests": 5,
+      "passed": true,
+      "receipt": {
+        "path": "data/validation/windows-20261009-evidence/windows-python.log",
+        "sha256": "b112c17ee19e4367a7281b92454c08938edd9b95ac6328b78db075395b4e3a75"
+      }
+    },
+    "linux_runtime": {
+      "passed": 118,
+      "skipped": 1,
+      "receipt": {
+        "path": "data/validation/windows-20261009-evidence/linux-unit.log",
+        "sha256": "969f56951db63e808bdf08431d991dbb019354cf0e6d4737384f700321c5deaf"
+      }
+    },
+    "linux_controllers": {
+      "passed": 25,
+      "receipt": {
+        "path": "data/validation/windows-20261009-evidence/linux-controller.log",
+        "sha256": "f7b7b77fe46b177cbcb21ff249e100384df197daa6c63b21fb7cbd52fda45255"
+      }
+    },
+    "linux_python": {
+      "passed": 198,
+      "skipped_windows_only": 5,
+      "receipt": {
+        "path": "data/validation/windows-20261009-evidence/linux-python.log",
+        "sha256": "c4bd12ef101ee5fff7e4b8317990b34ed923ac73dbfae6d251555ce2887a32e8"
+      }
+    },
+    "image_audit_negative_test": {
+      "path": "data/validation/windows-20261009-evidence/windows-reference-test.log",
+      "sha256": "5f4da3a10467ed523d52edf10edfcd360269e31f5319fbb2e3c0632fb4663431"
+    }
+  },
+  "matrix": {
+    "path": "data/validation/windows-20261009-final-gpu/report.json",
+    "sha256": "0d24b37b8b069b6a40bc4da3d207232536bf72dd315fa4f8226be84ed72e56a9"
+  },
+  "scenes": [
+    {
+      "scene": "01-dock-final-4k",
+      "passed": true,
+      "stage": "s00a",
+      "disc": 1,
+      "frames": 180,
+      "final_4k_captures": 3,
+      "linux_identical_captures": 10,
+      "ssao_gpu_average_ms": 2.5104285649717517
+    },
+    {
+      "scene": "02-water-fixed",
+      "passed": true,
+      "stage": "opening",
+      "disc": 1,
+      "frames": 180,
+      "final_4k_captures": 3,
+      "linux_identical_captures": 10,
+      "ssao_gpu_average_ms": 0.10704914285714286
+    },
+    {
+      "scene": "03-hind-final",
+      "passed": true,
+      "stage": "s11h",
+      "disc": 1,
+      "frames": 180,
+      "final_4k_captures": 3,
+      "linux_identical_captures": 10,
+      "ssao_gpu_average_ms": 2.0840912457142857
+    },
+    {
+      "scene": "04-mantis-battle-vulkan",
+      "passed": true,
+      "stage": "s07b",
+      "disc": 1,
+      "frames": 180,
+      "final_4k_captures": 3,
+      "linux_identical_captures": 10,
+      "ssao_gpu_average_ms": 2.2289320459770114
+    },
+    {
+      "scene": "05-jeep-final-vulkan",
+      "passed": true,
+      "stage": "s19a",
+      "disc": 2,
+      "frames": 180,
+      "final_4k_captures": 3,
+      "linux_identical_captures": 10,
+      "ssao_gpu_average_ms": 2.061560459770115
+    },
+    {
+      "scene": "06-snow-fixed",
+      "passed": true,
+      "stage": "s12b",
+      "disc": 1,
+      "frames": 180,
+      "final_4k_captures": 3,
+      "linux_identical_captures": 10,
+      "ssao_gpu_average_ms": 2.5749253485714285
+    },
+    {
+      "scene": "07-rex-fixed",
+      "passed": true,
+      "stage": "s17a",
+      "disc": 2,
+      "frames": 180,
+      "final_4k_captures": 3,
+      "linux_identical_captures": 10,
+      "ssao_gpu_average_ms": 2.3782687085714285
+    },
+    {
+      "scene": "08-furnace-fixed",
+      "passed": true,
+      "stage": "s13a",
+      "disc": 2,
+      "frames": 180,
+      "final_4k_captures": 3,
+      "linux_identical_captures": 10,
+      "ssao_gpu_average_ms": 2.1508165485714286
+    }
+  ],
+  "comparison": {
+    "final_4k_images_bit_identical": 24,
+    "intermediate_vulkan_images_bit_identical": 24,
+    "native_images_bit_identical": 32,
+    "compiled_shaders_bit_identical": true,
+    "shader_sha256": {
+      "crash3_semi_textured.frag.spv": "80523433a104c63fe16ba34ba40b196686c2925a08a21d8cd005de7763a82d75",
+      "crash3_semi_untextured.frag.spv": "86b3d895a31caedc3d8a5792204570ad080e94e9db0116be7829359df1eda8f7",
+      "crash3_sidecar.vert.spv": "fc3e657161228d4c4727f9e7321de3616d15d29d2119ba23cdb30538665a0f28",
+      "crash3_sidecar_midpoint.comp.spv": "057c63e6f77128188fc31315e7c7d85d2ce784156e155493f36848324e2fd24e",
+      "crash3_sidecar_midpoint_fp32.comp.spv": "4c89786f7b30d8e36934e11f9524830cf0a8fd9617adfb98a66954f7730d3db6",
+      "crash3_sidecar_model_pulled.vert.spv": "869ccb090b473ce142019fb3db8745f180791a97385850c2c69b202bca182363",
+      "crash3_sidecar_opaque.frag.spv": "df5d5014a3e68b395e967386392e8886bf3ecb6d1004ad18e38b2942dbe762c7",
+      "crash3_sidecar_pulled.vert.spv": "1797000ac54cb5a2b5909e71eb753513efbdbba7a2287ce6fa0b5d50eecdb9c9",
+      "crash3_sidecar_pulled_interpolated.vert.spv": "f490b4fe3766b3ff46fd2d0ce9ed834ed839b81fb774cd7137c31597ae22119a",
+      "crash3_sidecar_raw_pulled.vert.spv": "2a90c29328b2bc594135bbd90d503601d92d0023062758b9cdd32ea4f5de41b4",
+      "crash3_sidecar_semi_interlock.frag.spv": "184b23ff49259ab02c8b28faaca8778ebf0a7b462a6030b11b5ca9211ea271ae",
+      "crash3_sidecar_semi_textured.frag.spv": "2e62e333ae1b835e5395963f0d5ada82e4339fe5c3bb3155dbc85ecbadba6cdb",
+      "crash3_sidecar_semi_untextured.frag.spv": "a164427920290aa8f0159c18960d09d5416d2db27e44fdb667dc3aaa8a44e794",
+      "mgs_ssao.comp.spv": "934c0f9b28ccc26f564ebda3205c7943dbfe6f5dfbd23c29f2bb177c1fb952e0",
+      "mgs_ssao_blur.comp.spv": "3f726c47cd71a344d918a9a3bcbcac0e8070b8b215068afaa40bd0420420a07b",
+      "present_fullscreen.vert.spv": "b07e8466fb11e9dc18c71f0839d211f30bf5a12d6973d79b4f0b864cc700bf3d",
+      "present_native.frag.spv": "66a0ec8e54a941db47279aa4050a03c19e9740af8c5f389762a48383ca47d6e6",
+      "present_replay.frag.spv": "582f2958d5a1ad31cb4d411d9aa1110be14e8001db87c4117e40e159d5001b41",
+      "present_replay_depth.frag.spv": "a507331efe81866cb5b6a362d27d3174d6634d12767d6c17499020e7b131abd5",
+      "present_replay_ssao.frag.spv": "198363df22a112724e126648d700da5498f2ad630101b9cde8583e128de0ba79",
+      "present_replay_temporal.frag.spv": "8f46ffe6ac971910d174fdd47e91f2a0496e701a5655e34fc27f8a2baa64041b",
+      "present_rgba.frag.spv": "1bdbb621042e22ea51c58b9357d99043b1519510f9e3b15fd7a394fca4e073cf",
+      "replay_copy_scratch.frag.spv": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07",
+      "replay_native_expand.frag.spv": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870",
+      "replay_opaque_textured.frag.spv": "94af1fa431c7c0b2007173a12a9f8f4b0d79252e2456658dd18879d9b11edef8",
+      "replay_opaque_untextured.frag.spv": "31f22d1d179642c6acfc57d55ddc7ef696c420ec998129334a15020b905d33e7",
+      "replay_precise.frag.spv": "32349c5107eae0cbd1af81ae8be6b4de0452b75816224544c7415d3d98bbf541",
+      "replay_precise.vert.spv": "e4bdb5ad46b968a59cf2ce824aec373dfb2f7b0c3331730c3a0f119dcd6c00b4",
+      "replay_semi_textured.frag.spv": "afc3aef809a7dbae32e2bd03c87187039df58bd7da5b917e5868edfe8e6d8da1",
+      "replay_seed.frag.spv": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d",
+      "replay_visibility_precise.vert.spv": "82b30a4c0b1ea3cb0d4ceda857d29ce076d0fd3c18fe37b61b4d75524990025f",
+      "replay_visibility_owner.frag.spv": "ff93339ddaa8e3d94047a29f3d4fef5fb720000c7af1074cc6bc3923d7a5d513",
+      "replay_visibility_stack.frag.spv": "534f57f99f8bfccfc95e12ae40318a3bb1ad3ebc0894a97c14a0358ac0e84b62"
+    }
+  },
+  "pause_save_restore": {
+    "cycles": 8,
+    "passed": true,
+    "report": {
+      "path": "data/validation/windows-20261009-final-gpu/soak/report.json",
+      "sha256": "ee6356f289322d80d77b113e3f113e104826341ef380169b3e457e10be9eb35f"
+    },
+    "handle_count_coverage": "unavailable: Wine returns zero; not claimed leak-free"
+  },
+  "disc_transition": {
+    "passed": true,
+    "report": {
+      "path": "data/validation/windows-20261009-disc-change/audit.json",
+      "sha256": "08f512e5b08e6cc6c2f11a896818d8ac24ed5aa804bedfc50622ce1f7c806446"
+    },
+    "frames": 542,
+    "automatic_switches": 1,
+    "original_validations": 1,
+    "cd_timeouts": 0,
+    "interpreter_calls": 0
+  },
+  "windows_state_loaded_by_linux": {
+    "passed": true,
+    "report": {
+      "path": "data/validation/windows-20261009-state-back-to-linux/result.json",
+      "sha256": "b9c9a30c6641847b4adfe127b411bf2da17223767cef71a0200823dd679c2e88"
+    },
+    "game_ticks_advanced": 60
+  },
+  "launcher_parent_death": {
+    "passed": true,
+    "report": {
+      "path": "data/validation/windows-20261009-lifecycle.json",
+      "sha256": "fab34ee2663a23ccbc96bc7e5b44798308b70ecec329fae34af185d12d6f24f7"
+    }
+  },
+  "fresh_disc_import": {
+    "passed": true,
+    "unicode_profile": "tested spaces, accented and Japanese characters",
+    "cache_sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6",
+    "receipt": {
+      "path": "data/validation/windows-20261009-evidence/windows-import.log",
+      "sha256": "9340093ff994d67289318b41dea85967b6f93217b7be1df0bc59bef1eeae07e7"
+    }
+  },
+  "frontend": {
+    "passed": true,
+    "screenshot": {
+      "path": "data/validation/windows-20261009-frontend.bmp",
+      "sha256": "9702535008f3b89140ec286163d88a37c93f570540c3e943476add26d03599c3"
+    }
+  },
+  "deterministic_relink": {
+    "path": "data/validation/windows-20261009-evidence/deterministic-link.json",
+    "sha256": "87954e8d376a305412e05b6b92dc92d6f6ea0e630fe623bb1e4d6c4c1ebd851f"
+  },
+  "linux_gpu_sync_validation": {
+    "passed": true,
+    "receipt": {
+      "path": "data/validation/windows-20261009-evidence/linux-gpu.log",
+      "sha256": "aa8b17a2f033fff7a2a2c0045fd9998beae06809110782f30463ade54f4eb8bc"
+    }
+  },
+  "failed_attempts": [
+    {
+      "report": {
+        "path": "data/validation/windows-20261009-gpu1/report.json",
+        "sha256": "d6c6651529a4121fb2701882f3e2674a19eb78ac77206d9835d0da4c0d116935"
+      },
+      "reason": "Wine hides app Vulkan layers; Linux validation below Wine reported repeated ID-properties pNext/extension VUIDs. Retained as failed; not silently reclassified as validation-clean."
+    }
+  ],
+  "limitations": [
+    "No native Windows desktop/GPU/driver acceptance yet.",
+    "Physical Steam Input, USB/Bluetooth, audio-device switching, suspend/resume and Steam overlay are not certified by virtual device tests.",
+    "Application Vulkan validation unavailable through this Wine path; host-layer attempt failed.",
+    "Windows handle-count growth cannot be assessed under this Wine version.",
+    "Sampled scenarios, not continuous campaign/full boss certification."
+  ],
+  "protected_user_saves_unchanged": true
+}

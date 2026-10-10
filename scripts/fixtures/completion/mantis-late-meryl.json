@@ -1,0 +1,50 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-second-meryl-active",
+  "source": "USA psyco.c state3 uses original callback/animation; observe next phase4 with original Meryl actor still present. No state patches.",
+  "requires": {
+    "stage": "s07b",
+    "story": 129,
+    "actor_psyco_count": 1,
+    "gcl_12000046": 3
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000046",
+    "work_psyco_800d3acc_0844_s16"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "second-meryl-phase-entered",
+        "until": {
+          "work_psyco_800d3acc_0844_s16": 4,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "wait:30"
+        },
+        "attempts": 100,
+        "max_frames": 3000,
+        "abort_when": {
+          "life": 0
+        }
+      }
+    ]
+  }
+}

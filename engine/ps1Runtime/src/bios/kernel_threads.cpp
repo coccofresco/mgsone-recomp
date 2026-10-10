@@ -5,6 +5,10 @@
 #include <exception>
 #include <stdexcept>
 #include <vector>
+#include <system_error>
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 #if defined(__unix__) || defined(__APPLE__)
 #include <ucontext.h>
 #endif
@@ -12,11 +16,39 @@ extern void recomp_dispatch(uint8_t *, recomp_context *, uint32_t);
 extern void recomp_resume_dispatch(uint8_t *, recomp_context *, uint32_t);
 
 namespace ps1::bios {
+#if defined(_WIN32)
+namespace {
+// Conversion belongs to the host thread, not to a particular saved timeline.
+// A restart replaces guest continuations while retaining this root stack.
+void *windowsRootFiber() {
+  struct Root {
+    void *handle = nullptr;
+    bool converted = false;
+    Root() {
+      converted = !IsThreadAFiber();
+      handle = converted ? ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH)
+                         : GetCurrentFiber();
+      if (!handle)
+        throw std::system_error(GetLastError(), std::system_category(), "ConvertThreadToFiberEx");
+    }
+    ~Root() {
+      if (converted && IsThreadAFiber() && GetCurrentFiber() == handle)
+        ConvertFiberToThread();
+    }
+  };
+  thread_local Root root;
+  return root.handle;
+}
+}
+#endif
 struct KernelThreads::Impl {
   recomp_context &ctx;
   struct Fiber {
 #if defined(__unix__) || defined(__APPLE__)
     ucontext_t host{};
+#elif defined(_WIN32)
+    void *host = nullptr;
+    bool ownsHost = false;
 #endif
     std::vector<uint8_t> stack;
     Impl *owner = nullptr;
@@ -29,6 +61,14 @@ struct KernelThreads::Impl {
   Fiber *root = nullptr;
   std::exception_ptr failure;
   explicit Impl(recomp_context &c) : ctx(c) {}
+  static void release(Fiber &fiber) {
+#if defined(_WIN32)
+    if (fiber.ownsHost && fiber.host) DeleteFiber(fiber.host);
+    fiber.host = nullptr;
+    fiber.ownsHost = false;
+#endif
+  }
+  ~Impl() { for (auto &fiber : fibers) release(fiber); }
   uint32_t pcb() { return ctx.mem->read32(0x108); }
   uint32_t base() { return ctx.mem->read32(0x110); }
   uint32_t count() { return ctx.mem->read32(0x114) / 0xc0; }
@@ -64,8 +104,7 @@ struct KernelThreads::Impl {
     for (auto &p : ctx.pgxpGpr)
       p = {};
   }
-  static void entry(uint32_t low, uint32_t high) {
-    auto *fiber = reinterpret_cast<Fiber *>((uintptr_t(high) << 32) | low);
+  static void run(Fiber *fiber) {
     auto &self = *fiber->owner;
     try {
       if (fiber->resumePc)
@@ -78,10 +117,18 @@ struct KernelThreads::Impl {
       self.current = self.root;
 #if defined(__unix__) || defined(__APPLE__)
       setcontext(&self.root->host);
+#elif defined(_WIN32)
+      SwitchToFiber(self.root->host);
 #endif
       std::terminate();
     }
   }
+  static void entry(uint32_t low, uint32_t high) {
+    run(reinterpret_cast<Fiber *>((uintptr_t(high) << 32) | low));
+  }
+#if defined(_WIN32)
+  static void WINAPI windowsEntry(void *data) { run(static_cast<Fiber *>(data)); }
+#endif
   void select(uint32_t address, uint32_t resumePc) {
     validate(address);
     if (!current) {
@@ -91,6 +138,9 @@ struct KernelThreads::Impl {
       current->tcb = old;
       current->owner = this;
       current->initialized = true;
+#if defined(_WIN32)
+      current->host = windowsRootFiber();
+#endif
     }
     if (current->tcb == address)
       return;
@@ -112,6 +162,20 @@ struct KernelThreads::Impl {
                   uint32_t(pointer), uint32_t(pointer >> 32));
       target.initialized = true;
     }
+#elif defined(_WIN32)
+    if (!target.initialized) {
+      target.owner = this;
+      target.tcb = address;
+      target.host = CreateFiberEx(64 * 1024, 4 * 1024 * 1024,
+                                 FIBER_FLAG_FLOAT_SWITCH, windowsEntry, &target);
+      if (!target.host)
+        throw std::system_error(GetLastError(), std::system_category(), "CreateFiberEx");
+      target.ownsHost = true;
+      target.initialized = true;
+    }
+#else
+    throw std::runtime_error("Native BIOS thread continuations require a supported host fiber backend");
+#endif
     Fiber *previous = current;
     save(*previous, resumePc);
     load(target);
@@ -120,14 +184,14 @@ struct KernelThreads::Impl {
     metrics::count("bios.thread_switch");
     metrics::trace("bios.thread_switch",
                    {{"from", previous->tcb}, {"to", address}, {"pc", ctx.pc}});
+#if defined(__unix__) || defined(__APPLE__)
     if (swapcontext(&previous->host, &target.host) != 0)
       throw std::runtime_error("swapcontext failed");
+#elif defined(_WIN32)
+    SwitchToFiber(target.host);
+#endif
     if (failure)
       std::rethrow_exception(failure);
-#else
-    throw std::runtime_error("Native BIOS thread continuations require POSIX "
-                             "ucontext on this build");
-#endif
   }
 };
 KernelThreads::KernelThreads(recomp_context &c)
@@ -144,6 +208,7 @@ uint32_t KernelThreads::open(uint32_t entry, uint32_t sp, uint32_t gp) {
       continue;
     if (s.current == &s.fibers[i])
       throw std::runtime_error("reopening active native TCB");
+    Impl::release(s.fibers[i]);
     s.fibers[i] = Impl::Fiber{};
     m.write32(t, 0x4000);
     m.write32(t + 4, 0x1000);
@@ -216,6 +281,9 @@ void KernelThreads::restart(const Snapshot &state) {
     }
     fresh->root = fresh->current = &fresh->fibers[(state.currentTcb - fresh->base()) / 0xc0];
     fresh->current->initialized = true;
+#if defined(_WIN32)
+    fresh->current->host = windowsRootFiber();
+#endif
   }
   impl_ = std::move(fresh);
 }

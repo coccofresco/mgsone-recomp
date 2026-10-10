@@ -1,6 +1,8 @@
 // Memory-card directory/chain algorithms adapted from RecompOne (MIT).
 // Copyright (c) 2026 flaffy. See third_party/recompone/LICENSE and provenance.
 #include "runtime/input/input.h"
+#include "runtime/save_files.h"
+#include <fmt/core.h>
 #include <algorithm>
 #include <filesystem>
 
@@ -13,12 +15,31 @@ void MemoryCard::fixChecksum(unsigned offset) {
 }
 bool MemoryCard::attachFile(const std::string &path) {
   std::error_code error;
-  const bool exists = std::filesystem::exists(path, error);
-  if (error || (exists && !loadFromFile(path)))
-    return false;
-  if (!exists && !saveToFile(path))
-    return false;
+  const auto status = std::filesystem::symlink_status(path, error);
+  if (error && error != std::errc::no_such_file_or_directory) return false;
+  const bool exists = std::filesystem::exists(status);
+  if (exists && !std::filesystem::is_regular_file(status)) return false;
+  recoverySource_.clear();
+  if (!exists || !loadFromFile(path)) {
+    for (const auto &backup : storage::backups(path)) {
+      if (loadFromFile(backup.string())) {
+        recoverySource_ = backup.string();
+        fmt::print(stderr, "[MemoryCard] Recovered '{}' from '{}'; original retained until next write\n", path, recoverySource_);
+        break;
+      }
+    }
+    if (recoverySource_.empty()) {
+      // A missing primary with existing history is an error if no backup can
+      // be read. Never silently turn damaged progress into a blank card.
+      std::error_code historyError;
+      const auto history = std::filesystem::symlink_status(path + ".backups", historyError);
+      if (exists || std::filesystem::exists(history) ||
+          (historyError && historyError != std::errc::no_such_file_or_directory) ||
+          !saveToFile(path)) return false;
+    }
+  }
   backingPath_ = path;
+  sessionBackedUp_ = false;
   return true;
 }
 bool MemoryCard::flush() const {
@@ -48,12 +69,28 @@ uint32_t MemoryCard::fileSize(unsigned block) const {
 }
 std::vector<unsigned> MemoryCard::fileChain(unsigned first) const {
   std::vector<unsigned> result;
+  // A damaged directory must not turn file I/O or erase into a write to a
+  // neighbour's blocks. Count incoming allocated links before following any
+  // chain: a head has no predecessor and each continuation has exactly one.
+  std::array<unsigned, NUM_BLOCKS + 1> incoming{};
+  for (unsigned block = 1; block <= NUM_BLOCKS; ++block) {
+    const unsigned offset = block * SECTOR_SIZE;
+    const uint8_t state = data_[offset];
+    if (state != 0x51 && state != 0x52 && state != 0x53) continue;
+    const unsigned next = data_[offset + 8] | unsigned(data_[offset + 9]) << 8;
+    if (next < NUM_BLOCKS) ++incoming[next + 1];
+  }
   while (first >= 1 && first <= NUM_BLOCKS) {
     if (std::find(result.begin(), result.end(), first) != result.end())
       return {};
-    result.push_back(first);
     const unsigned offset = first * SECTOR_SIZE;
     const unsigned next = data_[offset + 8] | unsigned(data_[offset + 9]) << 8;
+    const uint8_t expected = result.empty() ? 0x51 : next == 0xffff ? 0x53 : 0x52;
+    uint8_t checksum = 0;
+    for (unsigned i = 0; i < SECTOR_SIZE; ++i) checksum ^= data_[offset + i];
+    if (data_[offset] != expected || checksum || incoming[first] != (result.empty() ? 0u : 1u))
+      return {};
+    result.push_back(first);
     if (next == 0xffff)
       return result;
     first = next + 1;

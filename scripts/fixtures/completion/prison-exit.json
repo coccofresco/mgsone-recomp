@@ -1,0 +1,176 @@
+{
+  "format": "mgs-situation-1",
+  "name": "prison-equipment-to-original-exit",
+  "source": "USA s03c/ea54 ntrap2b09 advances story163 and calls bfcc when global004e bit2 is set; bfcc loads s03a. Door requires equipped card17, level6.",
+  "requires": {
+    "stage": "s03c",
+    "story": 162,
+    "gcl_1401004e": 1,
+    "item": 17
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "gcl_1180006c",
+    "weapons"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "pause_level",
+    "game_over_timer",
+    "gcl_1401004e",
+    "weapons",
+    "items"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "finish-original-equipment-pickup",
+        "until": {
+          "control": {
+            "ne": 0
+          },
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0,
+          "pause_level": 0,
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          }
+        },
+        "when": {
+          "pause_level": {
+            "mask": 1,
+            "eq": 1
+          }
+        },
+        "action": {
+          "sequence": "cross:3,wait:12"
+        },
+        "attempts": 600,
+        "max_frames": 6000,
+        "stable_frames": 12
+      },
+      {
+        "name": "approach-exit-keypad",
+        "until": {
+          "x": {
+            "min": 2820,
+            "max": 3180
+          },
+          "z": {
+            "min": -4180,
+            "max": -3820
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": 3000,
+            "z": -4000
+          }
+        },
+        "max_frames": 1100,
+        "guard": {
+          "stage": "s03c",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      },
+      {
+        "name": "pass-card-six-door",
+        "until": {
+          "x": {
+            "min": 2820,
+            "max": 3180
+          },
+          "z": {
+            "min": -5430,
+            "max": -5070
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": 3000,
+            "z": -5250
+          }
+        },
+        "max_frames": 1100,
+        "guard": {
+          "stage": "s03c",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      },
+      {
+        "name": "original-prison-exit-load",
+        "until": {
+          "stage": "s03a",
+          "story": 163
+        },
+        "action": {
+          "move_to": {
+            "x": 5500,
+            "z": -5250
+          }
+        },
+        "max_frames": 1500,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "control-restored-outside-prison",
+        "until": {
+          "control": {
+            "ne": 0
+          },
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0,
+          "pause_level": 0,
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          },
+          "stage": "s03a",
+          "story": 163,
+          "load_request": 0,
+          "actor_loader_count": 0
+        },
+        "when": {
+          "pause_level": {
+            "mask": 1,
+            "eq": 1
+          }
+        },
+        "action": {
+          "sequence": "cross:3,wait:12"
+        },
+        "attempts": 600,
+        "max_frames": 6000,
+        "stable_frames": 30
+      }
+    ]
+  }
+}

@@ -16,6 +16,13 @@ public:
   void free(uint32_t pointer);
   uint32_t allocationSize(uint32_t pointer);
 
+  struct Snapshot {
+    uint32_t baseAddress = 0, totalSize = 0, firstBlock = 0;
+  };
+  Snapshot snapshot() const { return {baseAddress_, totalSize_, firstBlock_}; }
+  static bool validSnapshot(const Snapshot &state);
+  bool restore(const Snapshot &state);
+
 private:
   struct Block {
     uint32_t size;    // excluding header size. In PS1, usually MSB indicates

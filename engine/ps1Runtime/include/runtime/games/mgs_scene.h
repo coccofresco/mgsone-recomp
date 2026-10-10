@@ -24,6 +24,7 @@ struct SceneModel {
   std::array<uint32_t, 2> originalPackets{};
 };
 struct SceneInstance {
+  uint64_t lifetime = 0;
   uint32_t guestAddress = 0, definition = 0, flags = 0, group = 0;
   uint32_t rootAddress = 0, primaryModels = 0;
   uint32_t asset = ~0u;
@@ -35,6 +36,7 @@ struct SceneInstance {
   std::vector<SceneModel> models;
 };
 struct SceneSnapshot {
+  uint64_t epoch = 0;
   uint64_t sequence = 0;
   uint32_t vblank = 0, channel = 0, bufferIndex = 0, currentGroup = 0;
   int32_t projection = 0;

@@ -1,0 +1,67 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-third-health-gate",
+  "source": "USA psyco phase6 compares TARGET life to table800C5AEE=288; original state7 transition. Observe original subsequent phase; no state/callback/story patch.",
+  "requires": {
+    "stage": "s07b",
+    "story": 129,
+    "actor_psyco_count": 1,
+    "gcl_12000046": 3,
+    "work_psyco_800d3acc_0844_s16": 6
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000046",
+    "work_psyco_800d3acc_0844_s16"
+  ],
+  "fixture": {
+    "scope": "Synthetic post-damage boss life boundary only; original phase transition executes. Does not validate player damage delivery.",
+    "patches": [
+      {
+        "actor": "psyco.c",
+        "act": "0x800d3acc",
+        "offset": "0x7e0",
+        "indirect_offset": 38,
+        "width": 2,
+        "expect": 480,
+        "value": 288,
+        "source": "USA psyco phase6 compares TARGET life to table800C5AEE=288; original state7 transition",
+        "reason": "Post-hit life at third health gate"
+      }
+    ]
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "third-health-gate-original-transition",
+        "until": {
+          "work_psyco_800d3acc_0844_s16": 8,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "wait:30"
+        },
+        "attempts": 200,
+        "max_frames": 6000,
+        "abort_when": {
+          "life": 0
+        }
+      }
+    ]
+  }
+}

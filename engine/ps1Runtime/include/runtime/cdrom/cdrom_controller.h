@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "runtime/cdrom/virtual_fs.h"
+#include "runtime/cdrom/xa_adpcm.h"
 
 namespace ps1::cdrom {
 
@@ -82,6 +83,12 @@ public:
     uint8_t xaFilterFile = 0;
     uint8_t xaFilterChannel = 0;
     bool xaFilterEnabled = false;
+    XaAdpcm::Snapshot xaDecoder;
+    uint8_t xaCurrentFile = 0, xaCurrentChannel = 0;
+    bool xaCurrentSet = false, muted = false, adpcmMuted = false;
+    // LL, LR, RL, RR. Applied only by index 3/port 3 bit 5.
+    std::array<uint8_t, 4> audioVolume{128, 0, 0, 128};
+    std::array<uint8_t, 4> nextAudioVolume{128, 0, 0, 128};
     bool motorOn = false;
     bool shellOpen = false;
     uint8_t pendingCommand = 0;
@@ -101,6 +108,12 @@ public:
 
   // Attach the virtual filesystem for reading sectors
   void attachVirtualFs(VirtualFs *vfs);
+  std::string mediaIdentity() const { return vfs_ ? vfs_->mediaIdentity() : std::string{}; }
+  // Savestate restore selects backing data only; the saved controller follows.
+  bool restoreMedia(const std::string &identity) {
+    return vfs_ ? vfs_->mountIdentity(identity) : identity.empty();
+  }
+  bool changeMedia(const std::string &identity);
 
   // I/O register access (0x1F801800-0x1F801803)
   void writeRegister(uint32_t addr, uint8_t val);
@@ -116,9 +129,10 @@ public:
   void accrueClockCycles(uint32_t cycles);
   void serviceClock();
 
-  // Publish at most one additional sector whose time is already represented
-  // by readCycleCounter_. Used after an INT1 ACK by the game-thread consumer.
-  void serviceMaturedSector() { tickOwned(0); }
+  // Consume matured XA sectors and publish at most one data sector. Explicitly
+  // allowlisted data may bypass the deadline, but never the IRQ/ACK handshake.
+  bool serviceMaturedSector();
+  bool unpacedDataRead() const;
 
   // Interrupt check
   // Host-visible level mirror. The actual interrupt FIFO/flag remains
@@ -208,7 +222,7 @@ private:
 
   // Mode
   uint8_t mode_ = 0; // bit7=speed, bit5=sectorSize, bit4=xaFilter,
-                     // bit3=xaAdpcm, bit2=wholeSector
+                     // bit6=xaAdpcm (bit5 selects 2340-byte reads)
 
   // Sector data
   std::array<uint8_t, 2352> sectorBuffer_;
@@ -227,6 +241,12 @@ private:
   uint8_t xaFilterFile_ = 0;
   uint8_t xaFilterChannel_ = 0;
   bool xaFilterEnabled_ = false;
+  XaAdpcm xaDecoder_;
+  uint8_t xaCurrentFile_ = 0, xaCurrentChannel_ = 0;
+  bool xaCurrentSet_ = false, muted_ = false, adpcmMuted_ = false;
+  std::array<uint8_t, 4> audioVolume_{128, 0, 0, 128};
+  std::array<uint8_t, 4> nextAudioVolume_{128, 0, 0, 128};
+  void processXaSector(const uint8_t *raw);
 
   // Motor
   bool motorOn_ = false;

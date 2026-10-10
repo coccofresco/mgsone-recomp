@@ -52,17 +52,32 @@ gtest_discover_tests(ps1Recomp_tests)
 # ------------------------------------------
 # Runtime Tests
 # ------------------------------------------
+add_executable(mgsController_tests runtime/test_controller_hub.cpp runtime/test_stubs.cpp)
+target_link_libraries(mgsController_tests PRIVATE ps1Runtime_lib mgs_controllers mgs_imgui GTest::gtest_main)
+target_compile_definitions(mgsController_tests PRIVATE MGS_CONTROLLER_DB="${CMAKE_SOURCE_DIR}/third_party/SDL_GameControllerDB/gamecontrollerdb.txt")
+configure_file(${CMAKE_SOURCE_DIR}/third_party/SDL_GameControllerDB/gamecontrollerdb.txt
+    ${CMAKE_CURRENT_BINARY_DIR}/gamecontrollerdb.txt COPYONLY)
+gtest_discover_tests(mgsController_tests)
+if(MGS_ABI_LIBRARY_DIR)
+    target_link_libraries(mgsController_tests PRIVATE
+        "${MGS_ABI_LIBRARY_DIR}/libm.so.6" "${MGS_ABI_LIBRARY_DIR}/libstdc++.so.6")
+    set_target_properties(mgsController_tests PROPERTIES SKIP_BUILD_RPATH TRUE)
+endif()
+
+if(NOT WIN32)
 add_executable(ps1Runtime_tests
     runtime/test_stubs.cpp
     runtime/test_cpu_context.cpp
     runtime/test_emuptr.cpp
     runtime/test_memory.cpp
+    runtime/test_memory_mmio.cpp
     runtime/test_runtime_macros.cpp
     runtime/test_mips_interpreter.cpp
     runtime/test_gte.cpp
     runtime/test_gte_color_oracle.cpp
     runtime/test_crash3_profile.cpp
     runtime/test_memory_card_files.cpp
+    runtime/test_mgs_frame_interpolation.cpp
     runtime/test_mgs_profile.cpp
     runtime/test_mgs_asset_cache.cpp
     runtime/test_mgs_screen_effects.cpp
@@ -118,12 +133,14 @@ add_executable(ps1Runtime_tests
     runtime/test_cdrom_controller.cpp
     runtime/test_dma.cpp
     runtime/test_input.cpp
+    runtime/test_host_input.cpp
     runtime/test_tas_movie.cpp
     runtime/test_tas_route.cpp
     runtime/test_mdec.cpp
     runtime/test_timers.cpp
     runtime/test_vblank_scheduler.cpp
     runtime/test_save_state.cpp
+    runtime/test_save_files.cpp
     runtime/test_config.cpp
     runtime/test_gpu_screenshot.cpp
     runtime/test_game_validation.cpp
@@ -157,7 +174,25 @@ target_link_libraries(ps1Runtime_tests
         fmt::fmt
 )
 
+target_link_options(ps1Runtime_tests PRIVATE "-Wl,--wrap=fsync")
 gtest_discover_tests(ps1Runtime_tests)
+if(MGS_ABI_LIBRARY_DIR)
+    target_link_libraries(ps1Runtime_tests PRIVATE
+        "${MGS_ABI_LIBRARY_DIR}/libm.so.6" "${MGS_ABI_LIBRARY_DIR}/libstdc++.so.6")
+    set_target_properties(ps1Runtime_tests PROPERTIES SKIP_BUILD_RPATH TRUE)
+endif()
+endif() # POSIX runtime / syscall-fault suite
+if(WIN32)
+    # Exercise the actual Windows fibers, filesystem publication and unchanged
+    # save/config formats. The POSIX fault-injection suite uses fork/fsync.
+    add_executable(mgsWindows_tests runtime/test_stubs.cpp runtime/test_bios.cpp
+        runtime/test_bios_table_b.cpp runtime/test_memory_card_files.cpp
+        runtime/test_save_state.cpp runtime/test_config.cpp runtime/test_save_files_windows.cpp)
+    target_link_libraries(mgsWindows_tests PRIVATE ps1Runtime_lib GTest::gtest_main fmt::fmt)
+    target_sources(mgsWindows_tests PRIVATE "${CMAKE_SOURCE_DIR}/../packaging/windows/application.rc")
+    target_include_directories(mgsWindows_tests PRIVATE "${CMAKE_SOURCE_DIR}/../packaging/windows")
+    gtest_discover_tests(mgsWindows_tests)
+endif()
 
 # Focused renderer iteration binary.  Keeping this independent from the game
 # executable is intentional: edits to GPU/replay policy must never rebuild or

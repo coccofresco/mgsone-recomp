@@ -4,6 +4,17 @@ project(PS1Recomp VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+if(WIN32)
+    enable_language(RC)
+    add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0A00)
+    # Runtime snapshots and the CPU/GPU test fixtures exceed the PE default
+    # 1 MiB stack; reserve address space, commit pages on demand.
+    if(MINGW)
+        add_link_options("-Wl,--stack,16777216" "-Wl,--no-insert-timestamp")
+    elseif(MSVC)
+        add_link_options("/STACK:16777216")
+    endif()
+endif()
 
 # AddressSanitizer (debug aid — heap/stack/global overflow detection).
 # Enable with: cmake -B build-asan -DPS1RECOMP_ASAN=ON

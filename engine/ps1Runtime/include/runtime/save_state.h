@@ -44,7 +44,7 @@ class Bios;
 
 struct SaveStateHeader {
   char magic[4] = {'P', 'S', '1', 'S'}; // "PS1S"
-  uint32_t version = 7;
+  uint32_t version = 12;
   uint32_t flags = 0;
   uint32_t checksum = 0; // v6+: FNV-1a of full payload; v1-v5: RAM-only XOR
 };
@@ -75,6 +75,10 @@ public:
   bool service(const std::function<bool(const Request &)> &operation);
 
   bool pending() const;
+  // A host pause uses the same resumable boundary as save/load. While held,
+  // operations can complete without letting any guest code run between them.
+  void setHostPaused(bool paused);
+  bool hostPaused() const;
   void cancel();
 
 private:
@@ -86,10 +90,19 @@ private:
   bool operationComplete_ = false;
   bool reloadTimeline_ = false;
   bool cancelled_ = false;
+  bool hostPauseRequested_ = false;
 };
 
 class SaveState {
 public:
+  struct Info {
+    bool exists = false, supported = false;
+    uint32_t version = 0;
+    uintmax_t bytes = 0;
+    std::string savedAt;
+  };
+  // Header/date only for UI; full validation still happens on load.
+  static Info inspect(const std::string &path);
   // Save entire system state to file
   static bool save(const std::string &path, const recomp_context &ctx,
                    const Memory &mem, const gpu::GPU &gpu, const spu::SPU &spu,
@@ -105,6 +118,14 @@ public:
                    cdrom::CdromController &cdrom, Timers &timers,
                    InterruptController &irq, input::InputController &input,
                    mdec::MDEC *mdec = nullptr, bios::Bios *bios = nullptr);
+
+  // Player-facing recovery only. Diagnostics/TAS keep strict load semantics.
+  // Unsupported newer states and unavailable media never trigger rollback.
+  static bool loadRecovering(const std::string &path, recomp_context &ctx, Memory &mem,
+                   gpu::GPU &gpu, spu::SPU &spu, DMA &dma,
+                   cdrom::CdromController &cdrom, Timers &timers,
+                   InterruptController &irq, input::InputController &input,
+                   mdec::MDEC *mdec, bios::Bios *bios, std::string &recoverySource);
 
   // Check if file is a valid save state
   static bool isValid(const std::string &path);

@@ -1,28 +1,58 @@
 # Metal Gear Solid — PSX recomp
 
+È disponibile anche il candidato **Windows x64**, compilato dagli stessi sorgenti
+di gioco e presentazione Vulkan: [installazione e build](docs/mgs-windows.md),
+[prove di parità con Linux](docs/mgs-windows-evidence.json).
+
 Repository locale per sviluppare la ricompilazione nativa di Metal Gear Solid
 PSX. Riferimento attuale: **USA v1.0**, CD1 **SLUS-00594** e CD2 **SLUS-00776**.
 Le immagini italiane e il relativo audit restano disponibili come confronto.
+
+Preparazione del **primo alpha Linux**: [piano di rilascio e riferimenti X360](docs/mgs-alpha-plan.md),
+[installazione e opzioni](docs/mgs-alpha-install.md). Il nuovo launcher si avvia
+con `python3 scripts/mgs_alpha.py`: importa e verifica entrambi i CD, separa i
+dati utente, offre impostazioni persistenti e backup. È un candidato locale,
+non ancora una release pubblica; compatibilità Linux, interfaccia in gioco e
+copertura dei passaggi obbligati hanno ancora verifiche aperte.
+Le [verifiche del candidato](docs/mgs-alpha-evidence.json) includono importazione
+retail, avvio dal pacchetto e compilazione/test dall'archivio dei soli sorgenti.
+La destinazione finale è ora **SteamOS desktop e Big Picture, in AppImage e
+Flatpak**: [launcher nativo, pausa sicura e distribuzione](docs/mgs-steamos.md).
 
 Stato: **avvio nativo USA verificato**, dai loghi Konami attraverso l’intro
 fino al menu iniziale, con presentazione Vulkan e temporizzazione NTSC.
 La campagna verificata in **Normal** arriva dal molo attraverso eliporto, hangar e DARPA
 fino alla **vittoria nello scontro B1 con Meryl**. Sono ricompilati 73 candidati
-di overlay della campagna; Ocelot, i salvataggi dal gioco e il cambio disco
-restano da validare. Le [macro TAS adattive](docs/mgs-tas-routes.md) eseguono
+di overlay della campagna; una prova storica in Extreme raggiunge anche la
+vittoria su Ocelot da un checkpoint dello scontro. Le [macro TAS adattive](docs/mgs-tas-routes.md) eseguono
 azioni in una sessione nativa continua, sincronizzandole sullo stato del gioco.
 La partita continua in Extreme è temporaneamente accantonata. La verifica
 attuale usa [scenari indipendenti](docs/mgs-tas-routes.md#independent-scenario-checks):
 **24 salvataggi Normal dei due dischi, su 20 scenari**, caricati dal menu originale,
 con controllo stabile e prova di abbassarsi/rialzarsi. Tutti passano nella recomp
 senza interprete e coincidono con SwanStation per avanzamento, vita, inventario
-e posizione finale. Questa copertura non certifica gli scontri completi o il
-cambio disco. Le [verifiche del secondo disco](docs/mgs-tas-routes.md#disc-2-scenario-workflow)
+e posizione finale. Questa copertura non certifica gli scontri completi.
+Il [cambio disco automatico](docs/mgs-disc-change.md) è verificato separatamente:
+uscita da `s12c`, validazione originale del CD2 e movimento in `s13a`, senza
+schermata di inserimento, pressione di Start o riavvio, anche in Vulkan 4K.
+Le [verifiche del secondo disco](docs/mgs-tas-routes.md#disc-2-scenario-workflow)
 includono 10 salvataggi e brevi prove Vulkan a 3840×2160 negli 8 scenari distinti,
 con correzione del crash di `s15a` e del percorso delle mesh nelle scene con nebbia.
 Le [prove mirate da checkpoint](docs/mgs-tas-routes.md#checkpoint-situations)
 verificano anche menu, equipaggiamento, cambio stanza e danno/rialzata contro Liquid,
 confrontando recomp e SwanStation senza ripetere la campagna.
+Le [verifiche di completabilità](docs/mgs-completion.md) includono i 30 contratti
+confrontati col donor: morte/Continue in 19 scene, terminali PAL, uscite delle
+fasi REX/Liquid, entrambi i finali, crediti e scrittura/rilettura del salvataggio
+finale. Le verifiche successive aggiungono il Continue di Snake18 e la prima
+sessione di tortura: resistenza, resa e morte con uscita al titolo. Corrette due
+callback mancanti e la distinzione fra scena corrente e scena salvata nel TAS.
+Il blocco dello streaming nel filmato introduttivo della tortura è corretto:
+il clock audio nativo lascia terminare il lavoro del driver originale prima
+di consegnare l'interrupt successivo. Passano filmato, prima sessione e ritorno
+alla cella, oltre alle regressioni di Liquid e dei crediti. Le fasi preparate
+artificialmente sono dichiarate. Restano da verificare gli scontri completi e
+la fuga in jeep.
 Il precedente replay continuo dall’avvio all’eliporto in Extreme
 resta conservato (17.588 VBlank, vita piena, nessuna allerta).
 **F5/F9 ora salvano e ripristinano anche dopo il riavvio del runtime.**
@@ -33,11 +63,24 @@ il donor/oracolo e usa CPU al 165%; il codice nativo gira alla velocità
 host, mantenendo i divisori originali 30/20 fps. Non è ancora implementato
 un modello di budget CPU nativo equivalente esattamente al 165%.
 
+I [caricamenti rapidi](docs/mgs-fast-loading.md) sono attivi di default:
+4–7 VBlank nei 24 scenari retail verificati dei due CD, mantenendo i clock
+di audio/filmati e le routine originali di registrazione degli asset.
+`game.fast_loading = false` ripristina i tempi CD per confronti e vecchi TAS.
+
+Le ultime [verifiche della continuità BIOS](docs/mgs-hle-state-verification.md)
+correggono risorse mancanti nei savestate: file, cursori, allocatori e generatore
+casuale. Il formato NSV12 ripristina anche questi dati in un nuovo processo.
+1.325 test runtime passati anche con ASan/UBSan, 31 esclusi, e 142 test Python;
+regressioni riuscite su entrambi i dischi, senza nuova certificazione visiva Vulkan.
+
 - [Stato, verifiche e limiti del runtime](docs/mgs-runtime-progress.md)
 - [Controlli e memory card persistenti](docs/mgs-input-memory-card.md)
 - [Savestate nativi: tasti, formato e verifiche](docs/mgs-savestates.md)
+- [Cambio disco automatico e regressione riproducibile](docs/mgs-disc-change.md)
 - [Registrazione TAS, replay verificabile e checkpoint di regressione](docs/mgs-tas.md)
 - [Macro TAS adattive e avanzamento per traguardi](docs/mgs-tas-routes.md)
+- [Completabilità: prove mirate, correzioni e passaggi ancora da verificare](docs/mgs-completion.md)
 - [Donor: aggiornamenti verificati il 3 ottobre 2026](docs/donor-updates-2026-10-03.md)
 - [Migrazione ai moduli C della decompilazione e stream originali](docs/mgs-decomp-native-core.md)
 - [Intro Vulkan, rifrazione continua e verifiche del dettaglio UHD](docs/mgs-intro-presentation.md)
@@ -49,10 +92,18 @@ un modello di budget CPU nativo equivalente esattamente al 165%.
 
 ## Asset originali e presentazione Vulkan
 
+Il criterio è la fedeltà della resa complessiva con una presentazione moderna:
+si preferiscono metodi nativi Vulkan per superare i limiti grafici PSX. Ogni
+sostituzione deve documentare scelta, confronti visivi e costi per riconoscere
+regressioni, secondo il [contratto di presentazione](docs/mgs-vulkan-presentation.md#criterio-di-fedeltà-e-regressioni).
+La simulazione originale e le sue verifiche restano indipendenti dal metodo grafico.
+
 - [Formati 3D verificati e fonti](docs/mgs-3d-formats.md): KMD/ZMD, PCX, OAR,
   archivi di scenario, luci e confini ancora da verificare.
 - [Contratto di presentazione](docs/mgs-vulkan-presentation.md): mesh originali,
   istanze e posa dal codice ricompilato, proiezione float e isolamento della simulazione.
+- [Occlusione ambientale da Godot 4.7.2](docs/mgs-ambient-occlusion.md):
+  adattatore ASSAO Vulkan, opzione nel launcher e confronti GPU a 4K.
 - [Evidenza sui CD italiani](docs/mgs-asset-evidence.json): 94 scenari per CD,
   parser, confronto con Rex e risorse ancora opache.
 

@@ -74,6 +74,16 @@ void hle_libetc_DMACallback(recomp_context *ctx) {
   auto &s = psyq_state();
   uint32_t prev = s.dmaCallback[n];
   s.dmaCallback[n] = ctx->r[A1];
+  if (ctx->mem && n < 7) {
+    // Match PsyQ registration at the hardware surface as well. Preserve
+    // pending W1C flags while enabling/disabling this channel's interrupt.
+    constexpr uint32_t dicr = 0x1F8010F4;
+    uint32_t control = ctx->mem->read32(dicr) & 0x00FFFFFFu;
+    const uint32_t channel = 1u << (16 + n);
+    control = ctx->r[A1] ? (control | channel | (1u << 23))
+                        : (control & ~channel);
+    ctx->mem->write32(dicr, control);
+  }
   static constexpr const char *kMetricNames[PsyqState::kDmaSlots] = {
       "libetc.dma_callback_0", "libetc.dma_callback_1",
       "libetc.dma_callback_2", "libetc.dma_callback_3",

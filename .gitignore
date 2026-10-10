@@ -15,3 +15,10 @@ __pycache__/
 /engine/ps1Runtime/src/recompiled_out.part*.cpp
 
 /savestates/
+
+# Alpha portable profiles contain the user's retail images and saves.
+/userdata/
+/portable.txt
+*.mcd
+*.ps1s
+*.mgsc

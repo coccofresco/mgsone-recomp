@@ -8,6 +8,30 @@ import hashlib
 import struct
 
 BASE = 0x800C5968
+VERIFIED_CALLBACKS = {
+    # MetalGearLogo Act begins BEFORE the stack prologue: it sets DG_FrameRate
+    # and loads GV_Clock first. Retain this historical verified entry as a
+    # compatibility check; the scanner now also accepts its non-NOP return
+    # delay slot.
+    'd06543015baf02c8b4e6f30fe39e6bcd4786d7a0b6e6e2c80e2b482e1ead2844': [0x800C7404],
+}
+
+
+def return_boundary(words, index):
+    """An explicit callback may follow JR RA with useful delay-slot work.
+
+    Stores and arithmetic in a return delay slot are normal compiler output.
+    Reject control transfers in that slot; do not turn arbitrary labels into
+    entries without a separately discovered pointer reference.
+    """
+    if index < 2 or words[index - 2] != 0x03E00008:
+        return False
+    delay = words[index - 1]
+    op, rs, function = delay >> 26, (delay >> 21) & 31, delay & 63
+    transfer = (op in (1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23) or
+                (op == 0 and function in (8, 9, 12, 13)) or
+                (op in (16, 17, 18, 19) and rs == 8))
+    return not transfer
 
 
 def code_extent(payload):
@@ -32,7 +56,7 @@ def callback_entries(payload, size):
         offset = address - BASE
         if offset < 0 or offset >= size or offset % 4:
             return
-        if actor or (offset >= 8 and words[offset // 4 - 2:offset // 4] == (0x03E00008, 0)):
+        if actor or return_boundary(words, offset // 4):
             found.add(address)
 
     # The prefix is the CHARA {16-bit name hash, constructor pointer} table.
@@ -50,7 +74,7 @@ def callback_entries(payload, size):
 
     # Some overlays store leaf callbacks in pointer tables, without ever
     # materializing their addresses with LUI/ADDIU. s12c's snow renderer is
-    # one example. Require the same standalone JR RA/NOP boundary as below:
+    # one example. Require the same standalone return boundary as below:
     # interior jump-table labels must not become function entry candidates.
     for offset in range(table_size, len(payload) - 3, 4):
         candidate(struct.unpack_from('<I', payload, offset)[0])
@@ -87,6 +111,8 @@ def callback_entries(payload, size):
 def describe(name, payload):
     size = code_extent(payload)
     callbacks, table_size = callback_entries(payload, size)
+    digest = hashlib.sha256(payload).hexdigest()
+    callbacks = sorted(set(callbacks + VERIFIED_CALLBACKS.get(digest, [])))
     return {"stage": name, "sha256": hashlib.sha256(payload).hexdigest(),
             "resource_size": len(payload), "code_size": size,
             "code_end": f"0x{BASE + size:08X}", "actor_table_size": table_size,

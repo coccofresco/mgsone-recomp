@@ -1,0 +1,36 @@
+name: Bug report
+description: Report a reproducible runtime, presentation or installer problem.
+body:
+  - type: input
+    id: build
+    attributes:
+      label: Build version
+      description: Version from build-info.json or the diagnostics ZIP.
+    validations:
+      required: true
+  - type: textarea
+    id: system
+    attributes:
+      label: System and graphics
+      description: Linux distribution, CPU, GPU, driver, X11/Wayland, controller and selected presentation resolution.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps and expected result
+      description: Include disc, difficulty, location, preceding story event, and whether you loaded a Codec save or a quick state.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Actual result
+      description: Describe the failure, how often it happens, and attach a screenshot if useful.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Export a ZIP from the launcher support tab, inspect it, and attach it here. Do not attach discs, extracted assets, memory cards or savestates to a public issue.

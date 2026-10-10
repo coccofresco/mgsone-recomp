@@ -6,9 +6,25 @@ using ps1::input::TasRoute;
 namespace {
 struct RouteFixture : testing::Test {
   std::vector<uint8_t> ram=std::vector<uint8_t>(2097152);
-  void stage(const char* name) { std::memset(ram.data()+0xB7500,0,8); std::memcpy(ram.data()+0xB7500,name,std::strlen(name)); }
+  void stage(const char* name) {
+    for (size_t address : {0xB7500u, 0xADB34u}) {
+      std::memset(ram.data()+address,0,8);
+      std::memcpy(ram.data()+address,name,std::strlen(name));
+    }
+  }
   void word(unsigned addr,uint32_t value) { for (unsigned i=0;i<4;++i) ram[addr+i]=uint8_t(value>>(8*i)); }
 };
+}
+TEST_F(RouteFixture, CurrentAreaCanReturnToTitleWithoutChangingSavedArea) {
+  TasRoute route; std::string error;
+  ASSERT_TRUE(route.parse("MGSROUTE 1\nSTEP exit 100 1\nUNTIL current_stage eq title 4294967295\n"
+                          "UNTIL stage eq s03b 4294967295\nEND\n", error)) << error;
+  stage("s03b");
+  route.sample(ram.data(),ram.size(),1);
+  EXPECT_FALSE(route.done());
+  std::memcpy(ram.data()+0xADB34,"title\0",6);
+  route.sample(ram.data(),ram.size(),2);
+  EXPECT_TRUE(route.done()); EXPECT_FALSE(route.failed());
 }
 TEST_F(RouteFixture, ArmsOnStateAndReleasesImmediatelyWhenGoalArrives) {
   TasRoute route; std::string error;
@@ -304,4 +320,66 @@ TEST_F(RouteFixture, DuctMovementTurnsRelativeToSnakeAndDoesNotWriteGuestState) 
   EXPECT_EQ(route.sample(ram.data(),ram.size(),3)[0],0x80); // left turns 0 towards 1024
   word(0xAE16C,0x801ffff8);
   EXPECT_EQ(route.sample(ram.data(),ram.size(),4)[0],0); // invalid control pointer
+}
+
+TEST_F(RouteFixture, MovieProgressRequiresUniqueLiveActorAndVerifiedOverlay) {
+  stage("d18a");
+  for (unsigned level=0;level<9;++level) {
+    const auto head=0xaf390+level*68;
+    word(head+4,(head+32)|0x80000000);word(head+32,head|0x80000000);
+  }
+  constexpr uint32_t head=0xaf390,a=0x10000;
+  word(head+4,a|0x80000000);word(a,head|0x80000000);
+  word(a+4,(head+32)|0x80000000);word(head+32,a|0x80000000);
+  word(a+8,0x800C7718);word(a+20,0x80020000);word(a+32,0x80030000);
+  std::memcpy(ram.data()+0x20000,"movie.c",8);
+  word(a+60,450u<<16);word(0x30000,482u<<16);
+  const auto observe=[&]() {
+    TasRoute route;std::string error;
+    if (!route.parse("MGSROUTE 1\nSTEP movie 100 1\nUNTIL movie_frame min 450 4294967295\n"
+                     "UNTIL movie_total_frames eq 482 4294967295\nEND\n",error)) return false;
+    route.sample(ram.data(),ram.size(),1);return route.done() && !route.failed();
+  };
+  EXPECT_TRUE(observe());
+  word(a+60,449u<<16);EXPECT_FALSE(observe());
+  word(a+60,450u<<16);stage("s18a");EXPECT_FALSE(observe());
+  stage("d18a");word(a+8,0x80010000);EXPECT_FALSE(observe());
+  word(a+8,0x800C7718);word(a+32,0x801fffff);EXPECT_FALSE(observe());
+  word(a+32,0x80030000);word(a,0);EXPECT_FALSE(observe());
+}
+
+TEST_F(RouteFixture, WorkViewsRequireUniqueLiveImplementationAndBoundedPointers) {
+  for (unsigned level=0;level<9;++level) {
+    const auto head=0xaf390+level*68;
+    word(head+4,(head+32)|0x80000000); word(head+32,head|0x80000000);
+  }
+  constexpr unsigned head=0xaf390,a=0x120000,b=0x121000;
+  word(head+4,a|0x80000000);word(a,head|0x80000000);
+  word(a+4,(head+32)|0x80000000);word(head+32,a|0x80000000);
+  word(a+8,0x8005ce1c);word(a+20,0x80130000);
+  std::memcpy(ram.data()+0x130000,"snake.c",8);
+  word(a+0x40,65529);word(a+0x44,0x80140000);word(0x140026,65530);
+  const auto original=ram;
+  auto observe=[&](const std::string& field,const char* predicate) {
+    TasRoute route;std::string error;
+    EXPECT_TRUE(route.parse("MGSROUTE 1\nSTEP phase 100 1\nUNTIL "+field+" "+predicate+" 4294967295\nEND\n",error))<<error;
+    route.sample(ram.data(),ram.size(),1);return route.done();
+  };
+  EXPECT_TRUE(observe("work_snake_8005ce1c_0040_s16","eq -7"));
+  EXPECT_TRUE(observe("work_snake_8005ce1c_0044_p0026_u16","eq 65530"));
+  EXPECT_EQ(ram,original);
+  for (auto [at,value] : {std::pair{a+8,0x80010000u},std::pair{a+0x44,0x801ffffcu},
+                          std::pair{a+0x44,0x80140001u},std::pair{a,0u}}) {
+    ram=original;word(at,value);
+    EXPECT_FALSE(observe("work_snake_8005ce1c_0044_p0026_u16","ne 0"));
+  }
+  ram=original;word(a+4,b|0x80000000);word(b,a|0x80000000);
+  word(b+4,(head+32)|0x80000000);word(head+32,b|0x80000000);
+  word(b+8,0x8005ce1c);word(b+20,0x80130000);
+  EXPECT_FALSE(observe("work_snake_8005ce1c_0040_s16","ne 0"));
+  for (const auto field : {"work_snake_8005ce1d_0040_s16","work_snake_8005ce1c_0041_s16",
+       "work_snake_8005ce1c_4000_s16","work_snake_8005ce1c_0044_p0027_s16"}) {
+    TasRoute route;std::string error;
+    EXPECT_FALSE(route.parse(std::string("MGSROUTE 1\nSTEP invalid 10 1\nUNTIL ")+field+" eq 0 4294967295\nEND\n",error));
+  }
 }

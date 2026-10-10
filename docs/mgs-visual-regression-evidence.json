@@ -1,0 +1,780 @@
+{
+  "format": "mgs-visual-regression-1",
+  "status": "complete-for-captured-windows",
+  "date": "2026-10-10",
+  "root_cause": "Promo restored pre-PCX-scratch-fix states with missing registered textures. Runtime loading fix already existed; the recording/export pipeline failed to enforce the presentation contract. Reloaded original resources and regenerated the same scenes.",
+  "runtime": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "sha256": "979117b9e05e12a5d87d286563a9f1a560e0d1fd64d9722b3ded3a8cf6725485"
+  },
+  "windows_build": {
+    "binary": {
+      "path": "build-windows/ps1Runtime/ps1Runtime.exe",
+      "sha256": "b327b76e0c03ac877a24d8708f76547d3c2ef842537733fd60551222c8d434be"
+    },
+    "log": {
+      "path": "data/validation/visual-systematic-20261010/windows-build.log",
+      "sha256": "7afe6e55841b9eb3eeebf48010fe737ae7f632ed6e674f7acfd95c204949387f"
+    },
+    "scope": "Cross-build only in this pass; no new Windows hardware run."
+  },
+  "source_files": [
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_scene.cpp",
+      "sha256": "a1a30474bcacf0a9865539718f101461b34f2c35913993d58ed9219bcf96c29d"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_asset_cache.cpp",
+      "sha256": "80f2833526fb10e28f09196f3b4c77b54bd644e563dbdfd3b512327964bbe58c"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_screen_effects.cpp",
+      "sha256": "4ace1dbe6cc1b50f58c1b9d03685fcb686f10880a5bf78e33889af54a706899e"
+    },
+    {
+      "path": "scripts/mgs_loading_check.py",
+      "sha256": "cbf58c42272e1b17a5ab5189bd345b47bf17cc40e3ccb1cf275314704aca94b4"
+    },
+    {
+      "path": "scripts/mgs_scenarios.py",
+      "sha256": "020780c4030ff30373c58ffbb56553fe193a40ea2b22374283253dbc30bb491e"
+    },
+    {
+      "path": "scripts/mgs_situations.py",
+      "sha256": "8d381faf0deeb86e9c776cb3c0e266d09a920038ee2a2c7fa9f90a154575ec3b"
+    },
+    {
+      "path": "scripts/mgs_presentation_check.py",
+      "sha256": "7068642acaed271f933759fad91eb671e390f7496bfc9c33ccdd15639d1c7c79"
+    },
+    {
+      "path": "scripts/mgs_video_check.py",
+      "sha256": "38d4835c90ceba2f756ed79b14fc0d571aefccf8ca27d9de8f36289bd560ff96"
+    },
+    {
+      "path": "scripts/mgs_promo_capture.py",
+      "sha256": "c95dd34b996f5fb118c02060823693223b01d8faf9c3adf410b93b68fda8ad72"
+    },
+    {
+      "path": "scripts/mgs_promo_edit.py",
+      "sha256": "20a980a2e8b313eccb8e99f44a61b103fd4b688ef95f95125335b2b6cb7d755e"
+    },
+    {
+      "path": "scripts/tests/test_mgs_video_check.py",
+      "sha256": "d188c3469758459c0bf32443492a46b85bdd0410a04065f5ac215eba2f9d79df"
+    },
+    {
+      "path": "scripts/tests/test_mgs_scenarios.py",
+      "sha256": "c8fa3d780a5cad5a9edca78b267724e54a9d570b3c794bb92b414fee03d001b4"
+    }
+  ],
+  "negative_recordings": [
+    {
+      "name": "mantis-scene",
+      "state": {
+        "path": "data/media/promo-20261010/mantis-scene/states/quick_slot_0.ps1s",
+        "sha256": "370b23ead7533caee32fe0e56600e91ecf33c73a7824a3e1e4be9956f7f06781"
+      },
+      "textures": {
+        "count": 154,
+        "sha256": "39a752ad6130ee5485e3a24eeaf3a900f2b0a04b76aa451ae70ee16ac1162bb5"
+      },
+      "guard_counts": {
+        "mgs.material.missing_texture": 277207,
+        "mgs.source.missing_material": 277207,
+        "mgs.source.material_bind_rejected": 168165,
+        "mgs.scene.recovery_material_rejected": 11563
+      }
+    },
+    {
+      "name": "hind-cinema",
+      "state": {
+        "path": "data/media/promo-20261010/hind-cinema/states/quick_slot_0.ps1s",
+        "sha256": "d1a820e7e06ef4dc0ea098be56cdd00a591b97099cd9f509b4019b123e6e8423"
+      },
+      "textures": {
+        "count": 132,
+        "sha256": "f50fe311916e9a376094f174758a003dd0be3dae5d85e6be0582da756a412c69"
+      },
+      "guard_counts": {
+        "mgs.material.missing_texture": 829845,
+        "mgs.source.missing_material": 829845,
+        "mgs.source.material_bind_rejected": 420756,
+        "mgs.scene.recovery_material_rejected": 49801
+      }
+    },
+    {
+      "name": "jeep",
+      "state": {
+        "path": "data/media/promo-20261010/jeep/states/quick_slot_0.ps1s",
+        "sha256": "288734635daf1c603753919fa5f3c4700cf3e847ecf380647ec69b35093e9dc3"
+      },
+      "textures": {
+        "count": 151,
+        "sha256": "5fda84afd0a4581071b71b65bedf4e0c531fe9b89cff7c435fa7dc9b9e16c29d"
+      },
+      "guard_counts": {
+        "mgs.material.missing_texture": 46603,
+        "mgs.source.missing_material": 46603,
+        "mgs.source.material_bind_rejected": 131065,
+        "mgs.scene.recovery_material_rejected": 13146
+      }
+    }
+  ],
+  "texture_oracles": [
+    {
+      "count": 328,
+      "sha256": "0b78726ab47c93536dbda35d08bbe42a2d5bdebd26d94e85de32968e2123c4e5",
+      "match": true,
+      "name": "mantis",
+      "native": "data/validation/visual-systematic-20261010/mantis-second-clean/final-ram.bin",
+      "donor": "data/validation/completion/alpha-gates-20261007/mantis-second-possession-r2/donor/session/final-ram.bin"
+    },
+    {
+      "count": 345,
+      "sha256": "2d90bf44f36e8c1c17d32b09b5b09cacdc30e421f04fd13e9e0c83e34e8d5bd7",
+      "match": true,
+      "name": "hind",
+      "native": "data/validation/visual-systematic-20261010/fresh-hind/session/final-ram.bin",
+      "donor": "data/validation/completion/required-paths-next-20261006/hind-map-entry/donor/session/final-ram.bin"
+    },
+    {
+      "count": 396,
+      "sha256": "5c00ba2a2070e6e70c43fcd18d25e7d510ec6c4adc1e4904868002f82a3b4416",
+      "match": true,
+      "name": "jeep",
+      "native": "data/validation/presentation/asset-path-20261007/jeep-first-ready-clean/states/checkpoint_000000755_vblank_4675.ps1s",
+      "donor": "data/validation/completion/alpha-gates-20261007/jeep-first-ready/donor/session/final-ram.bin"
+    }
+  ],
+  "scenario_checks": {
+    "old": {
+      "format": "mgs-scene-comparison-1",
+      "status": "needs-review",
+      "stage": "s11h",
+      "story": 185,
+      "native_status": "complete",
+      "donor_status": "complete",
+      "differences": {
+        "textures": {
+          "native": {
+            "count": 132,
+            "sha256": "f50fe311916e9a376094f174758a003dd0be3dae5d85e6be0582da756a412c69"
+          },
+          "donor": {
+            "count": 345,
+            "sha256": "2d90bf44f36e8c1c17d32b09b5b09cacdc30e421f04fd13e9e0c83e34e8d5bd7"
+          }
+        }
+      },
+      "compared_fields": [
+        "stage",
+        "story",
+        "difficulty",
+        "disc",
+        "life",
+        "max_life",
+        "stance",
+        "weapon",
+        "item",
+        "weapons",
+        "items",
+        "x",
+        "z",
+        "game_over_timer",
+        "textures"
+      ],
+      "scope": "Synthetic source-derived pre-boss entry; original load/intro and actor initialization. Neither boss victory nor preceding route is established by this probe."
+    },
+    "fresh": {
+      "format": "mgs-scene-comparison-1",
+      "status": "complete",
+      "stage": "s11h",
+      "story": 185,
+      "native_status": "complete",
+      "donor_status": "complete",
+      "differences": {},
+      "compared_fields": [
+        "stage",
+        "story",
+        "difficulty",
+        "disc",
+        "life",
+        "max_life",
+        "stance",
+        "weapon",
+        "item",
+        "weapons",
+        "items",
+        "x",
+        "z",
+        "game_over_timer",
+        "textures"
+      ],
+      "scope": "Synthetic source-derived pre-boss entry; original load/intro and actor initialization. Neither boss victory nor preceding route is established by this probe."
+    }
+  },
+  "historical_continuation_rejected": "mantis-second-possession-r2: parent texture inventories differ; reload the scene through the original loader",
+  "lighting": {
+    "authority": "USA DG_Ambient at 800ADACC, gp+0xd0 verified against DG_SetAmbient retail instructions",
+    "scope": "Presentation read only; per-object ambient retained; no guest RAM/GTE changes",
+    "causality": "GTE and DG_Ambient matched in investigated captures. This hardening is not claimed as the observed flicker fix.",
+    "trace": [
+      {
+        "path": "data/validation/visual-systematic-20261010/lighting-v2-intro-launch/trace.jsonl",
+        "sha256": "38a5614b4b34e87912bda769ad5b507f000d6cd70394725e0e38eac39e0a80cc"
+      },
+      {
+        "path": "data/validation/visual-systematic-20261010/lighting-v2-rex/trace.jsonl",
+        "sha256": "3ab76bf38dbebe18518efe39157973dd44e16290f19fae80854e66bb03ce68c6"
+      },
+      {
+        "path": "data/validation/visual-systematic-20261010/lighting-v2-intro-command/trace.jsonl",
+        "sha256": "8f084b9fc0ca6d4ccae3f65f717fa7947d3e61d3cc922c85a32986a0b84a45bf"
+      }
+    ]
+  },
+  "temporal": {
+    "method": "Mean absolute luma difference on 64x36 frames: min(d(i,i-1),d(i,i+1))-d(i-1,i+1), positive part. Diagnostic impulse measure, not a universal artistic acceptance threshold.",
+    "before": {
+      "max_temporal_impulse": 5.530815972222222,
+      "impulses_above_1": 98,
+      "frames": 450
+    },
+    "after": {
+      "max_temporal_impulse": 0,
+      "impulses_above_1": 0,
+      "frames": 450
+    }
+  },
+  "clips": [
+    {
+      "name": "Intro — sala di comando",
+      "disc": 1,
+      "capture": {
+        "path": "/home/xander/mgs_recomp/data/media/promo-20261010-corrected/intro-command/capture.json",
+        "sha256": "cd70a0e3a7a09d8c2e6e465c02cd21fce7bc92f4b8530d28ab8c957a94ad1455"
+      },
+      "source": "/home/xander/mgs_recomp/data/media/promo-20261010/intro-command/states/quick_slot_0.ps1s",
+      "duration_seconds": 12,
+      "encoded_frames": 360,
+      "guard_counts": {
+        "mgs.material.missing_texture": 0,
+        "mgs.pose.invalid_inputs": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "visible_instance_captures": 2713,
+      "complete_instance_captures": 2713,
+      "original_asset_gpu_packets": 100369,
+      "hardware_type": 2,
+      "hardware_vendor": 4318,
+      "hardware_device": 10370,
+      "validation_required": 1
+    },
+    {
+      "name": "Intro — lancio",
+      "disc": 1,
+      "capture": {
+        "path": "/home/xander/mgs_recomp/data/media/promo-20261010-corrected/intro-launch/capture.json",
+        "sha256": "909d2e157506896415536da188bae0334b3442e0f4fff98731b9888e581ed88a"
+      },
+      "source": "/home/xander/mgs_recomp/data/media/promo-20261010/intro-launch/states/quick_slot_0.ps1s",
+      "duration_seconds": 12,
+      "encoded_frames": 360,
+      "guard_counts": {
+        "mgs.material.missing_texture": 0,
+        "mgs.pose.invalid_inputs": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "visible_instance_captures": 2257,
+      "complete_instance_captures": 2257,
+      "original_asset_gpu_packets": 125604,
+      "hardware_type": 2,
+      "hardware_vendor": 4318,
+      "hardware_device": 10370,
+      "validation_required": 1
+    },
+    {
+      "name": "Intro — ripresa rossa",
+      "disc": 1,
+      "capture": {
+        "path": "/home/xander/mgs_recomp/data/media/promo-20261010-corrected/intro-red-clean/capture.json",
+        "sha256": "99715a1ee73f0ac16c046ed882d353bcd90cf9a66d35873126ac2386cc4bb6a9"
+      },
+      "source": "/home/xander/mgs_recomp/data/media/promo-20261010/intro-red-clean/states/quick_slot_0.ps1s",
+      "duration_seconds": 7,
+      "encoded_frames": 210,
+      "guard_counts": {
+        "mgs.material.missing_texture": 0,
+        "mgs.pose.invalid_inputs": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "visible_instance_captures": 2118,
+      "complete_instance_captures": 2118,
+      "original_asset_gpu_packets": 131075,
+      "hardware_type": 2,
+      "hardware_vendor": 4318,
+      "hardware_device": 10370,
+      "validation_required": 1
+    },
+    {
+      "name": "Intro — veicolo subacqueo e bolle",
+      "disc": 1,
+      "capture": {
+        "path": "/home/xander/mgs_recomp/data/media/promo-20261010-corrected/intro-water-direct/capture.json",
+        "sha256": "f9ca873b0fbc6d8025a2ab5508c1b1aeac22a7b2c624c0fa6500967e262d9f02"
+      },
+      "source": "/home/xander/mgs_recomp/data/media/promo-20261010/intro-water-direct/states/quick_slot_0.ps1s",
+      "duration_seconds": 10,
+      "encoded_frames": 300,
+      "guard_counts": {
+        "mgs.material.missing_texture": 0,
+        "mgs.pose.invalid_inputs": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "visible_instance_captures": 1833,
+      "complete_instance_captures": 1833,
+      "original_asset_gpu_packets": 75639,
+      "hardware_type": 2,
+      "hardware_vendor": 4318,
+      "hardware_device": 10370,
+      "validation_required": 1
+    },
+    {
+      "name": "Intro — Snake in immersione",
+      "disc": 1,
+      "capture": {
+        "path": "/home/xander/mgs_recomp/data/media/promo-20261010-corrected/intro-snake/capture.json",
+        "sha256": "519a45feef09de484ce1ec7a88ce3ab699f0867b511576b58060bd4c910bb577"
+      },
+      "source": "/home/xander/mgs_recomp/data/media/promo-20261010/intro-snake/states/quick_slot_0.ps1s",
+      "duration_seconds": 12,
+      "encoded_frames": 360,
+      "guard_counts": {
+        "mgs.material.missing_texture": 0,
+        "mgs.pose.invalid_inputs": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "visible_instance_captures": 2343,
+      "complete_instance_captures": 2343,
+      "original_asset_gpu_packets": 144343,
+      "hardware_type": 2,
+      "hardware_vendor": 4318,
+      "hardware_device": 10370,
+      "validation_required": 1
+    },
+    {
+      "name": "Intro — risalita",
+      "disc": 1,
+      "capture": {
+        "path": "/home/xander/mgs_recomp/data/media/promo-20261010-corrected/intro-swim/capture.json",
+        "sha256": "18fb0596b87301211983f0c989ea9a860c9e413ccf4dd439d83ee07181e0f46b"
+      },
+      "source": "/home/xander/mgs_recomp/data/media/promo-20261010/intro-swim/states/quick_slot_0.ps1s",
+      "duration_seconds": 12,
+      "encoded_frames": 360,
+      "guard_counts": {
+        "mgs.material.missing_texture": 0,
+        "mgs.pose.invalid_inputs": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "visible_instance_captures": 1259,
+      "complete_instance_captures": 1259,
+      "original_asset_gpu_packets": 66000,
+      "hardware_type": 2,
+      "hardware_vendor": 4318,
+      "hardware_device": 10370,
+      "validation_required": 1
+    },
+    {
+      "name": "Psycho Mantis",
+      "disc": 1,
+      "capture": {
+        "path": "/home/xander/mgs_recomp/data/media/promo-20261010-corrected/mantis-scene/capture.json",
+        "sha256": "c88d34ded651f24b662a3908b06943a399f0a814e1ce628c112b3fc02d649f33"
+      },
+      "source": "/home/xander/mgs_recomp/data/validation/visual-systematic-20261010/mantis-second-clean/states/checkpoint_000003077_vblank_10324.ps1s",
+      "duration_seconds": 15,
+      "encoded_frames": 450,
+      "guard_counts": {
+        "mgs.material.missing_texture": 0,
+        "mgs.pose.invalid_inputs": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "visible_instance_captures": 17214,
+      "complete_instance_captures": 17214,
+      "original_asset_gpu_packets": 189909,
+      "hardware_type": 2,
+      "hardware_vendor": 4318,
+      "hardware_device": 10370,
+      "validation_required": 1
+    },
+    {
+      "name": "Hind — esplosioni",
+      "disc": 1,
+      "capture": {
+        "path": "/home/xander/mgs_recomp/data/media/promo-20261010-corrected/hind-cinema/capture.json",
+        "sha256": "15327c565bd61aba7cf0fe73f1846b74d22fc6bcacba16183a5f0fe40d71553b"
+      },
+      "source": "/home/xander/mgs_recomp/data/validation/visual-systematic-20261010/hind-cinema-fixture.ps1s",
+      "duration_seconds": 30,
+      "encoded_frames": 900,
+      "guard_counts": {
+        "mgs.material.missing_texture": 0,
+        "mgs.pose.invalid_inputs": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "visible_instance_captures": 22833,
+      "complete_instance_captures": 22833,
+      "original_asset_gpu_packets": 610136,
+      "hardware_type": 2,
+      "hardware_vendor": 4318,
+      "hardware_device": 10370,
+      "validation_required": 1
+    },
+    {
+      "name": "Metal Gear REX",
+      "disc": 2,
+      "capture": {
+        "path": "/home/xander/mgs_recomp/data/media/promo-20261010-corrected/rex/capture.json",
+        "sha256": "74265966513cc44e12d6a19402e9ba786f598aab4d2048859dab1326c45326da"
+      },
+      "source": "/home/xander/mgs_recomp/data/media/promo-20261010/rex/states/quick_slot_0.ps1s",
+      "duration_seconds": 12,
+      "encoded_frames": 360,
+      "guard_counts": {
+        "mgs.material.missing_texture": 0,
+        "mgs.pose.invalid_inputs": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "visible_instance_captures": 10912,
+      "complete_instance_captures": 10912,
+      "original_asset_gpu_packets": 145833,
+      "hardware_type": 2,
+      "hardware_vendor": 4318,
+      "hardware_device": 10370,
+      "validation_required": 1
+    },
+    {
+      "name": "Fuga in jeep — fuoco e movimento",
+      "disc": 2,
+      "capture": {
+        "path": "/home/xander/mgs_recomp/data/validation/visual-systematic-20261010/jeep-clean-video/capture.json",
+        "sha256": "f649a463bab369ffc04919e9e3e01cac6df163a18436e68dbe92f2968bfbedd6"
+      },
+      "source": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/jeep-first-ready-clean/states/checkpoint_000000755_vblank_4675.ps1s",
+      "duration_seconds": 10,
+      "encoded_frames": 300,
+      "guard_counts": {
+        "mgs.material.missing_texture": 0,
+        "mgs.pose.invalid_inputs": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "visible_instance_captures": 7777,
+      "complete_instance_captures": 7777,
+      "original_asset_gpu_packets": 273506,
+      "hardware_type": 2,
+      "hardware_vendor": 4318,
+      "hardware_device": 10370,
+      "validation_required": 1
+    },
+    {
+      "name": "Snake — ripresa calma e dissolvenza",
+      "disc": 1,
+      "capture": {
+        "path": "/home/xander/mgs_recomp/data/media/promo-20261010-corrected/hind/capture.json",
+        "sha256": "cc0445addd03f9456fb6149de562c3d1eb0c307021ac5ae0651ac3bc57ea1de1"
+      },
+      "source": "/home/xander/mgs_recomp/data/media/promo-20261010/hind/states/quick_slot_0.ps1s",
+      "duration_seconds": 10,
+      "encoded_frames": 300,
+      "guard_counts": {
+        "mgs.material.missing_texture": 0,
+        "mgs.pose.invalid_inputs": 0,
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "visible_instance_captures": 1812,
+      "complete_instance_captures": 1812,
+      "original_asset_gpu_packets": 64717,
+      "hardware_type": 2,
+      "hardware_vendor": 4318,
+      "hardware_device": 10370,
+      "validation_required": 1
+    }
+  ],
+  "tests": {
+    "runtime_gpu": {
+      "total": 72,
+      "passed": 71,
+      "skipped": 1,
+      "log": {
+        "path": "data/validation/visual-systematic-20261010/gpu-tests.log",
+        "sha256": "e24b64136a5a5aa5fa3de080c3fd7dc066687f8afe963fe808c519ee16290f0e"
+      },
+      "scope": "Mixture of CPU and opt-in hardware Vulkan tests, not 71 GPU tests."
+    },
+    "python": {
+      "total": 207,
+      "passed": 202,
+      "skipped": 5,
+      "log": {
+        "path": "data/validation/visual-systematic-20261010/python-all.log",
+        "sha256": "54d5f72b2ff2d14f8c3162ffa5b676cb26eeb84d6c2445a4446fb577ffa16b31"
+      }
+    }
+  },
+  "exports": [
+    {
+      "file": "MGS_Recomp_Alpha_Promo_4K.mp4",
+      "size_bytes": 206377463,
+      "sha256": "772bb47b260e7c7d824afdfa7701861b7b92eb319b05ef7af96ee9843da423f0",
+      "width": 3840,
+      "height": 2160,
+      "frames": 2700,
+      "seconds": 90.0,
+      "last_picture_rgb_max": 1,
+      "last_20ms_audio_peak_s16": 0
+    },
+    {
+      "file": "MGS_Recomp_Alpha_Promo_1080p.mp4",
+      "size_bytes": 87287282,
+      "sha256": "06a9e12c20c53c2774da4a0d9397d4ec86497752e9f28defd3d254aa3358575b",
+      "width": 1920,
+      "height": 1080,
+      "frames": 2700,
+      "seconds": 90.0,
+      "last_picture_rgb_max": 1,
+      "last_20ms_audio_peak_s16": 0
+    }
+  ],
+  "export_verification": {
+    "path": "data/media/promo-20261010-corrected/final/verification.json",
+    "sha256": "060f42955bd7ae52030105200976b205d13350ddb11acd656adf2acce61a1bf1"
+  },
+  "edit_plan": {
+    "path": "data/media/promo-20261010-corrected/edit-plan.json",
+    "sha256": "cb051b12447c983bcbcbee444c67916303c715fa6341d8031dfc2deb7284dbd7"
+  },
+  "protected_saves": {
+    "manifest": {
+      "path": ".local/tas-protected.sha256",
+      "sha256": "5414ea1b5bfa9556900c4c540bb0392f2dfe435caf980612e0f22a2f7ddfda8e"
+    },
+    "unchanged": true
+  },
+  "limits": [
+    "Captured windows on both discs, not full-game or complete-fight visual certification.",
+    "Mantis/Hind use existing documented post-damage fixtures; reaching the battle continuously is not certified.",
+    "DG texture descriptors match donor; this is not byte-for-byte equivalence of every VRAM pixel.",
+    "Historical defective savestates are retained unchanged. Reloading game resources is required; presentation does not invent missing data."
+  ]
+}

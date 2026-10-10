@@ -36,12 +36,15 @@ void DMA::restore(const Snapshot &state) {
   dicr_ = state.dicr;
   std::memcpy(completionGeneration_, state.completionGeneration,
               sizeof(completionGeneration_));
+  updateMasterInterrupt();
 }
 
 // Register I/O
 
-void DMA::writeRegister(uint32_t addr, uint32_t val) {
+void DMA::writeRegister(uint32_t addr, uint32_t val, uint32_t writeMask) {
   uint32_t offset = addr - 0x1F801080;
+  if (offset != 0x74)
+    val = (readRegister(addr) & ~writeMask) | (val & writeMask);
 
   // DPCR / DICR
   if (offset == 0x70) {
@@ -58,11 +61,14 @@ void DMA::writeRegister(uint32_t addr, uint32_t val) {
     return;
   }
   if (offset == 0x74) {
-    // DICR: bits 0-5 are force-IRQ, bits 16-22 are enable, bits 24-30 are flags
-    // Writing 1 to flag bits clears them
-    uint32_t flagAck = val & 0x7F000000;
-    dicr_ = (dicr_ & ~0x7F000000) & ~flagAck; // Clear acknowledged flags
-    dicr_ = (dicr_ & 0x7F000000) | (val & 0x00FF803F); // Set other bits
+    // DICR has ordinary control bits and write-one-to-clear IRQ flags.
+    // PsyQ's STR reader changes channel enables with SB at DICR+2.
+    // Unwritten byte lanes must neither change enables nor acknowledge flags.
+    const uint32_t flagAck = val & writeMask & 0x7F000000u;
+    const uint32_t flags = (dicr_ & 0x7F000000u) & ~flagAck;
+    constexpr uint32_t controls = 0x00FF803Fu;
+    dicr_ = flags | (dicr_ & controls & ~writeMask) |
+            (val & controls & writeMask);
     updateMasterInterrupt();
     return;
   }
@@ -202,6 +208,13 @@ void DMA::executeChannel(uint32_t ch) {
       (!cdrom_ || !cdrom_->hasSectorReady())) {
     return;
   }
+  if (ch == MDEC_OUT && !isFromRam(ch)) {
+    const uint32_t bcr = channels_[ch].blockControl;
+    const uint32_t words = (bcr & 0xFFFFu) ? (bcr & 0xFFFFu) : 0x10000u;
+    const uint32_t blocks = sync == SLICE && (bcr >> 16) ? bcr >> 16 : 1;
+    if (!mdec_ || uint64_t(words) * blocks > mdec_->dmaOutRemaining())
+      return; // DecDCTout is normally armed BEFORE DecDCTin produces pixels.
+  }
 
   fmt::print("[DMA] Ch{} transfer: sync={}, fromRam={}, addr=0x{:08X}\n", ch,
              static_cast<int>(sync), isFromRam(ch), channels_[ch].baseAddr);
@@ -209,6 +222,7 @@ void DMA::executeChannel(uint32_t ch) {
                       {{"channel", ch},
                        {"sync", static_cast<int>(sync)},
                        {"from_ram", isFromRam(ch) ? 1 : 0},
+                       {"dicr", dicr_},
                        {"address", channels_[ch].baseAddr},
                        {"block_control", channels_[ch].blockControl}});
 
@@ -231,10 +245,14 @@ void DMA::executeChannel(uint32_t ch) {
   // Clear start/busy and trigger bits after transfer
   channels_[ch].channelControl &= ~((1 << 24) | (1 << 28));
 
-  // Set completion flag in DICR
-  dicr_ |= (1 << (24 + ch));
+  // Masked synchronous transfers do not raise an interrupt. In particular,
+  // STR's header DMA must not masquerade as its asynchronous payload DMA.
+  if (dicr_ & (1u << (16 + ch)))
+    dicr_ |= (1u << (24 + ch));
   ++completionGeneration_[ch];
   updateMasterInterrupt();
+  if (ch == MDEC_IN && isChannelEnabled(MDEC_OUT) && isChannelTriggered(MDEC_OUT))
+    executeChannel(MDEC_OUT);
 }
 
 void DMA::executeBlockTransfer(uint32_t ch) {
@@ -420,7 +438,8 @@ void DMA::updateMasterInterrupt() {
   uint8_t enableMask = (dicr_ >> 16) & 0x7F;
   uint8_t flagMask = (dicr_ >> 24) & 0x7F;
 
-  bool masterFlag = forceIrq || ((enableMask & flagMask) != 0);
+  bool masterFlag = forceIrq || ((dicr_ & (1u << 23)) &&
+                                (enableMask & flagMask) != 0);
   if (masterFlag) {
     dicr_ |= (1u << 31);
   } else {

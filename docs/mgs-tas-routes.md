@@ -1,5 +1,14 @@
 # Adaptive native TAS routes
 
+The [2026-10-07 gameplay/endurance extension](mgs-alpha-gameplay-soak.md)
+adds source-bound live Work observations and repeated routes in one process.
+`work_psyco_800d3acc_0844_s16` reads the unique live USA actor's phase;
+`work_psyco_800d3acc_07e0_p0026_s16` reads its TARGET life. These diagnostic
+views require the exact Act function, valid complete actor lists, aligned
+bounded fields and valid pointers. Missing or ambiguous actors remain unknown.
+Document every offset's source in its recipe. The ordinary recorded TAS
+protocol is unchanged; the endurance rendezvous is explicitly diagnostic.
+
 `scripts/mgs_tas_route.py` reuses actions from the published USA PSXjin movie
 inside **one continuous native session**. The C++ runner observes game state
 at each TAS VBlank, arms the appropriate action, and releases both controllers
@@ -10,6 +19,11 @@ The [PSXjin reference workflow](mgs-tas-reference.md) supplies observed original
 movie states through the first disc change, plus experimental game-update input
 retiming and local prefix recovery. That reference completion is separate from
 the native campaign's measured progress.
+
+The [completion checks](mgs-completion.md) extend the independent-scenario
+workflow with source-bound synthetic fixtures, original phase exits and
+completed-game save/reload. Their coverage remains distinct from a continuous
+playthrough and from full boss victories.
 
 The workflow is organized around milestones: a stage transition, a completed
 fight, a required pickup or restored player control. Use the original HZD/GCL
@@ -121,6 +135,15 @@ missing or duplicate actor names never satisfy a condition. These predicates
 can wait for the patrol to leave a crossing before starting a movement macro.
 `--checkpoint-interval 600` retains intermediate branch points during route
 development, avoiding a repeat of earlier waits after a failed crossing.
+
+`current_stage` reads USA `GM_CurrentStageName` at `800ADB34`, written by
+`GM_SetArea` at `8002BD84`. Use it to check area transitions and exits to the
+title. The historical `stage` field remains the saved gameplay name at
+`800B7500` so existing recordings retain their meaning: after a torture death
+it can still say `s03b` while `current_stage` is already `title`. Title actor
+inspection uses the current area. Both native and donor use this observation;
+it never writes game memory. Loaded-area readiness still needs loader/actor
+and control predicates, since `GM_SetArea` can precede completion of loading.
 
 Observations are pinned to the verified USA executable. The title actor uses
 USA callback `800D26E0` and offsets `A48`, `A4C`, `24B8`; Integral's different
@@ -234,8 +257,9 @@ persistent run has not yet been validated; it is not part of the milestones.
 This measures the native diagnostic path with inexpensive framebuffer captures.
 It does not benchmark or certify Vulkan effects in these encounters. The normal
 4K presentation remains the launcher default. The raw PSXjin movie is still
-unsynchronized; these are adapted, state-gated inputs. Ocelot and disc change
-have not yet been validated.
+unsynchronized; these are adapted, state-gated inputs. Ocelot remains unvalidated
+by this continuous route. The disc transition is now covered independently by
+the [input-only seamless disc regression](mgs-disc-change.md).
 
 Ten Python route tests cover source preservation, compiler validation, state gates,
 budgets, retail GCL operands and USA actor offsets. Four catalog tests cover
@@ -499,3 +523,14 @@ original-script goals are defined. Those cases are not certified by the checks
 above. Artificial fixtures that initialize a special phase would need separate
 labeling: they can validate that phase, but cannot prove it is reachable through
 normal campaign progression.
+
+
+### Diagnostica del clock CD e savestate XA
+
+`mgs_tas.py record/replay --trace-cd-clock` conserva in `cd-clock.jsonl` i comandi
+CD, credito perso, interrupt e ordine DMA/callback. La traccia è opzionale;
+le verifiche ordinarie usano i contatori. Quando si confrontano tempi, riportare
+VBlank guest e periodo dell'harness: un intervallo accelerato non è un benchmark
+della presentazione. I checkpoint NSV6–NSV10 mantengono RAM all'offset 476 e sono
+riconosciuti anche dal confronto con i TAS di riferimento. NSV10 conserva XA e
+mix CD; i dettagli delle regressioni sono in [completabilità](mgs-completion.md).

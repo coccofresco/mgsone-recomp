@@ -1,0 +1,63 @@
+{
+  "format": "mgs-situation-1",
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000066",
+    "gcl_1200005c",
+    "gcl_1180005c",
+    "gcl_1180006c"
+  ],
+  "name": "prison-otacon-gifts",
+  "source": {
+    "retail": "USA s03c/ea54 main @11396, 3abf, f323, 507b, 0c0c; post-submission global5c bit8 schedules Otacon without further torture",
+    "decomp": "chara/torture/otacom.c: proximity <1500 invokes retail callback; s03c ea37 gives ketchup=1/card=6; global66=4 is later rescue variant, not the first gift milestone"
+  },
+  "requires": {
+    "stage": "s03c",
+    "story": 162,
+    "gcl_12000066": 2
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-otacon-arrival",
+        "until": {
+          "stage": "s03c",
+          "gcl_12000066": {
+            "min": 2,
+            "max": 3
+          },
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0,
+          "gcl_1180005c": 1,
+          "gcl_1180006c": 6,
+          "pause_level": 0,
+          "game_status": {
+            "mask": 3623878656,
+            "eq": 0
+          },
+          "actor_otacom_count": 0
+        },
+        "action": {
+          "sequence": "circle:2,wait:2"
+        },
+        "attempts": 4000,
+        "max_frames": 16000,
+        "stable_frames": 30
+      }
+    ]
+  }
+}

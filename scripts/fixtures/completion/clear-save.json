@@ -1,0 +1,65 @@
+{
+  "format": "mgs-situation-1",
+  "name": "clear-game-save",
+  "source": {
+    "retail": "rank/ea54 procedures0ed8,1d3c,94ae",
+    "decomp": "overlays/rank/onoda/rank/rank.c DrawSaveDialog"
+  },
+  "requires": {
+    "stage": "rank",
+    "story": 294
+  },
+  "preserve": [
+    "difficulty"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "life",
+    "max_life",
+    "weapons",
+    "items",
+    "game_over_timer"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-completed-data-dialog",
+        "until": {
+          "story": 0,
+          "disc": 1
+        },
+        "action": {
+          "sequence": "wait:60,circle:6,wait:60"
+        },
+        "attempts": 80,
+        "max_frames": 10000
+      },
+      {
+        "name": "save-and-return-title",
+        "until": {
+          "stage": "title",
+          "load_request": 0,
+          "actor_loader_count": 0
+        },
+        "action": {
+          "sequence": "wait:60,left:6,wait:12,circle:6,wait:90"
+        },
+        "attempts": 100,
+        "max_frames": 15000,
+        "stable_frames": 30
+      }
+    ]
+  },
+  "card_goal": {
+    "slot": 1,
+    "fields": {
+      "stage": "rank",
+      "story": 0,
+      "disc": 1
+    }
+  }
+}

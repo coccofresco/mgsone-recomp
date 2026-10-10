@@ -40,6 +40,15 @@ def fixture():
 
 
 class ScenariosTest(unittest.TestCase):
+    def test_disc_two_boot_preserves_seamless_disc_one(self):
+        import tomllib
+        source = '[disc]\ncue_path = "/tmp/disc1.cue"\nadditional_cues = ["/tmp/disc2.cue"]\n'
+        parsed = tomllib.loads(config_with_cue(source, Path('/tmp/disc2.cue')))
+        self.assertEqual(parsed['disc']['cue_path'], '/tmp/disc2.cue')
+        self.assertEqual(parsed['disc']['additional_cues'], ['/tmp/disc1.cue'])
+        self.assertEqual(tomllib.loads(config_with_cue(source, Path('/tmp/disc1.cue')))['disc'],
+                         tomllib.loads(source)['disc'])
+
     def test_disc_selection_changes_only_disc_section(self):
         import tomllib
         source = '[disc]\nexe_path = "retail.exe"\ncue_path = "disc1.cue"\n[other]\ncue_path = "untouched"\n'
@@ -107,6 +116,7 @@ class ScenariosTest(unittest.TestCase):
 
     def test_differential_check_rejects_different_contracts_and_failed_runs(self):
         native = dict(engine='native', status='complete', route_sha256='route',
+                      textures=dict(count=123, sha256='same-materials'),
                       scenario=dict(stage='s08c', story=75, card_sha256={'card': 'digest'}),
                       final_state=dict(stage='s08c', story=75, life=384), scope='load/control')
         donor = dict(native, engine='donor')
@@ -116,6 +126,12 @@ class ScenariosTest(unittest.TestCase):
         self.assertIn('life', compare(native, different)['differences'])
         with self.assertRaises(ValueError):
             compare(native, dict(donor, route_sha256='other'))
+        for textures in (None, dict(count=122, sha256='missing'),
+                         dict(count=123, sha256='wrong-palette')):
+            changed = dict(donor, textures=textures)
+            result = compare(native, changed)
+            self.assertEqual(result['status'], 'needs-review')
+            self.assertIn('textures', result['differences'])
 
 
 if __name__ == '__main__':

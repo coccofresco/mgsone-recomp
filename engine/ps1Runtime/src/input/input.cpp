@@ -1,3 +1,5 @@
+#include "runtime/save_files.h"
+#include <fmt/core.h>
 #include "runtime/input/input.h"
 #include <fmt/format.h>
 #include <filesystem>
@@ -65,19 +67,32 @@ bool MemoryCard::loadFromFile(const std::string &path) {
   std::array<uint8_t, CARD_SIZE> candidate;
   file.seekg(0);
   if (!file.read(reinterpret_cast<char *>(candidate.data()), CARD_SIZE)) return false;
+  if (candidate[0] != 'M' || candidate[1] != 'C') return false;
+  uint8_t headerChecksum = 0;
+  for (unsigned i = 0; i < SECTOR_SIZE; ++i) headerChecksum ^= candidate[i];
+  if (headerChecksum != 0) return false;
   data_ = candidate;
   return true;
 }
 
 bool MemoryCard::saveToFile(const std::string &path) const {
-  const auto temporary = path + ".tmp";
-  std::ofstream file(temporary, std::ios::binary | std::ios::trunc);
-  if (!file.write(reinterpret_cast<const char *>(data_.data()), CARD_SIZE)) return false;
-  file.close();
-  if (!file) return false;
-  std::error_code error;
-  std::filesystem::rename(temporary, path, error);
-  return !error;
+  try {
+    storage::Transaction transaction(path);
+    std::ofstream file(transaction.temporary(), std::ios::binary | std::ios::trunc);
+    if (!file.write(reinterpret_cast<const char *>(data_.data()), CARD_SIZE)) return false;
+    file.close();
+    if (!file) return false;
+    bool changed = false;
+    // Keep the pre-session disk card, not the previous 128-byte write. BIOS
+    // saves span many writes; rotating each one would erase the recovery point.
+    const bool session = !backingPath_.empty() && path == backingPath_;
+    if (!transaction.commit(!session || !sessionBackedUp_, &changed)) return false;
+    if (session && changed) sessionBackedUp_ = true;
+    return true;
+  } catch (const std::exception &error) {
+    fmt::print(stderr, "[MemoryCard] Save failed: {}\n", error.what());
+    return false;
+  }
 }
 
 uint8_t MemoryCard::transfer(uint8_t dataIn) {
@@ -193,7 +208,7 @@ InputController::Snapshot InputController::snapshot() const {
   return state;
 }
 
-bool InputController::restore(const Snapshot &state) {
+bool InputController::validSnapshot(const Snapshot &state) {
   if (state.sioState > static_cast<uint8_t>(SioState::MemCardTransfer) ||
       state.selectedPort > 1)
     return false;
@@ -202,7 +217,11 @@ bool InputController::restore(const Snapshot &state) {
         port.padType != PadType::Analog && port.padType != PadType::DualShock)
       return false;
   }
+  return true;
+}
 
+bool InputController::restore(const Snapshot &state) {
+  if (!validSnapshot(state)) return false;
   std::lock_guard lock(portMutex_);
   for (int port = 0; port < 2; ++port) {
     ports_[port].buttons = state.ports[port].buttons;
@@ -341,7 +360,9 @@ void InputController::setPadType(int port, PadType type) {
 PadType InputController::getPadType(int port) const {
   if (port >= 0 && port < 2) {
     std::lock_guard lock(portMutex_);
-    return ports_[port].padType;
+    // Link-state queries and direct pad buffers must observe the same TAS
+    // sample. A host hotplug becomes visible at the next VBlank boundary.
+    return frameSampling_ ? latchedSample_[port].padType : ports_[port].padType;
   }
   return PadType::None;
 }
@@ -359,6 +380,9 @@ void InputController::writeRegister(uint32_t addr, uint32_t val) {
       irqPending_ = true;
     }
     break;
+  default:
+    writeRegister16(addr, static_cast<uint16_t>(val));
+    break;
   }
 }
 
@@ -369,6 +393,8 @@ uint32_t InputController::readRegister(uint32_t addr) const {
     return joyData_;
   case 0x04:
     return joyStat_;
+  default:
+    return readRegister16(addr);
   }
   return 0;
 }
@@ -376,6 +402,9 @@ uint32_t InputController::readRegister(uint32_t addr) const {
 void InputController::writeRegister16(uint32_t addr, uint16_t val) {
   uint32_t offset = addr - 0x1F801040;
   switch (offset) {
+  case 0x00:
+    writeRegister(addr, val);
+    break;
   case 0x08:
     joyMode_ = val;
     break;
@@ -400,6 +429,8 @@ void InputController::writeRegister16(uint32_t addr, uint16_t val) {
 uint16_t InputController::readRegister16(uint32_t addr) const {
   uint32_t offset = addr - 0x1F801040;
   switch (offset) {
+  case 0x00:
+    return static_cast<uint16_t>(joyData_);
   case 0x08:
     return joyMode_;
   case 0x0A:

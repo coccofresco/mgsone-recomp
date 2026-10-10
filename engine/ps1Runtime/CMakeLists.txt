@@ -1,4 +1,4 @@
-find_package(SDL2 REQUIRED)
+find_package(SDL2 2.26 REQUIRED)
 
 # Prefer a complete system Vulkan SDK, while allowing an explicit header tree
 # for distributions which ship the loader independently from Vulkan-Headers.
@@ -93,6 +93,9 @@ set(PS1RECOMP_VULKAN_SHADER_SOURCES
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/present_fullscreen.vert"
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/present_native.frag"
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/present_replay.frag"
+    "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/present_replay_ssao.frag"
+    "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/mgs_ssao.comp"
+    "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/mgs_ssao_blur.comp"
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/present_replay_temporal.frag"
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/present_replay_depth.frag"
     "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/present_rgba.frag"
@@ -128,6 +131,9 @@ set(PS1RECOMP_VULKAN_SHADER_RUNTIME_BINARIES)
 foreach(shader_source IN LISTS PS1RECOMP_VULKAN_SHADER_SOURCES)
     get_filename_component(shader_name "${shader_source}" NAME)
     set(shader_dependencies "${shader_source}")
+    if(shader_name MATCHES "ssao")
+        list(APPEND shader_dependencies "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/mgs_ssao_common.glsl")
+    endif()
     # Both direct and GPU-pulled shaders share the fragment projective-depth
     # contract. Header-only iterations must rebuild every consuming module.
     list(APPEND shader_dependencies
@@ -152,10 +158,24 @@ foreach(shader_source IN LISTS PS1RECOMP_VULKAN_SHADER_SOURCES)
         list(APPEND shader_dependencies
             "${PS1RECOMP_VULKAN_SHADER_SOURCE_DIR}/gte_color_math.glsl")
     endif()
+    # The large MGS textured fragments hit a reproducible null JIT call on
+    # Mesa Lavapipe 26.1.6 with glslc 2026.3 -O/-Os, including the native-CLUT
+    # read used by animated 8-bit PCX. The same sources pass with -O0 (the
+    # Vulkan driver still compiles/optimizes them). Keep the portable bytecode
+    # for these shared material paths; do not change sampling or hide effects.
+    # Regression: OptInGpuPainterWriteCoversTexturedDiscardAndMaskFeedback and
+    # OptInMgsOriginal8BitPcxKeepsIndicesAndTracksRuntimePalette. See
+    # docs/mgs-asset-presentation-validation.md for captures and limits.
+    set(shader_optimization -O)
+    if(shader_name STREQUAL "replay_opaque_textured.frag" OR
+       shader_name STREQUAL "replay_precise.frag" OR
+       shader_name STREQUAL "replay_semi_textured.frag")
+        set(shader_optimization -O0)
+    endif()
     add_custom_command(
         OUTPUT "${shader_binary}"
         COMMAND "${PS1RECOMP_GLSLC_EXECUTABLE}"
-            --target-env=vulkan1.0 -O
+            --target-env=vulkan1.0 ${shader_optimization}
             -o "${shader_binary}" "${shader_source}"
         DEPENDS ${shader_dependencies}
         COMMENT "Compiling Vulkan shader ${shader_name}"
@@ -191,10 +211,12 @@ add_library(ps1Runtime_lib STATIC
     src/games/crash3_scenery_construction.cpp
     src/games/crash3_profile.cpp
     src/games/mgs_profile.cpp
+    src/games/mgs_disc.cpp
     src/games/mgs_decomp.cpp
     src/games/mgs_decomp/texture.c
     src/games/mgs_asset_cache.cpp
     src/games/mgs_scene.cpp
+    src/games/mgs_frame_interpolation.cpp
     src/games/mgs_pose.cpp
     src/games/mgs_mesh_replay.cpp
     src/games/mgs_source_material.cpp
@@ -212,6 +234,7 @@ add_library(ps1Runtime_lib STATIC
     src/cdrom/exe_extractor.cpp
     src/cdrom/virtual_fs.cpp
     src/cdrom/cdrom_controller.cpp
+    src/cdrom/xa_adpcm.cpp
     src/bios/bios.cpp
     src/bios/kernel_threads.cpp
     src/bios/bios_access.cpp
@@ -250,6 +273,8 @@ add_library(ps1Runtime_lib STATIC
     src/mdec/mdec.cpp
     src/timers/timers.cpp
     src/save_state.cpp
+    src/save_files.cpp
+    src/soak_probe.cpp
     src/config.cpp
     src/overlay_manager.cpp
     src/psyq/psyq_hle.cpp
@@ -289,7 +314,11 @@ target_include_directories(ps1Runtime_lib
 
 target_link_libraries(ps1Runtime_lib
     PUBLIC fmt::fmt
+    PRIVATE toml11::toml11
 )
+if(WIN32)
+    target_link_libraries(ps1Runtime_lib PRIVATE psapi)
+endif()
 
 # Recompiled output generation (manual; see CONTRIBUTING.md)
 # Auto-generation from spinningCube is disabled when using custom game configs.
@@ -335,9 +364,25 @@ else()
     message(STATUS "recompiled_out.cpp not found -- using stub (CI/test build)")
 endif()
 
+set(MGS_IMGUI_DIR "${CMAKE_SOURCE_DIR}/third_party/imgui")
+add_library(mgs_imgui STATIC
+    ${MGS_IMGUI_DIR}/imgui.cpp ${MGS_IMGUI_DIR}/imgui_draw.cpp
+    ${MGS_IMGUI_DIR}/imgui_tables.cpp ${MGS_IMGUI_DIR}/imgui_widgets.cpp
+    ${MGS_IMGUI_DIR}/backends/imgui_impl_sdl2.cpp)
+target_include_directories(mgs_imgui PUBLIC ${MGS_IMGUI_DIR} ${MGS_IMGUI_DIR}/backends)
+target_link_libraries(mgs_imgui PUBLIC SDL2::SDL2)
+add_library(mgs_controllers STATIC src/input/controller_hub.cpp)
+target_include_directories(mgs_controllers PUBLIC include)
+target_link_libraries(mgs_controllers PUBLIC SDL2::SDL2 PRIVATE toml11::toml11)
+configure_file(${CMAKE_SOURCE_DIR}/third_party/SDL_GameControllerDB/gamecontrollerdb.txt
+    ${CMAKE_CURRENT_BINARY_DIR}/gamecontrollerdb.txt COPYONLY)
+add_executable(mgsFrontend src/frontend.cpp ${MGS_IMGUI_DIR}/backends/imgui_impl_sdlrenderer2.cpp)
+target_link_libraries(mgsFrontend PRIVATE mgs_imgui mgs_controllers toml11::toml11)
+
 add_library(ps1Runtime_vulkan_renderer STATIC
     src/gpu/renderer_vulkan.cpp
     src/gpu/mgs_asset_cache_vulkan.cpp
+    ${MGS_IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
 )
 
 # The sidecar's capture/profile and Vulkan presentation sources are bounded
@@ -356,6 +401,7 @@ target_include_directories(ps1Runtime_vulkan_renderer
 target_link_libraries(ps1Runtime_vulkan_renderer
     PUBLIC ps1Runtime_lib
     PRIVATE
+        mgs_imgui
         fmt::fmt
         SDL2::SDL2
         ps1Runtime_vulkan
@@ -368,6 +414,7 @@ add_executable(ps1Runtime
     src/main_host.cpp
     ${RECOMP_SRC}
 )
+target_link_libraries(ps1Runtime PRIVATE mgs_controllers)
 # Generated translations are exceptionally large and are not a practical
 # source-level debugging surface.  Suppressing their DWARF in debug-info build
 # types shortens the one unavoidable game-object rebuild and keeps renderer
@@ -393,8 +440,18 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     endif()
     set_source_files_properties(${RECOMP_SRC} PROPERTIES
         COMPILE_OPTIONS "${RECOMP_COMPILE_OPTIONS}")
+    if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND RECOMP_SHARD_SRC)
+        # The support TU contains >19,000 unordered_map registrations in a
+        # single initializer. Inlining libc++ into it makes LLVM optimization
+        # take many minutes. Keep its calls out of line; the actual game shards
+        # and all handwritten runtime/renderer code retain normal optimization.
+        set_source_files_properties(src/recompiled_out.cpp PROPERTIES
+            COMPILE_OPTIONS "${RECOMP_COMPILE_OPTIONS};-fno-inline-functions")
+    endif()
 endif()
 add_dependencies(ps1Runtime ps1Runtime_vulkan_shaders)
+set_source_files_properties(src/main_host.cpp PROPERTIES
+    INCLUDE_DIRECTORIES "${MGS_IMGUI_DIR}")
 
 target_include_directories(ps1Runtime
     PUBLIC include
@@ -410,3 +467,37 @@ target_link_libraries(ps1Runtime
         ps1Runtime_vulkan
         ps1Analyzer_lib
 )
+if(WIN32)
+    target_link_libraries(ps1Runtime PRIVATE SDL2::SDL2main)
+    target_link_libraries(mgsFrontend PRIVATE SDL2::SDL2main)
+    set(MGS_WINDOWS_PACKAGING "${CMAKE_CURRENT_SOURCE_DIR}/../../packaging/windows")
+    add_executable(MGSRecomp WIN32 "${MGS_WINDOWS_PACKAGING}/launcher.cpp"
+        "${MGS_WINDOWS_PACKAGING}/application.rc")
+    target_link_libraries(MGSRecomp PRIVATE shell32)
+    if(MINGW)
+        target_link_options(MGSRecomp PRIVATE -municode)
+    endif()
+    foreach(mgs_windows_target ps1Runtime mgsFrontend)
+        target_sources(${mgs_windows_target} PRIVATE "${MGS_WINDOWS_PACKAGING}/application.rc")
+    endforeach()
+    foreach(mgs_windows_target ps1Runtime mgsFrontend MGSRecomp)
+        target_include_directories(${mgs_windows_target} PRIVATE "${MGS_WINDOWS_PACKAGING}")
+    endforeach()
+endif()
+
+# Link portable candidates to the SDK's versioned math/C++ ABI rather than
+# newly introduced host libm symbol versions. This is a real SDK link, not
+# an ELF-version rewrite; packaging audits every resulting ELF requirement.
+set(MGS_ABI_LIBRARY_DIR "" CACHE PATH "Optional baseline SDK library directory")
+if(MGS_ABI_LIBRARY_DIR)
+    foreach(mgs_target ps1Runtime mgsFrontend)
+        foreach(mgs_abi_lib libm.so.6 libstdc++.so.6)
+            if(NOT EXISTS "${MGS_ABI_LIBRARY_DIR}/${mgs_abi_lib}")
+                message(FATAL_ERROR "Missing baseline ABI library: ${mgs_abi_lib}")
+            endif()
+            target_link_libraries(${mgs_target} PRIVATE "${MGS_ABI_LIBRARY_DIR}/${mgs_abi_lib}")
+        endforeach()
+        target_link_options(${mgs_target} PRIVATE "-Wl,-rpath-link,${MGS_ABI_LIBRARY_DIR}")
+        set_target_properties(${mgs_target} PROPERTIES SKIP_BUILD_RPATH TRUE)
+    endforeach()
+endif()

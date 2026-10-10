@@ -5,12 +5,15 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
 
 struct SDL_Window;
+union SDL_Event;
+struct _SDL_GameController;
 
 namespace ps1::gpu {
 
@@ -470,6 +473,11 @@ public:
   bool init(const std::string &windowTitle, int width = 800, int height = 600,
             bool vsync = true, bool fullscreen = false);
   void renderFrame();
+  // Host-only UI, composed after the scene on the swapchain. It never enters
+  // VRAM, game feedback, screenshots used by game logic or temporal effects.
+  void setHostOverlay(std::function<void()> draw);
+  void processHostEvent(const SDL_Event &event);
+  void setHostController(_SDL_GameController *controller);
   bool processEvents();
   // F8 calls this from the host event loop. It cycles colour, post-correction
   // presented-surface R32, independent pre-correction strict-W depth and a

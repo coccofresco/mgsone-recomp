@@ -1,0 +1,199 @@
+{
+  "format": "mgs-situation-1",
+  "name": "pal-hot-terminal",
+  "source": {
+    "script": "USA s16d/ea54.g",
+    "procedure": "3ac8",
+    "condition": "equipped item 16, matching PAL temperature and story; HZD key2/key3"
+  },
+  "requires": {
+    "stage": "s16d",
+    "story": 246,
+    "item": 17,
+    "gcl_11800082": 1
+  },
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "life",
+    "max_life",
+    "game_over_timer",
+    "pause_level",
+    "items",
+    "weapons"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "doorway",
+        "until": {
+          "x": {
+            "min": -6350,
+            "max": -6050
+          },
+          "z": {
+            "min": 9100,
+            "max": 9400
+          }
+        },
+        "guard": {
+          "stage": "s16d",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        },
+        "action": {
+          "move_to": {
+            "x": -6200,
+            "z": 9250
+          }
+        },
+        "max_frames": 600
+      },
+      {
+        "name": "enter-command-room",
+        "until": {
+          "x": {
+            "min": -4650,
+            "max": -4350
+          },
+          "z": {
+            "min": 9100,
+            "max": 9400
+          }
+        },
+        "guard": {
+          "stage": "s16d",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        },
+        "action": {
+          "move_to": {
+            "x": -4500,
+            "z": 9250
+          }
+        },
+        "max_frames": 600
+      },
+      {
+        "name": "terminal-approach",
+        "until": {
+          "x": {
+            "min": 1225,
+            "max": 1525
+          },
+          "z": {
+            "min": 8800,
+            "max": 9600
+          }
+        },
+        "guard": {
+          "stage": "s16d",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        },
+        "action": {
+          "move_to": {
+            "x": 1375,
+            "z": 9100
+          }
+        },
+        "max_frames": 600
+      },
+      {
+        "name": "equip-pal-key",
+        "until": {
+          "item": 16
+        },
+        "guard": {
+          "stage": "s16d",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        },
+        "action": {
+          "sequence": "wait:20,l2:10,l2+left:6,l2:12,l2+left:6,l2:12,wait:24"
+        },
+        "attempts": 24,
+        "max_frames": 2200
+      },
+      {
+        "name": "insert-pal-key",
+        "until": {
+          "story": {
+            "min": 247
+          }
+        },
+        "guard": {
+          "stage": "s16d",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        },
+        "action": {
+          "move_to": {
+            "x": 1375,
+            "z": 7875
+          }
+        },
+        "max_frames": 360
+      },
+      {
+        "name": "original-confirmation",
+        "until": {
+          "stage": "s16d",
+          "story": 250,
+          "control": {
+            "ne": 0
+          },
+          "pause_level": 0,
+          "load_request": 0,
+          "actor_loader_count": 0,
+          "actor_fadeio_count": 0,
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          }
+        },
+        "max_frames": 9000,
+        "stable_frames": 30,
+        "guard": {
+          "stage": "s16d",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        },
+        "action": {
+          "sequence": "wait:60,cross:6,wait:30,circle:6,wait:60,select:6,wait:60"
+        },
+        "when": {
+          "pause_level": {
+            "mask": 1,
+            "eq": 1
+          }
+        },
+        "attempts": 40
+      }
+    ]
+  }
+}

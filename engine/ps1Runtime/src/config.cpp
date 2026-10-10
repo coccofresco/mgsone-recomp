@@ -60,6 +60,12 @@ bool ConfigReader::load(const std::string &path) {
         config_.game.profile = unquote(val);
       else if (key == "widescreen_16_9")
         config_.game.widescreen16x9 = (val == "true");
+      else if (key == "fast_loading")
+        config_.game.fastLoading = (val == "true");
+      else if (key == "presentation_height")
+        config_.game.presentationHeight = std::stoi(val);
+      else if (key == "ambient_occlusion")
+        config_.game.ambientOcclusion = (val == "true");
       else if (key == "presentation_depth_corrections")
         config_.game.presentationDepthCorrections = (val == "true");
       else if (key == "scenery_cull_guard_pixels")
@@ -142,6 +148,10 @@ bool ConfigReader::save(const std::string &path) const {
     f << "profile = \"" << config_.game.profile << "\"\n";
     f << "widescreen_16_9 = "
       << (config_.game.widescreen16x9 ? "true" : "false") << "\n";
+    f << "fast_loading = "
+      << (config_.game.fastLoading ? "true" : "false") << "\n";
+    f << "presentation_height = " << config_.game.presentationHeight << "\n";
+    f << "ambient_occlusion = " << (config_.game.ambientOcclusion ? "true" : "false") << "\n";
     f << "presentation_depth_corrections = "
       << (config_.game.presentationDepthCorrections ? "true" : "false")
       << "\n";

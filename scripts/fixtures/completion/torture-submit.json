@@ -1,0 +1,87 @@
+{
+  "format": "mgs-situation-1",
+  "name": "torture-submit",
+  "source": {
+    "retail": "USA s03b/ea54: main story157..162; c48b survival; 4742 surrender sets global005c bit8; c7c4 loads s03c",
+    "decomp": "chara/torture/torture.c: PAD_CIRCLE health recovery and PAD_SELECT surrender"
+  },
+  "requires": {
+    "stage": "s03b",
+    "story": 157,
+    "actor_torture_count": 1,
+    "life": {
+      "min": 1
+    },
+    "gcl_12000065": 0,
+    "gcl_1200005c": {
+      "mask": 8,
+      "eq": 0
+    }
+  },
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "life",
+    "game_over_timer",
+    "gcl_12000065",
+    "gcl_1200005c"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-torture-submit",
+        "until": {
+          "gcl_12000065": {
+            "min": 1
+          },
+          "gcl_1200005c": {
+            "mask": 8,
+            "eq": 8
+          }
+        },
+        "action": {
+          "sequence": "circle:3,wait:3,cross:3,wait:3,select:6,wait:6"
+        },
+        "attempts": 5000,
+        "max_frames": 60000,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "original-cell-return",
+        "until": {
+          "stage": "s03c",
+          "story": {
+            "min": 158
+          },
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0,
+          "load_request": 0,
+          "actor_loader_count": 0,
+          "gcl_1200005c": {
+            "mask": 8,
+            "eq": 8
+          }
+        },
+        "action": {
+          "sequence": "wait:30,start:6,wait:30,cross:6,wait:6,circle:6,wait:30"
+        },
+        "attempts": 500,
+        "max_frames": 22000,
+        "stable_frames": 30
+      }
+    ]
+  }
+}

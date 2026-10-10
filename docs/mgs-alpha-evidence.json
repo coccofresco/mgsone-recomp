@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "date": "2026-10-06",
+  "status": "local-alpha-candidate-not-published",
+  "version": "0.1.0-alpha.1-dev",
+  "platform": "linux-x86_64",
+  "native_runtime": {
+    "input_sha256": "abed4baacdc44f324330f890ff76eff6b3fc189249afd5cd2ff94dfd15631833",
+    "packaged_sha256": "cf4e0eb7b976419465008243a5c315ed3d072238c79d45691f8f38652779bca2",
+    "stub": false,
+    "abi": {
+      "GLIBC": "GLIBC_2.43",
+      "GLIBCXX": "GLIBCXX_3.4.32",
+      "CXXABI": "CXXABI_1.3.15"
+    }
+  },
+  "runtime_tests": {
+    "passed": 1326,
+    "skipped": 31,
+    "failed": 0,
+    "report": "data/validation/alpha-20261006/runtime-tests.json"
+  },
+  "python_tests": {
+    "passed": 165,
+    "skipped": 0,
+    "failed": 0,
+    "new_alpha_tests": 14,
+    "report": "data/validation/alpha-20261006/python-tests.log"
+  },
+  "source_archive_tests": {
+    "cpp_passed": 1577,
+    "cpp_skipped": 35,
+    "cpp_failed": 0,
+    "python_passed": 155,
+    "python_skipped": 10,
+    "python_failed": 0,
+    "generated_retail_code_or_assets_present": false,
+    "engine_scripts_ci_identical_to_worktree": true,
+    "configuration": "Release, stubs enabled, four C++ test targets including analyzer/recompiler/runtime/pipeline",
+    "sdk_note": "Clean configure initially could not download absent Vulkan headers because DNS is unavailable. Reconfigured using the already cached Khronos header dependency; all source files came from the archive.",
+    "test_report": "data/validation/alpha-20261006/clean-test-results.xml"
+  },
+  "retail_installation": {
+    "new_isolated_profile": true,
+    "path_contains_spaces": true,
+    "both_complete_disc_hashes_verified": true,
+    "asset_cache_bytes": 63741104,
+    "cli_import_exit": 0,
+    "full_integrity_verify_exit": 0,
+    "rollback_and_save_preservation": "unit-tested"
+  },
+  "native_boots": [
+    {
+      "runtime": "development",
+      "vblanks": 1800,
+      "configured_presentation": [
+        3840,
+        2160
+      ],
+      "native_raster_scale": 1,
+      "exit_code": 0,
+      "headless": true
+    },
+    {
+      "runtime": "packaged",
+      "launch_cwd": "/tmp",
+      "vblanks": 1800,
+      "configured_presentation": [
+        1920,
+        1080
+      ],
+      "native_raster_scale": 1,
+      "exit_code": 0,
+      "headless": true,
+      "elapsed_seconds": 4.604
+    }
+  ],
+  "backups": {
+    "real_profile_save_files": 2,
+    "zip_integrity": "passed",
+    "no_overwrite_and_profile_lock": "unit-tested",
+    "personal_project_cards_and_state_hashes_unchanged": true
+  },
+  "diagnostics": {
+    "contents": [
+      "diagnostics.json",
+      "runtime.log"
+    ],
+    "zip_integrity": "passed",
+    "known_personal_paths_redacted": true,
+    "game_assets_or_saves_included": false
+  },
+  "package": {
+    "files": 43,
+    "shaders": 30,
+    "inventory_and_checksums": "passed on initial candidate; final assembly report stored beside release archives",
+    "directory": "data/releases/alpha-20261006-final",
+    "release_notes": "packaging/RELEASE_NOTES.md"
+  },
+  "not_verified": [
+    "No physical GPU/Vulkan acceptance in this preparation run.",
+    "GUI cannot run in this environment: Python Tk shared library is missing; actionable CLI error verified.",
+    "Linux baseline compatibility and full clean native campaign rebuild remain pending.",
+    "GitHub CI prepared and equivalent source tests run locally; no remote configured or publication performed.",
+    "Continuous campaign completion, all complete boss fights and jeep combat remain uncertified."
+  ],
+  "sources": [
+    "https://github.com/hedge-dev/UnleashedRecomp/blob/main/README.md",
+    "https://github.com/hedge-dev/UnleashedRecomp/releases",
+    "https://github.com/sonicnext-dev/MarathonRecomp"
+  ]
+}

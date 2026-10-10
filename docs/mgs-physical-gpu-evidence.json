@@ -1,0 +1,713 @@
+{
+  "format": "mgs-physical-gpu-evidence-1",
+  "date": "2026-10-08",
+  "status": "passed",
+  "scope": "Eight short original-asset Vulkan scene windows at 4K, targeted GPU integration tests and eight restore cycles. Not whole-game or release-package certification.",
+  "git_head": "6f30e2cfb5e94ec71c0e337347a9495c3b829b8a",
+  "working_tree": "Pre-existing uncommitted work preserved; executable, deployed shaders and cache recorded in each session receipt.",
+  "device": {
+    "device_type": 2,
+    "vendor_id": 4318,
+    "device_id": 10370,
+    "driver_version": 2559459584,
+    "api_version": 4211029
+  },
+  "device_name": "NVIDIA GeForce RTX 4060",
+  "driver": "610.57.04",
+  "vulkan_api": "1.4.341",
+  "wsi": "Ordinary SDL desktop Vulkan surface, visible scene windows. No headless surface or CPU ICD.",
+  "validation_layer": "VK_LAYER_KHRONOS_validation, required explicitly during device initialization",
+  "runtime": {
+    "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+    "sha256": "5c4a914d86f3ca822fa10b985692a54b8021acba6333d1600c07d25c65e22245"
+  },
+  "asset_cache": {
+    "path": "data/presentation/usa-source/assets.mgsc",
+    "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+  },
+  "matrix_report": {
+    "path": "data/validation/presentation/physical-gpu-20261008/report.json",
+    "sha256": "d9197450e9609e41070d6b017d0ff7ea6dce7e575341b797f7023472656e1d4f"
+  },
+  "scenes": [
+    {
+      "label": "Molo / 4K",
+      "audit": {
+        "path": "data/validation/presentation/physical-gpu-20261008/01-dock-final-4k-audit.json",
+        "sha256": "d8b6824e71371c744bcb815ae138e9656df127c215987ac59a196ca71781da57"
+      },
+      "session": {
+        "path": "data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/result.json",
+        "sha256": "0f638d5b7815f68f7ad3abd84a19c87c7f6f7b05066ff72954c4bbc323d595d5"
+      },
+      "frames": 180,
+      "game_ticks": 91,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "gpu_original_format_packets": 34108,
+      "gpu_full_faces": 34108,
+      "visible_instance_captures": 2002,
+      "complete_instance_captures": 2002,
+      "gpu_timestamp_samples": 182,
+      "gpu_mean_ms": 14.9065,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/gpu/frame-97320-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "7dc05a3f87389e32de95752767d469e6f9b6fefb158a7fb7d03e2b2550087917"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/gpu/frame-97380-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "e6eb45e01cb2ba45150fdc6cece451becfb3e9b9deb1943d8283c06a9605094d"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/gpu/frame-97440-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "798d239fa8d680e7baa5dbb1a56b6bd97a456f377d80f054daa50ed2b7a85170"
+        }
+      ]
+    },
+    {
+      "label": "Intro, video verde/subacqueo",
+      "audit": {
+        "path": "data/validation/presentation/physical-gpu-20261008/02-water-fixed-audit.json",
+        "sha256": "ec07365be86a8f9f71617a403c9490b0b914ec16dd4d8ae569c8cbf60de7de3e"
+      },
+      "session": {
+        "path": "data/validation/presentation/physical-gpu-20261008/02-water-fixed/result.json",
+        "sha256": "0d01cafdef56dce3200e6753b91365e1d1d01ce700131dca9ec2d217bcac8de2"
+      },
+      "frames": 180,
+      "game_ticks": 90,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "gpu_original_format_packets": 18142,
+      "gpu_full_faces": 18142,
+      "visible_instance_captures": 360,
+      "complete_instance_captures": 360,
+      "gpu_timestamp_samples": 182,
+      "gpu_mean_ms": 12.6003,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/02-water-fixed/gpu/frame-9240-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "54ab4dd8b6738c04fdb18a414489b747d1cadb2664f0b5d8be6eb0932619e23c"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/02-water-fixed/gpu/frame-9300-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "da2c0597831d5c29dfda6bdaee91d50a921980376db8fa8fc118dc590902a9b1"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/02-water-fixed/gpu/frame-9360-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "8a1fcdc5c2103a4f16fa42c10917d2645954274da30f8a1e6224c432f78ab237"
+        }
+      ]
+    },
+    {
+      "label": "Ingresso tetto s11h",
+      "audit": {
+        "path": "data/validation/presentation/physical-gpu-20261008/03-hind-final-audit.json",
+        "sha256": "d13e979bbf97512e05a819cbcb8b5a599f0388a9a6743a1b2f1cc6069c59b7d5"
+      },
+      "session": {
+        "path": "data/validation/presentation/physical-gpu-20261008/03-hind-final/result.json",
+        "sha256": "8bab393b9153d2255d0bc72e9ed21c9a4a72831b12dec1023ee9c06268358a66"
+      },
+      "frames": 180,
+      "game_ticks": 90,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "gpu_original_format_packets": 19137,
+      "gpu_full_faces": 19137,
+      "visible_instance_captures": 540,
+      "complete_instance_captures": 540,
+      "gpu_timestamp_samples": 182,
+      "gpu_mean_ms": 5.2528,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/03-hind-final/gpu/frame-3000-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "4d32c2c1596c88eb743f072efb6665207b635b51a4992921928de59ca35161c6"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/03-hind-final/gpu/frame-3060-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "ed70abb0bb75df3bf89fdb08f4f07688f89721193596553121c3b73e61af684e"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/03-hind-final/gpu/frame-3120-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "2fbcceb570a1e5dd1757f96ef51653153ddeb46aed0b0f7e4818e7fad6c090b4"
+        }
+      ]
+    },
+    {
+      "label": "Anticamera Mantis / Meryl",
+      "audit": {
+        "path": "data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan-audit.json",
+        "sha256": "bb9834cb990e762abd53d1be94b9ef2f3a5356e7a72b7a2263b24e238e568579"
+      },
+      "session": {
+        "path": "data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/result.json",
+        "sha256": "6c92fe23b1f1bd71bc2a1a919d7b0972a405f11732461385bf4afffd6d0a4fce"
+      },
+      "frames": 180,
+      "game_ticks": 90,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "gpu_original_format_packets": 77127,
+      "gpu_full_faces": 77127,
+      "visible_instance_captures": 3240,
+      "complete_instance_captures": 3240,
+      "gpu_timestamp_samples": 182,
+      "gpu_mean_ms": 6.0671,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/gpu/frame-4260-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "c5f19d3563b3186031de9dc1c918ad681d1d155f08f8b5ca69f12b2189da2eb2"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/gpu/frame-4320-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "3f6154fe754c4d6bc2d64baad0cd3800dff8156e99697abeaea3621df8eee5ee"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/gpu/frame-4380-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "cc0c4ce2ded703d3b522e32b8a62647473b4cc0cea98625a50089c7833a9e6ea"
+        }
+      ]
+    },
+    {
+      "label": "Jeep, primo sbarramento",
+      "audit": {
+        "path": "data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan-audit.json",
+        "sha256": "c27a15b6e623d817d7731fcce6d43e24abda21ffc578a97bba5da148290a9e8c"
+      },
+      "session": {
+        "path": "data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/result.json",
+        "sha256": "a2e96f80455cd5ff3a8f6e51dc9c22ddcbbc982c92f5ee067afa18c5440f79ab"
+      },
+      "frames": 180,
+      "game_ticks": 91,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "gpu_original_format_packets": 79052,
+      "gpu_full_faces": 79052,
+      "visible_instance_captures": 2340,
+      "complete_instance_captures": 2340,
+      "gpu_timestamp_samples": 182,
+      "gpu_mean_ms": 12.4217,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/gpu/frame-4680-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "065f8be9ac488c17b18dadc762a897006955f1cb362f755235bfd505d9927997"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/gpu/frame-4740-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "f6de2dff778dd7b7124437b3c15c8587dee9086a65afe7b8d73771c406596b84"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/gpu/frame-4800-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "174e8247e078eedd060e1d1c5e0b7c47a075bea5859d1af7b57d1811264e4ff0"
+        }
+      ]
+    },
+    {
+      "label": "Neve",
+      "audit": {
+        "path": "data/validation/presentation/physical-gpu-20261008/06-snow-fixed-audit.json",
+        "sha256": "f00697f45c0c0f953dfaddc5374e3ef1ed3b51883c9e3e8fdbce48832af61bfc"
+      },
+      "session": {
+        "path": "data/validation/presentation/physical-gpu-20261008/06-snow-fixed/result.json",
+        "sha256": "b165aac108f4bf245271f35ab824ad01f1cff2511850ae60c55068bd950b64db"
+      },
+      "frames": 180,
+      "game_ticks": 90,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "gpu_original_format_packets": 23763,
+      "gpu_full_faces": 23763,
+      "visible_instance_captures": 3960,
+      "complete_instance_captures": 3960,
+      "gpu_timestamp_samples": 182,
+      "gpu_mean_ms": 22.5827,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/06-snow-fixed/gpu/frame-2100-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "1cf7d995d56d7c6f3c16c1531f17df8308fbb2adbee152535958b8d984a8896b"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/06-snow-fixed/gpu/frame-2160-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "49c313763ae1adc026fc1cc6e38085880a54409af5622be4880b7d6b7d73419d"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/06-snow-fixed/gpu/frame-2220-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "f54f9f12f8d0e15b0b2eda29f3d62867121805bfe6d8209b3c9751eb424a626f"
+        }
+      ]
+    },
+    {
+      "label": "s17a",
+      "audit": {
+        "path": "data/validation/presentation/physical-gpu-20261008/07-rex-fixed-audit.json",
+        "sha256": "a5bcb4bcf32f2d5fb1f4025df6c4cc4d465a84862ede7279a86619d84b0b448b"
+      },
+      "session": {
+        "path": "data/validation/presentation/physical-gpu-20261008/07-rex-fixed/result.json",
+        "sha256": "0f0c75509970b8a4f9002a380fbdb8ae1e979a4dfd6634a90ea3cd558bf70fc6"
+      },
+      "frames": 180,
+      "game_ticks": 90,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "gpu_original_format_packets": 61399,
+      "gpu_full_faces": 61399,
+      "visible_instance_captures": 2902,
+      "complete_instance_captures": 2902,
+      "gpu_timestamp_samples": 182,
+      "gpu_mean_ms": 15.6964,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/07-rex-fixed/gpu/frame-4920-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "911bd413b6f039c09e6fa27da1ee4d56068c60b1f16a7030fb6f414433d1dd1d"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/07-rex-fixed/gpu/frame-4980-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "a93ea3e7dbad3a931edb637988895fe14d884ad9c13771c0421f3723a87c6cd1"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/07-rex-fixed/gpu/frame-5040-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "1a9c3f93b573688358f11800d0a76c4bfc4adb93f320c6a52bf9852da17be3f5"
+        }
+      ]
+    },
+    {
+      "label": "Fornace s13a",
+      "audit": {
+        "path": "data/validation/presentation/physical-gpu-20261008/08-furnace-fixed-audit.json",
+        "sha256": "f18c12ab40c27b0c5e15b5cedbc1996f7da3c21b62c4bc6d128718f9b97a0438"
+      },
+      "session": {
+        "path": "data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/result.json",
+        "sha256": "0834fe1d80ed898fa92ef55205cb1a91526dd9c64c71be748eda44a6c38dd3cd"
+      },
+      "frames": 180,
+      "game_ticks": 90,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "gpu_original_format_packets": 25454,
+      "gpu_full_faces": 25454,
+      "visible_instance_captures": 450,
+      "complete_instance_captures": 450,
+      "gpu_timestamp_samples": 182,
+      "gpu_mean_ms": 3.0859,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.renderer.vulkan_gpu_timing.query_failure": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/gpu/frame-2160-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "2d36321dce000e95a59bdbb8036b83941bb47cc9efa1aaeb9ba71470a0250b8f"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/gpu/frame-2220-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "6c25a7e3cf7aefcc926bfd7c220dc0f0deb55f99dccb9a1fe57233705e0756bd"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/gpu/frame-2280-present-3-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "2d36321dce000e95a59bdbb8036b83941bb47cc9efa1aaeb9ba71470a0250b8f"
+        }
+      ]
+    }
+  ],
+  "tests": {
+    "report": {
+      "path": "data/validation/presentation/physical-gpu-20261008/gpu-tests.json",
+      "sha256": "80918e4b42aff86467f8ef78f9bac202eaea9c6fad43366395fed0248770d520"
+    },
+    "log": {
+      "path": "data/validation/presentation/physical-gpu-20261008/gpu-tests.log",
+      "sha256": "682454f5b155240e0b6a50c73eca2edcbaba3e01ccf17d56c702b5167e6c672f"
+    },
+    "binary": {
+      "path": "build/ps1Test/ps1Runtime_tests",
+      "sha256": "a4fdde64748ed5d341959560877a7a7b370947f114dde9a3b3b765755f3cf8f3"
+    },
+    "total": 135,
+    "passed": 133,
+    "skipped": [
+      "MgsSurfaceEffectsSnapshotTest.OptInRetailFogFollowsRelocatedCodeAndZoomParameters",
+      "MgsSurfaceEffectsSnapshotTest.OptInRetailRamProvesAnimationLayout"
+    ],
+    "failed": 0,
+    "gpu_opt_in_passed": [
+      "MgsSourceMeshTest.OptInGpuLightingIsPerPixelAndNativeRasterUnchanged",
+      "MgsScreenEffectsTest.OptInGpuClippedScreenCopyPreservesSubpixelScene",
+      "MgsScreenEffectsTest.OptInGpuScreenTexturePreservesSubpixelSceneAndRgb8",
+      "MgsScreenEffectsTest.OptInUnderwaterFogUsesSceneDepthAndExcludesFurnace",
+      "MgsScreenEffectsTest.OptInGpuVisorRetainsSubpixelEdgesAndNativeVram",
+      "MgsScreenEffectsTest.OptInGpuFadeEndpointsAndEnvelopeUseTrueColor",
+      "GpuModernReplayVulkanCopyTest.OptInGpuDepthPresentationReconstructsPreAndSplitViews",
+      "GpuModernReplayVulkanCopyTest.OptInGpuReadbackProvesTrueColorMaskOverlapAndDepthPlanes",
+      "GpuModernReplayVulkanDepthTest.OptInGpuPerspectiveDepthIsIndependentOfPlanarQuadDiagonal",
+      "GpuModernReplayVulkanDepthTest.OptInGpuPainterWriteKeepsOtLaterOpaqueVisibleAcrossRejectedHole",
+      "GpuModernReplayVulkanDepthTest.OptInGpuCrashSemiTransparencyWritesPresentedSurfaceOnlyWhereAccepted",
+      "GpuModernReplayVulkanDepthTest.OptInGpuFragmentStackOverflowReportsRequiredRecordsAndFailsClosed",
+      "GpuModernReplayVulkanDepthTest.OptInGpuPainterWriteCoversTexturedDiscardAndMaskFeedback",
+      "GpuModernReplayVulkanDepthTest.OptInGpuPaintRunsPreserveOpaqueBlendedPixelsAndHoles",
+      "GpuModernReplayVulkanDepthTest.OptInMgsOriginalPcxMatchesGpuAndTracksRuntimePalette",
+      "GpuModernReplayVulkanDepthTest.OptInMgsOriginal8BitPcxKeepsIndicesAndTracksRuntimePalette",
+      "GpuModernReplayVulkanDepthTest.OptInUhdRasterHasTwelveSubpixelsAndNativeOracle",
+      "MgsSurfaceEffectsGpuTest.OptInGpuContinuousGlowAccumulatesAndLeavesNativeVramUnchanged",
+      "MgsSurfaceEffectsGpuTest.OptInBubbleDepthOffsetKeepsAuthoredPlumeVisible",
+      "MgsSurfaceEffectsGpuTest.OptInExplosionVolumeOccludesAgainstGeometryWithoutOrderingBypass",
+      "MgsSurfaceEffectsGpuTest.OptInPhotoCapturesModernScanoutWithoutDiagnosticMode"
+    ],
+    "validation_errors": 0
+  },
+  "soak": {
+    "report": {
+      "path": "data/validation/presentation/physical-gpu-20261008/soak/report.json",
+      "sha256": "e952ba6c055dcb527d2ebbd0d5ade130afe82aad3db1c22ddf6912ef48f36f38"
+    },
+    "cycles": 8,
+    "warmup": 2,
+    "pause_save_restore_passes": 8,
+    "source_files_unchanged": true,
+    "cases": [
+      {
+        "name": "segment-00",
+        "rss": {
+          "first": 530898944,
+          "last": 530898944,
+          "growth": 0,
+          "slope_per_cycle": 0.0,
+          "passed": true
+        },
+        "file_descriptors": {
+          "first": 53,
+          "last": 53,
+          "growth": 0,
+          "slope_per_cycle": 0.0,
+          "passed": true
+        },
+        "presentation_cpu_p95_us": [
+          12673,
+          11789,
+          11045,
+          13751,
+          11370,
+          12076
+        ],
+        "host_interval_p95_us": [
+          39919,
+          33150,
+          31962,
+          33902,
+          31744,
+          34337
+        ],
+        "host.vulkan_memory.live_bytes": {
+          "first": 1755159728,
+          "last": 1755159728,
+          "growth": 0,
+          "slope_per_cycle": 0.0,
+          "passed": true
+        },
+        "host.vulkan_memory.live_allocations": {
+          "first": 18,
+          "last": 18,
+          "growth": 0,
+          "slope_per_cycle": 0.0,
+          "passed": true
+        }
+      }
+    ]
+  },
+  "visual_review": {
+    "method": "Reviewed the middle capture of all eight windows alongside the original CPU framebuffer at the same VBlank. Overall scene composition, actor placement and materials checked; no pixel-equality criterion for modern effects. Preview originals are stretched to the same 16:9 comparison extent.",
+    "gpu_preview": {
+      "path": "data/validation/presentation/physical-gpu-20261008/matrix-preview.png",
+      "sha256": "74f5db61f1f6af06a63a73ccabb084084cb164e8a12aa267daff0da23354c33a"
+    },
+    "native_preview": {
+      "path": "data/validation/presentation/physical-gpu-20261008/native-preview.png",
+      "sha256": "f51bfd575d105148310be0f75b004b0c3c8d4a6ccb112b71348306366d77c277"
+    },
+    "finding": "No obvious missing geometry or materials in the eight reviewed frame pairs. This is sampled visual evidence, not complete animation or effect validation."
+  },
+  "protected_saves": "sha256sum -c .local/tas-protected.sha256 passed for quick_slot_0 and both personal memory cards.",
+  "limits": [
+    "180 VBlanks per scene; sample coverage only, not continuous progression or full boss fights.",
+    "GPU means include diagnostic readback and validation; do not infer steady-state FPS or percentiles.",
+    "Only this RTX 4060/driver tested here; Steam Deck, AMD/Intel and packaged AppImage/Flatpak GPU execution remain unverified.",
+    "Eight restore cycles are a short regression probe, not proof of no long-term leak."
+  ],
+  "matrix_source_evidence": {
+    "path": "data/validation/presentation/physical-gpu-20261008/source-evidence.json",
+    "sha256": "25a4823d0742a619b74d54a93d3facfbb25042b2d3a378797a863acb538c6ecc"
+  }
+}

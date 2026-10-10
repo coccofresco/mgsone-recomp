@@ -1,0 +1,46 @@
+{
+  "format": "mgs-situation-1",
+  "name": "prison-guard-notices-ketchup",
+  "source": "johnny.c Johnny_800C7F78 calls proc_id[4]; USA s03c/ea54 dc61 sets global66=3. No input while waiting preserves PLAYER_KETCHUP.",
+  "requires": {
+    "stage": "s03c",
+    "story": 162,
+    "gcl_12000066": 2,
+    "player_status": {
+      "mask": 1048576,
+      "eq": 1048576
+    }
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "life",
+    "max_life",
+    "gcl_1180006c"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000066",
+    "gcl_1180006c"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-guard-reaction-to-faked-death",
+        "until": {
+          "gcl_12000066": 3,
+          "life": {
+            "min": 1
+          }
+        },
+        "max_frames": 7000
+      }
+    ]
+  }
+}

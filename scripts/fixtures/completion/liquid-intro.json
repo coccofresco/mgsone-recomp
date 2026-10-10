@@ -1,0 +1,102 @@
+{
+  "format": "mgs-situation-1",
+  "name": "liquid-introduction",
+  "source": {
+    "retail": "s18a/ea54, d18a/ea54",
+    "decomp": "chara/wake/wake.c and menu/radio.c: first-person wake, demo skipping, Codec release CROSS"
+  },
+  "requires": {
+    "stage": "s18a",
+    "story": 260
+  },
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "life",
+    "game_over_timer"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "liquid-speech-and-movies",
+        "until": {
+          "story": 275
+        },
+        "when": {
+          "game_status": {
+            "mask": 2147483648,
+            "eq": 2147483648
+          }
+        },
+        "action": {
+          "sequence": "wait:30,start:6,wait:30"
+        },
+        "attempts": 500,
+        "max_frames": 32000
+      },
+      {
+        "name": "final-codec",
+        "until": {
+          "story": {
+            "min": 276
+          }
+        },
+        "when": {
+          "pause_level": {
+            "mask": 1,
+            "eq": 1
+          }
+        },
+        "action": {
+          "sequence": "cross:6,wait:6"
+        },
+        "attempts": 1000,
+        "max_frames": 12000
+      },
+      {
+        "name": "original-liquid-fight-control",
+        "until": {
+          "stage": "s18a",
+          "story": 277,
+          "actor_liquid_count": 1,
+          "control": {
+            "ne": 0
+          },
+          "game_over_timer": 0,
+          "pause_level": 0,
+          "load_request": 0,
+          "actor_loader_count": 0,
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          }
+        },
+        "when": {
+          "game_status": {
+            "mask": 2147483648,
+            "eq": 2147483648
+          }
+        },
+        "action": {
+          "sequence": "wait:30,start:6,wait:30"
+        },
+        "attempts": 100,
+        "max_frames": 10000,
+        "stable_frames": 30
+      }
+    ]
+  }
+}

@@ -1,7 +1,9 @@
 #include "runtime/bios/bios.h"
 #include "runtime/cdrom/virtual_fs.h"
+#include "runtime/cdrom/cdrom_controller.h"
 #include "runtime/cpu_context.h"
 #include "runtime/dma/dma.h"
+#include "runtime/games/mgs_profile.h"
 #include "runtime/memory.h"
 #include "runtime/psyq/psyq_state.h"
 #include "runtime/psyq/psyq_libetc.h"
@@ -9,6 +11,8 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
+#include <thread>
+#include <atomic>
 
 using namespace ps1::bios;
 using namespace ps1::cdrom;
@@ -57,6 +61,38 @@ protected:
   std::unique_ptr<VirtualFs> fs;
   std::unique_ptr<Bios> bios;
 };
+
+TEST_F(BiosTest, ShutdownUnwindsPollingWithCallbacksBlockedWithoutChangingGuestMemory) {
+  ctx.callbackDrainBlockDepth = 1;
+  mem.write32(0x1000, 0x12345678);
+  std::atomic<bool> started{false}, stopped{false};
+  std::thread worker([&] {
+    struct Unwound { std::atomic<bool> &flag; ~Unwound() { flag = true; } } guard{stopped};
+    started = true;
+    try { for (;;) bios->drainPendingCallbacks(0x80012340); }
+    catch (const ShutdownRequested &) {}
+  });
+  while (!started) std::this_thread::yield();
+  bios->requestShutdown(); worker.join();
+  EXPECT_TRUE(stopped); EXPECT_EQ(mem.read32(0x1000), 0x12345678u);
+}
+
+TEST_F(BiosTest, ShutdownCrossesNativeFiberBackToRootAndRunsActiveDestructors) {
+  mem.write32(0x108, 0x80001000); mem.write32(0x110, 0x80001100);
+  mem.write32(0x114, 2 * 0xc0); mem.write32(0x1000, 0x80001100);
+  mem.write32(0x1100, 0x4000); mem.write32(0x11c0, 0x1000);
+  ctx.bios = bios.get();
+  KernelThreads threads(ctx);
+  struct Reset { ~Reset() { g_testRecompDispatchHook = nullptr; } } reset;
+  static bool unwound; unwound = false;
+  g_testRecompDispatchHook = [](recomp_context *c, uint32_t) {
+    struct Guard { ~Guard() { unwound = true; } } guard;
+    c->bios->requestShutdown(); c->bios->drainPendingCallbacks();
+  };
+  const auto handle = threads.open(0x80012340, 0x801e0000, 0x800abc00);
+  EXPECT_THROW(threads.change(handle), ShutdownRequested);
+  EXPECT_TRUE(unwound);
+}
 
 TEST_F(BiosTest, StrcmpReturnsCorrectly) {
   writeString(0x80000000, "apple");
@@ -242,6 +278,7 @@ TEST_F(BiosTest, DmaCallbacksDispatchOnceForEachCompletedTransfer) {
   g_testRecompDispatchHook = &recordDispatchedCallback;
 
   dma.writeRegister(0x1F8010F0, 1u << 19); // enable DMA4
+  dma.writeRegister(0x1F8010F4, (1u << 23) | (1u << 20));
   dma.writeRegister(0x1F8010C0, 0x00001000);
   dma.writeRegister(0x1F8010C4, 0x00000001);
   dma.writeRegister(0x1F8010C8,
@@ -257,6 +294,50 @@ TEST_F(BiosTest, DmaCallbacksDispatchOnceForEachCompletedTransfer) {
   bios->drainPendingCallbacks();
   EXPECT_EQ(g_dispatchedCallbacks.size(), 1u);
 
+  g_testRecompDispatchHook = nullptr;
+  state.reset();
+}
+
+TEST_F(BiosTest, StrHeaderDmaDoesNotDuplicatePayloadReadyCallback) {
+  DMA dma;
+  cdrom::CdromController cd;
+  dma.setMemory(&mem);
+  dma.setCDROM(&cd);
+  mem.setDMA(&dma);
+  bios->setDma(&dma);
+  auto sector = cd.snapshot();
+  sector.sectorReady = true;
+  sector.sectorSize = 2048;
+  cd.restore(sector);
+  auto &state = psyq::psyq_state();
+  state.reset();
+  ctx.r[A0] = DMA::CDROM_CH;
+  ctx.r[A1] = 0x800DB530;
+  psyq::hle_libetc_DMACallback(&ctx);
+  EXPECT_EQ(mem.read8(0x1F8010F6), 0x88);
+  dma.writeRegister(0x1F8010F0, 1u << 15);
+  auto transfer = [&](uint32_t address, uint32_t words) {
+    dma.writeRegister(0x1F8010B0, address);
+    dma.writeRegister(0x1F8010B4, words);
+    dma.writeRegister(0x1F8010B8, 0x11000000);
+  };
+  g_dispatchedCallbacks.clear();
+  g_testRecompDispatchHook = &recordDispatchedCallback;
+  mem.write8(0x1F8010F6, 0x80); // header is polled synchronously
+  transfer(0x1000, 8);
+  EXPECT_FALSE(dma.hasInterrupt());
+  mem.write8(0x1F8010F6, 0x88); // payload completion publishes the ring entry
+  transfer(0x2000, 504);
+  EXPECT_EQ(cd.snapshot().dataReadOffset, 2048u);
+  EXPECT_TRUE(dma.hasInterrupt());
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(g_dispatchedCallbacks, (std::vector<uint32_t>{0x800DB530}));
+  EXPECT_FALSE(dma.hasInterrupt());
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(g_dispatchedCallbacks.size(), 1u);
+  ctx.r[A1] = 0;
+  psyq::hle_libetc_DMACallback(&ctx);
+  EXPECT_EQ(mem.read8(0x1F8010F6), 0x80);
   g_testRecompDispatchHook = nullptr;
   state.reset();
 }
@@ -301,6 +382,130 @@ TEST_F(BiosTest, SpuCallbackIsDeliveredFromAudioEdgeWithoutVblank) {
   bios->drainPendingCallbacks();
   EXPECT_EQ(g_dispatchedCallbacks.size(), 1u);
   EXPECT_EQ(state.vsyncCounter.load(), 0u);
+  g_testRecompDispatchHook = nullptr;
+  state.reset();
+}
+
+TEST_F(BiosTest, MgsBusySoundReceiverRetainsAudioCreditAndPendingInterrupt) {
+  spu::SPU audio;
+  audio.enableGuestClock();
+  bios->setSpu(&audio);
+  auto &state = psyq::psyq_state();
+  state.reset();
+  state.intrCallback[9] = 0x80085150;
+  auto sound = audio.snapshot();
+  sound.irqPending = true;
+  sound.clockSamplesPending = 735;
+  audio.restore(sound);
+  games::mgs::configure(true, false);
+  mem.write8(0x800C33B0, 3); // SdInt still handling its previous wakeup
+  g_dispatchedCallbacks.clear();
+  g_testRecompDispatchHook = &recordDispatchedCallback;
+
+  for (int i = 0; i < 3; ++i)
+    bios->drainPendingCallbacks();
+  EXPECT_TRUE(g_dispatchedCallbacks.empty());
+  EXPECT_TRUE(audio.snapshot().irqPending);
+  EXPECT_EQ(audio.snapshot().clockSamplesPending, 735u);
+  EXPECT_EQ(audio.snapshot().generatedSampleCount, sound.generatedSampleCount);
+
+  // The original receiver finishes. Deliver the held edge once, then spend
+  // the retained credit; repeated cooperative polls must not duplicate it.
+  mem.write8(0x800C33B0, 2);
+  mem.write8(0x800C33B3, 0xff);
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(g_dispatchedCallbacks, (std::vector<uint32_t>{0x80085150}));
+  EXPECT_EQ(audio.snapshot().clockSamplesPending, 735u);
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(g_dispatchedCallbacks.size(), 1u);
+  EXPECT_EQ(audio.snapshot().clockSamplesPending, 0u);
+  EXPECT_EQ(audio.snapshot().generatedSampleCount, sound.generatedSampleCount + 735u);
+  EXPECT_EQ(mem.read32(0x800C33B0), 0xff000002u);
+
+  g_testRecompDispatchHook = nullptr;
+  games::mgs::configure(false, false);
+  state.reset();
+}
+
+TEST_F(BiosTest, ChainedDmaSlicesCompleteWithoutAdvancingVblank) {
+  DMA dma;
+  dma.setMemory(&mem);
+  mem.setDMA(&dma);
+  bios->setDma(&dma);
+  auto &state = psyq::psyq_state();
+  state.reset();
+  state.dmaCallback[DMA::SPU_CH] = 0x8004FFB8;
+  dma.writeRegister(0x1F8010F0, 1u << 19);
+  dma.writeRegister(0x1F8010F4, (1u << 23) | (1u << 20));
+  dma.writeRegister(0x1F8010C0, 0x1000);
+  dma.writeRegister(0x1F8010C4, 1);
+  g_dispatchedCallbacks.clear();
+  g_testRecompDispatchHook = [](recomp_context *context, uint32_t address) {
+    g_dispatchedCallbacks.push_back(address);
+    if (g_dispatchedCallbacks.size() < 20)
+      context->mem->write32(0x1F8010C8, 0x11000001);
+  };
+  dma.writeRegister(0x1F8010C8, 0x11000001);
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(g_dispatchedCallbacks.size(), 20u);
+  EXPECT_EQ(state.vsyncCounter.load(), 0u);
+  EXPECT_FALSE(dma.hasInterrupt());
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(g_dispatchedCallbacks.size(), 20u);
+  g_testRecompDispatchHook = nullptr;
+  state.reset();
+}
+
+TEST_F(BiosTest, LowLevelCdDriverDrainsMaturedSectorsAndPayloadCallbacksBeforeNextVblank) {
+  struct Disc : cdrom::VirtualFs {
+    std::optional<cdrom::Sector> readSector(uint32_t lba) override {
+      cdrom::Sector s{};
+      s.raw[24] = static_cast<uint8_t>(lba + 1);
+      return s;
+    }
+  } disc;
+  CdromController cd;
+  DMA dma;
+  dma.setMemory(&mem);
+  dma.setCDROM(&cd);
+  mem.setDMA(&dma);
+  bios->setDma(&dma);
+  bios->setCdromController(&cd);
+  cd.attachVirtualFs(&disc);
+  cd.setInterruptCallback([&](uint8_t kind) { bios->queueCdromEvent(kind); });
+  ctx.bios = bios.get();
+  auto &state = psyq::psyq_state();
+  state.reset();
+  state.intrCallback[2] = 0x80010000;
+  state.dmaCallback[3] = 0x80010004;
+  dma.writeRegister(0x1f8010f0, 1u << 15);
+  dma.writeRegister(0x1f8010f4, (1u << 23) | (1u << 19));
+  auto cs = cd.snapshot();
+  cs.state = CdromState::ReadingData;
+  cd.restore(cs);
+  g_dispatchedCallbacks.clear();
+  g_testRecompDispatchHook = [](recomp_context *ctx, uint32_t address) {
+    if (address == 0x80010000) {
+      auto *cd = ctx->bios->cdromController();
+      g_dispatchedCallbacks.push_back(100 + cd->getSectorBuffer()[24]);
+      ctx->mem->write32(0x1f8010b0, 0x1000);
+      ctx->mem->write32(0x1f8010b4, 512);
+      ctx->mem->write32(0x1f8010b8, 0x11000000);
+      cd->writeRegister(0x1f801800, 1);
+      cd->writeRegister(0x1f801803, 31);
+    } else {
+      g_dispatchedCallbacks.push_back(200 + ctx->mem->read8(0x1000));
+    }
+  };
+  cd.accrueClockCycles(cd.getCyclesPerSector() * 3);
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(g_dispatchedCallbacks, (std::vector<uint32_t>{101,201,102,202,103,203}));
+  EXPECT_EQ(cd.snapshot().currentLba, 3u);
+  EXPECT_EQ(state.vsyncCounter.load(), 0u);
+  EXPECT_FALSE(cd.hasInterrupt());
+  EXPECT_FALSE(dma.hasInterrupt());
+  bios->drainPendingCallbacks();
+  EXPECT_EQ(g_dispatchedCallbacks.size(), 6u);
   g_testRecompDispatchHook = nullptr;
   state.reset();
 }

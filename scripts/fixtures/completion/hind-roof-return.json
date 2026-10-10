@@ -1,0 +1,151 @@
+{
+  "format": "mgs-situation-1",
+  "name": "hind-retail-roof-original-return",
+  "source": "Original retail tower -> roof ladder entrance followed by original roof stair Circle exit. USA s11h/ea54 ntrap2bfd -> bdb1 -> e5fb; no RAM writes.",
+  "requires": {
+    "stage": "s11h",
+    "story": 190,
+    "life": {
+      "min": 1
+    },
+    "gcl_1180006c": 6,
+    "pause_level": 0,
+    "gcl_140102e7": 0
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "life",
+    "game_over_timer",
+    "weapons",
+    "items"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "align-stair-entry",
+        "until": {
+          "x": {
+            "min": -5930,
+            "max": -5570
+          },
+          "z": {
+            "min": -6680,
+            "max": -6320
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -5750,
+            "z": -6500
+          }
+        },
+        "max_frames": 1500,
+        "guard": {
+          "stage": "s11h",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      },
+      {
+        "name": "enter-stair-interaction-zone",
+        "until": {
+          "x": {
+            "min": -6200,
+            "max": -5400
+          },
+          "z": {
+            "min": -5375,
+            "max": -4400
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -5750,
+            "z": -4750
+          }
+        },
+        "max_frames": 900,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "face-stair-interaction",
+        "until": {
+          "yaw": {
+            "max": 400
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -5750,
+            "z": -4100
+          }
+        },
+        "max_frames": 500,
+        "guard": {
+          "stage": "s11h",
+          "life": {
+            "min": 1
+          }
+        }
+      },
+      {
+        "name": "original-roof-stair-circle-interaction",
+        "until": {
+          "stage": "s11c",
+          "actor_loader_count": 0,
+          "load_request": 0
+        },
+        "action": {
+          "sequence": "circle:3,wait:30"
+        },
+        "attempts": 30,
+        "max_frames": 2400,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "tower-control-after-roof-exit",
+        "until": {
+          "stage": "s11c",
+          "story": 190,
+          "pause_level": 0,
+          "actor_loader_count": 0,
+          "load_request": 0,
+          "control": {
+            "ne": 0
+          },
+          "life": {
+            "min": 1
+          },
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          }
+        },
+        "stable_frames": 30,
+        "max_frames": 3000
+      }
+    ]
+  }
+}

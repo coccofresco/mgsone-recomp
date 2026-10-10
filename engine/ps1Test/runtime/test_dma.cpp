@@ -2,6 +2,7 @@
 #include "runtime/dma/dma.h"
 #include "runtime/gpu/gpu.h"
 #include "runtime/memory.h"
+#include "runtime/mdec/mdec.h"
 #include "runtime/spu/spu.h"
 #include <gtest/gtest.h>
 #include <vector>
@@ -24,6 +25,54 @@ TEST_F(DmaTest, InitialState) {
   EXPECT_FALSE(dma.hasInterrupt());
   for (uint32_t ch = 0; ch < DMA::NUM_CHANNELS; ++ch)
     EXPECT_EQ(dma.completionGeneration(ch), 0u);
+}
+
+TEST_F(DmaTest, MdecOutputArmedBeforeInputWaitsForDecodedPixels) {
+  mdec::MDEC decoder;
+  dma.setMDEC(&decoder);
+  dma.writeRegister(0x1F8010F0, 0x88); // MDEC input and output
+  dma.writeRegister(0x1F8010F4, (1u << 23) | (1u << 17));
+  mem.write32(0x2000, 0xdeadbeef);
+  dma.writeRegister(0x1F801090, 0x2000);
+  dma.writeRegister(0x1F801094, 0x00040020); // 128 words
+  dma.writeRegister(0x1F801098, 0x01000200);
+  EXPECT_NE(dma.readRegister(0x1F801098) & (1u << 24), 0u);
+  EXPECT_EQ(mem.read32(0x2000), 0xdeadbeefu);
+  EXPECT_EQ(dma.completionGeneration(DMA::MDEC_OUT), 0u);
+  decoder.writeCommand(0x38000006);
+  for (unsigned i = 0; i < 6; ++i) mem.write32(0x1000 + i * 4, 0xFE000400);
+  dma.writeRegister(0x1F801080, 0x1000);
+  dma.writeRegister(0x1F801084, 0x00010006);
+  dma.writeRegister(0x1F801088, 0x01000201);
+  EXPECT_EQ(dma.readRegister(0x1F801098) & (1u << 24), 0u);
+  EXPECT_EQ(dma.completionGeneration(DMA::MDEC_OUT), 1u);
+  EXPECT_TRUE(dma.hasInterrupt());
+  EXPECT_TRUE(decoder.dataOutEmpty());
+  for (unsigned i = 0; i < 128; ++i) EXPECT_EQ(mem.read32(0x2000 + i * 4), 0x42104210u);
+}
+
+TEST_F(DmaTest, DicrByteEnableAndSelectiveAcknowledgePreserveOtherLanes) {
+  mem.setDMA(&dma);
+  dma.writeRegister(0x1F8010F0, 0x08888888);
+  // Enable SPU and OTC IRQs using the same SB lane as the retail STR driver.
+  mem.write8(0x1F8010F6, 0xd0);
+  EXPECT_EQ(mem.read8(0x1F8010F6), 0xd0);
+  for (unsigned ch : {4u, 6u}) {
+    dma.writeRegister(0x1F801080 + ch * 16, 0x1000);
+    dma.writeRegister(0x1F801084 + ch * 16, 1);
+    dma.writeRegister(0x1F801088 + ch * 16, 0x11000001);
+  }
+  EXPECT_EQ(mem.read8(0x1F8010F7), 0xd0); // both flags + master
+  mem.write8(0x1F8010F6, 0x50); // disable master without ACKing either flag
+  EXPECT_FALSE(dma.hasInterrupt());
+  EXPECT_EQ(mem.read8(0x1F8010F7), 0x50);
+  mem.write8(0x1F8010F6, 0xd0);
+  EXPECT_TRUE(dma.hasInterrupt());
+  mem.write8(0x1F8010F7, 0x10); // ACK only SPU
+  EXPECT_EQ(mem.read8(0x1F8010F6), 0xd0);
+  EXPECT_EQ(mem.read8(0x1F8010F7), 0xc0);
+  mem.write8(0x1F8010F7, 0x40);
+  EXPECT_FALSE(dma.hasInterrupt());
 }
 
 TEST_F(DmaTest, DpcrReadWrite) {

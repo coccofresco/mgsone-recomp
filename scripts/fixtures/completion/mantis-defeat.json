@@ -1,0 +1,96 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-original-defeat-callback",
+  "source": "USA original psyco damage handler800CF36C..800CF698; explicit post-projectile boundary after original port2 activation; death callback0b90->5cb4 must produce story133/phase4.",
+  "requires": {
+    "stage": "s07b",
+    "story": 129,
+    "actor_psyco_count": 1,
+    "gcl_12000046": 3,
+    "work_psyco_800d3acc_0844_s16": 9,
+    "player_status": {
+      "mask": 134217728,
+      "eq": 134217728
+    }
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000046"
+  ],
+  "fixture": {
+    "scope": "Synthetic post-damage boss life boundary only; original phase transition executes. Does not validate player damage delivery.",
+    "patches": [
+      {
+        "actor": "psyco.c",
+        "act": "0x800d3acc",
+        "offset": "0x7e0",
+        "indirect_offset": 38,
+        "width": 2,
+        "expect": 144,
+        "value": 0,
+        "source": "USA psyco TARGET life at state9; accepted-hit zero-life check800CF638 selects death800D1AB0 and original0b90->5cb4 callback.",
+        "reason": "Post-hit zero-life boundary for original death actor"
+      },
+      {
+        "actor": "psyco.c",
+        "act": "0x800d3acc",
+        "offset": "0x7e0",
+        "indirect_offset": 6,
+        "width": 2,
+        "signed": false,
+        "expect": 0,
+        "value": 4,
+        "source": "USA damage handler800CF384 requires TARGET_POWER; PLAYER_SECOND_CONTROLLER selects accepted hit at800CF3B0; TARGET attack mode1 projectile; zero-life check800CF638 selects death800D1AB0",
+        "reason": "Supply an original projectile hit at final life boundary after real port2 activation"
+      },
+      {
+        "actor": "psyco.c",
+        "act": "0x800d3acc",
+        "offset": "0x7e0",
+        "indirect_offset": 62,
+        "width": 2,
+        "signed": true,
+        "expect": -1,
+        "value": 1,
+        "source": "USA damage handler800CF384 requires TARGET_POWER; PLAYER_SECOND_CONTROLLER selects accepted hit at800CF3B0; TARGET attack mode1 projectile; zero-life check800CF638 selects death800D1AB0",
+        "reason": "Supply an original projectile hit at final life boundary after real port2 activation"
+      }
+    ]
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-defeat-callback",
+        "until": {
+          "story": 133,
+          "gcl_12000046": 4,
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        },
+        "action": {
+          "sequence": "wait:30"
+        },
+        "attempts": 200,
+        "max_frames": 6000,
+        "abort_when": {
+          "life": 0
+        }
+      }
+    ]
+  }
+}

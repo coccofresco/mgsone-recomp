@@ -48,6 +48,9 @@ class DMA;
 
 namespace ps1::bios {
 
+// Host cancellation, deliberately distinct from a guest fault or timeline load.
+struct ShutdownRequested final {};
+
 /**
  * @brief HLE replacement for the PS1 kernel -- syscall dispatch + events + callbacks.
  *
@@ -59,6 +62,10 @@ namespace ps1::bios {
 class Bios {
 public:
   struct Snapshot {
+    Heap::Snapshot heap;
+    FileIO::Snapshot files;
+    uint32_t kernelHeapNext = 0, kernelHeapEnd = 0;
+    uint32_t randomSeed = 1;
     EventSystem::Snapshot eventSystem;
     KernelThreads::Snapshot kernelThreads;
     std::vector<std::array<uint32_t, 2>> cardEvents;
@@ -77,6 +84,10 @@ public:
 
   Bios(recomp_context &ctx, cdrom::VirtualFs &fs, Memory &mem);
   ~Bios();
+  void requestShutdown() { shutdownRequested_.store(true, std::memory_order_release); }
+  void checkShutdown() const {
+    if (shutdownRequested_.load(std::memory_order_acquire)) throw ShutdownRequested{};
+  }
   bool hasNativeThreadContinuations() const { return kernelThreads_.active(); }
 
   bool canSaveNativeThreads() const { return kernelThreads_.canSnapshot(); }
@@ -158,11 +169,16 @@ public:
   // (testEvent, waitEvent, VSync, etc.) to safely dispatch mode-0x1000
   // handlers.
   void drainPendingCallbacks(uint32_t resumePc = 0);
+  // One data/DMA transaction, without advancing clocks or switching threads.
+  // A native asset consumer must run between transactions when buffers alias.
+  bool serviceUnpacedDataSector();
 
   // Capture/restore the host-side half of the BIOS HLE timeline. RAM alone
   // does not contain callback queues or the delivery epochs used to bridge
   // VBlank/DMA hardware into PsyQ.
   Snapshot snapshot() const;
+  static bool validSnapshot(const Snapshot &state);
+  bool canRestore(const Snapshot &state) const;
   bool restore(const Snapshot &state);
 
   // Compatibility path for states written before BIOS HLE state was part of
@@ -191,6 +207,7 @@ public:
   void setGameThreadId(std::thread::id id) { gameThreadId_ = id; }
 
 private:
+  bool queueDmaInterrupts();
   recomp_context &ctx_;
   Heap heap_;
   EventSystem eventSystem_;
@@ -232,6 +249,7 @@ private:
   // by `queueCdromEvent`; popped only by `drainCdromEventQueue` on the
   // game thread.  Mutex is held only for the short push/swap, so it
   // does not contend with normal game-thread work.
+  std::atomic<bool> shutdownRequested_{false};
   mutable std::mutex cdEventQueueMtx_;
   std::queue<uint8_t> cdEventQueue_;
 
@@ -277,6 +295,7 @@ private:
   KernelThreads kernelThreads_{ctx_};
   uint32_t kernelHeapNext_ = 0;
   uint32_t kernelHeapEnd_ = 0;
+  uint32_t randomSeed_ = 1;
 
   // Specific Table handlers mapping
   void handleA0(uint32_t index);

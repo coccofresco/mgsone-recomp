@@ -1,0 +1,102 @@
+{
+  "format": "mgs-situation-1",
+  "name": "torture-intro-and-resist",
+  "source": {
+    "retail": "USA s03b/ea54: main story157..162; c48b survival; 4742 surrender sets global005c bit8; c7c4 loads s03c",
+    "decomp": "chara/torture/torture.c: PAD_CIRCLE health recovery and PAD_SELECT surrender",
+    "timing": "Torture 800C5420 checks terminal health only at shock end; transient zero on the HUD is not death. Original Circle press-edge recovery, alternating held/released game frames.",
+    "scope": "Same input route as the reproduced native stream stall; first torture actor may be skipped with Cross, subsequent streamed films receive only Circle recovery pulses. No RAM edits after the synthetic capture seed."
+  },
+  "requires": {
+    "stage": "s03b",
+    "story": 157,
+    "actor_torture_count": 1,
+    "life": {
+      "min": 1
+    },
+    "gcl_12000065": 0,
+    "gcl_1200005c": {
+      "mask": 8,
+      "eq": 0
+    },
+    "current_stage": "s03b"
+  },
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "life",
+    "game_over_timer",
+    "gcl_12000065",
+    "gcl_1200005c",
+    "current_stage"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-intro-callback",
+        "until": {
+          "gcl_14010064": 1
+        },
+        "action": {
+          "sequence": "cross:6,wait:6"
+        },
+        "attempts": 1000,
+        "max_frames": 12000
+      },
+      {
+        "name": "original-torture-resist",
+        "until": {
+          "gcl_12000065": {
+            "min": 1
+          },
+          "gcl_1200005c": {
+            "mask": 8,
+            "eq": 0
+          }
+        },
+        "action": {
+          "sequence": "circle:2,wait:2"
+        },
+        "attempts": 15000,
+        "max_frames": 60000,
+        "abort_when": {
+          "actor_over_count": 1
+        }
+      },
+      {
+        "name": "original-cell-return",
+        "until": {
+          "stage": "s03c",
+          "story": {
+            "min": 158
+          },
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0,
+          "load_request": 0,
+          "actor_loader_count": 0,
+          "gcl_1200005c": {
+            "mask": 8,
+            "eq": 0
+          }
+        },
+        "action": {
+          "sequence": "wait:30,start:6,wait:30,cross:6,wait:6,circle:6,wait:30"
+        },
+        "attempts": 500,
+        "max_frames": 22000,
+        "stable_frames": 30
+      }
+    ]
+  }
+}

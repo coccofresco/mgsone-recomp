@@ -12,6 +12,7 @@
 #include "runtime/gpu/renderer_vulkan.h"
 #include "runtime/memory.h"
 #include "runtime/metrics.h"
+#include "runtime/pgxp.h"
 #include <SDL2/SDL.h>
 #include <algorithm>
 #include <bit>
@@ -1457,6 +1458,68 @@ TEST_F(MgsSourceMeshTest, AnimatedLightingUsesOriginalNormalsWithoutPackets) {
   EXPECT_NEAR(material->originalMesh->lighting.normals[0][2], 0, 1e-5);
 }
 
+TEST_F(MgsSourceMeshTest, SceneLightingIgnoresTransientGteBackgroundRegisters) {
+  constexpr uint32_t light = 0x80017000;
+  memory.write32(object + 40, 0x1d);
+  memory.write32(object + 52, light);
+  const std::array<float, 3> ambient{24, 48, 72};
+  for (unsigned k = 0; k < 3; ++k)
+    memory.write16(0x800adacc + k * 2, unsigned(ambient[k]));
+  const auto before = std::vector<uint8_t>(memory.ramPtr(),
+                                         memory.ramPtr() + Memory::RAM_SIZE);
+  // Consecutive actors may leave wildly different GTE background registers.
+  // The resulting source-mesh lighting must still reflect the scene, and the
+  // adapter must not repair/mutate guest registers or memory to achieve that.
+  for (uint32_t scratch : {0u, 4096u, 0xfffffff0u}) {
+    for (unsigned k = 0; k < 3; ++k) ctx.cop2c[13 + k] = scratch;
+    captureSceneBeforeBounds(&ctx);
+    const auto scene = latestSceneSnapshot();
+    ASSERT_TRUE(scene);
+    EXPECT_EQ(scene->ambient, ambient);
+    const auto material = sourceMeshMaterial(cache, memory, *scene,
+        scene->instances[0], 0, std::array<uint32_t, 1>{0}, 0, 0);
+    ASSERT_TRUE(material);
+    for (unsigned k = 0; k < 3; ++k) {
+      EXPECT_FLOAT_EQ(material->originalMesh->lighting.ambient[k], ambient[k]);
+      EXPECT_EQ(ctx.cop2c[13 + k], scratch);
+    }
+    EXPECT_EQ(std::memcmp(before.data(), memory.ramPtr(), before.size()), 0);
+  }
+  // Authored per-object ambient still overrides the scene when requested.
+  memory.write32(object + 40, 0x11d);
+  for (unsigned k = 0; k < 3; ++k) memory.write32(light + 20 + k * 4, 100 + k);
+  captureSceneBeforeBounds(&ctx);
+  const auto scene = latestSceneSnapshot();
+  const auto material = sourceMeshMaterial(cache, memory, *scene,
+      scene->instances[0], 0, std::array<uint32_t, 1>{0}, 0, 0);
+  ASSERT_TRUE(material);
+  for (unsigned k = 0; k < 3; ++k)
+    EXPECT_FLOAT_EQ(material->originalMesh->lighting.ambient[k], 100 + k);
+}
+
+TEST_F(MgsSourceMeshTest, AuthoredZeroNormalIsAmbientInputNotMissingMaterial) {
+  auto bytes = fixture(false, true, true);
+  const auto original = AssetCache::decode(bytes);
+  const auto normals = original.sourceModel(0)->normalsByte;
+  std::fill_n(bytes.begin() + normals, 6, 0);
+  checksum(bytes);
+  cache = AssetCache::decode(bytes);
+  setSceneAssetCache(&cache);
+  for (unsigned offset = 0; offset < 6; ++offset)
+    memory.write8(definition + 156 + offset, 0);
+  memory.write32(object + 40, 0x1d);
+  memory.write32(object + 52, 0x80017000);
+  memory.write32(object + 56, 0x80017100);
+  captureSceneBeforeBounds(&ctx);
+  const auto scene = latestSceneSnapshot();
+  ASSERT_TRUE(scene);
+  const auto material = sourceMeshMaterial(cache, memory, *scene, scene->instances[0],
+                                           0, std::array<uint32_t, 1>{0}, 0, 0);
+  ASSERT_TRUE(material);
+  EXPECT_EQ(material->originalMesh->lighting.normals[0], (std::array<float, 4>{0, 0, 0, 0}));
+  EXPECT_FLOAT_EQ(material->originalMesh->lighting.ambient[3], 1);
+}
+
 TEST_F(MgsSourceMeshTest, TransparencyDoesNotRequireNativePacketAllocation) {
   memory.write32(definition + 32, 2);
   for (unsigned k = 0; k < 4; ++k)
@@ -1917,6 +1980,215 @@ TEST_F(MgsSourceMeshTest, OptInGpuLightingIsPerPixelAndNativeRasterUnchanged) {
   EXPECT_EQ(metrics::get("host.renderer.vulkan_replay_executor_downgrade"), 0u);
   EXPECT_TRUE(gpu::isVulkanNativeOraclePolicyActive(gpu));
   renderer.destroy();
+}
+
+TEST_F(MgsSourceMeshTest,
+       OptInGpuSsaoContactsRespectDistanceHudAndNativeRaster) {
+  if (!std::getenv("PS1_RUN_VULKAN_INTEGRATION"))
+    GTEST_SKIP();
+  const auto dir =
+      std::filesystem::temp_directory_path() /
+      ("mgs-ssao-test-" + std::to_string(SDL_GetPerformanceCounter()));
+  std::filesystem::create_directories(dir);
+  struct Cleanup {
+    std::filesystem::path dir;
+    std::vector<std::pair<std::string, std::optional<std::string>>> saved;
+    void set(const char *key, const std::string &value) {
+      const char *old = std::getenv(key);
+      saved.push_back(
+          {key, old ? std::optional<std::string>(old) : std::nullopt});
+      setenv(key, value.c_str(), 1);
+    }
+    ~Cleanup() {
+      for (auto it = saved.rbegin(); it != saved.rend(); ++it)
+        if (it->second)
+          setenv(it->first.c_str(), it->second->c_str(), 1);
+        else
+          unsetenv(it->first.c_str());
+      std::filesystem::remove_all(dir);
+      metrics::reset();
+      metrics::setEnabledForTesting(false);
+    }
+  } cleanup{dir, {}};
+  // An original KMD plane, not a projected PSX replacement. The second
+  // rectangle below supplies an independently positioned foreground surface.
+  // Cover the test region even in the far-camera radius/cap cases.
+  auto bytes = fixture(false, true, true);
+  const auto base = cache.section(AssetCache::Source).offset;
+  for (unsigned k = 0; k < 4; ++k) {
+    const int x = (k == 1 || k == 2) ? 9600 : -9600,
+              y = k >= 2 ? 9600 : -9600;
+    for (auto [offset, value] :
+         std::array<std::pair<unsigned, int>, 2>{{{0, x}, {2, y}}}) {
+      bytes[base + 120 + k * 8 + offset] = uint16_t(value);
+      bytes[base + 121 + k * 8 + offset] = uint16_t(value) >> 8;
+      put(bytes,
+          cache.section(AssetCache::Vertices).offset + k * 48 + offset * 2,
+          std::bit_cast<uint32_t>(float(value)));
+    }
+  }
+  checksum(bytes);
+  cache = AssetCache::decode(bytes);
+  const auto assetPath = dir / "fixture.mgsc";
+  {
+    std::ofstream out(assetPath, std::ios::binary);
+    out.write(reinterpret_cast<const char *>(bytes.data()), bytes.size());
+  }
+  for (unsigned i = 0; i < 178; ++i)
+    memory.write8(definition + i, bytes[base + i]);
+  for (unsigned field : {56u, 60u, 68u, 72u, 76u, 80u})
+    memory.write32(definition + 32 + field,
+                   definition + memory.read32(definition + 32 + field));
+  memory.write16(definition + 176, 0x1234);
+  memory.write32(object + 28, 2000);
+  memory.write32(object + 72 + 28, 2000);
+  memory.write32(object + 40, 0x1d);
+  constexpr uint32_t light = 0x80017000;
+  memory.write32(object + 52, light);
+  memory.write16(light + 4, 4096);
+  for (unsigned channel = 0; channel < 3; ++channel)
+    memory.write16(light + 32 + channel * 6, 128 * 16);
+  cleanup.set("PS1_MGS_ASSET_CACHE", assetPath.string());
+  cleanup.set("PS1_VULKAN_REPLAY_READBACK", "all");
+  cleanup.set("PS1_VULKAN_REPLAY_READBACK_FRAME_FROM", "2");
+  cleanup.set("PS1_VULKAN_REPLAY_READBACK_FRAME_TO", "10");
+  cleanup.set("PS1_VULKAN_REPLAY_READBACK_REGION", "0,0,320,224");
+  std::array<std::vector<uint8_t>, 9> baseline;
+  std::array<std::vector<gpu::Color16>, 9> nativeBaseline;
+  for (bool enabled : {false, true}) {
+    const auto output = dir / (enabled ? "on" : "off");
+    std::filesystem::create_directories(output);
+    cleanup.set("PS1_VULKAN_REPLAY_READBACK_DUMP_DIRECTORY", output.string());
+    setSceneAssetCache(&cache);
+    metrics::reset();
+    metrics::setEnabledForTesting(true);
+    gpu::GPU gpu;
+    gpu::configureVulkanNativeOracle(gpu, true);
+    gpu::RendererOptions options;
+    options.internalScale = 4;
+    options.pgxp = options.trueDepth = options.trueColor = true;
+    options.ambientOcclusion = enabled;
+    gpu::RendererVulkan renderer(gpu, options);
+    ASSERT_TRUE(
+        renderer.init("MGS SSAO GPU contracts", 320, 224, false, false));
+    gpu.writeGP1(0x03000000);
+    gpu.writeGP1(0x05000000);
+    for (uint32_t w :
+         {0xe3000000u, 0xe4000000u | 319u | (223u << 10),
+          0xe5000000u | 160u | (112u << 11), 0xa0000000u, 0u, 1u | (4u << 16),
+          0x11111111u, 0x11111111u, 0xa0000000u, 512u | (400u << 16),
+          16u | (1u << 16), 0x7fff0000u, 0u, 0u, 0u, 0u, 0u, 0u, 0u})
+      gpu.writeGP0(w);
+    gpu.snapshotDisplayBuffer(1);
+    renderer.renderFrame();
+    renderer.drainReplayDiagnostics();
+    for (unsigned frame = 2; frame <= 10; ++frame) {
+      gpu.writeGP0(0xe5000000u);
+      gpu.writeGP0(0x60000000u);
+      gpu.writeGP0(0);
+      gpu.writeGP0(320u | (224u << 16));
+      // The fixture's 4-bit texture lives at (0,0), inside the cleared page.
+      // Restore its original indices before binding the source material.
+      for (uint32_t word : {0xa0000000u, 0u, 1u | (4u << 16),
+                            0x11111111u, 0x11111111u})
+        gpu.writeGP0(word);
+      gpu.writeGP0(0xe5000000u | 160u | (112u << 11));
+      const unsigned planeDepth = frame == 10 ? 48000 : frame >= 8 ? 16000 : 2000;
+      memory.write32(object + 28, planeDepth);
+      memory.write32(object + 72 + 28, planeDepth);
+      captureSceneBeforeBounds(&ctx);
+      prepareMeshReplay(&ctx);
+      gpu.processLinkedList(table + 256 * 4, memory.ramPtr(), &memory);
+      gpu.writeGP0(0xe5000000u);
+      if (frame != 2) {
+        // Same 1100-unit gap at near/far camera depths (frames 7/8): only
+        // the far surface should gain AO from the growing world-space radius.
+        // Frames 9/10 reject detached geometry and verify the 3000-unit cap.
+        const unsigned gap = frame == 4 ? 1650 : frame == 7 || frame == 8 ? 1100
+                                : frame == 9 ? 8000 : frame == 10 ? 4000 : 150;
+        const double depth = planeDepth - gap;
+        gpu.writeGP0(0x28808080u);
+        for (unsigned k = 0; k < 4; ++k) {
+          const float x = k & 1 ? 185 : 135, y = k & 2 ? 137 : 87;
+          const uint32_t packed = uint32_t(x) | (uint32_t(y) << 16);
+          PGXPValue p;
+          p.x = x;
+          p.y = y;
+          p.z = depth;
+          p.value = packed;
+          p.flags = PGXPValue::VALID_XY | PGXPValue::VALID_Z |
+                    PGXPValue::VALID_SIGNED_PROJECTION;
+          p.origin = PGXPOrigin::GteProjection;
+          p.qx = x * depth;
+          p.qy = y * depth;
+          p.nearDepth = 1;
+          p.projectionId = frame * 4 + k;
+          p.projectionContext = 0x5353414f;
+          gpu.writeGP0(packed, UINT32_MAX, &p);
+        }
+      }
+      // Native 2D tile over a contact area, then a full-screen Codec/video
+      // stand-in in frame 5. Neither is valid geometric AO input.
+      gpu.writeGP0(0x60a0b0c0u);
+      gpu.writeGP0(frame == 5 ? 0u : 120u | (105u << 16));
+      gpu.writeGP0(frame == 5 ? 320u | (224u << 16) : 8u | (14u << 16));
+      gpu.snapshotDisplayBuffer(frame);
+      renderer.renderFrame();
+      renderer.drainReplayDiagnostics();
+      std::filesystem::path capture;
+      for (const auto &entry : std::filesystem::directory_iterator(output)) {
+        const auto name = entry.path().filename().string();
+        if (name.starts_with("frame-" + std::to_string(frame) + "-present-") &&
+            name.ends_with("-scanout.ppm"))
+          capture = entry.path();
+      }
+      ASSERT_FALSE(capture.empty());
+      std::ifstream input(capture, std::ios::binary);
+      std::string magic;
+      unsigned w, h, max;
+      input >> magic >> w >> h >> max;
+      input.get();
+      ASSERT_EQ(magic, "P6");
+      ASSERT_EQ(w, 1280u);
+      ASSERT_EQ(h, 960u);
+      std::vector<uint8_t> pixels(w * h * 3);
+      input.read(reinterpret_cast<char *>(pixels.data()), pixels.size());
+      ASSERT_TRUE(input);
+      if (!enabled) {
+        baseline[frame - 2] = pixels;
+        nativeBaseline[frame - 2].assign(gpu.getVRAM(),
+                                         gpu.getVRAM() + 1024 * 512);
+      } else {
+        EXPECT_EQ(std::memcmp(nativeBaseline[frame - 2].data(), gpu.getVRAM(),
+                              1024 * 512 * sizeof(gpu::Color16)),
+                  0);
+        if (frame == 2 || frame == 4 || frame == 5 || frame == 7 ||
+            frame == 9 || frame == 10)
+          EXPECT_EQ(pixels, baseline[frame - 2])
+              << "plane, out-of-radius obstacle or 2D screen received AO, frame " << frame;
+        else {
+          unsigned darkened = 0;
+          for (unsigned y = 0; y < h; ++y)
+            for (unsigned x = 0; x < w; ++x)
+              for (unsigned c = 0; c < 3; ++c) {
+                const auto i = (y * w + x) * 3 + c;
+                ASSERT_LE(pixels[i], baseline[frame - 2][i]);
+                darkened += pixels[i] + 3 < baseline[frame - 2][i];
+                if (x >= 120 * 4 && x < 128 * 4 && y >= 105 * 4 && y < 119 * 4)
+                  ASSERT_EQ(pixels[i], baseline[frame - 2][i])
+                      << "HUD was darkened";
+              }
+          EXPECT_GT(darkened, 1000u)
+              << "in-radius surface must produce actual contact AO, frame " << frame;
+        }
+      }
+    }
+    EXPECT_EQ(metrics::get("host.renderer.vulkan_replay_executor_downgrade"),
+              0u);
+    if (enabled)
+      EXPECT_EQ(metrics::get("mgs.ssao.resolves"), 9u);
+    renderer.destroy();
+  }
 }
 
 TEST_F(MgsSourceMeshTest, StageLightingRequiresMapOwnershipAndReloadsSources) {

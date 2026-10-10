@@ -1,0 +1,15 @@
+name: Quality of life proposal
+description: Describe a usability or presentation improvement.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would this improve?
+      description: Describe the player situation and the proposed behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Presentation or gameplay impact
+      description: Indicate whether this changes only the host interface/presentation or also original game rules or timing.

@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstdint>
+#include <cstddef>
 #include <vector>
 
 namespace ps1::mdec {
@@ -24,6 +25,7 @@ public:
     std::vector<uint16_t> inputBuffer;
     std::vector<uint32_t> outputBuffer;
     std::array<int16_t, 64> block{};
+    std::array<int16_t, 64> scaleTable{};
   };
 
   MDEC();
@@ -39,16 +41,16 @@ public:
 
   // DMA interface
   void dmaIn(const uint32_t *data, uint32_t wordCount);
-  bool dmaOutReady() const { return !outputBuffer_.empty(); }
+  bool dmaOutReady() const { return !dataOutEmpty(); }
   uint32_t dmaOutRead();
   uint32_t dmaOutRemaining() const {
-    return static_cast<uint32_t>(outputBuffer_.size());
+    return static_cast<uint32_t>(outputBuffer_.size() - outputReadIndex_);
   }
 
   // Status
   bool isBusy() const { return busy_; }
   bool dataInFull() const { return inputBuffer_.size() >= 0xFFFF; }
-  bool dataOutEmpty() const { return outputBuffer_.empty(); }
+  bool dataOutEmpty() const { return outputReadIndex_ == outputBuffer_.size(); }
 
   // Zigzag scan order (public for testing)
   static const uint8_t ZIGZAG[64];
@@ -71,12 +73,12 @@ private:
   bool hasCustomQuantTable_ = false;
 
   // Cosine table for iDCT (precomputed)
-  std::array<int32_t, 64 * 64> cosineTable_;
-  bool cosineTableReady_ = false;
+  std::array<int16_t, 64> scaleTable_{};
 
   // Data buffers
   std::vector<uint16_t> inputBuffer_;
   std::vector<uint32_t> outputBuffer_;
+  size_t outputReadIndex_ = 0;
 
   // 8x8 block scratch
   int16_t block_[64]; // current 8x8 block

@@ -1,0 +1,69 @@
+{
+  "format": "mgs-situation-1",
+  "name": "jeep-garage-drums-and-exit",
+  "source": "USA pkjp_sne.c Act800DD2A4; input800DE154, GV pad mapping libgv.h; gun world yaw Work+08ce updated800DE398 from aim+08d6 and jeep root. Drum positions from retail GCL: (-3000,-3500),(-2000,-4000). Original drum destruction releases pjeep and s19b load. Input-only, no damage/phase patches. GM_CurrentStageName is s19b during seamless load while historical GM_SaveStageName remains s19a; check current_stage for arrival.",
+  "requires": {
+    "stage": "s19a",
+    "story": 283,
+    "gcl_110001ea": 3,
+    "actor_pkjp_sne_count": 1,
+    "life": {
+      "min": 1
+    }
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "game_over_timer",
+    "current_stage"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "aim-gun-toward-blocking-drums",
+        "until": {
+          "work_pkjp_sne_800dd2a4_08ce_u16": {
+            "min": 2330,
+            "max": 2395
+          }
+        },
+        "action": {
+          "sequence": "left+square+triangle:1"
+        },
+        "attempts": 900,
+        "max_frames": 900,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "fire-through-original-garage-exit",
+        "until": {
+          "actor_jeep_srl_count": 1,
+          "actor_loader_count": 0,
+          "load_request": 0,
+          "life": {
+            "min": 1
+          },
+          "current_stage": "s19b"
+        },
+        "action": {
+          "sequence": "square+triangle:180"
+        },
+        "attempts": 50,
+        "max_frames": 9000,
+        "abort_when": {
+          "life": 0
+        }
+      }
+    ]
+  }
+}

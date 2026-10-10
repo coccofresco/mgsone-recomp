@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=MGS Recomp
+Comment=Native MGS runtime with a modern Vulkan presentation
+Exec=mgs-recomp
+Icon=io.github.mgsrecomp.MGSRecomp
+Terminal=false
+Categories=Game;
+StartupWMClass=MGSRecomp
+Actions=BigPicture;
+
+[Desktop Action BigPicture]
+Name=Big Picture / Gaming Mode
+Exec=mgs-recomp --big-picture

@@ -1,5 +1,6 @@
 #include "runtime/cdrom/cdrom_controller.h"
 #include "runtime/metrics.h"
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -40,6 +41,17 @@ uint8_t CdromController::fromBcd(uint8_t bcd) {
 
 CdromController::CdromController() { reset(); }
 
+bool CdromController::changeMedia(const std::string &identity) {
+  // Called by the guest thread after the original driver has stopped reading.
+  // Do not clear pending data/commands if preparing the new medium fails.
+  if (!restoreMedia(identity)) return false;
+  const uint8_t interrupts = interruptEnable_;
+  reset();
+  interruptEnable_ = interrupts;
+  motorOn_ = !identity.empty();
+  return true;
+}
+
 void CdromController::reset() {
   state_ = CdromState::Idle;
   indexReg_ = 0;
@@ -66,6 +78,10 @@ void CdromController::reset() {
   xaFilterFile_ = 0;
   xaFilterChannel_ = 0;
   xaFilterEnabled_ = false;
+  xaDecoder_.reset();
+  xaCurrentFile_ = xaCurrentChannel_ = 0;
+  xaCurrentSet_ = muted_ = adpcmMuted_ = false;
+  audioVolume_ = nextAudioVolume_ = {128, 0, 0, 128};
   motorOn_ = false;
   shellOpen_ = false;
   pendingCommand_ = 0;
@@ -104,6 +120,14 @@ CdromController::Snapshot CdromController::snapshot() const {
   result.xaFilterFile = xaFilterFile_;
   result.xaFilterChannel = xaFilterChannel_;
   result.xaFilterEnabled = xaFilterEnabled_;
+  result.xaDecoder = xaDecoder_.snapshot();
+  result.nextAudioVolume = nextAudioVolume_;
+  result.audioVolume = audioVolume_;
+  result.adpcmMuted = adpcmMuted_;
+  result.muted = muted_;
+  result.xaCurrentSet = xaCurrentSet_;
+  result.xaCurrentChannel = xaCurrentChannel_;
+  result.xaCurrentFile = xaCurrentFile_;
   result.motorOn = motorOn_;
   result.shellOpen = shellOpen_;
   result.pendingCommand = pendingCommand_;
@@ -142,6 +166,14 @@ void CdromController::restore(const Snapshot &state) {
   xaFilterFile_ = state.xaFilterFile;
   xaFilterChannel_ = state.xaFilterChannel;
   xaFilterEnabled_ = state.xaFilterEnabled;
+  xaDecoder_.restore(state.xaDecoder);
+  nextAudioVolume_ = state.nextAudioVolume;
+  audioVolume_ = state.audioVolume;
+  adpcmMuted_ = state.adpcmMuted;
+  muted_ = state.muted;
+  xaCurrentSet_ = state.xaCurrentSet;
+  xaCurrentChannel_ = state.xaCurrentChannel;
+  xaCurrentFile_ = state.xaCurrentFile;
   motorOn_ = state.motorOn;
   shellOpen_ = state.shellOpen;
   pendingCommand_ = state.pendingCommand;
@@ -215,12 +247,15 @@ void CdromController::writeRegister(uint32_t addr, uint8_t val) {
         paramFifo_.push_back(val);
       break;
     case 3: // Request register
-      // bit5: want data (triggers data read)
+      // bit7: BFRD; reads/DMA share the sector cursor.
       break;
     }
     break;
   case 1:
     switch (port) {
+    case 2:
+      interruptEnable_ = val & 0x1F;
+      break;
     case 3: // Interrupt flag (ack by writing bits) -- Index 1
       interruptFlag_ &= ~(val & 0x1F);
       irqLinePending_.store(interruptFlag_ != 0, std::memory_order_release);
@@ -240,42 +275,15 @@ void CdromController::writeRegister(uint32_t addr, uint8_t val) {
     }
     break;
   case 2:
-    switch (port) {
-    case 2: // Interrupt enable
-      interruptEnable_ = val & 0x1F;
-      break;
-    case 3: // Interrupt flag (ack by writing bits) -- Index 2
-      // Some docs say index 2/3 port 3 also ACKs IF.
-      // PsyQ CdInit writes port3.idx2 = 0x00 (no-op clear).
-      interruptFlag_ &= ~(val & 0x1F);
-      irqLinePending_.store(interruptFlag_ != 0, std::memory_order_release);
-      if (val & 0x1F) {
-        waitingForAck_ = false;
-        if (secondaryResponseDelay_ == 0)
-          fireSecondaryNow();
-      }
-      if (val & 0x40)
-        paramFifo_.clear();
-      break;
-    }
+    if (port == 2) nextAudioVolume_[0] = val;
+    if (port == 3) nextAudioVolume_[1] = val;
     break;
   case 3:
-    switch (port) {
-    case 1: // Volume apply
-      break;
-    case 3: // Interrupt flag (ack by writing bits) -- Index 3
-      // PS1 CDROM: port 3 with ODD index (1 or 3) = write to IF ACK.
-      // PsyQ CdInit writes port3.idx3 = 0x20 to clear param FIFO.
-      interruptFlag_ &= ~(val & 0x1F);
-      irqLinePending_.store(interruptFlag_ != 0, std::memory_order_release);
-      if (val & 0x1F) {
-        waitingForAck_ = false;
-        if (secondaryResponseDelay_ == 0)
-          fireSecondaryNow();
-      }
-      if (val & 0x40)
-        paramFifo_.clear();
-      break;
+    if (port == 1) nextAudioVolume_[3] = val;
+    if (port == 2) nextAudioVolume_[2] = val;
+    if (port == 3) {
+      adpcmMuted_ = (val & 1) != 0;
+      if (val & 0x20) audioVolume_ = nextAudioVolume_;
     }
     break;
   }
@@ -370,21 +378,27 @@ void CdromController::serviceClock() {
   if (cycles != 0)
     tickOwned(static_cast<uint32_t>(cycles));
 
-  // A 2x drive matures three sectors per PAL VBlank. When libcd has no guest
-  // data callback, triggerCdromEvent performs the complete copy+ACK inline on
-  // this same thread; consume the remaining matured credit iteratively so a
-  // once-per-frame poll does not throttle the drive to 1-2 sectors/frame.
-  // A guest callback or register-DMA consumer leaves waitingForAck_ asserted,
-  // so the loop stops after exactly one published sector. The eight-sector
-  // bound matches the credit cap below and prevents a long host stall from
-  // turning one yield into an unbounded burst.
-  constexpr int maxSectorsPerService = 8;
-  for (int i = 1; i < maxSectorsPerService; ++i) {
+  serviceMaturedSector();
+}
+
+bool CdromController::unpacedDataRead() const {
+  // XA-enabled reads are always timed, even if a caller misclassifies a file.
+  return state_ == CdromState::ReadingData && !(mode_ & 0x40) && vfs_ &&
+         vfs_->allowsUnpacedData(currentLba_);
+}
+
+bool CdromController::serviceMaturedSector() {
+  const uint32_t before = currentLba_;
+  // XA does not raise INT1. Continue across audio sectors until a data sector
+  // needs its callback, using only credit already accrued by the host clock.
+  for (unsigned i = 0; i < 8; ++i) {
     if (state_ != CdromState::ReadingData || waitingForAck_ ||
-        readCycleCounter_ < static_cast<int32_t>(cyclesPerSector_))
-      break;
+        interruptFlag_ != INT_NONE ||
+        (!unpacedDataRead() &&
+         readCycleCounter_ < static_cast<int32_t>(cyclesPerSector_))) break;
     tickOwned(0);
   }
+  return currentLba_ != before;
 }
 
 void CdromController::tick(uint32_t cycles) { tickOwned(cycles); }
@@ -436,18 +450,45 @@ void CdromController::tickOwned(uint32_t cycles) {
     const int64_t accrued = static_cast<int64_t>(readCycleCounter_) + cycles;
     const int64_t creditLimit =
         static_cast<int64_t>(cyclesPerSector_) * maxBufferedSectors;
+    if (accrued > creditLimit) {
+      ps1::metrics::count("cdrom.discarded_clock_cycles", accrued - creditLimit);
+      ps1::metrics::trace("cdrom.credit_discarded",
+          {{"cycles", accrued - creditLimit}, {"lba", currentLba_},
+           {"interrupt", interruptFlag_}, {"waiting", waitingForAck_},
+           {"ready", sectorReady_},
+           {"vblank", ps1::metrics::getState("timing.vblank_index")}});
+    }
     readCycleCounter_ = static_cast<int32_t>(std::min(accrued, creditLimit));
 
-    if (waitingForAck_)
+    // A data-ready interrupt must not replace an unconsumed command response.
+    // MGS changes Setloc during its disc verification read; overwriting INT3
+    // with INT1 loses the command ACK and triggers libcd's timeout/retry loop.
+    if (waitingForAck_ || interruptFlag_ != INT_NONE)
       return;
 
-    if (readCycleCounter_ >= static_cast<int32_t>(cyclesPerSector_)) {
-      readCycleCounter_ -= static_cast<int32_t>(cyclesPerSector_);
+    const bool unpaced = unpacedDataRead();
+    if (unpaced || readCycleCounter_ >= static_cast<int32_t>(cyclesPerSector_)) {
+      // Neither borrow nor carry clock credit across the asset/stream boundary.
+      // No guest timer, VBlank, SPU clock or movie clock is advanced here.
+      if (unpaced) readCycleCounter_ = 0;
+      else readCycleCounter_ -= static_cast<int32_t>(cyclesPerSector_);
 
       // Read next sector
       if (vfs_) {
         auto sector = vfs_->readSector(currentLba_);
         if (sector) {
+          ps1::metrics::count("cdrom.read_sector");
+          if (unpaced) ps1::metrics::count("cdrom.unpaced_data_sector");
+          ps1::metrics::trace("cdrom.sector_read",
+                             {{"lba", currentLba_}, {"unpaced", unpaced ? 1 : 0}});
+          // XA realtime audio is consumed by the drive, not sent to libcd as
+          // INT1. This also preserves a pending data buffer while audio passes.
+          if ((mode_ & 0x40) && sector->raw[15] == 2 &&
+              (sector->raw[18] & 0x44) == 0x44) {
+            ++currentLba_;
+            processXaSector(sector->raw);
+            return;
+          }
           std::memcpy(sectorBuffer_.data(), sector->raw,
                       std::min<size_t>(SECTOR_SIZE_RAW, 2352));
           sectorReady_ = true;
@@ -470,6 +511,30 @@ void CdromController::tickOwned(uint32_t cycles) {
       }
     }
   }
+}
+
+void CdromController::processXaSector(const uint8_t *raw) {
+  ps1::metrics::count("cdrom.xa_sector");
+  if (xaFilterEnabled_ && (raw[16] != xaFilterFile_ || raw[17] != xaFilterChannel_)) return;
+  if (!xaCurrentSet_) {
+    if (raw[17] == 255 && (!xaFilterEnabled_ || xaFilterChannel_ != 255)) return;
+    xaCurrentFile_ = raw[16];
+    xaCurrentChannel_ = raw[17];
+    xaCurrentSet_ = true;
+  } else if (raw[16] != xaCurrentFile_ || raw[17] != xaCurrentChannel_) return;
+  if (raw[18] & 0x80) xaCurrentSet_ = false;
+  auto pcm = xaDecoder_.decode(raw, !muted_ && !adpcmMuted_);
+  ps1::metrics::count("cdrom.xa_decoded_sector");
+  if (muted_ || adpcmMuted_) return;
+  for (size_t i = 0; i < pcm.size(); i += 2) {
+    const int32_t left = pcm[i], right = pcm[i+1];
+    pcm[i] = static_cast<int16_t>(std::clamp(
+        (left * audioVolume_[0] + right * audioVolume_[2]) / 128, -32768, 32767));
+    pcm[i+1] = static_cast<int16_t>(std::clamp(
+        (left * audioVolume_[1] + right * audioVolume_[3]) / 128, -32768, 32767));
+  }
+  ps1::metrics::count("cdrom.xa_output_frame", pcm.size() / 2);
+  if (xaCallback_) xaCallback_(pcm.data(), static_cast<uint32_t>(pcm.size()));
 }
 
 // Push Response
@@ -633,6 +698,8 @@ void CdromController::cmdReadN() {
 
   // Transition to reading data state, tick() will handle INT1
   state_ = CdromState::ReadingData;
+  xaDecoder_.reset();
+  xaCurrentSet_ = false;
   currentLba_ = seekTarget_;
   // Speed: bit7 of mode = double speed
   cyclesPerSector_ = (mode_ & 0x80) ? (33868800 / 150) : (33868800 / 75);
@@ -680,6 +747,7 @@ void CdromController::cmdReadN() {
                        {"lba_distance", lbaDifference},
                        {"seek_cycles", seekCycles},
                        {"cycles_per_sector", cyclesPerSector_},
+                       {"unpaced_data", unpacedDataRead() ? 1 : 0},
                        {"double_speed", (mode_ & 0x80) ? 1 : 0}});
 }
 
@@ -718,6 +786,10 @@ void CdromController::cmdPause() {
 void CdromController::cmdInit() {
   state_ = CdromState::Idle;
   mode_ = 0;
+  xaDecoder_.reset();
+  xaCurrentSet_ = false;
+  xaFilterEnabled_ = false;
+  muted_ = adpcmMuted_ = false;
   motorOn_ = true;
 
   // Cancel any pending secondary response from a previous command (e.g.,
@@ -752,10 +824,12 @@ void CdromController::cmdInit() {
 }
 
 void CdromController::cmdMute() {
+  muted_ = true;
   pushResponse(INT_ACKNOWLEDGE, {buildStatusByte()});
 }
 
 void CdromController::cmdDemute() {
+  muted_ = false;
   pushResponse(INT_ACKNOWLEDGE, {buildStatusByte()});
 }
 

@@ -1,7 +1,10 @@
 #include "runtime/save_state.h"
+#include "runtime/save_files.h"
+#include <ctime>
 #include "runtime/bios/bios.h"
 #include "runtime/games/crash3_profile.h"
 #include "runtime/games/mgs_scene.h"
+#include "runtime/games/mgs_disc.h"
 #include "runtime/psyq/psyq_pad.h"
 #include "runtime/psyq/psyq_state.h"
 #include <cstring>
@@ -14,6 +17,12 @@ namespace ps1 {
 
 namespace {
 
+constexpr uint32_t kVersionTwelveFlags = 0x4356534eu; // NSVC: BIOS allocators and files
+constexpr uint32_t kVersionElevenFlags = 0x4256534eu; // NSVB: timer phase and IRQ latch
+constexpr uint32_t kVersionTenFlags = 0x4156534eu; // NSVA: XA decoder and CD mixer
+constexpr uint32_t kVersionNineFlags = 0x3956534eu; // NSV9: DMA IRQ semantics + MDEC scale matrix
+constexpr uint32_t kVersionEightFlags = 0x3856534eu; // NSV8
+constexpr size_t kMediaIdentitySize = 64; // fixed v8 trailer; no host paths
 constexpr uint32_t kVersionSevenFlags = 0x3756534eu; // NSV7
 constexpr uint32_t kVersionSixFlags = 0x3656534eu; // NSV6
 constexpr uint32_t kExtendedStateMarker = 0x32545845u; // "EXT2"
@@ -57,6 +66,74 @@ bool readVector(std::ifstream &f, std::vector<T> &values) {
   return count == 0 || static_cast<bool>(f.read(
                            reinterpret_cast<char *>(values.data()),
                            static_cast<std::streamsize>(count * sizeof(T))));
+}
+
+// NSV12 variable-length data is bounded by both a total budget and the bytes
+// actually present. A forged length must not cause a large allocation first.
+template <typename Container>
+bool readBoundedBytes(std::ifstream &f, Container &out, size_t limit, size_t &budget) {
+  uint32_t count = 0;
+  if (!readPod(f, count) || count > limit || count > budget) return false;
+  const auto start = f.tellg();
+  if (start < 0) return false;
+  f.seekg(0, std::ios::end);
+  const auto end = f.tellg();
+  f.seekg(start);
+  if (!f || end - start < std::streamoff(count) + std::streamoff(kMediaIdentitySize))
+    return false;
+  budget -= count;
+  out.resize(count);
+  return count == 0 || bool(f.read(reinterpret_cast<char *>(out.data()), count));
+}
+
+void writeBiosResources(std::ofstream &f, const bios::Bios::Snapshot &state) {
+  writePod(f, state.heap.baseAddress);
+  writePod(f, state.heap.totalSize);
+  writePod(f, state.heap.firstBlock);
+  writePod(f, state.kernelHeapNext);
+  writePod(f, state.kernelHeapEnd);
+  const auto writeString = [&](const std::string &s) {
+    writePod(f, uint32_t(s.size()));
+    f.write(s.data(), s.size());
+  };
+  for (const auto &fd : state.files.descriptors) {
+    writePod(f, fd.kind);
+    writeString(fd.path);
+    writeVector(f, fd.data);
+    writePod(f, fd.cursor);
+    writePod(f, fd.firstBlock);
+    writePod(f, fd.cardSlot);
+  }
+  writePod(f, uint32_t(state.files.directory.size()));
+  for (const auto &[name, size] : state.files.directory) {
+    writeString(name);
+    writePod(f, size);
+  }
+  writePod(f, state.files.directoryIndex);
+  writePod(f, state.randomSeed);
+}
+
+bool readBiosResources(std::ifstream &f, bios::Bios::Snapshot &state) {
+  using bios::FileIO;
+  if (!(readPod(f, state.heap.baseAddress) && readPod(f, state.heap.totalSize) &&
+        readPod(f, state.heap.firstBlock) && readPod(f, state.kernelHeapNext) &&
+        readPod(f, state.kernelHeapEnd))) return false;
+  size_t dataBudget = FileIO::MAX_SNAPSHOT_DATA;
+  size_t pathBudget = FileIO::MAX_FDS * FileIO::MAX_SNAPSHOT_PATH + 15u * 20u;
+  for (auto &fd : state.files.descriptors) {
+    if (!(readPod(f, fd.kind) &&
+          readBoundedBytes(f, fd.path, FileIO::MAX_SNAPSHOT_PATH, pathBudget) &&
+          readBoundedBytes(f, fd.data, FileIO::MAX_SNAPSHOT_DATA, dataBudget) &&
+          readPod(f, fd.cursor) && readPod(f, fd.firstBlock) && readPod(f, fd.cardSlot)))
+      return false;
+  }
+  uint32_t count = 0;
+  if (!readPod(f, count) || count > 15) return false;
+  state.files.directory.resize(count);
+  for (auto &[name, size] : state.files.directory)
+    if (!readBoundedBytes(f, name, 20, pathBudget) || !readPod(f, size)) return false;
+  return readPod(f, state.files.directoryIndex) && readPod(f, state.randomSeed) &&
+         bios::Bios::validSnapshot(state);
 }
 
 struct PsyqDiskState {
@@ -143,19 +220,23 @@ bool SaveStateCoordinator::request(Action action, std::string path) {
     return false;
   request_ = Request{action, std::move(path)};
   operationComplete_ = false;
-  reloadTimeline_ = false;
+  // A successful load while host-paused must still unwind when we resume,
+  // even if the player saves again before closing the host menu.
   return true;
 }
 
 void SaveStateCoordinator::checkpoint(recomp_context &ctx, uint32_t resumePc) {
   std::unique_lock lock(mutex_);
-  if (!request_.has_value() || cancelled_)
+  if ((!request_.has_value() && !hostPauseRequested_) || cancelled_)
     return;
 
   ctx.pc = resumePc;
   gameThreadParked_ = true;
   ready_.notify_one();
-  resumed_.wait(lock, [&] { return operationComplete_ || cancelled_; });
+  resumed_.wait(lock, [&] {
+    return cancelled_ || (!hostPauseRequested_ &&
+                          (!request_.has_value() || operationComplete_));
+  });
   const bool reload = reloadTimeline_ && !cancelled_;
   gameThreadParked_ = false;
   request_.reset();
@@ -179,8 +260,10 @@ bool SaveStateCoordinator::service(
   const bool succeeded = operation(current);
   {
     std::lock_guard lock(mutex_);
-    reloadTimeline_ = succeeded && current.action == Action::Load;
+    reloadTimeline_ |= succeeded && current.action == Action::Load;
     operationComplete_ = true;
+    // Keep the guest parked but allow another operation from the host menu.
+    if (hostPauseRequested_) request_.reset();
   }
   resumed_.notify_one();
   return true;
@@ -189,6 +272,19 @@ bool SaveStateCoordinator::service(
 bool SaveStateCoordinator::pending() const {
   std::lock_guard lock(mutex_);
   return request_.has_value();
+}
+
+void SaveStateCoordinator::setHostPaused(bool paused) {
+  {
+    std::lock_guard lock(mutex_);
+    hostPauseRequested_ = paused;
+  }
+  resumed_.notify_all();
+}
+
+bool SaveStateCoordinator::hostPaused() const {
+  std::lock_guard lock(mutex_);
+  return hostPauseRequested_ && gameThreadParked_;
 }
 
 void SaveStateCoordinator::cancel() {
@@ -230,7 +326,14 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
     fmt::print(stderr, "[SaveState] Native threads have not reached resumable boundaries\n");
     return false;
   }
-  const std::string temporaryPath = path + ".tmp";
+  const auto previous = inspect(path);
+  if (previous.version > SaveStateHeader{}.version) {
+    fmt::print(stderr, "[SaveState] Refusing to overwrite newer state format {}\n", previous.version);
+    return false;
+  }
+  try {
+  storage::Transaction transaction(path);
+  const auto &temporaryPath = transaction.temporary();
   std::ofstream f(temporaryPath, std::ios::binary | std::ios::trunc);
   if (!f) {
     fmt::print(stderr, "[SaveState] Cannot open '{}' for writing\n", path);
@@ -239,7 +342,7 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
 
   // Write header placeholder (we'll update checksum at the end)
   SaveStateHeader header;
-  header.flags = kVersionSevenFlags;
+  header.flags = kVersionTwelveFlags;
   auto headerPos = f.tellp();
   writeBytes(f, &header, sizeof(header));
 
@@ -306,14 +409,11 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
   writePod(f, gpuState);
   const DMA::Snapshot dmaState = dma.snapshot();
   writePod(f, dmaState);
-  for (uint32_t timer = 0; timer < 3; ++timer) {
-    const uint32_t base = 0x1F801100u + timer * 0x10u;
-    const uint16_t mode = timers.readRegister(base + 4u);
-    const uint16_t target = timers.readRegister(base + 8u);
-    const uint16_t counter = timers.readRegister(base);
-    writePod(f, mode);
-    writePod(f, target);
-    writePod(f, counter);
+  const auto timerState = timers.snapshot(); // does not acknowledge guest flags
+  for (const auto &timer : timerState.timers) {
+    writePod(f, timer.mode);
+    writePod(f, timer.target);
+    writePod(f, timer.counter);
   }
 
   const cdrom::CdromController::Snapshot cd = cdrom.snapshot();
@@ -413,9 +513,10 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
   // completions after F9.
   writePod(f, kBiosStateMarker);
   const bool hasBiosState = biosHle != nullptr;
+  const auto biosState = hasBiosState ? biosHle->snapshot() : bios::Bios::Snapshot{};
+  if (hasBiosState && !bios::Bios::validSnapshot(biosState)) return false;
   writePod(f, hasBiosState);
   if (hasBiosState) {
-    const bios::Bios::Snapshot biosState = biosHle->snapshot();
     writeVector(f, biosState.eventSystem.events);
     writePod(f, biosState.eventSystem.triggeredBits);
     writeVector(f, biosState.eventSystem.pendingCallbacks);
@@ -439,6 +540,32 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
   for (size_t slot = 8; slot < psyq::PsyqState::kIntrSlots; ++slot)
     writePod(f, psyq::psyq_state().intrCallback[slot]);
   writePod(f, spuState.clockSamplesPending);
+  // v9 appends the MDEC matrix; all earlier hardware sections stay frozen.
+  writePod(f, mdecState.scaleTable);
+  // v10: XA prediction, interpolation, filtering and both CD mixer stages.
+  writePod(f, cd.xaDecoder.history);
+  writePod(f, cd.xaDecoder.ring);
+  writePod(f, cd.xaDecoder.position);
+  writePod(f, cd.xaDecoder.sixstep);
+  writePod(f, cd.xaCurrentFile);
+  writePod(f, cd.xaCurrentChannel);
+  writePod(f, cd.xaCurrentSet);
+  writePod(f, cd.muted);
+  writePod(f, cd.adpcmMuted);
+  writePod(f, cd.audioVolume);
+  writePod(f, cd.nextAudioVolume);
+  writePod(f, spuState.cdVolL);
+  writePod(f, spuState.cdVolR);
+  // v11: four bytes, deliberately outside the frozen timer register prefix.
+  for (const auto &timer : timerState.timers) writePod(f, timer.irqFired);
+  writePod(f, timerState.sysclkDiv8Carry);
+  // v12: only when IOS4 declares a BIOS. No host pointers or backing paths.
+  if (hasBiosState) writeBiosResources(f, biosState);
+  std::array<char, kMediaIdentitySize> media{};
+  const auto identity = cdrom.mediaIdentity();
+  if (identity.size() >= media.size()) return false;
+  std::copy(identity.begin(), identity.end(), media.begin());
+  writePod(f, media);
 
   if (!f.good()) {
     fmt::print(stderr, "[SaveState] Short write to '{}'\n", path);
@@ -452,23 +579,22 @@ bool SaveState::save(const std::string &path, const recomp_context &ctx,
   if (!payload) return false;
   payload.seekg(sizeof(SaveStateHeader));
   header.checksum = payloadChecksum(payload);
+  // Release the checksum reader before publication: Windows correctly refuses
+  // replacing an open file whose reader did not grant FILE_SHARE_DELETE.
+  payload.close();
   f.seekp(headerPos);
   writeBytes(f, &header, sizeof(header));
 
   f.close();
   if (!f) return false;
-  std::error_code renameError;
-  std::filesystem::rename(temporaryPath, path, renameError);
-  if (renameError) {
-    fmt::print(stderr, "[SaveState] Cannot publish '{}': {}\n", path,
-               renameError.message());
-    std::error_code ignored;
-    std::filesystem::remove(temporaryPath, ignored);
-    return false;
-  }
+  if (!transaction.commit()) return false;
   fmt::print("[SaveState] Saved to '{}'\n", path);
   std::fflush(stdout);
   return true;
+  } catch (const std::exception &error) {
+    fmt::print(stderr, "[SaveState] Save failed: {}\n", error.what());
+    return false;
+  }
 }
 
 bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
@@ -489,8 +615,18 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
   // Read header
   SaveStateHeader header;
   if (!readBytes(f, &header, sizeof(header))) return false;
+  if ((header.version == 12 || header.flags == kVersionTwelveFlags) &&
+      (header.version != 12 || header.flags != kVersionTwelveFlags)) return false;
+  if ((header.version == 11 || header.flags == kVersionElevenFlags) &&
+      (header.version != 11 || header.flags != kVersionElevenFlags)) return false;
+  if ((header.version == 10 || header.flags == kVersionTenFlags) &&
+      (header.version != 10 || header.flags != kVersionTenFlags)) return false;
+  if ((header.version == 9 || header.flags == kVersionNineFlags) &&
+      (header.version != 9 || header.flags != kVersionNineFlags)) return false;
   if ((header.version == 6 || header.flags == kVersionSixFlags) &&
       (header.version != 6 || header.flags != kVersionSixFlags)) return false;
+  if ((header.version == 8 || header.flags == kVersionEightFlags) &&
+      (header.version != 8 || header.flags != kVersionEightFlags)) return false;
   if ((header.version == 7 || header.flags == kVersionSevenFlags) &&
       (header.version != 7 || header.flags != kVersionSevenFlags)) return false;
 
@@ -500,7 +636,7 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
     return false;
   }
   if (header.version != 1 && header.version != 2 && header.version != 3 &&
-      header.version != 4 && header.version != 5 && header.version != 6 && header.version != 7) {
+      header.version != 4 && header.version != 5 && header.version != 6 && header.version != 7 && header.version != 8 && header.version != 9 && header.version != 10 && header.version != 11 && header.version != 12) {
     fmt::print(stderr, "[SaveState] Unsupported version {} in '{}'\n",
                header.version, path);
     return false;
@@ -516,39 +652,55 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
     f.seekg(sizeof(SaveStateHeader));
   }
 
-  // CPU Context
-  readBytes(f, ctx.r, sizeof(ctx.r));
-  readBytes(f, &ctx.hi, sizeof(ctx.hi));
-  readBytes(f, &ctx.lo, sizeof(ctx.lo));
-  readBytes(f, &ctx.pc, sizeof(ctx.pc));
-  readBytes(f, ctx.cop0, sizeof(ctx.cop0));
-  readBytes(f, ctx.cop2d, sizeof(ctx.cop2d));
-  readBytes(f, ctx.cop2c, sizeof(ctx.cop2c));
-  ctx.nativeResumePc = 0;
-  ctx.nativeEntryPc = 0;
+  // Media selection is the last fallible operation, after parsing/validating
+  // the entire candidate. A rejected load must not change even the mounted CD.
+  const auto restoreMedium = [&]() {
+    if (header.version >= 8) {
+      std::array<char, kMediaIdentitySize> media{};
+      f.clear();
+      f.seekg(-static_cast<std::streamoff>(media.size()), std::ios::end);
+      if (!readPod(f, media) || media.back() != '\0' ||
+          !cdrom.restoreMedia(std::string(media.data()))) {
+        fmt::print(stderr, "[SaveState] Required medium unavailable in '{}'\n", path);
+        return false;
+      }
+      return true;
+    }
+    return games::mgs::restoreLegacyDisc(f, header.version, cdrom);
+  };
+  f.clear();
+  f.seekg(sizeof(SaveStateHeader));
+
+  // Stage all architectural bytes; checksums alone do not validate structure.
+  recomp_context candidate = ctx;
+  readBytes(f, candidate.r, sizeof(candidate.r));
+  readBytes(f, &candidate.hi, sizeof(candidate.hi));
+  readBytes(f, &candidate.lo, sizeof(candidate.lo));
+  readBytes(f, &candidate.pc, sizeof(candidate.pc));
+  readBytes(f, candidate.cop0, sizeof(candidate.cop0));
+  readBytes(f, candidate.cop2d, sizeof(candidate.cop2d));
+  readBytes(f, candidate.cop2c, sizeof(candidate.cop2c));
+  candidate.nativeResumePc = 0;
+  candidate.nativeEntryPc = 0;
   // Version 1 states predate the non-architectural PGXP side channels.  Never
   // let precision from the timeline being replaced attach to restored words.
-  std::memset(ctx.pgxpGpr, 0, sizeof(ctx.pgxpGpr));
-  std::memset(ctx.pgxpGteData, 0, sizeof(ctx.pgxpGteData));
-  std::memset(ctx.gteDataSourceToken, 0, sizeof(ctx.gteDataSourceToken));
-  std::memset(ctx.gteControlSourceToken, 0, sizeof(ctx.gteControlSourceToken));
-  std::memset(ctx.gteControlWriterPc, 0, sizeof(ctx.gteControlWriterPc));
-  std::memset(ctx.gteControlWriteGeneration, 0,
-              sizeof(ctx.gteControlWriteGeneration));
-  ctx.gteControlWriteSerial = 0;
+  std::memset(candidate.pgxpGpr, 0, sizeof(candidate.pgxpGpr));
+  std::memset(candidate.pgxpGteData, 0, sizeof(candidate.pgxpGteData));
+  std::memset(candidate.gteDataSourceToken, 0, sizeof(candidate.gteDataSourceToken));
+  std::memset(candidate.gteControlSourceToken, 0, sizeof(candidate.gteControlSourceToken));
+  std::memset(candidate.gteControlWriterPc, 0, sizeof(candidate.gteControlWriterPc));
+  std::memset(candidate.gteControlWriteGeneration, 0,
+              sizeof(candidate.gteControlWriteGeneration));
+  candidate.gteControlWriteSerial = 0;
 
-  // RAM (2MB)
-  readBytes(f, mem.ramPtr(), Memory::RAM_SIZE);
-
-  // Scratchpad (1KB)
-  readBytes(f, mem.scratchpadPtr(), Memory::SCRATCHPAD_SIZE);
-  mem.clearPrecision();
-  games::crash3::restoreTransientState(mem);
+  std::vector<uint8_t> ramData(Memory::RAM_SIZE);
+  std::array<uint8_t, Memory::SCRATCHPAD_SIZE> scratchpadData{};
+  readBytes(f, ramData.data(), ramData.size());
+  readBytes(f, scratchpadData.data(), scratchpadData.size());
 
   // GPU VRAM (1024x512x2 = 1MB)
   std::vector<uint8_t> vramData(1024 * 512 * sizeof(gpu::Color16));
   readBytes(f, vramData.data(), vramData.size());
-  gpu.loadVram(vramData.data());
 
   // GPU State
   uint32_t gpustat;
@@ -557,7 +709,6 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
   // SPU Sound RAM (512KB)
   std::vector<uint8_t> spuRam(spu::SOUND_RAM_SIZE);
   readBytes(f, spuRam.data(), spuRam.size());
-  spu.loadSoundRam(spuRam.data());
 
   // SPU Registers
   uint16_t spuCnt;
@@ -577,28 +728,32 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
     readBytes(f, &legacyDma[ch].block, sizeof(legacyDma[ch].block));
     readBytes(f, &legacyDma[ch].chcr, sizeof(legacyDma[ch].chcr));
   }
-  if (header.version == 1) {
-    dma.writeRegister(0x1F8010F0, dpcr);
-    dma.writeRegister(0x1F8010F4, dicr);
-    for (uint32_t ch = 0; ch < 7; ch++) {
-      dma.writeRegister(0x1F801080 + ch * 0x10, legacyDma[ch].base);
-      dma.writeRegister(0x1F801084 + ch * 0x10, legacyDma[ch].block);
-      dma.writeRegister(0x1F801088 + ch * 0x10, legacyDma[ch].chcr);
-    }
-  }
-
   // IRQ State
   uint32_t istat, imask;
   readBytes(f, &istat, sizeof(istat));
   readBytes(f, &imask, sizeof(imask));
-  irq.writeIMask(imask);
-  // Restore I_STAT by raising all bits that were set
-  // First clear, then raise
-  irq.writeIStat(0);
-  for (uint32_t bit = 0; bit < 11; bit++) {
-    if (istat & (1u << bit))
-      irq.raiseInterrupt(1u << bit);
-  }
+  if (!f) return false;
+
+  const auto validEnd = [&]() {
+    const auto parsedEnd = f.tellg();
+    if (parsedEnd < 0) return false;
+    f.seekg(0, std::ios::end);
+    const auto trailer = header.version >= 8 ? kMediaIdentitySize : 0;
+    return f && f.tellg() == parsedEnd + static_cast<std::streamoff>(trailer);
+  };
+  const auto commitPrefix = [&]() {
+    ctx = candidate;
+    std::memcpy(mem.ramPtr(), ramData.data(), ramData.size());
+    std::memcpy(mem.scratchpadPtr(), scratchpadData.data(), scratchpadData.size());
+    mem.clearPrecision();
+    games::crash3::restoreTransientState(mem);
+    gpu.loadVram(vramData.data());
+    spu.loadSoundRam(spuRam.data());
+    irq.writeIMask(imask);
+    irq.writeIStat(0);
+    for (uint32_t bit = 0; bit < 11; ++bit)
+      if (istat & (1u << bit)) irq.raiseInterrupt(1u << bit);
+  };
 
   bool biosTimelineRestored = false;
   if (header.version >= 2) {
@@ -612,12 +767,8 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
       return false;
     }
 
-    struct TimerDiskState {
-      uint16_t mode = 0;
-      uint16_t target = 0;
-      uint16_t counter = 0;
-    } timerState[3];
-    for (auto &timer : timerState) {
+    Timers::Snapshot timerState;
+    for (auto &timer : timerState.timers) {
       if (!readPod(f, timer.mode) || !readPod(f, timer.target) ||
           !readPod(f, timer.counter))
         return false;
@@ -664,7 +815,7 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
         readPod(f, spuState.cdDaReadPos) &&
         readPod(f, spuState.generatedSampleCount) &&
         readPod(f, spuState.firstNonzeroOutputSeen);
-    mdec::MDEC::Snapshot mdecState;
+    mdec::MDEC::Snapshot mdecState = mdec::MDEC().snapshot();
     const bool mdecValid = readPod(f, mdecState.state) &&
                            readPod(f, mdecState.busy) &&
                            readPod(f, mdecState.currentCommand) &&
@@ -676,9 +827,11 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
                            readPod(f, mdecState.hasCustomQuantTable) &&
                            readVector(f, mdecState.inputBuffer) &&
                            readVector(f, mdecState.outputBuffer) &&
-                           readPod(f, mdecState.block) && mdecState.state <= 2;
+                           readPod(f, mdecState.block) &&
+                           mdecState.state <= 2;
     input::InputController::Snapshot inputState = input.snapshot();
-    const bool inputValid = header.version < 3 || readPod(f, inputState);
+    const bool inputValid = header.version < 3 ||
+        (readPod(f, inputState) && input::InputController::validSnapshot(inputState));
     input::MemoryCard::Snapshot cards[2];
     const bool cardsValid =
         readPod(f, cards[0]) && readPod(f, cards[1]) &&
@@ -726,7 +879,7 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
             readPod(f, biosState.customExceptionBuffer) &&
             (header.version < 6 || (readPod(f, biosState.kernelThreads) &&
                                    readVector(f, biosState.cardEvents)))));
-      if (!biosValid) {
+      if (!biosValid || (hasBiosState && !bios::Bios::validSnapshot(biosState))) {
         fmt::print(stderr, "[SaveState] Invalid BIOS state in '{}'\n", path);
         return false;
       }
@@ -744,24 +897,76 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
       psyqState.intrCallback[0] = 0;
     }
 
+    if (header.version >= 9 && !readPod(f, mdecState.scaleTable)) return false;
+
+    if (header.version >= 10) {
+      if (!(readPod(f, cd.xaDecoder.history) &&
+            readPod(f, cd.xaDecoder.ring) &&
+            readPod(f, cd.xaDecoder.position) &&
+            readPod(f, cd.xaDecoder.sixstep) &&
+            readPod(f, cd.xaCurrentFile) &&
+            readPod(f, cd.xaCurrentChannel) &&
+            readPod(f, cd.xaCurrentSet) &&
+            readPod(f, cd.muted) &&
+            readPod(f, cd.adpcmMuted) &&
+            readPod(f, cd.audioVolume) &&
+            readPod(f, cd.nextAudioVolume) &&
+            readPod(f, spuState.cdVolL) &&
+            readPod(f, spuState.cdVolR)) ||
+          cd.xaDecoder.position >= 32 || cd.xaDecoder.sixstep < 1 || cd.xaDecoder.sixstep > 6)
+        return false;
+    } else {
+      // Older runtimes did not retain CD volume writes. Unity gain restores
+      // their mixer behavior; the next retail SpuSetCommonAttr sets real gain.
+      spuState.cdVolL = spuState.cdVolR = 0x7fff;
+    }
+
+    if (header.version >= 11) {
+      for (auto &timer : timerState.timers)
+        if (!readPod(f, timer.irqFired)) return false;
+      if (!readPod(f, timerState.sysclkDiv8Carry) || !Timers::validSnapshot(timerState))
+        return false;
+    } else {
+      // Old files had only registers: no divider phase or one-shot latch.
+      // Preserve their previous re-armed behavior; do not invent lost history.
+      for (auto &timer : timerState.timers)
+        timer.mode = (timer.mode & 0x1bff) | 0x400;
+    }
+
+    if (header.version >= 12 && hasBiosState && !readBiosResources(f, biosState))
+      return false;
+    // Attachment validation must precede even media selection and RAM commit.
+    if (hasBiosState && biosHle && !biosHle->canRestore(biosState)) return false;
+
+    if (header.version < 9) {
+      // Earlier hosts generated callbacks for every DMA regardless of DICR,
+      // and HLE registration never enabled hardware IRQs. Their flag bits
+      // therefore cannot represent pending interrupts. Reconstruct only the
+      // callbacks not yet consumed at the saved cooperative boundary.
+      dmaState.dicr &= 0x0000803Fu;
+      for (size_t ch = 0; ch < DMA::NUM_CHANNELS; ++ch) {
+        if (psyqState.dmaCallback[ch] == 0) continue;
+        dmaState.dicr |= (1u << 23) | (1u << (16 + ch));
+        if (hasBiosState && dmaState.completionGeneration[ch] != biosState.lastDmaCompletion[ch])
+          dmaState.dicr |= 1u << (24 + ch);
+      }
+      if ((mdecState.currentCommand >> 29) == 1)
+        mdecState.outputDepth24 = ((mdecState.currentCommand >> 27) & 3u) == 2;
+    }
+    if (!validEnd() || !restoreMedium()) return false;
+    commitPrefix();
     gpu.loadGuestState(gpuState);
     dma.restore(dmaState);
-    for (uint32_t timer = 0; timer < 3; ++timer) {
-      const uint32_t base = 0x1F801100u + timer * 0x10u;
-      timers.writeRegister(base + 4u, timerState[timer].mode);
-      timers.writeRegister(base + 8u, timerState[timer].target);
-      timers.writeRegister(base, timerState[timer].counter);
-    }
+    timers.restore(timerState); // validated before any timeline mutation
     cdrom.restore(cd);
     spu.restore(spuState);
     if (mdec != nullptr)
       mdec->restore(mdecState);
-    if (header.version >= 3 && !input.restore(inputState)) {
-      fmt::print(stderr, "[SaveState] Invalid input/SIO state in '{}'\n", path);
-      return false;
-    }
+    if (header.version >= 3) input.restore(inputState); // already validated
     input.getMemoryCard(0).restore(cards[0]);
     input.getMemoryCard(1).restore(cards[1]);
+    input.getMemoryCard(0).protectNextWrite();
+    input.getMemoryCard(1).protectNextWrite();
     restorePsyqState(psyqState);
     games::mgs::resetSceneCapture();
     std::copy(std::begin(extraIntrCallbacks), std::end(extraIntrCallbacks),
@@ -769,11 +974,18 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
     if (header.version >= 3)
       psyq::psyq_pad_restore(padState);
     if (hasBiosState && biosHle != nullptr) {
-      if (!biosHle->restore(biosState)) {
-        fmt::print(stderr, "[SaveState] Rejected BIOS state in '{}'\n", path);
-        return false;
-      }
+      biosHle->restore(biosState); // already validated, including event handlers
       biosTimelineRestored = true;
+    }
+  } else {
+    if (!validEnd() || !restoreMedium()) return false;
+    commitPrefix();
+    dma.writeRegister(0x1F8010F0, dpcr);
+    dma.writeRegister(0x1F8010F4, dicr);
+    for (uint32_t ch = 0; ch < 7; ++ch) {
+      dma.writeRegister(0x1F801080 + ch * 0x10, legacyDma[ch].base);
+      dma.writeRegister(0x1F801084 + ch * 0x10, legacyDma[ch].block);
+      dma.writeRegister(0x1F801088 + ch * 0x10, legacyDma[ch].chcr);
     }
   }
 
@@ -795,6 +1007,53 @@ bool SaveState::load(const std::string &path, recomp_context &ctx, Memory &mem,
   return true;
 }
 
+SaveState::Info SaveState::inspect(const std::string &path) {
+  Info info;
+  std::error_code error;
+  if (!std::filesystem::is_regular_file(std::filesystem::symlink_status(path, error)) || error) return info;
+  info.exists = true;
+  info.bytes = std::filesystem::file_size(path, error);
+  if (error) return info;
+  const auto time = std::filesystem::last_write_time(path, error);
+  if (!error) {
+    const auto systemTime = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+        std::chrono::file_clock::to_sys(time));
+    const auto seconds = std::chrono::system_clock::to_time_t(systemTime);
+    std::tm local{}; char text[32]{};
+#if defined(_WIN32)
+    const bool converted = localtime_s(&local, &seconds) == 0;
+#else
+    const bool converted = localtime_r(&seconds, &local) != nullptr;
+#endif
+    if (converted && std::strftime(text, sizeof(text), "%Y-%m-%d %H:%M:%S", &local)) info.savedAt = text;
+  }
+  std::ifstream file(path, std::ios::binary);
+  SaveStateHeader header;
+  if (!readPod(file, header) || std::memcmp(header.magic, "PS1S", 4) != 0) return info;
+  info.version = header.version;
+  info.supported = header.version >= 1 && header.version <= SaveStateHeader{}.version;
+  return info;
+}
+
+bool SaveState::loadRecovering(const std::string &path, recomp_context &ctx, Memory &mem,
+    gpu::GPU &gpu, spu::SPU &spu, DMA &dma, cdrom::CdromController &cdrom,
+    Timers &timers, InterruptController &irq, input::InputController &input,
+    mdec::MDEC *mdec, bios::Bios *biosHle, std::string &recoverySource) {
+  recoverySource.clear();
+  if (load(path, ctx, mem, gpu, spu, dma, cdrom, timers, irq, input, mdec, biosHle)) return true;
+  // A valid candidate may require another CD or an unavailable attachment.
+  // Don't silently replace it with older progress, or downgrade future states.
+  if (inspect(path).version > SaveStateHeader{}.version || isValid(path)) return false;
+  for (const auto &backup : storage::backups(path)) {
+    if (load(backup.string(), ctx, mem, gpu, spu, dma, cdrom, timers, irq, input, mdec, biosHle)) {
+      recoverySource = backup.string();
+      fmt::print(stderr, "[SaveState] Recovered '{}' from '{}'; primary left unchanged\n", path, recoverySource);
+      return true;
+    }
+  }
+  return false;
+}
+
 bool SaveState::isValid(const std::string &path) {
   std::ifstream f(path, std::ios::binary);
   if (!f)
@@ -808,10 +1067,10 @@ bool SaveState::isValid(const std::string &path) {
   const bool headerValid = header.magic[0] == 'P' && header.magic[1] == 'S' &&
          header.magic[2] == '1' && header.magic[3] == 'S' &&
          (header.version == 1 || header.version == 2 || header.version == 3 ||
-          header.version == 4 || header.version == 5 || header.version == 6 || header.version == 7);
+          header.version == 4 || header.version == 5 || header.version == 6 || header.version == 7 || header.version == 8 || header.version == 9 || header.version == 10 || header.version == 11 || header.version == 12);
   return headerValid && (header.version < 6
-      ? header.flags != kVersionSixFlags && header.flags != kVersionSevenFlags
-      : header.flags == (header.version == 6 ? kVersionSixFlags : kVersionSevenFlags)
+      ? header.flags != kVersionSixFlags && header.flags != kVersionSevenFlags && header.flags != kVersionEightFlags && header.flags != kVersionNineFlags && header.flags != kVersionTenFlags && header.flags != kVersionElevenFlags && header.flags != kVersionTwelveFlags
+      : header.flags == (header.version == 6 ? kVersionSixFlags : header.version == 7 ? kVersionSevenFlags : header.version == 8 ? kVersionEightFlags : header.version == 9 ? kVersionNineFlags : header.version == 10 ? kVersionTenFlags : header.version == 11 ? kVersionElevenFlags : kVersionTwelveFlags)
           && payloadChecksum(f) == header.checksum);
 }
 

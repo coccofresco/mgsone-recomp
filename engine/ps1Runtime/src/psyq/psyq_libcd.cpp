@@ -95,6 +95,12 @@ void issueCommand(cdrom::CdromController *cdrom, uint8_t com) {
   if (!cdrom) return;
   cdrom->writeRegister(CDR_PORT0, 0); // index = 0
   cdrom->writeRegister(CDR_PORT1, com);
+  // This HLE driver consumes command completion via the queued BIOS event,
+  // rather than a guest register-level IRQ handler. Release its hardware ACK
+  // too, so a ReadN sector cannot be held behind an already-consumed INT3.
+  // Keep the response bytes available to CdControl's drainResponse below.
+  if (psyq_state().intrCallback[2] == 0)
+    cdrom->ackInterrupt(0x1f);
 }
 
 } // namespace
@@ -485,13 +491,19 @@ void hle_libcd_CdReadCallback(recomp_context *ctx)  { setDataCallback(ctx); }
 void hle_libcd_CdReadyCallback(recomp_context *ctx) { setDataCallback(ctx); }
 void hle_libcd_CdDataCallback(recomp_context *ctx)  { setDataCallback(ctx); }
 
-// CdMix(*vol)
-//
-// CD audio mixing volume.  SPU CD-mix is not modeled (see CLAUDE.md "Long
-// Term: SPU accuracy"), so this is a NOP that returns 1 (success).
-//
+// CdMix(*vol): same port sequence as USA retail CD_mix at 0x80090824.
+// CdlATV bytes are LL, LR, RR, RL; applying the matrix does not ACK an IRQ.
 void hle_libcd_CdMix(recomp_context *ctx) {
-  (void)ctx;
+  if (auto *cd = cdromOf(ctx); cd && ctx->r[A0]) {
+    const auto vol = ctx->r[A0];
+    cd->writeRegister(CDR_PORT0, 2);
+    cd->writeRegister(CDR_PORT2, ctx->mem->read8(vol));
+    cd->writeRegister(CDR_PORT3, ctx->mem->read8(vol + 1));
+    cd->writeRegister(CDR_PORT0, 3);
+    cd->writeRegister(CDR_PORT1, ctx->mem->read8(vol + 2));
+    cd->writeRegister(CDR_PORT2, ctx->mem->read8(vol + 3));
+    cd->writeRegister(CDR_PORT3, 0x20);
+  }
   ctx->r[V0] = 1;
 }
 

@@ -1,0 +1,67 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-memory-controller-scene-resume",
+  "source": "USA s07b mempsy.c CheckCutsceneSkip: original Cross branch invokes field_8B4[0] callback6716. This explicitly tests the skip branch and return to second battle, not complete dialogue playback. Callback6716 does not assign story130; the reloaded second battle retains story129. Actor lifecycle and released input gates establish completion.",
+  "requires": {
+    "stage": "s07b",
+    "story": 129,
+    "actor_mempsy_count": 1,
+    "gcl_12000046": 3
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000046"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "resume-original-battle-after-memory-scene",
+        "until": {
+          "stage": "s07b",
+          "story": 129,
+          "actor_psyco_count": 1,
+          "actor_mempsy_count": 0,
+          "actor_loader_count": 0,
+          "load_request": 0,
+          "pause_level": 0,
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          },
+          "life": {
+            "min": 1
+          }
+        },
+        "when": {
+          "actor_mempsy_count": 1
+        },
+        "action": {
+          "sequence": "cross:3,wait:30"
+        },
+        "attempts": 300,
+        "max_frames": 3000,
+        "stable_frames": 30,
+        "abort_when": {
+          "life": 0
+        }
+      }
+    ]
+  }
+}

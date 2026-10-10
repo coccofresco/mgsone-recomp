@@ -69,8 +69,7 @@ void hle_libcd_CdReadyCallback(recomp_context *ctx);
 /// CdDataCallback(func) -- older alias of CdReadyCallback.  Same behaviour.
 void hle_libcd_CdDataCallback(recomp_context *ctx);
 
-/// CdMix(*vol) -- set CD audio volume.  Stubbed (NOP, returns 1) until SPU
-/// CD-mix is modeled.
+/// CdMix(*vol) -- apply CdlATV CD audio volume; returns 1.
 void hle_libcd_CdMix(recomp_context *ctx);
 
 /// CdReadBreak() -- abort an in-progress CdRead.  Stops the controller and

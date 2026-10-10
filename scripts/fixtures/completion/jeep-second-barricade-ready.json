@@ -1,0 +1,49 @@
+{
+  "format": "mgs-situation-1",
+  "name": "jeep-original-second-barricade-spawn",
+  "source": "USA s19b JeepSystem state4 invokes original GCL118b spawning three jeep_emy at authored names1466/1467/1468. Wait for original scroll and checkpoint trigger.",
+  "requires": {
+    "current_stage": "s19b",
+    "life": {
+      "min": 1
+    },
+    "actor_jeep_emy_count": 0
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life"
+  ],
+  "compare": [
+    "current_stage",
+    "story",
+    "disc",
+    "difficulty",
+    "game_over_timer",
+    "actor_jeep_emy_count"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-second-barricade-spawn",
+        "until": {
+          "actor_jeep_emy_count": 3,
+          "actor_jeep_sne_count": 1,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "square+triangle:30"
+        },
+        "attempts": 200,
+        "max_frames": 6000,
+        "abort_when": {
+          "life": 0
+        },
+        "stable_frames": 5
+      }
+    ]
+  }
+}

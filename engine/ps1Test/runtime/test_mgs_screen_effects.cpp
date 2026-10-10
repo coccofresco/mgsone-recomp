@@ -545,6 +545,9 @@ TEST(MgsScreenEffectsTest, UsaExecutableProvesClockPauseAndThermalAddresses) {
   EXPECT_EQ(instruction(0x8001ad78), 0x24c6fad0u); // DG_LightMatrix
   EXPECT_EQ(instruction(0x8001ada4), 0x3c06800au);
   EXPECT_EQ(instruction(0x8001ada8), 0x24c6faf0u); // DG_ColorMatrix
+  EXPECT_EQ(instruction(0x8001a8d0), 0xa79100d0u); // DG_Ambient = gp+0xd0
+  EXPECT_EQ(instruction(0x8001a8d4), 0xa79000d2u);
+  EXPECT_EQ(instruction(0x8001a8d8), 0xa79200d4u);
 }
 
 TEST(MgsScreenEffectsTest, StunAndAlarmRequireActorAndExactFullscreenTile) {

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+appdir="${APPDIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)}"
+export PYTHONHOME="$appdir/usr"
+export PYTHONNOUSERSITE=1
+unset PYTHONPATH
+export LD_LIBRARY_PATH="$appdir/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export SDL_VIDEO_X11_WMCLASS=MGSRecomp
+export SDL_VIDEO_WAYLAND_WMCLASS=io.github.mgsrecomp.MGSRecomp
+exec "$appdir/usr/bin/python3" "$appdir/usr/share/mgs-recomp/scripts/mgs_alpha.py" "$@"

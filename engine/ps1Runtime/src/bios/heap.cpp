@@ -5,6 +5,22 @@ namespace ps1::bios {
 
 Heap::Heap(Memory &mem) : mem_(mem) {}
 
+bool Heap::validSnapshot(const Snapshot &s) {
+  if (s.baseAddress == 0) return s.totalSize == 0 && s.firstBlock == 0;
+  return s.firstBlock == s.baseAddress && s.totalSize > BLOCK_HEADER_SIZE &&
+         s.totalSize <= Memory::RAM_SIZE &&
+         (s.baseAddress & 0x1fffffffu) <= Memory::RAM_SIZE - s.totalSize;
+}
+
+bool Heap::restore(const Snapshot &s) {
+  if (!validSnapshot(s)) return false;
+  // The block list belongs to restored guest RAM. InitHeap would destroy it.
+  baseAddress_ = s.baseAddress;
+  totalSize_ = s.totalSize;
+  firstBlock_ = s.firstBlock;
+  return true;
+}
+
 void Heap::initHeap(uint32_t address, uint32_t size) {
   if (size <= BLOCK_HEADER_SIZE) {
     fmt::print("[BIOS] Warning: InitHeap with size too small ({})\n", size);
@@ -27,7 +43,8 @@ void Heap::initHeap(uint32_t address, uint32_t size) {
 }
 
 uint32_t Heap::malloc(uint32_t size) {
-  if (baseAddress_ == 0 || size == 0)
+  if (baseAddress_ == 0 || size == 0 || size > totalSize_ - BLOCK_HEADER_SIZE ||
+      size > UINT32_MAX - 3)
     return 0;
 
   // Align size to 4 bytes

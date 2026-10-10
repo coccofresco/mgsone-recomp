@@ -1,9 +1,11 @@
 #include "runtime/input/tas_route.h"
+#include "runtime/metrics.h"
 #include <algorithm>
 #include <cstring>
 #include <cmath>
 #include <fstream>
 #include <optional>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -35,6 +37,21 @@ std::optional<GclVariable> gclVariable(const std::string& field) {
   return GclVariable{(scope==8?0xB7510u:0xB6440u)+offset,type,flag};
 }
 struct WatcherVariable { uint32_t name, offset; };
+// Read-only diagnostic view, explicitly bound to the original Act address.
+// work_<filename stem>_<Act>_<offset>[_p<indirect offset>]_<s/u><bits>
+struct WorkVariable { std::string name; uint32_t act, offset, indirect, width; bool pointer, signedValue; };
+std::optional<WorkVariable> workVariable(const std::string& field) {
+  if (!field.starts_with("work_") || field.size()>90) return {};
+  static const std::regex pattern("work_([a-z0-9_]{1,48})_([0-9a-f]{8})_([0-9a-f]{4})(_p([0-9a-f]{4}))?_([su])(8|16|32)");
+  std::smatch m;
+  if (!std::regex_match(field,m,pattern)) return {};
+  WorkVariable v{m[1].str()+".c",uint32_t(std::stoul(m[2],nullptr,16)),
+    uint32_t(std::stoul(m[3],nullptr,16)),m[5].matched?uint32_t(std::stoul(m[5],nullptr,16)):0u,
+    uint32_t(std::stoul(m[7])/8),m[5].matched,m[6]=="s"};
+  if (v.act<0x80010000 || v.act>=0x80200000 || (v.act&3) || v.offset>=0x4000 || v.indirect>=0x4000 ||
+      v.offset%(v.pointer?4:v.width) || v.indirect%v.width) return {};
+  return v;
+}
 std::optional<std::string> actorVariable(const std::string& field) {
   if (!field.starts_with("actor_") || !field.ends_with("_count") ||
       field.size()<13 || field.size()>60) return {};
@@ -93,19 +110,21 @@ std::optional<WatcherVariable> watcherVariable(const std::string& field) {
   return WatcherVariable{name | (camera?0x10000u:0u),offset->second};
 }
 const std::unordered_set<std::string> fields{
-    "stage", "game_status", "load_request", "game_over_timer", "player_status", "pause_level", "alert_mode", "alert_level",
+    "stage", "current_stage", "game_status", "load_request", "game_over_timer", "player_status", "pause_level", "alert_mode", "alert_level",
     "control", "difficulty", "disc", "life", "max_life", "weapon", "item",
     "stance", "story", "x", "y", "z", "yaw", "turn_yaw", "pad_origin", "socom_ammo",
-    "guards_alive", "guards_in_room", "ambush_phase", "ambush_kills", "title_state", "title_selection", "title_level"};
+    "guards_alive", "guards_in_room", "ambush_phase", "ambush_kills", "movie_frame", "movie_total_frames", "title_state", "title_selection", "title_level"};
 struct Observation {
   const uint8_t* ram;
-  std::string stage;
+  std::string stage, currentStage;
   std::unordered_map<std::string, int64_t> values;
   std::optional<uint32_t> title;
   bool scannedTitle = false, scannedGuards = false;
   bool scannedWatchers = false;
   bool scannedActors = false, validActors = false;
   std::unordered_map<std::string,int64_t> actors;
+  std::unordered_map<std::string,size_t> actorNodes;
+  std::optional<size_t> movie;
   std::unordered_map<uint32_t,std::optional<size_t>> watchers;
   uint32_t word(size_t p) const {
     return uint32_t(ram[p]) | uint32_t(ram[p+1]) << 8 |
@@ -114,6 +133,9 @@ struct Observation {
   int16_t half(size_t p) const { return int16_t(uint16_t(ram[p]) | uint16_t(ram[p+1]) << 8); }
   Observation(const uint8_t* bytes) : ram(bytes) {
     for (size_t i = 0; i < 8 && ram[0xB7500+i]; ++i) stage += char(ram[0xB7500+i]);
+    // Historical stage is GM_SaveStageName. GM_SetArea changes the current
+    // area independently, notably when exiting Game Over to the title menu.
+    for (size_t i = 0; i < 8 && ram[0xADB34+i]; ++i) currentStage += char(ram[0xADB34+i]);
     for (auto [name, address] : std::initializer_list<std::pair<const char*, size_t>>{
         {"game_status",0xADB3C}, {"load_request",0xADB40}, {"player_status",0xAE1C8},
         {"pause_level",0xAE0A0}, {"control",0xAE16C}, {"alert_mode",0xAE178}, {"alert_level",0xAE190}}) values[name] = word(address);
@@ -139,6 +161,32 @@ struct Observation {
     }
   }
   std::optional<int64_t> get(const std::string& field) {
+    if (const auto v=workVariable(field)) {
+      const auto count=get("actor_"+v->name.substr(0,v->name.size()-2)+"_count");
+      if (!count || *count!=1) return {};
+      const auto base=actorNodes.at(v->name);
+      if (word(base+8)!=v->act || base+v->offset>2097152-(v->pointer?4:v->width)) return {};
+      size_t address=base+v->offset;
+      if (v->pointer) {
+        const auto pointer=word(address);
+        if (pointer<0x80010000 || pointer>0x801fffff || (pointer&3)) return {};
+        address=(pointer&0x1fffffff)+v->indirect;
+        if (address>2097152-v->width) return {};
+      }
+      if (v->width==1) return v->signedValue?int64_t(int8_t(ram[address])):int64_t(ram[address]);
+      if (v->width==2) return v->signedValue?int64_t(half(address)):int64_t(uint16_t(half(address)));
+      return v->signedValue?int64_t(int32_t(word(address))):int64_t(word(address));
+    }
+    if (field == "movie_frame" || field == "movie_total_frames") {
+      // USA d18a movie.c Work and FS_MOVIE_FILE; reject other overlay layouts.
+      const auto count = get("actor_movie_count");
+      if (currentStage != "d18a" || !count || *count != 1 || !movie || *movie > 2097152-108)
+        return {};
+      const auto act = word(*movie+8), info = word(*movie+32)&0x1fffffff;
+      if ((act != 0x800C79AC && act != 0x800C7718) || info < 0x10000 || info > 2097152-8)
+        return {};
+      return uint16_t(half(field == "movie_frame" ? *movie+62 : info+2));
+    }
     if (const auto name=actorVariable(field)) {
       if (!scannedActors) {
         scannedActors=true;validActors=true;
@@ -157,7 +205,10 @@ struct Observation {
               const char* begin=reinterpret_cast<const char*>(ram+nameAt);
               const auto end=static_cast<const char*>(std::memchr(begin,0,std::min(64u,2097152-nameAt)));
               if (!end) {validActors=false;break;}
-              ++actors[std::string(begin,end)];
+              const std::string label(begin,end);
+              ++actors[label];
+              actorNodes[label]=at;
+              if (label == "movie.c") movie = at;
             }
             previous=actor;actor=word(at+4);
           }
@@ -213,7 +264,7 @@ struct Observation {
     if (field.rfind("title_", 0) == 0 && !scannedTitle) {
       scannedTitle = true;
       unsigned matches = 0;
-      if (stage == "title") for (size_t base=0; base+0x24BC<=2097152; base+=4) {
+      if (currentStage == "title") for (size_t base=0; base+0x24BC<=2097152; base+=4) {
         if (word(base+8) != 0x800D26E0) continue;
         uint32_t name = word(base+20) & 0x1fffffff;
         if (name <= 2097152-7 && std::memcmp(ram+name,"open.c",7)==0) { ++matches; title=base; }
@@ -304,11 +355,11 @@ bool TasRoute::parse(std::string_view text, std::string& error) {
         Predicate p;
         uint64_t mask;
         if (!(row>>p.field>>p.op>>p.value>>mask) || mask>0xffffffff ||
-            (!fields.count(p.field) && !gclVariable(p.field) && !watcherVariable(p.field) && !actorVariable(p.field)) ||
+            (!fields.count(p.field) && !gclVariable(p.field) && !watcherVariable(p.field) && !actorVariable(p.field) && !workVariable(p.field)) ||
             (p.op!="eq" && p.op!="ne" && p.op!="min" && p.op!="max"))
           throw std::runtime_error("invalid route predicate");
         p.mask=uint32_t(mask);
-        if (p.field=="stage") {
+        if (p.field=="stage" || p.field=="current_stage") {
           if ((p.op!="eq" && p.op!="ne") || p.value.size()>8) throw std::runtime_error("invalid stage predicate");
         } else {
           size_t end=0; std::stoll(p.value,&end);
@@ -332,10 +383,20 @@ std::array<uint16_t, 2> TasRoute::sample(const uint8_t* ram, size_t size, uint64
   if (done() || failed()) return {};
   if (!ram || size!=2097152) { error_="route requires complete USA RAM"; return {}; }
   Observation state(ram);
+  if (ps1::metrics::traceEnabled()) {
+    // Read-only measurement of the original loader actor, sampled at the
+    // same VBlank barriers as TAS input. Missing/corrupt actor lists stay -1.
+    ps1::metrics::trace("mgs.loading_sample",
+        {{"route_frame", static_cast<int64_t>(vblank)},
+         {"loader", state.get("actor_loader_count").value_or(-1)},
+         {"stage_lo", state.word(0xADB34)}, {"stage_hi", state.word(0xADB38)},
+         {"load_request", *state.get("load_request")}});
+  }
   const auto matches=[&](const std::vector<Predicate>& conditions) {
     for (const auto& p : conditions) {
-      if (p.field=="stage") {
-        if ((p.op=="eq") != (state.stage==p.value)) return false;
+      if (p.field=="stage" || p.field=="current_stage") {
+        const auto& value=p.field=="stage" ? state.stage : state.currentStage;
+        if ((p.op=="eq") != (value==p.value)) return false;
         continue;
       }
       auto read=state.get(p.field);
@@ -351,10 +412,11 @@ std::array<uint16_t, 2> TasRoute::sample(const uint8_t* ram, size_t size, uint64
   auto event=[&](const std::string& what) {
     std::ostringstream line;
     line << what << ' ' << step.name << " vblank=" << vblank
-         << " elapsed=" << elapsed_ << " attempts=" << used_ << " stage=" << state.stage;
+         << " elapsed=" << elapsed_ << " attempts=" << used_ << " stage=" << state.stage
+         << " current_stage=" << state.currentStage;
     std::set<std::string> observed{"story", "difficulty", "life", "x", "y", "z", "stance"};
     for (const auto* conditions : {&step.when, &step.until, &step.guard, &step.abort})
-      for (const auto& p : *conditions) if (p.field!="stage") observed.insert(p.field);
+      for (const auto& p : *conditions) if (p.field!="stage" && p.field!="current_stage") observed.insert(p.field);
     for (const auto& field : observed) {
       const auto value=state.get(field);
       line << ' ' << field << '=' << (value ? std::to_string(*value) : "missing");

@@ -1,0 +1,89 @@
+{
+  "format": "mgs-situation-1",
+  "name": "hind-retail-tower-to-roof",
+  "source": "USA s11c/ea54 ntrap f390 @27599; HZD05cd hasigo0 x[-5500,-4500] z[-3750,-3000]; facing3072 and Circle ->2ff5->f9db original roof load. Unmodified retail tower save story190.",
+  "requires": {
+    "stage": "s11c",
+    "story": 190,
+    "pause_level": 0,
+    "gcl_140102e7": 0
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "life",
+    "max_life",
+    "game_over_timer",
+    "gcl_140102e7"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "enter-original-ladder-volume",
+        "until": {
+          "x": {
+            "min": -5500,
+            "max": -4501
+          },
+          "z": {
+            "min": -3600,
+            "max": -3150
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -4900,
+            "z": -3375
+          }
+        },
+        "max_frames": 500
+      },
+      {
+        "name": "climb-original-roof-ladder",
+        "until": {
+          "stage": "s11h",
+          "actor_loader_count": 0,
+          "load_request": 0
+        },
+        "action": {
+          "sequence": "circle:3,wait:30"
+        },
+        "attempts": 50,
+        "max_frames": 3000
+      },
+      {
+        "name": "roof-original-entry-control",
+        "until": {
+          "stage": "s11h",
+          "story": 190,
+          "control": {
+            "ne": 0
+          },
+          "pause_level": 0,
+          "actor_loader_count": 0,
+          "load_request": 0,
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          }
+        },
+        "stable_frames": 30,
+        "max_frames": 3000
+      }
+    ]
+  }
+}

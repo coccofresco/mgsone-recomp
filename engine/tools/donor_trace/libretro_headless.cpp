@@ -575,6 +575,7 @@ int main(int argc, char **argv) {
   const auto setAudioBatch = symbol<void (*)(retro_audio_sample_batch_t)>(library, "retro_set_audio_sample_batch");
   const auto setInputPoll = symbol<void (*)(retro_input_poll_t)>(library, "retro_set_input_poll");
   const auto setInputState = symbol<void (*)(retro_input_state_t)>(library, "retro_set_input_state");
+  const auto setController = symbol<void (*)(unsigned, unsigned)>(library, "retro_set_controller_port_device");
   const auto init = symbol<void (*)()>(library, "retro_init");
   const auto loadGame = symbol<bool (*)(const retro_game_info *)>(library, "retro_load_game");
   const auto run = symbol<void (*)()>(library, "retro_run");
@@ -598,6 +599,12 @@ int main(int argc, char **argv) {
   setInputPoll(inputPoll);
   setInputState(inputState);
   init();
+  // The native diagnostic input supplies two digital pads. SwanStation's
+  // default only attaches port 1: sending port-2 button callbacks alone cannot
+  // exercise Mantis' original second-controller branch.
+  setController(0, RETRO_DEVICE_JOYPAD);
+  setController(1, RETRO_DEVICE_JOYPAD);
+  std::fprintf(stderr, "[donor-input] two digital controller ports attached\n");
 
   const std::string contentString = content.string();
   const retro_game_info game{contentString.c_str(), nullptr, 0, nullptr};

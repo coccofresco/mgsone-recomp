@@ -1,0 +1,24 @@
+{
+  "upstream": "https://github.com/N8python/n8ao",
+  "commit": "0fc15550c98119758e83ed4c2d0e87273bae9ed9",
+  "retrieved": "2026-10-08",
+  "license": "CC0-1.0",
+  "files": {
+    "LICENSE": "6d489af6292662d9e36d34ce49423784984a5f6e41d7b58f49b01264df59fa03",
+    "src/EffectShader.js": "d9a83f86c9a663ea794d506b179b58a8f71079175f51a5ef4ad7f8a580ae9112"
+  },
+  "reference": "src/EffectShader.js:202-206, screenSpaceRadius branch",
+  "adaptation": "mgs_ssao.comp world_radius uses the screen-span unprojection principle. Perspective depth/focal simplification, vertical viewport fraction, base-radius floor, 3x cap and existing ASSAO near-camera clamp are project choices. Only radius policy is adapted; the occlusion kernel remains Godot/ASSAO. No N8AO runtime, sampling kernel or denoiser is imported.",
+  "other_references": [
+    {
+      "project": "MXAO/iMMERSE",
+      "url": "https://guides.martysmods.com/shaders/immerse/mxao/#increase-radius-with-distance",
+      "use": "User-facing behavior reference only; no source adapted. Its license requires permission for source reuse."
+    },
+    {
+      "project": "HBAOPlus",
+      "url": "https://github.com/NVIDIAGameWorks/HBAOPlus",
+      "use": "Investigated background-radius feature; not selected, no source adapted."
+    }
+  ]
+}

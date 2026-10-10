@@ -68,6 +68,10 @@ public:
 
   bool attachFile(const std::string &path);
   bool flush() const;
+  // A loaded timeline may replace card RAM. Protect the current on-disk card
+  // again on its first subsequent write, even within the same process.
+  void protectNextWrite() { sessionBackedUp_ = false; }
+  const std::string &recoverySource() const { return recoverySource_; }
   int findFile(const std::string &name) const;
   int createFile(const std::string &name, unsigned blocks);
   bool eraseFile(const std::string &name);
@@ -84,6 +88,8 @@ public:
 
 private:
   std::string backingPath_;
+  mutable bool sessionBackedUp_ = false;
+  std::string recoverySource_;
   void fixChecksum(unsigned offset);
   std::array<uint8_t, CARD_SIZE> data_;
   bool present_ = true;
@@ -131,6 +137,7 @@ public:
   InputController();
   void reset();
   Snapshot snapshot() const;
+  static bool validSnapshot(const Snapshot &state);
   bool restore(const Snapshot &state);
 
   // Button state management

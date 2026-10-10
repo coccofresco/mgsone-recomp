@@ -253,7 +253,7 @@ TEST_F(PsyqHleTest, RootCounterHleProgramsTheHardwareTimer) {
 
     EXPECT_EQ(ctx.r[V0], 1u);
     EXPECT_EQ(timers.readRegister(0x1F801128u), 4092u);
-    EXPECT_EQ(timers.readRegister(0x1F801124u) & 0x07FFu, 0x0258u);
+    EXPECT_EQ(timers.readRegister(0x1F801124u) & 0x03FFu, 0x0258u);
 
     ctx.r[A0] = 0xF2000002u;
     hle_StartRCnt(&ctx);

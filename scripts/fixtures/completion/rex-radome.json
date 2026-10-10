@@ -1,0 +1,106 @@
+{
+  "format": "mgs-situation-1",
+  "name": "rex-radome-defeat-exit",
+  "requires": {
+    "stage": "s17a",
+    "story": 255,
+    "actor_mgrex_count": 1,
+    "gcl_1100040e": 1,
+    "life": {
+      "min": 1
+    }
+  },
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "game_over_timer"
+  ],
+  "fixture": {
+    "scope": "Synthetic entry to REX radome death animation; tests original phase1 exit, Ninja cinematic, restart and phase2 entry, not the fight.",
+    "patches": [
+      {
+        "actor": "mgrex.c",
+        "act": "0x800DD324",
+        "offset": 6508,
+        "width": 4,
+        "expect": {
+          "min": 0,
+          "max": 1
+        },
+        "value": 2,
+        "reason": "Enter original radome destruction phase",
+        "source": "USA s17a 800DD324 jump table work+196C -> 800DE2FC, work+1764 original callback1E04 performs restart; retail ea54 main GCL040e advances phase"
+      },
+      {
+        "actor": "mgrex.c",
+        "act": "0x800DD324",
+        "offset": 6824,
+        "width": 4,
+        "expect": 0,
+        "value": 0,
+        "reason": "Start destruction animation timer",
+        "source": "USA s17a 800DE2FC, work+1AA8"
+      }
+    ]
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-radome-restart",
+        "until": {
+          "gcl_1100040e": {
+            "min": 2
+          }
+        },
+        "max_frames": 1800
+      },
+      {
+        "name": "cockpit-phase-control",
+        "until": {
+          "stage": "s17a",
+          "story": 257,
+          "gcl_1100040e": 5,
+          "life": {
+            "min": 1
+          },
+          "control": {
+            "ne": 0
+          },
+          "game_over_timer": 0,
+          "load_request": 0,
+          "actor_loader_count": 0,
+          "pause_level": 0,
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          }
+        },
+        "action": {
+          "sequence": "wait:60,start:6,wait:90"
+        },
+        "attempts": 100,
+        "max_frames": 6000,
+        "stable_frames": 30,
+        "guard": {
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      }
+    ]
+  }
+}

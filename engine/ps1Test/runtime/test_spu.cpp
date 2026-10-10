@@ -387,7 +387,12 @@ TEST_F(SpuReverbTest, ReverbRegisterWriteDoesntCrash) {
 class XaAdpcmTest : public ::testing::Test {
 protected:
   SPU spu;
-  void SetUp() override { spu.reset(); }
+  void SetUp() override {
+    spu.reset();
+    spu.writeRegister(0x1F801DB0, 0x7fff);
+    spu.writeRegister(0x1F801DB2, 0x7fff);
+    spu.writeRegister(0x1F801DAA, 1);
+  }
 };
 
 TEST_F(XaAdpcmTest, XaSamplesAreMixed) {
@@ -523,4 +528,27 @@ TEST_F(SpuAdpcmTest, GuestClockRestoreRetainsUnconsumedSampleCredit) {
   spu.serviceClock();
   EXPECT_EQ(spu.snapshot().generatedSampleCount, 1470u);
   EXPECT_EQ(spu.snapshot().clockSamplesPending, 0u);
+}
+
+TEST_F(XaAdpcmTest, CdGainPolarityAndDisableConsumeRatherThanDelayAudio) {
+  spu.writeRegister(0x1F801D80, 0x7fff);
+  spu.writeRegister(0x1F801D82, 0x7fff);
+  spu.writeRegister(0x1F801DB0, 0x4000);
+  spu.writeRegister(0x1F801DB2, 0xc000);
+  EXPECT_EQ(spu.readRegister(0x1F801DB0), 0x4000);
+  EXPECT_EQ(spu.readRegister(0x1F801DB2), 0xc000);
+  int16_t input[] = {10000, 10000, 10000, 10000};
+  int16_t output[4]{};
+  spu.pushXaSamples(input, 4);
+  spu.generateSamples(output, 1);
+  EXPECT_EQ(output[0], 4999);
+  EXPECT_EQ(output[1], -5000);
+  spu.writeRegister(0x1F801DAA, 0);
+  spu.generateSamples(output, 1);
+  EXPECT_EQ(output[0], 0);
+  EXPECT_EQ(output[1], 0);
+  spu.writeRegister(0x1F801DAA, 1);
+  spu.generateSamples(output, 1);
+  EXPECT_EQ(output[0], 0);
+  EXPECT_EQ(output[1], 0);
 }

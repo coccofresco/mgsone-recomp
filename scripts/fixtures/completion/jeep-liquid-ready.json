@@ -1,0 +1,51 @@
+{
+  "format": "mgs-situation-1",
+  "name": "jeep-liquid-recovered-vulnerable",
+  "source": "s19b jeep_liq.c restores TARGET class TARGET_POWER=4 after original hit animation (s19b_spark2_m_800D88D8 and recovery states). Wait for vulnerability; no writes.",
+  "requires": {
+    "current_stage": "s19b",
+    "actor_jeep_liq_count": 1,
+    "life": {
+      "min": 1
+    }
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life"
+  ],
+  "compare": [
+    "current_stage",
+    "story",
+    "disc",
+    "difficulty",
+    "game_over_timer",
+    "work_jeep_liq_800db2e8_08e4_p0026_s16"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-liquid-vulnerability-restored",
+        "until": {
+          "work_jeep_liq_800db2e8_08e4_p0000_u16": {
+            "mask": 4,
+            "eq": 4
+          },
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "wait:30"
+        },
+        "attempts": 200,
+        "max_frames": 6000,
+        "abort_when": {
+          "life": 0
+        },
+        "stable_frames": 3
+      }
+    ]
+  }
+}

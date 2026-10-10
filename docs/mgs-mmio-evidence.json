@@ -1,0 +1,254 @@
+{
+  "format": "mgs-mmio-verification-1",
+  "date": "2026-10-06",
+  "status": "complete",
+  "runtime": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "sha256": "9420f2b967bcd110b272c7372f090baef7f20e1189e5b579faf5ca7b82903754"
+  },
+  "git_head": "6f30e2cfb5e94ec71c0e337347a9495c3b829b8a",
+  "scope": "Generic MMIO transport and VBlank input sampling. Targeted headless regressions on both discs; no additional completed campaign segment or Vulkan visual certification.",
+  "source_files": [
+    {
+      "path": "engine/ps1Runtime/include/runtime/memory.h",
+      "sha256": "600c17ab9084f7bb0020830e075a56312e1a700e834c7599bdefb09ad3324192"
+    },
+    {
+      "path": "engine/ps1Runtime/src/memory_access.cpp",
+      "sha256": "4694cb0b8ee838521e44f15d53822710d727d3484cbf455d20cc800072adac9a"
+    },
+    {
+      "path": "engine/ps1Runtime/src/input/input.cpp",
+      "sha256": "2f493a2bccf2ac419a3cd4d304675f846099a34ba58864ef24700f420c1bf409"
+    },
+    {
+      "path": "engine/ps1Runtime/src/psyq/psyq_pad.cpp",
+      "sha256": "a133759751e67a7cc90fb85a401e5d491ad34ab57276329c78af172d3ffd1e8c"
+    },
+    {
+      "path": "engine/ps1Test/CMakeLists.txt",
+      "sha256": "a7ddf51701e8de247029294dc51ff9697724f2df238913169891943a8cbbaada"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_memory_mmio.cpp",
+      "sha256": "8d72de4f341dfd20cdd91a3c93a138f76cf53b7e70e817d709d8f99997d5d4f2"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_psyq_pad.cpp",
+      "sha256": "7f0b5c5f37ecba93ce9eb038fc5ad0f261c4fc57f513154cd69fa94f99ded42f"
+    }
+  ],
+  "donor_references": {
+    "revision": "7f69c199ed88d5723f71dd3a6e9c1b7a45b535a6",
+    "inspection_only": [
+      {
+        "path": ".local/swanstation/src/core/bus.cpp",
+        "sha256": "aa83ee5bd49464f37c4d105cca939c2e9b2db60859cf24f5bc4b8c6030f948f2"
+      },
+      {
+        "path": ".local/swanstation/src/core/pad.cpp",
+        "sha256": "08117b93c65d5547b15c85c52fd3a8077b5c27c3b6a146137d96d0e8765b93ea"
+      }
+    ],
+    "hardware_write_caveat": "https://psx-spx.consoledev.net/ps1/system/partialwordwrites/"
+  },
+  "red_regressions": {
+    "total": 11,
+    "failed": 10,
+    "result": {
+      "path": "data/validation/completion/mmio-20261006/red-tests.json",
+      "sha256": "b1f0e4759a92e27a0d5e91556b551a278cf9f63a3e5c59207ffb2925f1202379"
+    },
+    "log": {
+      "path": "data/validation/completion/mmio-20261006/red-tests.log",
+      "sha256": "e542553abc47396632cbbbf15e00144d0d629ae0b1eba814e8c877821afeaa92"
+    },
+    "note": "Captured before fixes. Final suite also adds all packet restore boundaries and restricts word pad-register cases to aligned addresses."
+  },
+  "validation": {
+    "runtime_release": {
+      "total": 1347,
+      "passed": 1316,
+      "skipped": 31,
+      "suites": 128,
+      "result": {
+        "path": "data/validation/completion/mmio-20261006/runtime-tests.json",
+        "sha256": "7cd2a4909f4241382bca382cb03781d436d1f28d07213116ac17b1657a495a0a"
+      },
+      "log": {
+        "path": "data/validation/completion/mmio-20261006/runtime-tests.log",
+        "sha256": "9027e08c4a336c229e6252d9dc83a1d64596f5cd6a236da59c40a6614cdcead6"
+      },
+      "binary": {
+        "path": "build/ps1Test/ps1Runtime_tests",
+        "sha256": "d207ddd285b847846ddbe8fe5f87fe6e7f822973959e778e5156426ae7f227dc"
+      }
+    },
+    "runtime_sanitized": {
+      "total": 1347,
+      "passed": 1316,
+      "skipped": 31,
+      "suites": 128,
+      "result": {
+        "path": "data/validation/completion/mmio-20261006/asan-tests.json",
+        "sha256": "ef94108e9791ef8fd0a3e3dfae1cb4898622cc8b96dcb89c7ec7da63089f4953"
+      },
+      "log": {
+        "path": "data/validation/completion/mmio-20261006/asan-tests.log",
+        "sha256": "c2d3a0b4bb0da049aed062af7145efc3642389531a038aea3747b16b4bc98d85"
+      },
+      "binary": {
+        "path": "build-sanitize/ps1Test/ps1Runtime_tests",
+        "sha256": "91d4dafc7fb4532cc3c8377376e0cac2a35cf7fcce6395cfd74f493e9998fa41"
+      }
+    }
+  },
+  "regression_runs": {
+    "codec": {
+      "result": {
+        "path": "data/validation/completion/mmio-20261006/codec/native/session/result.json",
+        "sha256": "e933d35c0bcb80871f0987fac08b8a0337bbfbf0fbabe2a01753efde8728070d"
+      },
+      "frames": 147,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "codec_replay": {
+      "result": {
+        "path": "data/validation/completion/mmio-20261006/codec/verified-replay/result.json",
+        "sha256": "2d3ff7aa3fd430514d6cb0652ddd0084a73654035fc251de1040e9d5cf3c1900"
+      },
+      "frames": 147,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "movie_replay": {
+      "result": {
+        "path": "data/validation/completion/mmio-20261006/movie-replay/result.json",
+        "sha256": "4ee0a407251eaa28b22513a843336d6107af7377c03dd43ac62af8ad93c1bceb"
+      },
+      "frames": 1460,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "liquid_load": {
+      "result": {
+        "path": "data/validation/completion/mmio-20261006/liquid-load/session/result.json",
+        "sha256": "b82b15afec5eb1046612043ab5d2b015130d981aa0b9e185700db504f5357cbb"
+      },
+      "frames": 3633,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "disc_change": {
+      "result": {
+        "path": "data/validation/completion/mmio-20261006/disc-change/session/result.json",
+        "sha256": "71176520388c7a6743bb7e49a4f116f09460edcdf5159b2b07fd2807836528da"
+      },
+      "frames": 504,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "disc_change_replay": {
+      "result": {
+        "path": "data/validation/completion/mmio-20261006/disc-change/replay/result.json",
+        "sha256": "0528a1cb13c3ccbac48a688a01c79c5a89db2ec5bd23027b13646ca80fbe81aa"
+      },
+      "frames": 504,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "movie_entry": {
+      "result": {
+        "path": "data/validation/completion/mmio-20261006/movie-entry/session/result.json",
+        "sha256": "76333ea7598d200bda9b32dceca816198f54e3d66fb7c339d6df25202fddc438"
+      },
+      "frames": 3325,
+      "game_errors": [],
+      "interpreter_counters": {}
+    }
+  },
+  "paired_codec": {
+    "path": "data/validation/completion/mmio-20261006/codec/result.json",
+    "sha256": "8dc5da30903ac1eaf2b956678908ddb135a7a27b9545d760bf20ac54debc54dc"
+  },
+  "full_movie_check": {
+    "path": "data/validation/completion/mmio-20261006/movie-entry-check.json",
+    "sha256": "0594597a0f319273f4870e6d709fa4106e3e7247223cfcb130846fb1b079b937"
+  },
+  "disc_change": {
+    "path": "data/validation/completion/mmio-20261006/disc-change/evidence.json",
+    "sha256": "f3c2cd84795d1306d2af4223e75ae0f87e6ed209fe97274f03b0eb2c82756707"
+  },
+  "loading": {
+    "loads": [
+      {
+        "begin": 80,
+        "end": 86,
+        "vblanks": 6,
+        "seconds_at_60hz": 0.1,
+        "stages": [
+          "init"
+        ],
+        "sectors": [
+          275
+        ]
+      },
+      {
+        "begin": 96,
+        "end": 100,
+        "vblanks": 4,
+        "seconds_at_60hz": 0.06666666666666667,
+        "stages": [
+          "title"
+        ],
+        "sectors": [
+          191
+        ]
+      },
+      {
+        "begin": 412,
+        "end": 416,
+        "vblanks": 4,
+        "seconds_at_60hz": 0.06666666666666667,
+        "stages": [
+          "abst"
+        ],
+        "sectors": [
+          76
+        ]
+      },
+      {
+        "begin": 1525,
+        "end": 1531,
+        "vblanks": 6,
+        "seconds_at_60hz": 0.1,
+        "stages": [
+          "s18a"
+        ],
+        "sectors": [
+          547
+        ]
+      }
+    ],
+    "unpaced_sectors": 1089,
+    "session": "/home/xander/mgs_recomp/data/validation/completion/mmio-20261006/liquid-load/session",
+    "result_sha256": "b82b15afec5eb1046612043ab5d2b015130d981aa0b9e185700db504f5357cbb",
+    "trace_sha256": "66ce29700f8f7b4606f7134f89ac4123ea623b92b72dcdcc22a890e36bd2136e",
+    "runtime_sha256": "9420f2b967bcd110b272c7372f090baef7f20e1189e5b579faf5ca7b82903754"
+  },
+  "protected_files_unchanged": true,
+  "protected_check": {
+    "path": "data/validation/completion/mmio-20261006/protected.log",
+    "sha256": "47928750547a87d628691b664cbc1aa2c409fafc917061523b7125a2d0cba221"
+  },
+  "limits": [
+    "31 opt-in tests skipped in each suite; duplicate ordinary/sanitized cases are not independent coverage.",
+    "Sanitizers cover the runtime test executable with stub game, not the full recompiled game executable; LeakSanitizer disabled and makecontext/swapcontext support incomplete.",
+    "DMA byte-mask policy retained. Original full MIPS source word is not propagated by SB/SH; physical partial-write semantics remain a separate emitter/interpreter/MMIO task.",
+    "Serial card protocol, SIO timing/ACK/FIFO and DualShock2 packet remain incomplete. Pad hotplug tests exercise API state, not physical SDL events or Mantis completion.",
+    "Film entry is a declared synthetic s08b fixture, compared with historical donor endpoint and retail media bounds. Decode/mix totals are not audiovisual inspection.",
+    "Loader 4-6 VBlank intervals are diagnostic headless measurements; no new monitor/4K latency or Vulkan rendering check.",
+    "No analyzer, recompiler or Python suite rerun: those sources are unchanged in this verification."
+  ]
+}

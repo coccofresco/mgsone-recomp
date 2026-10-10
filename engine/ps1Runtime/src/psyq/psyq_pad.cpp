@@ -186,8 +186,12 @@ void hle_libetc_PadRead(recomp_context *ctx) {
   std::lock_guard lock(g_stateMutex);
   auto *input = inputOf(ctx);
 
-  uint16_t port1 = input ? input->latchedButtonState(0) : 0xFFFF;
-  uint16_t port2 = input ? input->latchedButtonState(1) : 0xFFFF;
+  const auto buttons = [&](int port) -> uint16_t {
+    return input && input->getPadType(port) != input::PadType::None
+               ? input->latchedButtonState(port) : 0xFFFF;
+  };
+  uint16_t port1 = buttons(0);
+  uint16_t port2 = buttons(1);
 
   // Refresh direct-mode buffers as a side-effect -- see PadInitDirect.
   writePadBuffer(ctx, input, g_state.buf1Addr, 0);

@@ -15,6 +15,80 @@ FileIO::FileIO(cdrom::VirtualFs &fs, Memory &mem) : fs_(fs), mem_(mem) {
   }
 }
 
+FileIO::Snapshot FileIO::snapshot() const {
+  Snapshot state;
+  for (size_t i = 3; i < fds_.size(); ++i) {
+    const auto &fd = fds_[i];
+    if (!fd.inUse) continue;
+    auto &out = state.descriptors[i];
+    out.kind = fd.card ? 2 : 1;
+    out.path = fd.path;
+    out.cursor = fd.cursor;
+    if (fd.card) {
+      out.firstBlock = fd.firstBlock;
+      out.cardSlot = fd.cardSlot;
+    } else out.data = fd.data;
+  }
+  state.directory = directory_;
+  state.directoryIndex = directoryIndex_;
+  return state;
+}
+
+bool FileIO::validSnapshot(const Snapshot &state) {
+  size_t remaining = MAX_SNAPSHOT_DATA;
+  for (size_t i = 0; i < state.descriptors.size(); ++i) {
+    const auto &fd = state.descriptors[i];
+    if (fd.kind > 2 || (i < 3 && fd.kind) ||
+        fd.path.size() > MAX_SNAPSHOT_PATH || fd.path.find('\0') != std::string::npos ||
+        fd.data.size() > remaining) return false;
+    remaining -= fd.data.size();
+    if (fd.kind == 0) {
+      if (!fd.path.empty() || !fd.data.empty() || fd.cursor || fd.firstBlock || fd.cardSlot)
+        return false;
+    } else if (fd.kind == 1) {
+      if (fd.cursor > fd.data.size() || fd.firstBlock || fd.cardSlot) return false;
+    } else {
+      if (fd.cardSlot > 1 || fd.firstBlock < 1 || fd.firstBlock > 15 ||
+          fd.cursor > 15u * 8192u || !fd.data.empty() || fd.path.size() <= 5 ||
+          fd.path.size() > 25 || fd.path.rfind(fd.cardSlot ? "bu10:" : "bu00:", 0) != 0)
+        return false;
+    }
+  }
+  if (state.directory.size() > 15 || state.directoryIndex > state.directory.size())
+    return false;
+  for (const auto &[name, size] : state.directory)
+    if (name.empty() || name.size() > 20 || name.find('\0') != std::string::npos ||
+        size > 15u * 8192u) return false;
+  return true;
+}
+
+bool FileIO::canRestore(const Snapshot &state) const {
+  return validSnapshot(state) && (input_ || std::none_of(
+      state.descriptors.begin(), state.descriptors.end(),
+      [](const auto &fd) { return fd.kind == 2; }));
+}
+
+bool FileIO::restore(const Snapshot &state) {
+  if (!canRestore(state)) return false;
+  // Host backing paths, completion callbacks and device ownership remain local.
+  // Do not close/flush descriptors belonging to the abandoned timeline.
+  for (size_t i = 0; i < fds_.size(); ++i) {
+    const auto &src = state.descriptors[i];
+    auto &dst = fds_[i];
+    dst = {};
+    dst.inUse = src.kind != 0;
+    dst.path = src.path;
+    dst.data = src.data;
+    dst.cursor = src.cursor;
+    dst.firstBlock = src.firstBlock;
+    dst.cardSlot = src.cardSlot;
+    if (src.kind == 2) dst.card = &input_->getMemoryCard(src.cardSlot);
+  }
+  directory_ = state.directory;
+  directoryIndex_ = state.directoryIndex;
+  return true;
+}
+
 int32_t FileIO::open(const char *path, int32_t mode) {
   std::string pathStr(path);
   fmt::print("[BIOS] open('{}', {})\n", pathStr, mode);

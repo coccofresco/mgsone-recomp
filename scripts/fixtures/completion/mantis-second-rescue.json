@@ -1,0 +1,93 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-second-meryl-nonlethal-rescue",
+  "source": "USA Meryl TARGET damage handler800C7B8C; psyco phase4 tests Meryl down flag0x1000 and advances state5; observe original arrival inphase6. Preserves original rescue logic.",
+  "requires": {
+    "stage": "s07b",
+    "story": 129,
+    "actor_psyco_count": 1,
+    "gcl_12000046": 3,
+    "work_psyco_800d3acc_0844_s16": 4
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000046",
+    "work_psyco_800d3acc_0844_s16"
+  ],
+  "fixture": {
+    "scope": "Synthetic final nonlethal punch on second Meryl possession. Only TARGET damaged/stun/attack mode, no boss life or phase writes.",
+    "patches": [
+      {
+        "actor": "meryl07b.c",
+        "act": "0x800cc660",
+        "offset": "0x7dc",
+        "indirect_offset": 6,
+        "width": 2,
+        "expect": 0,
+        "value": 4,
+        "signed": false,
+        "source": "USA meryl07b.c act800CC660: TARGET pointer+7dc; 800C7B8C checks damaged&4, 800C7BB4 compares attack mode3 (punch); 800C7BF0 tests nonlethal stun<=0 and chooses800C879C; 800C8DB0 publishes down flag0x1000 consumed by psyco state0.",
+        "reason": "Nonlethal post-punch stun boundary; original hit reaction/down animation must execute"
+      },
+      {
+        "actor": "meryl07b.c",
+        "act": "0x800cc660",
+        "offset": "0x7dc",
+        "indirect_offset": 42,
+        "width": 2,
+        "expect": 12,
+        "value": 0,
+        "signed": false,
+        "source": "USA meryl07b.c act800CC660: TARGET pointer+7dc; 800C7B8C checks damaged&4, 800C7BB4 compares attack mode3 (punch); 800C7BF0 tests nonlethal stun<=0 and chooses800C879C; 800C8DB0 publishes down flag0x1000 consumed by psyco state0.",
+        "reason": "Nonlethal post-punch stun boundary; original hit reaction/down animation must execute"
+      },
+      {
+        "actor": "meryl07b.c",
+        "act": "0x800cc660",
+        "offset": "0x7dc",
+        "indirect_offset": 62,
+        "width": 2,
+        "expect": 0,
+        "value": 3,
+        "signed": true,
+        "source": "USA meryl07b.c act800CC660: TARGET pointer+7dc; 800C7B8C checks damaged&4, 800C7BB4 compares attack mode3 (punch); 800C7BF0 tests nonlethal stun<=0 and chooses800C879C; 800C8DB0 publishes down flag0x1000 consumed by psyco state0.",
+        "reason": "Nonlethal post-punch stun boundary; original hit reaction/down animation must execute"
+      }
+    ]
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "second-meryl-rescued-original-actor",
+        "until": {
+          "work_psyco_800d3acc_0844_s16": 6,
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        },
+        "action": {
+          "sequence": "wait:30"
+        },
+        "attempts": 200,
+        "max_frames": 6000,
+        "abort_when": {
+          "life": 0
+        }
+      }
+    ]
+  }
+}

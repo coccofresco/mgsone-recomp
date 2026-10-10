@@ -8,6 +8,30 @@ il gameplay del molo. I formati e le prove iniziali su disco sono in
 e i limiti verificati sono in [mgs-vulkan-cache.md](mgs-vulkan-cache.md).
 Il contratto seguente descrive anche le parti ancora da realizzare.
 
+## Criterio di fedeltà e regressioni
+
+La fedeltà richiesta è nella resa generale dell'immagine: composizione,
+leggibilità, atmosfera, intensità relativa degli effetti e loro relazione
+spaziale con la scena. La presentazione moderna deve superare i limiti PSX:
+risoluzione, precisione cromatica e geometrica, illuminazione e costruzione degli
+effetti. Si preferiscono metodi nativi Vulkan che migliorino resa e prestazioni;
+la sequenza dei primitive, il rendering per scanline, il dithering e gli altri
+espedienti hardware originali non sono obiettivi da riprodurre.
+
+Per ciascuna sostituzione documentare il significato dell'effetto nel gioco,
+i dati originali usati, il metodo Vulkan scelto e il motivo della scelta.
+Conservare confronti visivi su scene e istanti identificabili, parametri e hash
+della build, misura dei costi alla risoluzione di presentazione e modalità di
+confronto col riferimento. Le differenze intenzionali vanno distinte dalle
+regressioni; un confronto pixel per pixel non misura da solo la fedeltà visiva.
+Le verifiche di script, audio, streaming e salvataggi certificano separatamente
+il comportamento sottostante e non vincolano il renderer ai metodi PSX.
+
+L'[occlusione ambientale da Godot 4.7.2](mgs-ambient-occlusion.md) applica
+questo criterio: calcolo e filtro Vulkan sulla profondità moderna, senza
+modificare VRAM o simulazione. La documentazione distingue le parti adattate
+da ASSAO, la composizione sul colore finale, i limiti e le catture A/B.
+
 ## Separazione delle responsabilità
 
 ```mermaid
@@ -152,3 +176,82 @@ La scena del molo è ora sostituita mediante il [bridge dalla cache](mgs-origina
 con materiali, deformazioni, suddivisione e quad procedurali. Il ripristino da
 savestate ricostruisce le associazioni. Restano da verificare altre scene e da
 implementare culling indipendente, famiglie LOD e interpolazione.
+
+
+## Registrazione a 60 fps e interpolazione MGS (10 ottobre 2026)
+
+`PS1_MGS_FRAME_INTERPOLATION=1` attiva ora un percorso MGS autonomo. Il
+percorso temporale ereditato da Crash 3 non era collegato alle mesh MGS: il
+solo output video a 60 fps non avrebbe aggiunto pose intermedie.
+
+La presentazione correla le facce originali KMD tramite epoca della scena,
+continuità osservata dell'istanza DG, asset, modello e faccia. Interpola le
+matrici per vertice, le normali, le posizioni per l'illuminazione e la luce
+ambiente/direzionale in uniform buffer separati. Vulkan continua a leggere i
+vertici originali dalla cache e rasterizza nuovamente geometria, profondità,
+materiali, illuminazione per pixel ed effetti. Non viene usata interpolazione
+ottica del filmato né fusione delle immagini già renderizzate.
+
+Una coppia a 30 Hz produce la fase 1/2; una coppia a 20 Hz produce 1/3 e 2/3.
+L'atlas di compatibilità viene salvato, usato per le fasi di presentazione e
+ripristinato prima di applicare una sola volta l'endpoint originale. Le fasi
+risolte, AO incluso, sono conservate in immagini Vulkan e presentate ai
+VBlank successivi. La latenza aggiunta è di uno o due VBlank. Il guest non
+riceve tick aggiuntivi né scritture dei dati interpolati.
+
+Identità duplicate, istanze nuove, materiali incompatibili e facce senza
+corrispondenza mantengono l'endpoint. Epoche diverse, intervalli diversi da
+2/3 VBlank, teletrasporti e cambi bruschi della camera interrompono la coppia.
+Le soglie conservative sono nel modulo `mgs_frame_interpolation.cpp`, non
+sono selettori di scene: 20 gradi circa per asse della camera, 2000 unità per
+la traslazione della camera e 1000 per gli spostamenti dei vertici illuminati.
+I reset/reanchor e il ridimensionamento del target eliminano le fasi pendenti.
+Il Codec resta animazione 2D originale, composta con il CRT moderno: i suoi
+ritratti/testi non sono mesh alle quali inventare pose geometriche. Anche le
+primitive procedurali prive di identità originale conservano la loro cadenza.
+
+Il registratore acquisisce direttamente lo scanout Vulkan completo in una
+pipe RGBA verso NVENC, ora con `--fps 60` predefinito (`--fps 30` disabilita
+l'interpolazione). `video-timeline.csv` registra VBlank e tipo di ogni frame;
+il controllo comune rifiuta buchi, duplicazioni temporali, conteggi incoerenti,
+assenza di interpolazione nelle riprese 3D, errori di risorse o di validazione.
+`--content codec` richiede invece l'effettiva esecuzione del pass Codec su GPU.
+Il montatore verifica gli hash delle prove e impone la stessa frequenza per
+tutte le riprese: non converte filmati a 30 fps in una consegna dichiarata 60.
+La velocità di registrazione con readback UHD e validation layer non è una
+misura delle prestazioni del gioco in tempo reale.
+
+Le registrazioni precedenti a 30 fps rimangono in
+`data/media/promo-20261010-corrected`; le nuove riprese e le verifiche sono in
+`data/media/promo-20261010-60fps` e `data/validation/interpolation-20261010`.
+
+
+Il promo aggiornato contiene 5400 frame a 60/1 fps (90 secondi), inclusi 2243
+frame geometrici intermedi e otto secondi di Codec a 00:35.767–00:43.767.
+Entrambi gli export sono stati decodificati integralmente e i timestamp di
+tutti i pacchetti verificati: passi esatti di 1/60, senza buchi o duplicati.
+La coda audio è sotto -140 dBFS e il frame finale è nero entro il residuo di
+quantizzazione H.264 (massimo RGB 4/255 su pochissimi pixel). Le prove e gli
+hash sono in [mgs-frame-interpolation-evidence.json](mgs-frame-interpolation-evidence.json).
+
+Il controllo TAS registra senza interpolazione e riproduce con interpolazione
+fino allo stesso checkpoint sicuro. Nei 180 VBlank dell'esempio, CPU/GTE,
+2 MiB di RAM, scratchpad e tutti i 1048576 byte della VRAM originale (bit
+maschera inclusi) coincidono; la seconda esecuzione presenta 88 intermedi.
+Sono passati 78 test C++ selezionati, inclusi quelli Vulkan su GPU fisica;
+205 test Python passano e 5 opzionali restano saltati. La generazione 20 Hz è
+coperta dai test unitari; queste riprese usano geometria a 30 Hz.
+
+La prova può essere ripetuta su qualsiasi checkpoint 3D con:
+
+```sh
+python scripts/mgs_interpolation_check.py --state percorso/checkpoint.ps1s \
+  --output data/validation/interpolation-nuova-scena --frames 180
+```
+
+Non confrontare i dump eseguiti allo shutdown libero come se fossero allo
+stesso punto di esecuzione: il thread guest può trovarsi a un diverso confine
+istruzione. La prova TAS usa invece lo stesso rendezvous. I file completi
+`.ps1s` dell'esempio differiscono solo per tre byte di padding della struttura
+`PadModuleSnapshot` e il relativo checksum; questo padding non è uno stato
+guest e non entra nel confronto CPU/RAM/VRAM.

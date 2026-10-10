@@ -321,7 +321,13 @@ void prepareFullSourceMeshes(const SceneSnapshot &scene, const Memory &memory,
         const bool runtimeTexture = face.draw.originalMesh->runtimeTexture;
         const bool thermalEmission = face.draw.originalMesh->thermalEmission;
         const auto lighting = face.draw.originalMesh->lighting;
+        const auto temporalIdentity = face.draw.originalMesh->temporalIdentity;
+        const auto temporalCamera = face.draw.originalMesh->temporalCamera;
+        const auto temporalFrame = face.draw.originalMesh->temporalFrame;
         applySourceGeometry(face.draw, source->second);
+        face.draw.originalMesh->temporalIdentity = temporalIdentity;
+        face.draw.originalMesh->temporalCamera = temporalCamera;
+        face.draw.originalMesh->temporalFrame = temporalFrame;
         face.draw.originalMesh->textureId = texture;
         face.draw.originalMesh->runtimeTexture = runtimeTexture;
         face.draw.originalMesh->thermalEmission = thermalEmission;

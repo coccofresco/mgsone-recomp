@@ -65,7 +65,8 @@ public:
   void restore(const Snapshot &state);
 
   // Register access (0x1F801080-0x1F8010FF)
-  void writeRegister(uint32_t addr, uint32_t val);
+  void writeRegister(uint32_t addr, uint32_t val,
+                     uint32_t writeMask = 0xFFFFFFFFu);
   uint32_t readRegister(uint32_t addr) const;
 
   // Attach hardware components

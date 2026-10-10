@@ -1,0 +1,85 @@
+{
+  "format": "mgs-situation-1",
+  "name": "liquid-defeat-exit",
+  "requires": {
+    "stage": "s18a",
+    "story": 277,
+    "actor_liquid_count": 1,
+    "life": {
+      "min": 1
+    }
+  },
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "game_over_timer"
+  ],
+  "fixture": {
+    "scope": "Synthetic lethal Liquid state, not a complete fight. Original phase selection, victory callback, cinematics and subsequent stage loading execute unchanged.",
+    "patches": [
+      {
+        "actor": "liquid.c",
+        "act": "0x800C8618",
+        "offset": 2440,
+        "width": 4,
+        "expect": 255,
+        "value": 0,
+        "source": "USA s18a 800D36E8: health work+988 below3 and hit latch work+9A8 select phase6/subphase31; 800D3594 -> 800D2ACC -> 800D0F78 invokes retail EAEE",
+        "reason": "Prepare lethal boss hit precondition; do not write GCL story or callbacks"
+      },
+      {
+        "actor": "liquid.c",
+        "act": "0x800C8618",
+        "offset": 2472,
+        "width": 4,
+        "expect": 0,
+        "value": 1,
+        "source": "USA s18a 800D36E8: health work+988 below3 and hit latch work+9A8 select phase6/subphase31; 800D3594 -> 800D2ACC -> 800D0F78 invokes retail EAEE",
+        "reason": "Prepare lethal boss hit precondition; do not write GCL story or callbacks"
+      }
+    ]
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-victory-callback",
+        "until": {
+          "story": 278
+        },
+        "max_frames": 600
+      },
+      {
+        "name": "escape-stage-control",
+        "until": {
+          "stage": "s19a",
+          "story": 283,
+          "life": {
+            "min": 1
+          },
+          "control": {
+            "ne": 0
+          },
+          "load_request": 0,
+          "actor_loader_count": 0,
+          "pause_level": 0,
+          "game_over_timer": 0
+        },
+        "action": {
+          "sequence": "wait:60,start:6,wait:60,cross:6,wait:60"
+        },
+        "attempts": 160,
+        "max_frames": 30000,
+        "stable_frames": 30
+      }
+    ]
+  }
+}

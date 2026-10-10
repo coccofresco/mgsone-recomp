@@ -1,0 +1,121 @@
+{
+  "format": "mgs-situation-1",
+  "name": "liquid-death-continue",
+  "requires": {
+    "stage": "s18a",
+    "story": 277,
+    "life": {
+      "min": 1
+    },
+    "actor_snake18_count": 1,
+    "game_over_timer": 0
+  },
+  "preserve": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "life",
+    "pause_level",
+    "game_over_timer",
+    "weapons",
+    "items"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-game-over",
+        "until": {
+          "actor_over_count": 1
+        },
+        "max_frames": 1500
+      },
+      {
+        "name": "original-continue",
+        "until": {
+          "stage": "s18a",
+          "story": 277,
+          "life": {
+            "min": 1
+          },
+          "control": {
+            "ne": 0
+          },
+          "game_over_timer": 0,
+          "pause_level": 0,
+          "load_request": 0,
+          "actor_loader_count": 0,
+          "actor_fadeio_count": 0,
+          "actor_over_count": 0,
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          },
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "actor_snake18_count": 1
+        },
+        "action": {
+          "sequence": "wait:30,circle:6,wait:90"
+        },
+        "attempts": 30,
+        "max_frames": 4500,
+        "stable_frames": 30
+      }
+    ]
+  },
+  "fixture": {
+    "scope": "synthetic lethal health precondition; original death and Continue execute unchanged",
+    "patches": [
+      {
+        "actor": "snake18.c",
+        "act": "0x800E1D14",
+        "offset": "0x7e8",
+        "indirect_offset": 38,
+        "width": 2,
+        "expect": {
+          "min": 1
+        },
+        "value": 0,
+        "reason": "synthetic lethal target hit: vital",
+        "source": "USA Snake18Act 800E1D14 reads TARGET pointer work+7e8; original TARGET+6 damaged, +38 vital, +62 reaction; Integral snake18.c is structural reference only"
+      },
+      {
+        "actor": "snake18.c",
+        "act": "0x800E1D14",
+        "offset": "0x7e8",
+        "indirect_offset": 6,
+        "width": 2,
+        "expect": 0,
+        "value": 4,
+        "reason": "synthetic lethal target hit: damaged TARGET_POWER",
+        "source": "USA Snake18Act 800E1D14 reads TARGET pointer work+7e8; original TARGET+6 damaged, +38 vital, +62 reaction; Integral snake18.c is structural reference only"
+      },
+      {
+        "actor": "snake18.c",
+        "act": "0x800E1D14",
+        "offset": "0x7e8",
+        "indirect_offset": 62,
+        "width": 2,
+        "expect": {
+          "min": 0,
+          "max": 16
+        },
+        "value": 1,
+        "reason": "synthetic lethal target hit: bullet reaction",
+        "source": "USA Snake18Act 800E1D14 reads TARGET pointer work+7e8; original TARGET+6 damaged, +38 vital, +62 reaction; Integral snake18.c is structural reference only"
+      }
+    ]
+  }
+}

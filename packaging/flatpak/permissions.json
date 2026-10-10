@@ -1,0 +1,12 @@
+{
+  "app-id": "io.github.mgsrecomp.MGSRecomp",
+  "runtime": "org.freedesktop.Platform",
+  "sdk": "org.freedesktop.Sdk",
+  "runtime-version": "25.08",
+  "command": "mgs-recomp",
+  "finish-args": [
+    "--socket=wayland", "--socket=fallback-x11", "--share=ipc",
+    "--socket=pulseaudio", "--device=dri", "--device=input",
+    "--filesystem=xdg-download:ro", "--filesystem=/run/media:ro"
+  ]
+}

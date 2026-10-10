@@ -59,6 +59,7 @@ public:
   // particular, pending callbacks must move backwards with a savestate; they
   // cannot be left over from the timeline being replaced.
   Snapshot snapshot() const;
+  static bool validSnapshot(const Snapshot &state);
   bool restore(const Snapshot &state);
   void discardPendingTimeline();
 

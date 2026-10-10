@@ -1,0 +1,1483 @@
+{
+  "format": "mgs-asset-presentation-evidence-1",
+  "date": "2026-10-07",
+  "status": "diagnostic_pass_hardware_sampled_matrix_passed",
+  "scope": "Historical CPU Vulkan scene receipts and fixes from 2026-10-07. Subsequent physical GPU acceptance is recorded separately in hardware_acceptance; these scene receipts remain software diagnostics.",
+  "git_head": "6f30e2cfb5e94ec71c0e337347a9495c3b829b8a",
+  "working_tree": "pre-existing uncommitted work preserved; runtime and shader identities recorded per run",
+  "device": "Vulkan 1.4.354 llvmpipe (LLVM 21.1.8, 256 bits), Mesa Lavapipe 26.1.6",
+  "wsi": "VK_EXT_headless_surface, same renderer/swapchain, SDL dummy",
+  "validation_layer": "VK_LAYER_KHRONOS_validation",
+  "current_runtime": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "sha256": "70935af9b2e155176f41d3e58c9e5cd577ab5d1ec000a0b49580141824f84121"
+  },
+  "test_binary": {
+    "path": "build/ps1Test/ps1Runtime_tests",
+    "sha256": "94a8b369e63797a10320794b9c94735b90d45a975f8f76c975b9c71657e62e8d"
+  },
+  "asset_cache": {
+    "path": "data/presentation/usa-source/assets.mgsc",
+    "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+  },
+  "runtime_shaders": [
+    {
+      "path": "build/ps1Runtime/shaders/crash3_semi_textured.frag.spv",
+      "sha256": "80523433a104c63fe16ba34ba40b196686c2925a08a21d8cd005de7763a82d75"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_semi_untextured.frag.spv",
+      "sha256": "86b3d895a31caedc3d8a5792204570ad080e94e9db0116be7829359df1eda8f7"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_sidecar.vert.spv",
+      "sha256": "fc3e657161228d4c4727f9e7321de3616d15d29d2119ba23cdb30538665a0f28"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_sidecar_midpoint.comp.spv",
+      "sha256": "057c63e6f77128188fc31315e7c7d85d2ce784156e155493f36848324e2fd24e"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_sidecar_midpoint_fp32.comp.spv",
+      "sha256": "4c89786f7b30d8e36934e11f9524830cf0a8fd9617adfb98a66954f7730d3db6"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_sidecar_model_pulled.vert.spv",
+      "sha256": "869ccb090b473ce142019fb3db8745f180791a97385850c2c69b202bca182363"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_sidecar_opaque.frag.spv",
+      "sha256": "df5d5014a3e68b395e967386392e8886bf3ecb6d1004ad18e38b2942dbe762c7"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_sidecar_pulled.vert.spv",
+      "sha256": "1797000ac54cb5a2b5909e71eb753513efbdbba7a2287ce6fa0b5d50eecdb9c9"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_sidecar_pulled_interpolated.vert.spv",
+      "sha256": "f490b4fe3766b3ff46fd2d0ce9ed834ed839b81fb774cd7137c31597ae22119a"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_sidecar_raw_pulled.vert.spv",
+      "sha256": "2a90c29328b2bc594135bbd90d503601d92d0023062758b9cdd32ea4f5de41b4"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_interlock.frag.spv",
+      "sha256": "184b23ff49259ab02c8b28faaca8778ebf0a7b462a6030b11b5ca9211ea271ae"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_textured.frag.spv",
+      "sha256": "2e62e333ae1b835e5395963f0d5ada82e4339fe5c3bb3155dbc85ecbadba6cdb"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/crash3_sidecar_semi_untextured.frag.spv",
+      "sha256": "a164427920290aa8f0159c18960d09d5416d2db27e44fdb667dc3aaa8a44e794"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/present_fullscreen.vert.spv",
+      "sha256": "b07e8466fb11e9dc18c71f0839d211f30bf5a12d6973d79b4f0b864cc700bf3d"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/present_native.frag.spv",
+      "sha256": "66a0ec8e54a941db47279aa4050a03c19e9740af8c5f389762a48383ca47d6e6"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/present_replay.frag.spv",
+      "sha256": "582f2958d5a1ad31cb4d411d9aa1110be14e8001db87c4117e40e159d5001b41"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/present_replay_depth.frag.spv",
+      "sha256": "a507331efe81866cb5b6a362d27d3174d6634d12767d6c17499020e7b131abd5"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/present_replay_temporal.frag.spv",
+      "sha256": "8f46ffe6ac971910d174fdd47e91f2a0496e701a5655e34fc27f8a2baa64041b"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/present_rgba.frag.spv",
+      "sha256": "1bdbb621042e22ea51c58b9357d99043b1519510f9e3b15fd7a394fca4e073cf"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_copy_scratch.frag.spv",
+      "sha256": "7c1ddd1abc727c4ea54c32af24f39872ea449622f52650abedaa9565426d7c07"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_native_expand.frag.spv",
+      "sha256": "34ca6b342da7918681814e71cc2c275698427c72a11cc615cb637ba8c8541870"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_opaque_textured.frag.spv",
+      "sha256": "94af1fa431c7c0b2007173a12a9f8f4b0d79252e2456658dd18879d9b11edef8"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_opaque_untextured.frag.spv",
+      "sha256": "31f22d1d179642c6acfc57d55ddc7ef696c420ec998129334a15020b905d33e7"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_precise.frag.spv",
+      "sha256": "32349c5107eae0cbd1af81ae8be6b4de0452b75816224544c7415d3d98bbf541"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_precise.vert.spv",
+      "sha256": "e4bdb5ad46b968a59cf2ce824aec373dfb2f7b0c3331730c3a0f119dcd6c00b4"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_seed.frag.spv",
+      "sha256": "ecd58fe595d23bc7ba534bd583c8fc5631e349d558753682842a1fc9dca48c5d"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_semi_textured.frag.spv",
+      "sha256": "afc3aef809a7dbae32e2bd03c87187039df58bd7da5b917e5868edfe8e6d8da1"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_owner.frag.spv",
+      "sha256": "ff93339ddaa8e3d94047a29f3d4fef5fb720000c7af1074cc6bc3923d7a5d513"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_precise.vert.spv",
+      "sha256": "82b30a4c0b1ea3cb0d4ceda857d29ce076d0fd3c18fe37b61b4d75524990025f"
+    },
+    {
+      "path": "build/ps1Runtime/shaders/replay_visibility_stack.frag.spv",
+      "sha256": "534f57f99f8bfccfc95e12ae40318a3bb1ad3ebc0894a97c14a0358ac0e84b62"
+    }
+  ],
+  "scenes": [
+    {
+      "label": "Molo / 4K",
+      "audit": {
+        "path": "data/validation/presentation/asset-path-20261007/dock-final-4k-audit.json",
+        "sha256": "4b7168c6e44169a377767ec9fd755314272263df1a970ed892be9b732d659698"
+      },
+      "passed": true,
+      "session": {
+        "path": "data/validation/presentation/asset-path-20261007/dock-final-4k/result.json",
+        "sha256": "aaae254972195babec3fa10f92e7d7ffc68db05f26efd782f31d37f7ca1f2b56"
+      },
+      "frames": 12,
+      "runtime": {
+        "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+        "sha256": "70935af9b2e155176f41d3e58c9e5cd577ab5d1ec000a0b49580141824f84121"
+      },
+      "resolution": [
+        3840,
+        2160
+      ],
+      "gpu_original_format_packets": 2274,
+      "gpu_full_faces": 2274,
+      "complete_instance_captures": 154,
+      "visible_instance_captures": 154,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/dock-final-4k/gpu/frame-97302-present-1-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "a0cd385e0d1924ce1971d87b6108f695468d046671d5e5134c95710a89f2c3bd"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/dock-final-4k/gpu/frame-97308-present-2-ordinary-scanout.ppm",
+          "width": 3840,
+          "height": 2160,
+          "nonblack": true,
+          "sha256": "a85c1777a8b892b7ce91a2d50368dece719152b5df126b57d446b6888f3c4a93"
+        }
+      ],
+      "texture_inventory": 370
+    },
+    {
+      "label": "Intro, video verde/subacqueo",
+      "audit": {
+        "path": "data/validation/presentation/asset-path-20261007/water-audit.json",
+        "sha256": "6343a30a3c432ebd9625c89cb929270a1fcb245adbd9d45590df457adeb8dee5"
+      },
+      "passed": true,
+      "session": {
+        "path": "data/validation/presentation/asset-path-20261007/water-fixed/result.json",
+        "sha256": "564a5357b2ba14433ae1bcf3d3e0cbb7b239b3b82441219dfa14243502adc446"
+      },
+      "frames": 36,
+      "runtime": {
+        "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+        "sha256": "3b14ed4498d79db8a5a55c5c1c4546427dc6e763e62f156fa05bf5a0123f2b1d"
+      },
+      "resolution": [
+        1280,
+        720
+      ],
+      "gpu_original_format_packets": 2473,
+      "gpu_full_faces": 2473,
+      "complete_instance_captures": 36,
+      "visible_instance_captures": 36,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/water-fixed/gpu/frame-9204-present-1-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "900a0b5fe8f9a848eeb5994b5cfb5cb870fddfc9b1a37e7dcdb46e0d25e95b7d"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/water-fixed/gpu/frame-9210-present-2-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "2d15919d20434276e74a61e3a7979e60a355c4ff34be5b670d245452469db82d"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/water-fixed/gpu/frame-9216-present-3-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "66d4b41905147fa78022344d7c40808b612d4502374c0d302a6978de090d0215"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/water-fixed/gpu/frame-9222-present-4-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "ae25d065bbd22b19803e63c3a66b8bbf2f117d643c05c2e2f1f0edebe2329740"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/water-fixed/gpu/frame-9228-present-5-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "57b10bf9a811c7ba23b5ec72db56141873be3b883593f0a50019d23023486080"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/water-fixed/gpu/frame-9234-present-6-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "581f8ff7ff5c8612cc71ca00127c5b6f59707e62b83997fd17bea3b55795dd05"
+        }
+      ],
+      "texture_inventory": 356
+    },
+    {
+      "label": "Ingresso tetto s11h",
+      "audit": {
+        "path": "data/validation/presentation/asset-path-20261007/hind-final-audit.json",
+        "sha256": "dc2d3f21eceb252202191109f550b52923dee0dc39770df085390e06c0acda3c"
+      },
+      "passed": true,
+      "session": {
+        "path": "data/validation/presentation/asset-path-20261007/hind-final/result.json",
+        "sha256": "f01f0020392ce63191d76ea85f1a8c0c126820fe7c48ec4484dbef906c8d2cac"
+      },
+      "frames": 12,
+      "runtime": {
+        "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+        "sha256": "70935af9b2e155176f41d3e58c9e5cd577ab5d1ec000a0b49580141824f84121"
+      },
+      "resolution": [
+        1280,
+        720
+      ],
+      "gpu_original_format_packets": 1077,
+      "gpu_full_faces": 1077,
+      "complete_instance_captures": 36,
+      "visible_instance_captures": 36,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/hind-final/gpu/frame-2964-present-1-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "84313a7fc2ca7d746882d3f4b7f961c7547485445382eecb4f9e1f0b9d84cc56"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/hind-final/gpu/frame-2970-present-2-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "e203c54498326f35e5139e149706302ac72815d071b90b23d930a465d9c69ee5"
+        }
+      ],
+      "texture_inventory": 345
+    },
+    {
+      "label": "Anticamera Mantis / Meryl",
+      "audit": {
+        "path": "data/validation/presentation/asset-path-20261007/mantis-battle-vulkan-audit.json",
+        "sha256": "151d747e8c3f57dccc5dc045fb39b4031953b46fa1d6e3a3a52a2f0b08833a16"
+      },
+      "passed": true,
+      "session": {
+        "path": "data/validation/presentation/asset-path-20261007/mantis-battle-vulkan/result.json",
+        "sha256": "7402b282befa59125834849c4b33f8d0e0688e810aafd901ec7f976590f65e38"
+      },
+      "frames": 18,
+      "runtime": {
+        "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+        "sha256": "70935af9b2e155176f41d3e58c9e5cd577ab5d1ec000a0b49580141824f84121"
+      },
+      "resolution": [
+        1280,
+        720
+      ],
+      "gpu_original_format_packets": 6142,
+      "gpu_full_faces": 6142,
+      "complete_instance_captures": 324,
+      "visible_instance_captures": 324,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/mantis-battle-vulkan/gpu/frame-4242-present-1-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "0b202937921f5d0fd37d8c8e09c51ea98050c693696731672002bfcbe9aceca5"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/mantis-battle-vulkan/gpu/frame-4248-present-2-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "5da1f2eef5187787e5dae87c220c77ebec371be6ee79499cca84c54b4ed6d80f"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/mantis-battle-vulkan/gpu/frame-4254-present-3-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "520165193dd02bcb7b4c6913308908c5bbaf2efefa58bc000c443c9374edf6fc"
+        }
+      ],
+      "texture_inventory": 328
+    },
+    {
+      "label": "Jeep, primo sbarramento",
+      "audit": {
+        "path": "data/validation/presentation/asset-path-20261007/jeep-final-vulkan-audit.json",
+        "sha256": "0acbb82a960a74c80a7478b362ada9dff002b409abc0f8749e69c8e50d0566c4"
+      },
+      "passed": true,
+      "session": {
+        "path": "data/validation/presentation/asset-path-20261007/jeep-final-vulkan/result.json",
+        "sha256": "b484deaf1b6a1d1026d2155fc538a12a870ac3874878f36462c96c0085fb3ee4"
+      },
+      "frames": 18,
+      "runtime": {
+        "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+        "sha256": "70935af9b2e155176f41d3e58c9e5cd577ab5d1ec000a0b49580141824f84121"
+      },
+      "resolution": [
+        1280,
+        720
+      ],
+      "gpu_original_format_packets": 5888,
+      "gpu_full_faces": 5888,
+      "complete_instance_captures": 234,
+      "visible_instance_captures": 234,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/jeep-final-vulkan/gpu/frame-4680-present-1-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "aed7c71ac1b7059f089e380435101d933e9f37db6cc2b54379efcc87a80d5691"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/jeep-final-vulkan/gpu/frame-4686-present-2-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "312f5d4113b1d7bd87dc25df062922fe73b31627a16be325adfcca90b393ccb2"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/jeep-final-vulkan/gpu/frame-4692-present-3-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "81511fcab74f044d45dfe9c9f3d46897b8a32e5b1351aaea4a6007f9a32118b1"
+        }
+      ],
+      "texture_inventory": 396
+    },
+    {
+      "label": "Neve",
+      "audit": {
+        "path": "data/validation/presentation/asset-path-20261007/snow-audit.json",
+        "sha256": "e0ddaba480bd8751d7a66ad5b7fc290715115110817770024dd898554798a937"
+      },
+      "passed": true,
+      "session": {
+        "path": "data/validation/presentation/asset-path-20261007/snow-fixed/result.json",
+        "sha256": "4519a03e3e9a5a356f93632a672fb034697ab04ac87eca63dca1e399f3c08de2"
+      },
+      "frames": 36,
+      "runtime": {
+        "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+        "sha256": "3b14ed4498d79db8a5a55c5c1c4546427dc6e763e62f156fa05bf5a0123f2b1d"
+      },
+      "resolution": [
+        1280,
+        720
+      ],
+      "gpu_original_format_packets": 4539,
+      "gpu_full_faces": 4539,
+      "complete_instance_captures": 792,
+      "visible_instance_captures": 792,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/snow-fixed/gpu/frame-2076-present-1-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "5fd139ab96d8465e19a981addf2075ded7bbdf57c302eb9a85922acbc94a0308"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/snow-fixed/gpu/frame-2082-present-2-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "7717d25cd180bee34d8d13618d66efb1c1b23f9be236045280d0e38e3d311f0d"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/snow-fixed/gpu/frame-2088-present-3-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "35a380fc0c3dcaafe8556169f142737e07c938ce03bf22190eb97ba28ee73aed"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/snow-fixed/gpu/frame-2094-present-4-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "fde26fcf224b7fba280b28d33cc2c35a0089310f678449d49b8686a6249071f6"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/snow-fixed/gpu/frame-2100-present-5-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "9ec1d4088f697b80ea77b5c9127aee238050e9365753c4dfa0b15f4881e9add0"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/snow-fixed/gpu/frame-2106-present-6-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "9e1a3609438c11add631c4c4bde82f484d348d809a7bf132e47387fcf3a91ccc"
+        }
+      ],
+      "texture_inventory": 382
+    },
+    {
+      "label": "s17a",
+      "audit": {
+        "path": "data/validation/presentation/asset-path-20261007/rex-audit.json",
+        "sha256": "23aae52eaad84a9f4dfb985e8cb5e9db893938b756bc904f4174548b75f003c2"
+      },
+      "passed": true,
+      "session": {
+        "path": "data/validation/presentation/asset-path-20261007/rex-fixed/result.json",
+        "sha256": "59e8f0f9c642c4090f82dcc0af6d7896ec7ba3836eacaaf0f21cbeb11ef3c7c1"
+      },
+      "frames": 36,
+      "runtime": {
+        "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+        "sha256": "3b14ed4498d79db8a5a55c5c1c4546427dc6e763e62f156fa05bf5a0123f2b1d"
+      },
+      "resolution": [
+        1280,
+        720
+      ],
+      "gpu_original_format_packets": 16759,
+      "gpu_full_faces": 16759,
+      "complete_instance_captures": 573,
+      "visible_instance_captures": 573,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/rex-fixed/gpu/frame-4878-present-1-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "b5e607fd89f591b1e8fa5db2f1656061b4d3b26d919597e15752cc2af09f5852"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/rex-fixed/gpu/frame-4884-present-2-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "686eb5405e6bfa5a4986216320b7418004aaf990f5e1ceab4f15f15c659af9f1"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/rex-fixed/gpu/frame-4890-present-3-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "ab1973fd424924c7c5803f1e6132693317e6851cafac4b60bae0be1de556d1ed"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/rex-fixed/gpu/frame-4896-present-4-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "3ecd9da7943b86258f7eb458833d4a851dbdf80e1b0388bcab4186ca4799fb16"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/rex-fixed/gpu/frame-4902-present-5-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "6fb1d4ecf02b38ebab51ecaee36d39cec0bd3e627bf96f4f5de562ecdf4f4ad5"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/rex-fixed/gpu/frame-4908-present-6-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "642cba82a57f40f59d082f708d49ef1bb991b078b2b7e007db8e52df23163e30"
+        }
+      ],
+      "texture_inventory": 462
+    },
+    {
+      "label": "Fornace s13a",
+      "audit": {
+        "path": "data/validation/presentation/asset-path-20261007/furnace-audit.json",
+        "sha256": "c5c1df5775aec1c77eeb07fa67805c30ac62ddb3e8fb7d4656b7c83004984466"
+      },
+      "passed": true,
+      "session": {
+        "path": "data/validation/presentation/asset-path-20261007/furnace-fixed/result.json",
+        "sha256": "3c53699ad355e2042217915715ce7bee99380212f07d858dc2d9019264e8f8f3"
+      },
+      "frames": 36,
+      "runtime": {
+        "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+        "sha256": "3b14ed4498d79db8a5a55c5c1c4546427dc6e763e62f156fa05bf5a0123f2b1d"
+      },
+      "resolution": [
+        1280,
+        720
+      ],
+      "gpu_original_format_packets": 4862,
+      "gpu_full_faces": 4862,
+      "complete_instance_captures": 90,
+      "visible_instance_captures": 90,
+      "guards": {
+        "mgs.source.unmapped_instances": 0,
+        "mgs.source.invalid_ownership": 0,
+        "mgs.source.missing_geometry": 0,
+        "mgs.source.missing_material": 0,
+        "mgs.source.changed_packet_faces": 0,
+        "mgs.source.unknown_packet_faces": 0,
+        "mgs.source.material_bind_rejected": 0,
+        "mgs.scene.recovery_material_rejected": 0,
+        "mgs.scene.recovery_invalid_list": 0,
+        "mgs.screen_effect.incomplete_pass": 0,
+        "host.renderer.vulkan_replay_executor_downgrade": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_incomplete": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_unsupported": 0,
+        "host.renderer.vulkan_replay_route.m0_reanchor_precision": 0,
+        "host.renderer.vulkan_replay_readback.dump_failed": 0,
+        "host.renderer.vulkan_replay_readback.scanout_dump_failed": 0,
+        "host.vulkan_memory.allocate_failed": 0,
+        "host.vulkan_memory.duplicate_handle": 0,
+        "host.vulkan_memory.untracked_free": 0
+      },
+      "reanchors": 2,
+      "captures": [
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/furnace-fixed/gpu/frame-2112-present-1-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "e559c8c762d2b72e775df1f38743fd63bc9d6f1803dcbd5df5a73f9bb1d19691"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/furnace-fixed/gpu/frame-2118-present-2-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "e3db47e31b400225493ace791e11f86d70494c5a06d7fc1a8ccb094519392958"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/furnace-fixed/gpu/frame-2124-present-3-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "1e142c0b039bcadcfc0cf953447ace7fa0c48fa51e1b558a28b3c5cd84648c98"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/furnace-fixed/gpu/frame-2130-present-4-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "104c275afbf953c1ebb38526ee6061ad6c197b0248c9be0d12592f1a1b32c9a4"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/furnace-fixed/gpu/frame-2136-present-5-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "0d76b4bfbc04d1f37dfeaa09704feb944f8d12b0a37c5e9b1f8df1208747a925"
+        },
+        {
+          "path": "/home/xander/mgs_recomp/data/validation/presentation/asset-path-20261007/furnace-fixed/gpu/frame-2142-present-6-ordinary-scanout.ppm",
+          "width": 1280,
+          "height": 720,
+          "nonblack": true,
+          "sha256": "eccf66a08b13dd23a2b1e39b317154de42fc0039bca3618e9fb77a29a5b784bb"
+        }
+      ],
+      "texture_inventory": 368
+    }
+  ],
+  "additional_captured_checks": [
+    {
+      "path": "data/validation/presentation/asset-path-20261007/dock-audit.json",
+      "sha256": "0f7c5ff3e4778bc8663f0367b3b1545f72ad785558e30982d010542e4cd7d02c"
+    },
+    {
+      "path": "data/validation/presentation/asset-path-20261007/mantis-final-vulkan-audit.json",
+      "sha256": "82f82847f31255b79b1f4f083e426f49a3061341cf96c4921e480c1538abb110"
+    }
+  ],
+  "graphics_suite": {
+    "path": "data/validation/presentation/asset-path-20261007/gpu-release-clean.json",
+    "sha256": "9607a6815b597493b749be2bd5a8bc0ee5a0addda9aa07e06aa7eeaecc47d4f1",
+    "total": 135,
+    "passed": 133,
+    "skipped": 2,
+    "failures": 0,
+    "log": {
+      "path": "data/validation/presentation/asset-path-20261007/gpu-release-clean.log",
+      "sha256": "7e0eb38c6f7fa7384ab9727ec5f1f66cfa165f96fc5f30f6703852ed003cbc5b"
+    }
+  },
+  "runtime_suite": {
+    "path": "data/validation/presentation/asset-path-20261007/runtime-release.json",
+    "sha256": "98f484d623aee62c89a7f02d626220dbae7bc478d096cd4edafdc59b534947a5",
+    "total": 1387,
+    "passed": 1356,
+    "skipped": 31,
+    "failures": 0,
+    "log": {
+      "path": "data/validation/presentation/asset-path-20261007/runtime-release.log",
+      "sha256": "61e1fbcdc09b307fbd27da921398c4f2a98eed008f75735eaa1664b8839935ab"
+    }
+  },
+  "python_suite": {
+    "passed": 192,
+    "log": {
+      "path": "data/validation/presentation/asset-path-20261007/python-release.log",
+      "sha256": "fee862aa92b7a2502efbf11f6920250ce409467142ef7df67ce29cd29778786d"
+    },
+    "final_changed_targets": {
+      "path": "data/validation/presentation/asset-path-20261007/python-final-targets.log",
+      "sha256": "b45cdc1a639291fb5ed5a9855bbc7652459ddd7595d2df36572d5495ffc63735"
+    }
+  },
+  "fast_loading": {
+    "comparisons": [
+      {
+        "report": {
+          "path": "data/validation/presentation/asset-path-20261007/d1-01-s01a-18-loading-comparison.json",
+          "sha256": "47928bb5749905954498c4b137bccb9c1d93466b5bd906aea0ac198e4f2fbf49"
+        },
+        "matching_textures": {
+          "count": 391,
+          "sha256": "5c4fcb67ed9417721f4f076ff0455e586c182e39e1c5701fce28c661b1d3bdd3"
+        },
+        "comparisons": [
+          {
+            "stages": [
+              "init"
+            ],
+            "sectors": [
+              275
+            ],
+            "slow_vblanks": 135,
+            "fast_vblanks": 6,
+            "reduction_percent": 95.55555555555556
+          },
+          {
+            "stages": [
+              "title"
+            ],
+            "sectors": [
+              191
+            ],
+            "slow_vblanks": 94,
+            "fast_vblanks": 4,
+            "reduction_percent": 95.74468085106383
+          },
+          {
+            "stages": [
+              "abst"
+            ],
+            "sectors": [
+              76
+            ],
+            "slow_vblanks": 56,
+            "fast_vblanks": 4,
+            "reduction_percent": 92.85714285714286
+          },
+          {
+            "stages": [
+              "s01a"
+            ],
+            "sectors": [
+              546
+            ],
+            "slow_vblanks": 244,
+            "fast_vblanks": 4,
+            "reduction_percent": 98.36065573770492
+          }
+        ]
+      },
+      {
+        "report": {
+          "path": "data/validation/presentation/asset-path-20261007/d1-05-s08c-111-loading-comparison.json",
+          "sha256": "a9b4d689316f6d33de0684752afce8b2dbdb8c398f8783db8f7072124d7ff1bf"
+        },
+        "matching_textures": {
+          "count": 291,
+          "sha256": "514531fd66fdee6af801508fcc58061807aca45aa9dee3c6edf61ea144afdcba"
+        },
+        "comparisons": [
+          {
+            "stages": [
+              "init"
+            ],
+            "sectors": [
+              275
+            ],
+            "slow_vblanks": 135,
+            "fast_vblanks": 6,
+            "reduction_percent": 95.55555555555556
+          },
+          {
+            "stages": [
+              "title"
+            ],
+            "sectors": [
+              191
+            ],
+            "slow_vblanks": 94,
+            "fast_vblanks": 4,
+            "reduction_percent": 95.74468085106383
+          },
+          {
+            "stages": [
+              "abst"
+            ],
+            "sectors": [
+              76
+            ],
+            "slow_vblanks": 56,
+            "fast_vblanks": 4,
+            "reduction_percent": 92.85714285714286
+          },
+          {
+            "stages": [
+              "s08c"
+            ],
+            "sectors": [
+              347
+            ],
+            "slow_vblanks": 165,
+            "fast_vblanks": 6,
+            "reduction_percent": 96.36363636363636
+          }
+        ]
+      },
+      {
+        "report": {
+          "path": "data/validation/presentation/asset-path-20261007/d1-06-s07c-119-loading-comparison.json",
+          "sha256": "dda03a1e8cff36c3aee805dcb873cc39d02521f1b9e1b554471c35cfe82f090e"
+        },
+        "matching_textures": {
+          "count": 453,
+          "sha256": "d3d2824e15764639860e7a2165aabc12b72ef01786b51c822c161263cd910403"
+        },
+        "comparisons": [
+          {
+            "stages": [
+              "init"
+            ],
+            "sectors": [
+              275
+            ],
+            "slow_vblanks": 135,
+            "fast_vblanks": 4,
+            "reduction_percent": 97.03703703703704
+          },
+          {
+            "stages": [
+              "title"
+            ],
+            "sectors": [
+              191
+            ],
+            "slow_vblanks": 94,
+            "fast_vblanks": 4,
+            "reduction_percent": 95.74468085106383
+          },
+          {
+            "stages": [
+              "abst"
+            ],
+            "sectors": [
+              76
+            ],
+            "slow_vblanks": 56,
+            "fast_vblanks": 4,
+            "reduction_percent": 92.85714285714286
+          },
+          {
+            "stages": [
+              "s07c"
+            ],
+            "sectors": [
+              510
+            ],
+            "slow_vblanks": 230,
+            "fast_vblanks": 4,
+            "reduction_percent": 98.26086956521739
+          }
+        ]
+      },
+      {
+        "report": {
+          "path": "data/validation/presentation/asset-path-20261007/d1-13-s12b-204-loading-comparison.json",
+          "sha256": "1682f7a4c735c724576daf7ed498788a3a116d96288fedd7e447b4d95fcd7d50"
+        },
+        "matching_textures": {
+          "count": 382,
+          "sha256": "76de7d03ea3be285f236b78e4d5249c51116a0aa30af3e8bec39a2c1d48b1089"
+        },
+        "comparisons": [
+          {
+            "stages": [
+              "init"
+            ],
+            "sectors": [
+              275
+            ],
+            "slow_vblanks": 135,
+            "fast_vblanks": 4,
+            "reduction_percent": 97.03703703703704
+          },
+          {
+            "stages": [
+              "title"
+            ],
+            "sectors": [
+              191
+            ],
+            "slow_vblanks": 94,
+            "fast_vblanks": 4,
+            "reduction_percent": 95.74468085106383
+          },
+          {
+            "stages": [
+              "abst"
+            ],
+            "sectors": [
+              76
+            ],
+            "slow_vblanks": 56,
+            "fast_vblanks": 4,
+            "reduction_percent": 92.85714285714286
+          },
+          {
+            "stages": [
+              "s12b"
+            ],
+            "sectors": [
+              441
+            ],
+            "slow_vblanks": 204,
+            "fast_vblanks": 4,
+            "reduction_percent": 98.0392156862745
+          }
+        ]
+      },
+      {
+        "report": {
+          "path": "data/validation/presentation/asset-path-20261007/d2-01-s13a-204-loading-comparison.json",
+          "sha256": "d6bbfcb527ab2471f2e6e494b5d21bca7823a2bc1d96ced32d6da54f0bd247a5"
+        },
+        "matching_textures": {
+          "count": 368,
+          "sha256": "6b90a26070bc49e2ea7423ec2fe0b28093eca0f6c315597adcb6edb689bff295"
+        },
+        "comparisons": [
+          {
+            "stages": [
+              "init"
+            ],
+            "sectors": [
+              275
+            ],
+            "slow_vblanks": 136,
+            "fast_vblanks": 6,
+            "reduction_percent": 95.58823529411765
+          },
+          {
+            "stages": [
+              "title"
+            ],
+            "sectors": [
+              191
+            ],
+            "slow_vblanks": 94,
+            "fast_vblanks": 4,
+            "reduction_percent": 95.74468085106383
+          },
+          {
+            "stages": [
+              "abst"
+            ],
+            "sectors": [
+              76
+            ],
+            "slow_vblanks": 55,
+            "fast_vblanks": 4,
+            "reduction_percent": 92.72727272727272
+          },
+          {
+            "stages": [
+              "s13a"
+            ],
+            "sectors": [
+              513
+            ],
+            "slow_vblanks": 230,
+            "fast_vblanks": 4,
+            "reduction_percent": 98.26086956521739
+          }
+        ]
+      },
+      {
+        "report": {
+          "path": "data/validation/presentation/asset-path-20261007/d2-03-s15a-219-loading-comparison.json",
+          "sha256": "aff47803d6dce3f84189e81df45c4986472d3f11269a01cab057fc0a758a22b9"
+        },
+        "matching_textures": {
+          "count": 310,
+          "sha256": "898dc33dccbaa0d0031d2db0edcd7c72a9a8ac3095714ddc1f4578e7d9c0a6cf"
+        },
+        "comparisons": [
+          {
+            "stages": [
+              "init"
+            ],
+            "sectors": [
+              275
+            ],
+            "slow_vblanks": 137,
+            "fast_vblanks": 6,
+            "reduction_percent": 95.62043795620438
+          },
+          {
+            "stages": [
+              "title"
+            ],
+            "sectors": [
+              191
+            ],
+            "slow_vblanks": 94,
+            "fast_vblanks": 4,
+            "reduction_percent": 95.74468085106383
+          },
+          {
+            "stages": [
+              "abst"
+            ],
+            "sectors": [
+              76
+            ],
+            "slow_vblanks": 55,
+            "fast_vblanks": 4,
+            "reduction_percent": 92.72727272727272
+          },
+          {
+            "stages": [
+              "s15a"
+            ],
+            "sectors": [
+              344
+            ],
+            "slow_vblanks": 162,
+            "fast_vblanks": 4,
+            "reduction_percent": 97.53086419753086
+          }
+        ]
+      },
+      {
+        "report": {
+          "path": "data/validation/presentation/asset-path-20261007/d2-05-s16d-240-loading-comparison.json",
+          "sha256": "58aafadaba31e63b3e4b4121b45e9077947b1693f5a27e3e5c6acee0a947cb6e"
+        },
+        "matching_textures": {
+          "count": 509,
+          "sha256": "c7002d04cdeded9a33e46e7bb23aa81da67621af53d81635300af89b508e19f3"
+        },
+        "comparisons": [
+          {
+            "stages": [
+              "init"
+            ],
+            "sectors": [
+              275
+            ],
+            "slow_vblanks": 135,
+            "fast_vblanks": 4,
+            "reduction_percent": 97.03703703703704
+          },
+          {
+            "stages": [
+              "title"
+            ],
+            "sectors": [
+              191
+            ],
+            "slow_vblanks": 94,
+            "fast_vblanks": 4,
+            "reduction_percent": 95.74468085106383
+          },
+          {
+            "stages": [
+              "abst"
+            ],
+            "sectors": [
+              76
+            ],
+            "slow_vblanks": 55,
+            "fast_vblanks": 4,
+            "reduction_percent": 92.72727272727272
+          },
+          {
+            "stages": [
+              "s16d"
+            ],
+            "sectors": [
+              553
+            ],
+            "slow_vblanks": 246,
+            "fast_vblanks": 4,
+            "reduction_percent": 98.3739837398374
+          }
+        ]
+      },
+      {
+        "report": {
+          "path": "data/validation/presentation/asset-path-20261007/d2-09-s18a-277-loading-comparison.json",
+          "sha256": "8636dd9e6efc1aca24449059fb20dee0ffe5789557a76b4c8531f821e89a4166"
+        },
+        "matching_textures": {
+          "count": 436,
+          "sha256": "420829c2b44f01004e9b3d48d25a0b200d7d15b23193075aaedce3c69beee894"
+        },
+        "comparisons": [
+          {
+            "stages": [
+              "init"
+            ],
+            "sectors": [
+              275
+            ],
+            "slow_vblanks": 135,
+            "fast_vblanks": 6,
+            "reduction_percent": 95.55555555555556
+          },
+          {
+            "stages": [
+              "title"
+            ],
+            "sectors": [
+              191
+            ],
+            "slow_vblanks": 94,
+            "fast_vblanks": 4,
+            "reduction_percent": 95.74468085106383
+          },
+          {
+            "stages": [
+              "abst"
+            ],
+            "sectors": [
+              76
+            ],
+            "slow_vblanks": 55,
+            "fast_vblanks": 4,
+            "reduction_percent": 92.72727272727272
+          },
+          {
+            "stages": [
+              "s18a"
+            ],
+            "sectors": [
+              547
+            ],
+            "slow_vblanks": 243,
+            "fast_vblanks": 4,
+            "reduction_percent": 98.35390946502058
+          }
+        ]
+      },
+      {
+        "report": {
+          "path": "data/validation/presentation/asset-path-20261007/d2-10-s19a-283-loading-comparison.json",
+          "sha256": "64235aa4019dabd06c76d5ba3731edd340369f3013f7b0f40771b95b9e63db3f"
+        },
+        "matching_textures": {
+          "count": 412,
+          "sha256": "8d2d0fa4c9c3a8c82011e418e1723cc2d0d209824eb5d42a1c6115b12cd92618"
+        },
+        "comparisons": [
+          {
+            "stages": [
+              "init"
+            ],
+            "sectors": [
+              275
+            ],
+            "slow_vblanks": 136,
+            "fast_vblanks": 5,
+            "reduction_percent": 96.32352941176471
+          },
+          {
+            "stages": [
+              "title"
+            ],
+            "sectors": [
+              191
+            ],
+            "slow_vblanks": 94,
+            "fast_vblanks": 4,
+            "reduction_percent": 95.74468085106383
+          },
+          {
+            "stages": [
+              "abst"
+            ],
+            "sectors": [
+              76
+            ],
+            "slow_vblanks": 55,
+            "fast_vblanks": 4,
+            "reduction_percent": 92.72727272727272
+          },
+          {
+            "stages": [
+              "s19a"
+            ],
+            "sectors": [
+              469
+            ],
+            "slow_vblanks": 212,
+            "fast_vblanks": 4,
+            "reduction_percent": 98.11320754716981
+          }
+        ]
+      },
+      {
+        "report": {
+          "path": "data/validation/presentation/asset-path-20261007/mantis-entry-loading-comparison.json",
+          "sha256": "7811c59ff671c826cda00bdd116b18fd73e1537ec6050ac2285e7df0c5143e42"
+        },
+        "matching_textures": {
+          "count": 328,
+          "sha256": "0b78726ab47c93536dbda35d08bbe42a2d5bdebd26d94e85de32968e2123c4e5"
+        },
+        "comparisons": [
+          {
+            "stages": [
+              "init"
+            ],
+            "sectors": [
+              275
+            ],
+            "slow_vblanks": 135,
+            "fast_vblanks": 4,
+            "reduction_percent": 97.03703703703704
+          },
+          {
+            "stages": [
+              "title"
+            ],
+            "sectors": [
+              191
+            ],
+            "slow_vblanks": 94,
+            "fast_vblanks": 4,
+            "reduction_percent": 95.74468085106383
+          },
+          {
+            "stages": [
+              "abst"
+            ],
+            "sectors": [
+              76
+            ],
+            "slow_vblanks": 56,
+            "fast_vblanks": 4,
+            "reduction_percent": 92.85714285714286
+          },
+          {
+            "stages": [
+              "s07b"
+            ],
+            "sectors": [
+              468
+            ],
+            "slow_vblanks": 213,
+            "fast_vblanks": 4,
+            "reduction_percent": 98.12206572769952
+          }
+        ]
+      }
+    ],
+    "paired_loads": 10,
+    "loader_intervals": 40,
+    "hind_before_count": 153,
+    "hind_after_count": 345,
+    "hind_paced_count": 345,
+    "hind_complete_table_equal": true,
+    "hind_exact_table_sha256": "6b2f251e0babbbea523215a0091331fc7bd3c088c5b7b8e5b9636449c541a1f6",
+    "evidence": [
+      {
+        "path": "data/validation/presentation/asset-path-20261007/hind-nodecomp/result.json",
+        "sha256": "b0face53f51baa88ee29bb3fb79a16ee686ec6494ce7bead7edcbf1158e53103"
+      },
+      {
+        "path": "data/validation/presentation/asset-path-20261007/hind-paced/result.json",
+        "sha256": "6075b302a5957a16f2ec76f57dcbf8eaf5852d65853524df43fe735d8749875c"
+      },
+      {
+        "path": "data/validation/presentation/asset-path-20261007/hind-reclaimed/result.json",
+        "sha256": "f764167fe1dd4d73afd013a73e6cd2d9037b6e868a12d1ff7cf1525ee5d481de"
+      }
+    ]
+  },
+  "soak": {
+    "report": {
+      "path": "data/validation/presentation/asset-path-20261007/dock-asset-soak/report.json",
+      "sha256": "0f26d9e634bad035c2522a537a8a10d6a1866308a7558ee5e0667e2c4a606efa"
+    },
+    "cycles": 6,
+    "passes": 6,
+    "passed": true,
+    "presentation_guard_failures": []
+  },
+  "initial_failures_preserved": [
+    {
+      "path": "data/validation/presentation/asset-path-20261007/hind-audit.json",
+      "sha256": "e2098e4e64c8effca4b73fa8b53e771f6cd89517d341c2f54a8d8c9701ffb953"
+    },
+    {
+      "path": "data/validation/presentation/asset-path-20261007/mantis-audit.json",
+      "sha256": "488828185558a6ef79b651434651d036bea931fbf2400b91400e78d8b944827a"
+    },
+    {
+      "path": "data/validation/presentation/asset-path-20261007/jeep-audit.json",
+      "sha256": "884ce5b0c246749944bba9f947a2990c8ef32dd28d7255a6a1b92cb486715571"
+    }
+  ],
+  "protected_saves": {
+    "path": "data/validation/presentation/asset-path-20261007/protected-files-final.log",
+    "sha256": "47928750547a87d628691b664cbc1aa2c409fafc917061523b7125a2d0cba221"
+  },
+  "screens": [
+    {
+      "path": "data/validation/presentation/asset-path-20261007/dock-3840x2160.png",
+      "sha256": "de5ac5b1c2f56db85bdcfa4bd1cf54e29e0de34137073f92aa9176ed4cd4666a"
+    },
+    {
+      "path": "data/validation/presentation/asset-path-20261007/hind-final-preview.png",
+      "sha256": "b08d6da7f9548f54026f68b973f71214a037f2a1936e9b6350eb18a895ff3ec0"
+    },
+    {
+      "path": "data/validation/presentation/asset-path-20261007/mantis-battle-vulkan-preview.png",
+      "sha256": "2ff9164ed696438cb7ef3af73b3daefa902d3495829f6127183d2e14ee53474c"
+    },
+    {
+      "path": "data/validation/presentation/asset-path-20261007/jeep-final-vulkan-preview.png",
+      "sha256": "a61e16f4c462beea82cbe4b01c79697a450f8d2ff398cc82ad44c12642788601"
+    }
+  ],
+  "limits": [
+    "Five initial clean scenes plus affected scenes regenerated after fixes; hashes distinguish tested builds.",
+    "Mantis phase is prepared from a source-derived memory card; no continuous campaign proof.",
+    "Ordinary startup/savestate reanchors are reported; absence of fallback guards is not a pixel-by-pixel visual oracle.",
+    "Fast/paced texture comparison checks live DG_TEXTURE metadata, not every VRAM pixel or all resource classes.",
+    "Old incomplete states need an original reload; no retroactive snapshot repair.",
+    "Performance and packaging acceptance on a physical SteamOS/GPU/display/controller remain pending.",
+    "The glslc -O0 portability workaround still needs physical GPU timing."
+  ],
+  "acceptance": "diagnostic-only",
+  "hardware_acceptance": {
+    "status": "sampled_matrix_passed",
+    "date": "2026-10-08",
+    "required": true,
+    "device": "NVIDIA GeForce RTX 4060, driver 610.57.04",
+    "evidence": {
+      "path": "docs/mgs-physical-gpu-evidence.json",
+      "sha256": "579fec06211b76c1f8ec0d848824e65f4c5ba0fa286e3a6cb08c27392e7112eb"
+    },
+    "scope": "Eight short scenes at true 4K, 21 GPU integration cases and eight save/restore cycles. Other GPUs, final packages and full campaign visual acceptance remain unverified.",
+    "command": "python3 scripts/mgs_gpu_check.py --show"
+  }
+}

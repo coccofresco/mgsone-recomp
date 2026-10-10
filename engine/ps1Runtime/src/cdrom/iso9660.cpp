@@ -1,13 +1,22 @@
 #include "runtime/cdrom/iso9660.h"
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 #include <sstream>
 
 namespace ps1::cdrom {
 
+namespace {
+uint32_t readLe32(const uint8_t *bytes) {
+  return uint32_t(bytes[0]) | (uint32_t(bytes[1]) << 8) |
+         (uint32_t(bytes[2]) << 16) | (uint32_t(bytes[3]) << 24);
+}
+}
+
 Iso9660Parser::Iso9660Parser(BinReader &reader) : reader_(reader) {}
 
 bool Iso9660Parser::initialize() {
+  root_lba_ = root_length_ = 0;
   // Primary Volume Descriptor represents sector 16
   for (uint32_t sector = 16; sector < 32; ++sector) {
     auto sectorOpt = reader_.readSector(sector);
@@ -26,10 +35,8 @@ bool Iso9660Parser::initialize() {
     if (type == 1) {
       // Root directory record is at offset 156, length is 34 bytes
       const uint8_t *root_record = &data[156];
-      root_lba_ = *reinterpret_cast<const uint32_t *>(
-          &root_record[2]); // little_endian read
-      root_length_ = *reinterpret_cast<const uint32_t *>(
-          &root_record[10]); // little_endian read
+      root_lba_ = readLe32(root_record + 2);
+      root_length_ = readLe32(root_record + 10);
       return true;
     }
   }
@@ -40,7 +47,10 @@ bool Iso9660Parser::initialize() {
 std::vector<Iso9660DirEntry> Iso9660Parser::readDirectory(uint32_t dir_lba,
                                                           uint32_t length) {
   std::vector<Iso9660DirEntry> entries;
-  uint32_t sectors_to_read = (length + SECTOR_SIZE_DATA - 1) / SECTOR_SIZE_DATA;
+  const uint64_t sectors_to_read =
+      (uint64_t(length) + SECTOR_SIZE_DATA - 1) / SECTOR_SIZE_DATA;
+  const uint32_t total = reader_.getTotalSectors();
+  if (dir_lba > total || sectors_to_read > total - dir_lba) return entries;
 
   for (uint32_t i = 0; i < sectors_to_read; ++i) {
     auto sectorOpt = reader_.readSector(dir_lba + i);
@@ -48,7 +58,8 @@ std::vector<Iso9660DirEntry> Iso9660Parser::readDirectory(uint32_t dir_lba,
       break;
 
     auto data = sectorOpt->getDataMode2Form1();
-    auto sector_entries = parseDirectorySector(data);
+    const auto remaining = uint64_t(length) - uint64_t(i) * SECTOR_SIZE_DATA;
+    auto sector_entries = parseDirectorySector(data.first(std::min<uint64_t>(data.size(), remaining)));
     entries.insert(entries.end(), sector_entries.begin(), sector_entries.end());
   }
 
@@ -65,15 +76,18 @@ Iso9660Parser::parseDirectorySector(std::span<const uint8_t> data) {
     if (record_len == 0)
       break; // Reached end of directory records
 
-    if (offset + record_len > data.size())
+    if (record_len < 34 || record_len > data.size() - offset)
       break; // Corrupt record
 
+    const uint8_t name_len = data[offset + 32];
+    if (name_len == 0 || name_len > record_len - 33)
+      break; // Name must be contained by its record, not just the sector.
+
     Iso9660DirEntry entry;
-    entry.extent_lba = *reinterpret_cast<const uint32_t *>(&data[offset + 2]);
-    entry.data_length = *reinterpret_cast<const uint32_t *>(&data[offset + 10]);
+    entry.extent_lba = readLe32(&data[offset + 2]);
+    entry.data_length = readLe32(&data[offset + 10]);
     entry.is_directory = (data[offset + 25] & 0x02) != 0;
 
-    uint8_t name_len = data[offset + 32];
     const char *name_ptr = reinterpret_cast<const char *>(&data[offset + 33]);
     entry.name = std::string(name_ptr, name_len);
 

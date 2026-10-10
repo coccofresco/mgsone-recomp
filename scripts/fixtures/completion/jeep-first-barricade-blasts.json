@@ -1,0 +1,149 @@
+{
+  "format": "mgs-situation-1",
+  "name": "jeep-first-barricade-original-explosions",
+  "source": "s19b/takabe/jeep/jdrum.c: damaged TARGET_POWER and vital<0 sets original burn phase; frame7 creates NewJeepBlast. USA Act800CB8EC TARGET pointer Work+1c0. Authored CONTROL yaw distinguishes GCL50d9 drums (0,3800), never allocator order.",
+  "requires": {
+    "current_stage": "s19b",
+    "life": {
+      "min": 1
+    },
+    "actor_jdrum_count": 2,
+    "actor_jeep_emy_count": 2
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life"
+  ],
+  "compare": [
+    "current_stage",
+    "story",
+    "disc",
+    "difficulty",
+    "game_over_timer",
+    "actor_jeep_emy_count"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-barrel-blast-spawn",
+        "until": {
+          "actor_jblast_count": {
+            "min": 1
+          },
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "wait:30"
+        },
+        "attempts": 30,
+        "max_frames": 900,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "original-first-barricade-cleared",
+        "until": {
+          "actor_jeep_emy_count": 0,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "square+triangle:120"
+        },
+        "attempts": 20,
+        "max_frames": 2400,
+        "abort_when": {
+          "life": 0
+        },
+        "stable_frames": 10
+      }
+    ]
+  },
+  "fixture": {
+    "scope": "Synthetic post-hit damage to the two original barrels. Only target vital and damage flags; original explosion, blast collision, guard death and jeep release execute. Does not certify gun aim or bullets striking the barrel.",
+    "patches": [
+      {
+        "actor": "jdrum.c",
+        "act": "0x800cb8ec",
+        "where": [
+          {
+            "offset": "0x2a",
+            "width": 2,
+            "value": 0
+          }
+        ],
+        "offset": "0x1c0",
+        "indirect_offset": 38,
+        "width": 2,
+        "signed": true,
+        "expect": 150,
+        "value": -1,
+        "reason": "Post-hit barrel boundary; original spatial blast handles enemies",
+        "source": "s19b/takabe/jeep/jdrum.c: damaged TARGET_POWER and vital<0 sets original burn phase; frame7 creates NewJeepBlast. USA Act800CB8EC TARGET pointer Work+1c0. Authored CONTROL yaw distinguishes GCL50d9 drums (0,3800), never allocator order."
+      },
+      {
+        "actor": "jdrum.c",
+        "act": "0x800cb8ec",
+        "where": [
+          {
+            "offset": "0x2a",
+            "width": 2,
+            "value": 0
+          }
+        ],
+        "offset": "0x1c0",
+        "indirect_offset": 6,
+        "width": 2,
+        "signed": false,
+        "expect": 0,
+        "value": 4,
+        "reason": "Post-hit barrel boundary; original spatial blast handles enemies",
+        "source": "s19b/takabe/jeep/jdrum.c: damaged TARGET_POWER and vital<0 sets original burn phase; frame7 creates NewJeepBlast. USA Act800CB8EC TARGET pointer Work+1c0. Authored CONTROL yaw distinguishes GCL50d9 drums (0,3800), never allocator order."
+      },
+      {
+        "actor": "jdrum.c",
+        "act": "0x800cb8ec",
+        "where": [
+          {
+            "offset": "0x2a",
+            "width": 2,
+            "value": 3800
+          }
+        ],
+        "offset": "0x1c0",
+        "indirect_offset": 38,
+        "width": 2,
+        "signed": true,
+        "expect": 150,
+        "value": -1,
+        "reason": "Post-hit barrel boundary; original spatial blast handles enemies",
+        "source": "s19b/takabe/jeep/jdrum.c: damaged TARGET_POWER and vital<0 sets original burn phase; frame7 creates NewJeepBlast. USA Act800CB8EC TARGET pointer Work+1c0. Authored CONTROL yaw distinguishes GCL50d9 drums (0,3800), never allocator order."
+      },
+      {
+        "actor": "jdrum.c",
+        "act": "0x800cb8ec",
+        "where": [
+          {
+            "offset": "0x2a",
+            "width": 2,
+            "value": 3800
+          }
+        ],
+        "offset": "0x1c0",
+        "indirect_offset": 6,
+        "width": 2,
+        "signed": false,
+        "expect": 0,
+        "value": 4,
+        "reason": "Post-hit barrel boundary; original spatial blast handles enemies",
+        "source": "s19b/takabe/jeep/jdrum.c: damaged TARGET_POWER and vital<0 sets original burn phase; frame7 creates NewJeepBlast. USA Act800CB8EC TARGET pointer Work+1c0. Authored CONTROL yaw distinguishes GCL50d9 drums (0,3800), never allocator order."
+      }
+    ]
+  }
+}

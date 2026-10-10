@@ -14,9 +14,10 @@ fi
 git -C "$donor_dir" apply --reverse --check "$project_root/donor/swanstation-trace.patch"
 cp donor/donor_pc_memory_snapshot.h "$donor_dir/src/core/donor_pc_memory_snapshot.h"
 make -C "$donor_dir" -f Makefile.libretro -j"${BUILD_JOBS:-4}"
-"${CXX:-c++}" -std=c++17 -O2 -Wall -Wextra \
+"${CXX:-c++}" -std=c++20 -O2 -Wall -Wextra \
   -I"$donor_dir/dep/libretro-common/include" \
   -DPS1_DONOR_TAS_ROUTE -Iengine/ps1Runtime/include \
   engine/tools/donor_trace/libretro_headless.cpp \
-  engine/ps1Runtime/src/input/tas_route.cpp -ldl -o .local/libretro_headless
+  engine/ps1Runtime/src/input/tas_route.cpp engine/ps1Runtime/src/metrics.cpp \
+  -pthread -ldl -o .local/libretro_headless
 sha256sum "$donor_dir/swanstation_libretro.so" .local/libretro_headless > .local/donor-build.sha256

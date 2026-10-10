@@ -1,0 +1,186 @@
+{
+  "format": "mgs-situation-1",
+  "name": "jeep-retail-garage-boarding",
+  "source": "USA s19a/ea54 c9e9/bc39 ntrap move_jeep/move_jeep2 (HZDcb81); companion callback63f6 establishes global01ea=2; original boarding input then machine-gun Square. No actor, story or life patches. Corridor HZD walls at z=-3000 x9500..11000 and x9500 z[-3000,-2000] require passage to their south (z=-3700).",
+  "requires": {
+    "stage": "s19a",
+    "story": 283,
+    "disc": 2,
+    "life": {
+      "min": 1
+    }
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_110001ea"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "align-south-of-corridor-obstruction",
+        "until": {
+          "x": {
+            "min": 11300,
+            "max": 11800
+          },
+          "z": {
+            "min": -4050,
+            "max": -3500
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": 11600,
+            "z": -3800
+          }
+        },
+        "max_frames": 900,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "leave-escape-corridor",
+        "until": {
+          "x": {
+            "max": 6000
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": 5000,
+            "z": -3700
+          }
+        },
+        "max_frames": 1400,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "reach-garage-center",
+        "until": {
+          "x": {
+            "min": -200,
+            "max": 400
+          },
+          "z": {
+            "min": -3300,
+            "max": -2700
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": 100,
+            "z": -3000
+          }
+        },
+        "max_frames": 900,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "approach-jeep-front",
+        "until": {
+          "x": {
+            "min": -300,
+            "max": 300
+          },
+          "z": {
+            "min": 150,
+            "max": 700
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": 0,
+            "z": 400
+          }
+        },
+        "max_frames": 900,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "pass-south-of-jeep-body",
+        "until": {
+          "x": {
+            "min": -5800,
+            "max": -5300
+          },
+          "z": {
+            "min": 100,
+            "max": 700
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -5500,
+            "z": 400
+          }
+        },
+        "max_frames": 900,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "wait-companion-ready-outside-boarding-trigger",
+        "until": {
+          "gcl_110001ea": 2
+        },
+        "action": {
+          "sequence": "wait:30"
+        },
+        "attempts": 80,
+        "max_frames": 2400,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "board-original-jeep",
+        "until": {
+          "gcl_110001ea": 3
+        },
+        "action": {
+          "move_to": {
+            "x": -5500,
+            "z": 2000
+          }
+        },
+        "max_frames": 700,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "boarding-animation-finished",
+        "until": {
+          "gcl_110001ea": 3,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "wait:30"
+        },
+        "stable_frames": 180,
+        "max_frames": 600
+      }
+    ]
+  }
+}

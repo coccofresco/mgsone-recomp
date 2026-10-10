@@ -523,14 +523,10 @@ TEST_F(PsyqCdTest, CdControlPushesParamsAndIssuesCommand) {
   hle_libcd_CdControl(&ctx);
 
   EXPECT_EQ(ctx.r[V0], 1u);
-  // Side-effect of CdlSetloc on cdrom_controller: it acknowledges with
-  // INT3, leaving an interrupt pending.  No direct seekTarget_ accessor
-  // exists, but we can check the controller saw something happen via the
-  // interrupt being asserted then the BIOS HLE dropping it.
-  // (After triggerCdromEvent fires synchronously, interruptFlag_ stays
-  // set on the controller until the test acks; so we just confirm a
-  // primary response was queued.)
-  EXPECT_TRUE(cdrom.hasInterrupt());
+  EXPECT_EQ(cdrom.snapshot().seekTarget, 225u); // 00:05:00 minus pregap
+  // The HLE driver owns and consumes the command ACK. Leaving INT3 pending
+  // would prevent the controller from publishing the next ReadN sector.
+  EXPECT_FALSE(cdrom.hasInterrupt());
 }
 
 TEST_F(PsyqCdTest, CdControlFiresCommandWithoutParamsWhenParamPtrIsNull) {
@@ -596,7 +592,7 @@ TEST_F(PsyqCdTest, CdDataCallbackIsAliasForCdReadyCallback) {
 
 // CdMix / CdReadBreak
 
-TEST_F(PsyqCdTest, CdMixIsNopReturnsOne) {
+TEST_F(PsyqCdTest, CdMixNullVolumeReturnsOne) {
   ctx.r[V0] = 0;
   hle_libcd_CdMix(&ctx);
   EXPECT_EQ(ctx.r[V0], 1u);
@@ -745,4 +741,16 @@ TEST_F(PsyqCdTest, RegisterLibcdExposesAll12FunctionsViaDispatch) {
     ctx.bios = bios.get();
     EXPECT_NO_FATAL_FAILURE(psyq_dispatch(n, &ctx)) << "dispatch failed: " << n;
   }
+}
+
+TEST_F(PsyqCdTest, CdMixAppliesRetailMatrixWithoutAcknowledgingInterrupt) {
+  cdrom.writeRegister(0x1f801800, 0);
+  cdrom.writeRegister(0x1f801801, 1);
+  ctx.r[A0] = 0x80011000;
+  for (uint8_t i = 0; i < 4; ++i) mem.write8(ctx.r[A0] + i, i * 20 + 3);
+  hle_libcd_CdMix(&ctx);
+  const auto snapshot = cdrom.snapshot();
+  EXPECT_EQ(snapshot.audioVolume, (std::array<uint8_t,4>{3, 23, 63, 43}));
+  EXPECT_EQ(snapshot.interruptFlag, cdrom::INT_ACKNOWLEDGE);
+  EXPECT_EQ(ctx.r[V0], 1u);
 }

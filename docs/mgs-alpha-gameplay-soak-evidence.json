@@ -1,0 +1,3359 @@
+{
+  "format": "mgs-alpha-gameplay-soak-evidence-1",
+  "date": "2026-10-07",
+  "status": "partial-with-explicit-limits",
+  "scope": "Passed isolated mandatory transitions with explicit damage fixtures, donor comparison and exact native replay; headless single-process endurance. No continuous campaign, full-fight, all-difficulty, alternate-companion or physical Vulkan certification.",
+  "runtime": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "sha256": "efb1a3869ffbb63c8054dcdc074725de18e4b6108140ae993b075d48d1cdddc3"
+  },
+  "sources": [
+    {
+      "path": "engine/ps1Runtime/src/soak_probe.cpp",
+      "sha256": "c99c51e9daa701b64014963b069eee2f6dff588fc56748e767546c738e24f16e"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/soak_probe.h",
+      "sha256": "15f2212f59b27cd997916e76a982213249a9530b123515856531d499e722e744"
+    },
+    {
+      "path": "engine/ps1Runtime/src/main_host.cpp",
+      "sha256": "182f7ffa8b6d7b540f4eaed30574bd63045e3cc1fbe240aa5ebea604ebcc618b"
+    },
+    {
+      "path": "engine/ps1Runtime/src/input/tas_movie.cpp",
+      "sha256": "92f1b45b11bdf031ea94b73f2be8b475adac608e875568686b6233236e0072d7"
+    },
+    {
+      "path": "engine/ps1Runtime/src/input/tas_route.cpp",
+      "sha256": "ced15a8bb784085da5cb1c30388a0f43867da8b61e114d6a8854a64fa1bd94ed"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/gpu/vulkan_memory_metrics.h",
+      "sha256": "b1bcb3a55b23e4e4ff64a249b133c4bddc6afeb1f519c2a5c6760472c0a6b549"
+    },
+    {
+      "path": "engine/ps1Runtime/src/gpu/renderer_vulkan.cpp",
+      "sha256": "2b787f646285b9e6a5a8ac3f148998957c9493f9203c48003f2adf0947101b8d"
+    },
+    {
+      "path": "engine/ps1Runtime/src/gpu/mgs_asset_cache_vulkan.cpp",
+      "sha256": "5324a9653307ba76f699aff136679d66fcf334183b1055d4fc882fdad72ea753"
+    },
+    {
+      "path": "engine/tools/donor_trace/libretro_headless.cpp",
+      "sha256": "263db09ca6ca50a7a6c568a6fca8fae555d2c0e283cd801e7f78ab4b7205ba98"
+    },
+    {
+      "path": "scripts/build_donor.sh",
+      "sha256": "76b19e7749c7f8e222c3a3f44ae6af4b8f8e153a8f2aa081b1be8d9b849c5ff8"
+    },
+    {
+      "path": "scripts/mgs_soak.py",
+      "sha256": "5244a807d23ec7c87dcf50b91582674d0faf7dc08d443603dbea911780c7a765"
+    },
+    {
+      "path": "scripts/mgs_tas_route.py",
+      "sha256": "952a14acded11b8e559fc316773ac655a0e1137867d144fba7e760ca49545035"
+    },
+    {
+      "path": "scripts/mgs_fixture.py",
+      "sha256": "db259766ee146bbebc6a0ca3cb73b2796fec417da11820461999a62701c8f16d"
+    }
+  ],
+  "counts": {
+    "new_grouped_contracts": 21,
+    "paired_replayed_receipts": 31,
+    "fully_certified_campaigns": 0
+  },
+  "passed": [
+    {
+      "case": "hind-bridge",
+      "name": "hind-retail-entry-r2",
+      "scope": "Input-only original ladder entry from an authentic retail tower save.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/hind-retail-entry-r2/result.json",
+            "sha256": "95888a187e59c22e20918d5d344949122dca58ad5bb52698f12744b877731bb7"
+          },
+          "name": "hind-retail-tower-to-roof",
+          "inputs_only": true,
+          "synthetic": false,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 545,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "a39c9e7a548aed8bc86c01258287d7a72911b445416d5b61d2445d5cc63cfae4"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/mgs.usa.native.toml",
+                  "sha256": "71a102e6787270a66d2fee98b29adb982936c9fcc52d0df3e8a071bf6ef3f2d5"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s11h",
+                "story": 190,
+                "life": 640,
+                "max_life": 640,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 767,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_completion",
+                  "sha256": "9a38690e0e55e8bb5c17e383ac9d5e7891d0ca9a659308462ecb161f15032e68"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d1-12-s11c-190/donor-01/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                }
+              },
+              "final": {
+                "current_stage": "s11h",
+                "story": 190,
+                "life": 640,
+                "max_life": 640,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "hind-bridge",
+      "name": "hind-roof-return",
+      "scope": "Input-only roof stair return with original guard history; no global patch.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/hind-roof-return/result.json",
+            "sha256": "9efd4c2f6a5cbb2e9d70d486ae5fa37f753cf66742d2b12b30fd695240979f55"
+          },
+          "name": "hind-retail-roof-original-return",
+          "inputs_only": true,
+          "synthetic": false,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 674,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "a39c9e7a548aed8bc86c01258287d7a72911b445416d5b61d2445d5cc63cfae4"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/mgs.usa.native.toml",
+                  "sha256": "71a102e6787270a66d2fee98b29adb982936c9fcc52d0df3e8a071bf6ef3f2d5"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s11c",
+                "story": 190,
+                "life": 640,
+                "max_life": 640,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 929,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_completion",
+                  "sha256": "9a38690e0e55e8bb5c17e383ac9d5e7891d0ca9a659308462ecb161f15032e68"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d1-12-s11c-190/donor-01/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                }
+              },
+              "final": {
+                "current_stage": "s11c",
+                "story": 190,
+                "life": 640,
+                "max_life": 640,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-second-possession-r2",
+      "scope": "Prepared nonlethal Meryl stun and first boss health threshold; original reactions/films to story129.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/mantis-second-possession-r2/result.json",
+            "sha256": "63b06b007727de3080d577f8234a99bed3606fead0ca1264bd845cf0f8761661"
+          },
+          "name": "mantis-first-health-gate",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 3076,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "4a01a3d415a05822720506d2cf1de6bfefe1beb162f3e4d753427fb3a728930a"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/native/native.toml",
+                  "sha256": "4563e45734c1389055fe308da46902e32e3caa379f1c65a0dd6b94cbb6b55d9b"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 3065,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_completion",
+                  "sha256": "9a38690e0e55e8bb5c17e383ac9d5e7891d0ca9a659308462ecb161f15032e68"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/donor/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-memory-scene-r2",
+      "scope": "Original memory/controller speech skip and battle resume; synthetic ancestors.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/mantis-memory-scene-r2/result.json",
+            "sha256": "860478b55b63d3029c368fed695fd67a18540da2547283ed66998babe85ba781"
+          },
+          "name": "mantis-memory-controller-scene-resume",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 718,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "5faca376b1d26b4cd98b0e416d1ed5a92991d7d4121939387d1abfe5c37c249c"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/native/native.toml",
+                  "sha256": "4563e45734c1389055fe308da46902e32e3caa379f1c65a0dd6b94cbb6b55d9b"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 718,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_completion",
+                  "sha256": "9a38690e0e55e8bb5c17e383ac9d5e7891d0ca9a659308462ecb161f15032e68"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/donor/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-late-health-r2",
+      "scope": "Prepared health480; original late phase2-to-3 transition.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/mantis-late-health-r2/result.json",
+            "sha256": "375a52f2e801329987829fc47c9100f8359dbf9dd2b5f6e803128ec1aaa3bad5"
+          },
+          "name": "mantis-late-health-gate",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 8,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/native/native.toml",
+                  "sha256": "4563e45734c1389055fe308da46902e32e3caa379f1c65a0dd6b94cbb6b55d9b"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 3,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates",
+                  "sha256": "e93a3e2b4b8cc1a5cbffd10bd1fb86b5effbee054b6adc727d18086a98a0300a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/donor/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-late-meryl",
+      "scope": "Original second Meryl phase entry, no new fixture.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/mantis-late-meryl/result.json",
+            "sha256": "23d6471638fed83645976e3d62559af1a5df94c9794f756f4238b1ec432f5920"
+          },
+          "name": "mantis-second-meryl-active",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 695,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/native/native.toml",
+                  "sha256": "4563e45734c1389055fe308da46902e32e3caa379f1c65a0dd6b94cbb6b55d9b"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 692,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates",
+                  "sha256": "e93a3e2b4b8cc1a5cbffd10bd1fb86b5effbee054b6adc727d18086a98a0300a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/donor/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-second-rescue",
+      "scope": "Prepared nonlethal punch; original Meryl rescue reaction and boss phase6.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/mantis-second-rescue/result.json",
+            "sha256": "1ef8405ba4a73ff2a63aafa03f25ef158eabd8c87a61eb3292bd5be0d7aa47bd"
+          },
+          "name": "mantis-second-meryl-nonlethal-rescue",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 1321,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/native/native.toml",
+                  "sha256": "4563e45734c1389055fe308da46902e32e3caa379f1c65a0dd6b94cbb6b55d9b"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 1298,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates",
+                  "sha256": "e93a3e2b4b8cc1a5cbffd10bd1fb86b5effbee054b6adc727d18086a98a0300a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/donor/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-third-health",
+      "scope": "Prepared health288; original phase6-to-8 transition.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/mantis-third-health/result.json",
+            "sha256": "b5094b3f85c002b96653d50ef518cdd255df3b0d15c3a2c2de3639fd35137a4b"
+          },
+          "name": "mantis-third-health-gate",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 304,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/native/native.toml",
+                  "sha256": "4563e45734c1389055fe308da46902e32e3caa379f1c65a0dd6b94cbb6b55d9b"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 294,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates",
+                  "sha256": "e93a3e2b4b8cc1a5cbffd10bd1fb86b5effbee054b6adc727d18086a98a0300a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/donor/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-final-phase",
+      "scope": "Prepared health144; original last combat phase9.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/mantis-final-phase/result.json",
+            "sha256": "40944ad3a9fbde474c1b2c0d1392bf7c4de35d3eebb594fe946581f2982a5972"
+          },
+          "name": "mantis-final-health-gate",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 4,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/native/native.toml",
+                  "sha256": "4563e45734c1389055fe308da46902e32e3caa379f1c65a0dd6b94cbb6b55d9b"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 4,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates",
+                  "sha256": "e93a3e2b4b8cc1a5cbffd10bd1fb86b5effbee054b6adc727d18086a98a0300a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/donor/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-port2-ready",
+      "scope": "Actual port2 direction; original controller selection with menu available, no new fixture.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/mantis-port2-ready/result.json",
+            "sha256": "ada7c50321c4430417549775669eb7ffa7997d2eb0d624dfb0d77097b96a7959"
+          },
+          "name": "mantis-original-second-controller",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 9,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "efb1a3869ffbb63c8054dcdc074725de18e4b6108140ae993b075d48d1cdddc3"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/native/native.toml",
+                  "sha256": "4563e45734c1389055fe308da46902e32e3caa379f1c65a0dd6b94cbb6b55d9b"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 15,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/donor/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 129,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-defeat-ready",
+      "scope": "Prepared lethal projectile after real port2 selection; original defeat callback/story133.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/mantis-defeat-ready/result.json",
+            "sha256": "6d2037a56d77d50cfcb400ac56d3a1332ed38951266433d4d2ecb562dfdd241b"
+          },
+          "name": "mantis-original-defeat-callback",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 372,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "efb1a3869ffbb63c8054dcdc074725de18e4b6108140ae993b075d48d1cdddc3"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/native/native.toml",
+                  "sha256": "4563e45734c1389055fe308da46902e32e3caa379f1c65a0dd6b94cbb6b55d9b"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 133,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 369,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/donor/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 133,
+                "life": 414,
+                "max_life": 448,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-post-boss-final",
+      "scope": "Actual port2 Codec/film skip and port1 return; original story137 and max-life reward512.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/mantis-post-boss-final/result.json",
+            "sha256": "eab8e11985e778dbc12831f03c99b78d88760c220e833ab43c983ccd7a2ed9f4"
+          },
+          "name": "mantis-original-post-boss-passage",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 1198,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "efb1a3869ffbb63c8054dcdc074725de18e4b6108140ae993b075d48d1cdddc3"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/native/native.toml",
+                  "sha256": "4563e45734c1389055fe308da46902e32e3caa379f1c65a0dd6b94cbb6b55d9b"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 137,
+                "life": 512,
+                "max_life": 512,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 1258,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/donor/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                }
+              },
+              "final": {
+                "current_stage": "s07b",
+                "story": 137,
+                "life": 512,
+                "max_life": 512,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-caves-ready",
+      "scope": "Actual passage to initialized s09a/story141 after original victory, live Snake and no loader.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/mantis-caves-ready/result.json",
+            "sha256": "9778b53d84aa306ebcf9c355d959299cf029b02d5b3af0d3ec988242fd2d96e8"
+          },
+          "name": "mantis-office-to-caves",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 1771,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "efb1a3869ffbb63c8054dcdc074725de18e4b6108140ae993b075d48d1cdddc3"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/native/native.toml",
+                  "sha256": "4563e45734c1389055fe308da46902e32e3caa379f1c65a0dd6b94cbb6b55d9b"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                },
+                "additional_cue_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "additional_track_0_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s09a",
+                "story": 141,
+                "life": 512,
+                "max_life": 512,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 2003,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-next-20261006/mantis-original-entry/donor/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).cue",
+                  "sha256": "b0ad2d33286b61b05accd7b17cf75bb95024fbe7858b89e5993cc324fa93f32b"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc1/Metal Gear Solid (USA) (Disc 1) (v1.0).bin",
+                  "sha256": "af59d9b247489d4bb4be4da30b5cdd1d236d0d2052b78dd3cd14b8656578e141"
+                }
+              },
+              "final": {
+                "current_stage": "s09a",
+                "story": 141,
+                "life": 512,
+                "max_life": 512,
+                "disc": 1,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "escape",
+      "name": "jeep-boarding",
+      "scope": "Input-only retail garage navigation, companion readiness and original boarding.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-boarding/result.json",
+            "sha256": "84d26f269906ec7b5be38f8f9799a8960739765fae341a88b8a85e0e5f3d32dc"
+          },
+          "name": "jeep-retail-garage-boarding",
+          "inputs_only": true,
+          "synthetic": false,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 1669,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19a",
+                "story": 283,
+                "life": 408,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 1633,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_completion",
+                  "sha256": "9a38690e0e55e8bb5c17e383ac9d5e7891d0ca9a659308462ecb161f15032e68"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19a",
+                "story": 283,
+                "life": 408,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "escape",
+      "name": "jeep-drums-r3",
+      "scope": "Input-only gun aiming/fire and original garage escape to s19b.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-drums-r3/result.json",
+            "sha256": "1dd3c27c5a49927f1999b20347f7099b4940237400ebd16fd7604d7d1e27ad7f"
+          },
+          "name": "jeep-garage-drums-and-exit",
+          "inputs_only": true,
+          "synthetic": false,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 584,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 745,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates",
+                  "sha256": "e93a3e2b4b8cc1a5cbffd10bd1fb86b5effbee054b6adc727d18086a98a0300a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "escape",
+      "name": "jeep-first-ready",
+      "scope": "Original first barricade spawns two barrels and two guards.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-first-ready/result.json",
+            "sha256": "cdf7c3d6c10ed9a654d3aaee90c3262871dd82a573e9a9680a86fce2d699da51"
+          },
+          "name": "jeep-original-first-barricade-spawn",
+          "inputs_only": true,
+          "synthetic": false,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 754,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 761,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates",
+                  "sha256": "e93a3e2b4b8cc1a5cbffd10bd1fb86b5effbee054b6adc727d18086a98a0300a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "escape",
+      "name": "jeep-first-blasts",
+      "scope": "Prepared barrel TARGET damage; original spatial blasts kill guards and release the first barricade.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-first-blasts/result.json",
+            "sha256": "26515ec23ff132a4daad94cd439a11f36438ffb218180a3ceb5b37410b3aeced"
+          },
+          "name": "jeep-first-barricade-original-explosions",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 183,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 183,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates",
+                  "sha256": "e93a3e2b4b8cc1a5cbffd10bd1fb86b5effbee054b6adc727d18086a98a0300a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "escape",
+      "name": "jeep-second-ready",
+      "scope": "Original second barricade scroll/spawn of three guards.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-second-ready/result.json",
+            "sha256": "6ed7571fa870049fcdda7977db0fdc73ad40db4f3d5025f5efe1b8b41e06515a"
+          },
+          "name": "jeep-original-second-barricade-spawn",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 559,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 559,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "escape",
+      "name": "jeep-second-deaths",
+      "scope": "Prepared guard projectile damage; original deaths and Liquid chase spawn.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-second-deaths/result.json",
+            "sha256": "b9bfc37cd603bcc7c55fbac381a207da2c8026f27bee3d8f6c4103f3cc503b04"
+          },
+          "name": "jeep-second-barricade-original-deaths",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 618,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 619,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "escape",
+      "name": "jeep-liquid-damage-recovery-chain",
+      "scope": "Six source-bound Liquid TARGET damage boundaries, with original vulnerability recovery between hits; original health reset, queued scroll reactions and hit animations. No actor phase, scroll counter, callback, story or Snake-health writes.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-liquid-hit-1/result.json",
+            "sha256": "d9df9372a9e0402db082164d2d56dde48c38f4ba43b99b78bef0986be2b23c4d"
+          },
+          "name": "jeep-liquid-first-damage-gate",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 8,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 5,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        },
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-liquid-ready-2/result.json",
+            "sha256": "87f0581bb76941f3eb81af71453a7cf919f0d0371f21559cb2387b4012513c07"
+          },
+          "name": "jeep-liquid-recovered-vulnerable",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 144,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 146,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        },
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-liquid-hit-2/result.json",
+            "sha256": "1fef46b46f8a4f38272869ada57f267be33744261489902832e3a846914098dc"
+          },
+          "name": "jeep-liquid-repeated-damage-gate",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 6,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 6,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        },
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-liquid-ready-3/result.json",
+            "sha256": "5819862e73cfa2f86f7bc20211b2d201d0a61dab42d7beaaf6ef99e01ec9996c"
+          },
+          "name": "jeep-liquid-recovered-vulnerable",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 146,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 146,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        },
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-liquid-hit-3/result.json",
+            "sha256": "6c548de3897813dcb27c6c9e15e77eae7c5ed27c90aa4675bc5ef84eed3ddfcc"
+          },
+          "name": "jeep-liquid-repeated-damage-gate",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 6,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 6,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        },
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-liquid-ready-4/result.json",
+            "sha256": "416fb2a29afbf7fdfe215e21bda5926a31f02970e4a17bc8c4b5ec2729ff594c"
+          },
+          "name": "jeep-liquid-recovered-vulnerable",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 146,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 146,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        },
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-liquid-hit-4/result.json",
+            "sha256": "8b884283d3dd5ac2758d2b8f78bb22e26e72d15ca902ba09a9ef394c070b3fc0"
+          },
+          "name": "jeep-liquid-repeated-damage-gate",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 6,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 6,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        },
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-liquid-ready-5/result.json",
+            "sha256": "badf1d8171b1c8769e67aa9891d31942cd35a33b19199d51144da0db0976c17b"
+          },
+          "name": "jeep-liquid-recovered-vulnerable",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 147,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 146,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        },
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-liquid-hit-5/result.json",
+            "sha256": "51790eb539fd3fa9de4c6319ae73708adad12ed50f7697bc4940fc95ff0809dd"
+          },
+          "name": "jeep-liquid-repeated-damage-gate",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 6,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 6,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        },
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-liquid-ready-6/result.json",
+            "sha256": "80a26844468711230951d85ec899ec480c6542ca992bfa4e4d30a37aa668029e"
+          },
+          "name": "jeep-liquid-recovered-vulnerable",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 181,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "674a9d61a205a229af8f466234c0d15f7ce1c5136b7532d8ec394aaddce61003"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 182,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        },
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-liquid-hit-6-r2/result.json",
+            "sha256": "a1166edc02c471240b207ef192760bc917e8c8b17eec27e44f24ee7ea76fda11"
+          },
+          "name": "jeep-liquid-repeated-damage-gate",
+          "inputs_only": false,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 6,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "efb1a3869ffbb63c8054dcdc074725de18e4b6108140ae993b075d48d1cdddc3"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 6,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s19b",
+                "story": 283,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "escape",
+      "name": "jeep-ending-six-hits",
+      "scope": "Original scroll/ending handoff to s20a/story286 after six prepared Liquid hit gates; Snake health untouched.",
+      "receipts": [
+        {
+          "result": {
+            "path": "data/validation/completion/alpha-gates-20261007/jeep-ending-six-hits/result.json",
+            "sha256": "65987c33d1d0a58820b0066a274fb66544c3561a8e7943594adf44fd5fa53f0f"
+          },
+          "name": "jeep-original-ending-handoff",
+          "inputs_only": true,
+          "synthetic": true,
+          "native_replay": "complete",
+          "engines": {
+            "native": {
+              "status": "complete",
+              "frames": 812,
+              "identity": {
+                "runtime": {
+                  "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+                  "sha256": "efb1a3869ffbb63c8054dcdc074725de18e4b6108140ae993b075d48d1cdddc3"
+                },
+                "config": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/native-04/native.toml",
+                  "sha256": "177e7f1aea79aa3212f925116a5387a59121769d145e3b62f9feb8f3fe3d4297"
+                },
+                "exe": {
+                  "path": "/home/xander/mgs_recomp/data/assets/usa/disc1/SLUS_005.94",
+                  "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                },
+                "asset_cache": {
+                  "path": "/home/xander/mgs_recomp/data/presentation/usa-source/assets.mgsc",
+                  "sha256": "33dc0785ab3d01ce6c0e74192965cae2a4fb2e1e1607ab1cef48e771cfa5c7a6"
+                }
+              },
+              "final": {
+                "current_stage": "s20a",
+                "story": 286,
+                "life": 288,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            },
+            "donor": {
+              "status": "complete",
+              "frames": 1887,
+              "identity": {
+                "runner": {
+                  "path": "/home/xander/mgs_recomp/.local/libretro_alpha_gates_ports",
+                  "sha256": "42b1b51a4fd8dab14bb4b87ff4c747e6f383734276288c2cc96796187904765a"
+                },
+                "core": {
+                  "path": "/home/xander/mgs_recomp/.local/swanstation/swanstation_libretro.so",
+                  "sha256": "038f9a93e730dd61db7a88b73d9179d1434cdc5e2e595812c25bac281d8f966b"
+                },
+                "bios": {
+                  "path": "/home/xander/mgs_recomp/data/scenarios/usa-normal/cases/d2-10-s19a-283/donor-02/work/system/openbios.bin",
+                  "sha256": "0a9685d9895b422f091a9bcceed8f73cf67a414c09eb8310c714f27ccdfdb349"
+                },
+                "cue": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).cue",
+                  "sha256": "379af2eb2b75f6e614d9ee394de2df5be6a709a3462a64263d7b7a184379a444"
+                },
+                "track_0": {
+                  "path": "/home/xander/mgs_recomp/data/discs/usa/disc2/Metal Gear Solid (USA) (Disc 2) (v1.0).bin",
+                  "sha256": "d213ea8be0379c823d176ca3d23d59b9a3e1defe4ddf2c55d79a6753caaaba94"
+                }
+              },
+              "final": {
+                "current_stage": "s20a",
+                "story": 286,
+                "life": 78,
+                "max_life": 768,
+                "disc": 2,
+                "difficulty": 1,
+                "game_over_timer": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "soaks": [
+    {
+      "name": "soak-mixed",
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/soak-mixed/report.json",
+        "sha256": "9c0e9095c661067bcb470b678bf74a041c854a2421f3f79ab49afed226aaced1"
+      },
+      "runtime": {
+        "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+        "sha256": "4a01a3d415a05822720506d2cf1de6bfefe1beb162f3e4d753427fb3a728930a"
+      },
+      "segments": 60,
+      "elapsed_seconds": 123.12399848499626,
+      "vulkan": false,
+      "growth": [
+        {
+          "name": "segment-00",
+          "rss_bytes": 0,
+          "fds": 0
+        },
+        {
+          "name": "segment-01",
+          "rss_bytes": 0,
+          "fds": 0
+        },
+        {
+          "name": "segment-02",
+          "rss_bytes": 0,
+          "fds": 0
+        },
+        {
+          "name": "segment-03",
+          "rss_bytes": 0,
+          "fds": 0
+        },
+        {
+          "name": "segment-04",
+          "rss_bytes": 0,
+          "fds": 0
+        }
+      ]
+    },
+    {
+      "name": "soak-endurance",
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/soak-endurance/report.json",
+        "sha256": "b9c40c38efb501698533cb4a360e934068d2e70731726138901356a8e018cd15"
+      },
+      "runtime": {
+        "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+        "sha256": "5faca376b1d26b4cd98b0e416d1ed5a92991d7d4121939387d1abfe5c37c249c"
+      },
+      "segments": 180,
+      "elapsed_seconds": 833.7358558499982,
+      "vulkan": false,
+      "growth": [
+        {
+          "name": "segment-00",
+          "rss_bytes": 0,
+          "fds": 0
+        },
+        {
+          "name": "segment-01",
+          "rss_bytes": 0,
+          "fds": 0
+        },
+        {
+          "name": "segment-02",
+          "rss_bytes": 0,
+          "fds": 0
+        },
+        {
+          "name": "segment-03",
+          "rss_bytes": 0,
+          "fds": 0
+        },
+        {
+          "name": "segment-04",
+          "rss_bytes": 0,
+          "fds": 0
+        },
+        {
+          "name": "segment-05",
+          "rss_bytes": 0,
+          "fds": 0
+        }
+      ]
+    },
+    {
+      "name": "soak-final",
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/soak-final/report.json",
+        "sha256": "1fe2ec1df1582f48ec6f84a618c8f370b9987489f57d2ccc8d1982c50dd6ec86"
+      },
+      "runtime": {
+        "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+        "sha256": "efb1a3869ffbb63c8054dcdc074725de18e4b6108140ae993b075d48d1cdddc3"
+      },
+      "segments": 56,
+      "elapsed_seconds": 121.08709876799549,
+      "vulkan": false,
+      "growth": [
+        {
+          "name": "segment-00",
+          "rss_bytes": -63897600,
+          "fds": 0
+        },
+        {
+          "name": "segment-01",
+          "rss_bytes": -43905024,
+          "fds": 0
+        },
+        {
+          "name": "segment-02",
+          "rss_bytes": -43905024,
+          "fds": 0
+        },
+        {
+          "name": "segment-03",
+          "rss_bytes": -43905024,
+          "fds": 0
+        },
+        {
+          "name": "segment-04",
+          "rss_bytes": -43905024,
+          "fds": 0
+        },
+        {
+          "name": "segment-05",
+          "rss_bytes": -43913216,
+          "fds": 0
+        },
+        {
+          "name": "segment-06",
+          "rss_bytes": -43913216,
+          "fds": 0
+        }
+      ]
+    }
+  ],
+  "tests": {
+    "runtime_passed": 1355,
+    "runtime_skipped": 31,
+    "python_passed": 187,
+    "runtime_report": {
+      "path": "data/validation/completion/alpha-gates-20261007/runtime-tests-final.json",
+      "sha256": "b950554715be98f48214c0db86aa0a06ed467b0869a8779487ed6ad7e83eaeb5"
+    },
+    "runtime_log": {
+      "path": "data/validation/completion/alpha-gates-20261007/runtime-tests-final.log",
+      "sha256": "ea5a1388dc2f09fc963fe07281b59d7c839af8f46519117b2e1843d9f5296233"
+    },
+    "python_log": {
+      "path": "data/validation/completion/alpha-gates-20261007/python-tests-final.log",
+      "sha256": "e334ac2a40f7fe8191a7e8db2cf350b5016fb6ff05db49eb795ff9eb9d2a4a7c"
+    }
+  },
+  "protected_files": [
+    {
+      "path": "savestates/quick_slot_0.ps1s",
+      "sha256": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953"
+    },
+    {
+      "path": "data/memory_cards/card1.mcd",
+      "sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+    },
+    {
+      "path": "data/memory_cards/card2.mcd",
+      "sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+    }
+  ],
+  "failed_explorations": [
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/hind-retail-entry/result.json",
+        "sha256": "51b3c9ba84e624e082b426f8d17973862e27982e208539d47d6a8e8b5572e51e"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/jeep-barricade/result.json",
+        "sha256": "c8799046eba33ee38d5c6f702fa70b22293df8cce2e147eae2d5527a6c9c9b1b"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/jeep-barricade-r2/result.json",
+        "sha256": "6d7470a4842c6af595547483bce7b6a48a430fc763e4cf2547b0a2bcabc27ff2"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/jeep-drums/result.json",
+        "sha256": "2331bf6ec6a35260186b9638de9e31e2e1eac8c060661a12d883ab32ca6f213f"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/jeep-drums-r2/result.json",
+        "sha256": "46d0b75622ae06fa3e69190a5acdccd1b9397f3ea4cd115a05216c0eb6845a41"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/jeep-ending-handoff/result.json",
+        "sha256": "f5a9cfb18100ac254c727ac0d327aed8f45c8d677d2356f4c252acd713a18311"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/jeep-garage/result.json",
+        "sha256": "35afb9bd3c13aae649e9696abb3639f400b1e876a527491503fe77fe6e1afa22"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/jeep-garage-r2/result.json",
+        "sha256": "e914c076a6720c147ea52fcbd96b46b5ca472dd5efc1dd7b012b061e91c171fe"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/jeep-garage-r3/result.json",
+        "sha256": "d4e360f2734ee17cb8f7cd5b1bab5f608dcd13f3263e4bbbb2f3a7c614c826e5"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/jeep-garage-r4/result.json",
+        "sha256": "de0040b1b82b8d8615b837c0c3afb473427406fe4bca9f30ad28a2e993c67947"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/jeep-garage-r5/result.json",
+        "sha256": "1bfd2db9c65ce369cbc9a9f1d62d3aedaeec2d1f608b546ecb478d0715416854"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-battle-meryl/result.json",
+        "sha256": "07edc3b49bd89aa987c93f480e9ec42b8750cf401335db955d41384d3098f3d2"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-battle-meryl-r2/result.json",
+        "sha256": "8b0d0b56e6ef9e73150a1c945cf1b63eddbccb4cee6b68e043a5b520eca4e593"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-caves-exit/result.json",
+        "sha256": "5dd6e3d2abce6d0aee74c3bad735cd54640e67b5cfc69e228b1d61a3e99fbbf8"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-caves-final/result.json",
+        "sha256": "cf3e5086703457a2ec7fdd4e418ebce4b61cfb5485c7b042027d0f4e5b10921b"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-defeat/result.json",
+        "sha256": "e8ddc628e077d7af61cbcbfac3348923c37ba8dd81cb9fdf7fdf3451e9887db4"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-final-health/result.json",
+        "sha256": "3798175e8eb6ecc5a2712b865e4581830a6dc3b3c5f8b4d7bf0a296783777d23"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-final-rescue/result.json",
+        "sha256": "0bbceee652e3b6693f31cd7f5657145a7ae3d70c958a2962f439ff5566d72b18"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-late-health/result.json",
+        "sha256": "c9120221532b5a6f577361bc768244da2128e299f4afd09c470fcb8a9be7608f"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-memory-scene/result.json",
+        "sha256": "42eb5c85a273647ac5074999d26106ace7ccd4e8b37661ce2c494c342d5f0179"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-port2/result.json",
+        "sha256": "776381fd440a07e3fb57b3995731c8094cf4e5873b9dc267016ed4a92668ef53"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-post-boss/result.json",
+        "sha256": "3b952cef577336427f4c37ae1a5f55b22763ca0a6d137c385d5579646f3c1c43"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-post-boss-r2/result.json",
+        "sha256": "3b49552e78179f0b210467532405522edeabf7e1aba5936a373e28711f3a0458"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-post-boss-ready/result.json",
+        "sha256": "6daebcc6578ab92fa539a0b09653720e23a73a561458e6bbfeb95720cb9cabfb"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    },
+    {
+      "result": {
+        "path": "data/validation/completion/alpha-gates-20261007/mantis-second-possession/result.json",
+        "sha256": "0d1b2065799009e63b2c8c5c586d69679ba45d1fd46c3c405266981fe2b36b13"
+      },
+      "status": "needs-review",
+      "excluded_from_passed_coverage": true
+    }
+  ],
+  "limits": [
+    "Prepared damage does not validate delivering all shots/punches or surviving a complete fight.",
+    "Statue alternative, full Hind/bridge chain, alternate jeep companion and all difficulties remain open.",
+    "Vulkan allocation ledger is compiled; no physical Vulkan device was available.",
+    "The 180-segment run used its recorded binary; 56 additional segments passed on the final binary."
+  ]
+}

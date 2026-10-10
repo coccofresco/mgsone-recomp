@@ -70,6 +70,12 @@ protected:
   }
 
   fs::path testBinPath;
+
+  void replaceDirectory(const std::vector<uint8_t> &data) {
+    std::fstream file(testBinPath, std::ios::binary | std::ios::in | std::ios::out);
+    file.seekp(17 * ps1::cdrom::SECTOR_SIZE_RAW + 24);
+    file.write(reinterpret_cast<const char *>(data.data()), data.size());
+  }
 };
 
 TEST_F(Iso9660Test, InitializeAndReadPVD) {
@@ -111,4 +117,51 @@ TEST_F(Iso9660Test, FindDirectory) {
   EXPECT_EQ(file->extent_lba, 19);
   EXPECT_EQ(file->data_length, 2048);
   EXPECT_TRUE(file->is_directory);
+}
+
+TEST_F(Iso9660Test, DirectoryLengthIsAnExactBoundaryNotSectorPadding) {
+  ps1::cdrom::BinReader reader;
+  ASSERT_TRUE(reader.open(testBinPath));
+  ps1::cdrom::Iso9660Parser parser(reader);
+  ASSERT_TRUE(parser.initialize());
+  EXPECT_TRUE(parser.readDirectory(17, 43).empty()); // first record is truncated
+  const auto entries = parser.readDirectory(17, 44);
+  ASSERT_EQ(entries.size(), 1u);
+  EXPECT_EQ(entries[0].name, "SYSTEM.CNF");
+  EXPECT_TRUE(parser.readDirectory(19, 4096).empty()); // extent exceeds image
+  EXPECT_TRUE(parser.readDirectory(0xffffffff, 4096).empty());
+}
+
+TEST_F(Iso9660Test, RejectsEveryShortRecordAndNameCrossingRecordBoundary) {
+  for (unsigned length = 1; length <= 33; ++length) {
+    SCOPED_TRACE(length);
+    std::vector<uint8_t> sector(2048);
+    sector[0] = length;
+    replaceDirectory(sector);
+    ps1::cdrom::BinReader reader;
+    ASSERT_TRUE(reader.open(testBinPath));
+    ps1::cdrom::Iso9660Parser parser(reader);
+    EXPECT_TRUE(parser.readDirectory(17, 2048).empty());
+  }
+  for (unsigned nameLength : {0u, 2u, 32u, 255u}) {
+    std::vector<uint8_t> sector(2048);
+    sector[0] = 34;
+    sector[32] = nameLength; // only one byte is available inside this record
+    replaceDirectory(sector);
+    ps1::cdrom::BinReader reader;
+    ASSERT_TRUE(reader.open(testBinPath));
+    ps1::cdrom::Iso9660Parser parser(reader);
+    EXPECT_TRUE(parser.readDirectory(17, 2048).empty());
+  }
+}
+
+TEST_F(Iso9660Test, ReinitializationFailureClearsPreviousRoot) {
+  ps1::cdrom::BinReader reader;
+  ASSERT_TRUE(reader.open(testBinPath));
+  ps1::cdrom::Iso9660Parser parser(reader);
+  ASSERT_TRUE(parser.initialize());
+  ASSERT_FALSE(reader.open(testBinPath.string() + ".missing"));
+  EXPECT_FALSE(parser.initialize());
+  EXPECT_EQ(parser.getRootLba(), 0);
+  EXPECT_EQ(parser.getRootLength(), 0);
 }

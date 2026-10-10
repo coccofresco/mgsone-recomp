@@ -1,0 +1,66 @@
+{
+  "format": "mgs-situation-1",
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "game_over_timer",
+    "actor_m1e1sold_count"
+  ],
+  "name": "tank-first-gunner-entry",
+  "source": {
+    "retail": "USA s05a/ea54 a4ad full entry assignments",
+    "decomp": "overlays/s05a/kojo/m1e1act.c tank phase1 approaches player then spawns m1e1sold.c; activation requires player distance < work.DC4: approach by original pad"
+  },
+  "requires": {
+    "stage": "s05a",
+    "story": 66,
+    "actor_m1e1_count": 1,
+    "actor_m1e1sold_count": 0
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-first-gunner-spawn",
+        "until": {
+          "stage": "s05a",
+          "story": 66,
+          "actor_m1e1sold_count": 1,
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        },
+        "max_frames": 800,
+        "stable_frames": 1,
+        "abort_when": {
+          "life": 0
+        }
+      }
+    ]
+  },
+  "fixture": {
+    "scope": "Synthetic player position inside the tank proximity threshold. Tests original gunner activation only; approach/minefield not established. Boss fields and outcome are untouched.",
+    "patches": [
+      {
+        "actor": "snake.c",
+        "act": "0x8005ce1c",
+        "offset": 36,
+        "width": 2,
+        "signed": true,
+        "expect": 18000,
+        "value": -7000,
+        "reason": "Place player in close range for original tank activation",
+        "source": "s05a m1e1act.c distance E5C compared to DC4; original tank position near z=-17000, threshold30000"
+      }
+    ]
+  }
+}

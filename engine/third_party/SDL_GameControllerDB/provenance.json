@@ -1,0 +1,11 @@
+{
+  "upstream": "https://github.com/mdqinc/SDL_GameControllerDB",
+  "retrieved_from": "Existing local SDK distribution snapshot, unmodified",
+  "upstream_commit": null,
+  "recorded_date": "2026-10-06",
+  "format": "SDL2 2.0.16",
+  "files_sha256": {
+    "gamecontrollerdb.txt": "f6cb9252c3c3790c3513c7d279e5b4b37b0d75d739f6a573f3a55471914fbde6",
+    "LICENSE.txt": "97f35b302b361680ec1e891e95d2d52097bb95abff361434916d99dc1305f127"
+  }
+}

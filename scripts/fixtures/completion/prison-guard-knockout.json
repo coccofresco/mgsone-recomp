@@ -1,0 +1,74 @@
+{
+  "format": "mgs-situation-1",
+  "name": "prison-johnny-original-knockout",
+  "source": "johnny.c TARGET/faint handling and Johnny_800C873C invokes proc_id[3]; USA s03c/ea54 94be sets global0267 bit1. Original unarmed punch combo, no damage writes.",
+  "requires": {
+    "stage": "s03c",
+    "story": 162,
+    "gcl_14070243": 1,
+    "gcl_14000267": 0,
+    "stance": 2
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "gcl_1180006c"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_14000267"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "stand-to-face-guard",
+        "until": {
+          "stance": 0
+        },
+        "action": {
+          "sequence": "cross:3,wait:30"
+        },
+        "attempts": 3,
+        "max_frames": 200
+      },
+      {
+        "name": "face-nearby-guard",
+        "until": {
+          "yaw": {
+            "min": 900,
+            "max": 1150
+          }
+        },
+        "action": {
+          "sequence": "right:3,wait:3"
+        },
+        "attempts": 20,
+        "max_frames": 120
+      },
+      {
+        "name": "original-punch-combo-knocks-guard-out",
+        "until": {
+          "gcl_14000267": 1,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "circle:3,wait:3"
+        },
+        "attempts": 200,
+        "max_frames": 1600,
+        "abort_when": {
+          "life": 0
+        }
+      }
+    ]
+  }
+}

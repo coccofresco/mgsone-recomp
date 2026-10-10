@@ -170,7 +170,7 @@ def main():
         ram = args.ram.read_bytes()
         if len(ram) != 2097152:
             # Native SaveState header: magic/version/context, then complete RAM.
-            if (ram[:4] != b'PS1S' or int.from_bytes(ram[4:8], 'little') != 7 or
+            if (ram[:4] != b'PS1S' or int.from_bytes(ram[4:8], 'little') not in (6, 7, 8, 9, 10) or
                     len(ram) < 476 + 2097152):
                 raise ValueError('not complete RAM or a native checkpoint')
             ram = ram[476:476 + 2097152]

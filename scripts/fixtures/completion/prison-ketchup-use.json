@@ -1,0 +1,88 @@
+{
+  "format": "mgs-situation-1",
+  "name": "prison-ketchup-original-inputs",
+  "source": "okajima/d_blood.c Act: prone+stationary+circle inside HZD ketchup trigger; d_bloodr.c sets PLAYER_KETCHUP at time100. USA s03c/c6c3 ketchup includes x[-1500,2500],z[6750,9250].",
+  "requires": {
+    "stage": "s03c",
+    "story": 162,
+    "item": -1,
+    "stance": 0,
+    "gcl_1180005c": 1,
+    "gcl_1180006c": 6,
+    "pause_level": 0
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "gcl_1180006c"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_1180005c",
+    "gcl_1180006c"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "equip-ketchup-through-original-menu",
+        "until": {
+          "item": 9,
+          "pause_level": 0
+        },
+        "action": {
+          "sequence": "l2:24,l2+left:3,l2:24,wait:18"
+        },
+        "attempts": 6,
+        "max_frames": 600
+      },
+      {
+        "name": "crouch-in-ketchup-trigger",
+        "until": {
+          "stance": 1
+        },
+        "action": {
+          "sequence": "cross:3,wait:30"
+        },
+        "attempts": 2,
+        "max_frames": 100
+      },
+      {
+        "name": "lie-prone-in-ketchup-trigger",
+        "until": {
+          "stance": 2
+        },
+        "action": {
+          "sequence": "left:3"
+        },
+        "attempts": 15,
+        "max_frames": 120
+      },
+      {
+        "name": "use-equipped-ketchup",
+        "until": {
+          "player_status": {
+            "mask": 1048576,
+            "eq": 1048576
+          },
+          "gcl_1180005c": -1,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "wait:12,circle:3,wait:240"
+        },
+        "attempts": 2,
+        "max_frames": 650,
+        "stable_frames": 4
+      }
+    ]
+  }
+}

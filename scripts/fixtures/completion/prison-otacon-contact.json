@@ -1,0 +1,62 @@
+{
+  "format": "mgs-situation-1",
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000066",
+    "gcl_1200005c"
+  ],
+  "name": "prison-otacon-contact",
+  "source": {
+    "retail": "USA s03c/ea54 main @11396, 3abf, f323, 507b, 0c0c; post-submission global5c bit8 schedules Otacon without further torture"
+  },
+  "requires": {
+    "stage": "s03c",
+    "story": 162,
+    "gcl_12000066": 1,
+    "actor_otacom_count": 1,
+    "pause_level": 0
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "approach-cell-front",
+        "until": {
+          "z": {
+            "min": 7000
+          }
+        },
+        "action": {
+          "sequence": "down:2"
+        },
+        "attempts": 100,
+        "max_frames": 300
+      },
+      {
+        "name": "original-otacon-proximity-callback",
+        "until": {
+          "stage": "s03c",
+          "gcl_12000066": 2,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "right:2"
+        },
+        "attempts": 150,
+        "max_frames": 400
+      }
+    ]
+  }
+}

@@ -1,6 +1,10 @@
 #include "runtime/gpu/renderer_vulkan.h"
+#include <imgui.h>
+#include <imgui_impl_sdl2.h>
+#include <imgui_impl_vulkan.h>
 #include "runtime/games/mgs_profile.h"
 #include "runtime/games/mgs_scene.h"
+#include "runtime/games/mgs_frame_interpolation.h"
 #include "runtime/games/mgs_screen_effects.h"
 #include "runtime/gpu/mgs_asset_cache_vulkan.h"
 
@@ -18,12 +22,14 @@
 #include "runtime/gpu/modern_replay_vulkan_diagnostics.h"
 #include "runtime/gpu/vulkan_replay_seed.h"
 #include "runtime/metrics.h"
+#include "runtime/gpu/vulkan_memory_metrics.h"
 #include "runtime/mips_construction_lineage.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 #include <vulkan/vulkan.h>
 
 #include <algorithm>
+#include <exception>
 #include <array>
 #include <bit>
 #include <charconv>
@@ -453,6 +459,8 @@ struct ReplayReadbackConfig {
   uint64_t interval = 1;
   std::optional<replay::VulkanReplayDiagnosticRegion> fixedRegion;
   std::filesystem::path colorDumpDirectory;
+  // Continuous RGBA8 video stream to an encoder pipe; no image files.
+  std::filesystem::path videoPipe;
   std::filesystem::path depthDumpDirectory;
   // Keep the exact R32_SFLOAT presentation-depth payload beside the
   // false-colour PPM.  The PFM stores encoded W/2^32 values losslessly, so a
@@ -508,6 +516,8 @@ bool parseReadbackRegion(std::string_view text,
 
 ReplayReadbackConfig readReplayReadbackConfig() {
   ReplayReadbackConfig config;
+  if (const char *path = std::getenv("PS1_VULKAN_VIDEO_PIPE"); path && *path)
+    config.videoPipe = path;
   if (const char *value =
           std::getenv("PS1_VULKAN_REPLAY_READBACK_TEMPORAL_MIDPOINT")) {
     config.temporalMidpoint = value[0] != '\0' &&
@@ -826,11 +836,12 @@ struct RendererVulkan::Impl {
     MidpointResolveEnd,
     InterpolationRestoreEnd,
     ReplayEnd,
+    MgsSsaoEnd,
     ResolveEnd,
     PresentEnd,
   };
 
-  static constexpr uint32_t kMaxGpuTimingPoints = 8u;
+  static constexpr uint32_t kMaxGpuTimingPoints = 9u;
 
   struct FrameContext {
     bool hostSceneDepthRecorded = false;
@@ -1868,6 +1879,8 @@ struct RendererVulkan::Impl {
     };
 
     VkDeviceSize uniformBase = 0;
+    std::array<VkDeviceSize, 2> mgsPhaseUniformBase{};
+    uint32_t mgsPhaseCount = 0;
     VkDeviceSize nativeUploadBase = 0;
     VkDeviceSize vertexBufferOffset = 0;
     VkDeviceSize residentBatchedOpaqueMaterialIndexBufferOffset = 0;
@@ -2156,6 +2169,26 @@ struct RendererVulkan::Impl {
   VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
   VkDevice device = VK_NULL_HANDLE;
   VkQueue graphicsQueue = VK_NULL_HANDLE;
+  std::function<void()> hostOverlay;
+  bool hostUiInitialized = false;
+  bool hostUiDrawValid = false;
+
+  void initHostUiBackend() {
+    ImGui_ImplVulkan_InitInfo info{};
+    info.ApiVersion = VK_API_VERSION_1_0;
+    info.Instance = instance;
+    info.PhysicalDevice = physicalDevice;
+    info.Device = device;
+    info.QueueFamily = graphicsFamily;
+    info.Queue = graphicsQueue;
+    info.DescriptorPoolSize = 16;
+    info.RenderPass = swapchainRenderPass;
+    info.MinImageCount = 2;
+    info.ImageCount = std::max(2u, static_cast<uint32_t>(swapchainImages.size()));
+    if (!ImGui_ImplVulkan_Init(&info))
+      throw std::runtime_error("Host Vulkan UI initialization failed");
+    hostUiDrawValid = false;
+  }
   VkQueue presentQueue = VK_NULL_HANDLE;
   uint32_t graphicsFamily = 0;
   uint32_t presentFamily = 0;
@@ -2204,6 +2237,41 @@ struct RendererVulkan::Impl {
   VkPipeline replayDepthResolvePipeline = VK_NULL_HANDLE;
   VkPipeline replayPreDepthResolvePipeline = VK_NULL_HANDLE;
   VkPipeline presentPipeline = VK_NULL_HANDLE;
+
+  struct MgsSsaoResources {
+    std::array<ImageResource, 2> images;
+    VkSampler sampler = VK_NULL_HANDLE;
+    VkDescriptorSetLayout computeSetLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout resolveSetLayout = VK_NULL_HANDLE;
+    VkDescriptorPool pool = VK_NULL_HANDLE;
+    std::array<VkDescriptorSet, 3> sets{};
+    VkPipelineLayout computeLayout = VK_NULL_HANDLE;
+    VkPipelineLayout resolveLayout = VK_NULL_HANDLE;
+    VkPipeline generate = VK_NULL_HANDLE, blur = VK_NULL_HANDLE;
+    VkPipeline resolve = VK_NULL_HANDLE;
+    VkImageView sourceDepth = VK_NULL_HANDLE;
+    bool initialized = false;
+  } mgsSsao;
+  struct MgsSsaoPush {
+    VulkanScanoutPushConstants scanout;
+    std::array<float, 4> camera{};
+    // Base world-space radius, intensity, shadow power, obscurance clamp.
+    // The shader expands the radius with view depth (bounded to 3x), while
+    // retaining depth/edge rejection. Intensity is 25% below the 3.0 preset.
+    std::array<float, 4> tuning{1000.0f, 2.25f, 2.0f, 0.65f};
+  };
+  static_assert(sizeof(MgsSsaoPush) == 64);
+  struct MgsSsaoCamera {
+    replay::VulkanReplayBakedRect area;
+    std::array<float,4> projection;
+  };
+  std::vector<MgsSsaoCamera> mgsSsaoCameras;
+  games::mgs::FrameInterpolator mgsInterpolator;
+  std::array<ImageResource, 2> mgsTemporalImages;
+  std::array<bool, 2> mgsTemporalImageInitialized{};
+  std::optional<DisplayScanoutPlan> mgsPendingScanout;
+  uint32_t mgsPendingPhase = 0, mgsPendingSteps = 0;
+  uint64_t mgsPendingFrame = 0;
 
   VkImage nativeSnapshotImage = VK_NULL_HANDLE;
   VkDeviceMemory nativeSnapshotMemory = VK_NULL_HANDLE;
@@ -2265,6 +2333,8 @@ struct RendererVulkan::Impl {
   Crash3PresentationCanvasSignature crash3TemporalPendingCanvas{};
   uint8_t replayPreCorrectionDepthValidPages = 0u;
   ReplayReadbackConfig replayReadbackConfig{};
+  std::ofstream videoStream, videoTimeline;
+  uint64_t videoLastFrame = 0;
   uint64_t lastMgsPhotoCapture=0;
   bool replayVisibilityAuditRequested = false;
   bool replayVisibilityAuditActive = false;
@@ -2458,16 +2528,25 @@ struct RendererVulkan::Impl {
 
   void createInstance(SDL_Window *window) {
     unsigned int extensionCount = 0;
-    if (SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, nullptr) !=
+    const bool headless = environmentSwitchEnabled("PS1_VULKAN_HEADLESS_SURFACE");
+    if (!headless && SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, nullptr) !=
         SDL_TRUE) {
       throw std::runtime_error(std::string("SDL Vulkan extensions: ") +
                                SDL_GetError());
     }
     std::vector<const char *> extensions(extensionCount);
-    if (SDL_Vulkan_GetInstanceExtensions(window, &extensionCount,
+    if (!headless && SDL_Vulkan_GetInstanceExtensions(window, &extensionCount,
                                          extensions.data()) != SDL_TRUE) {
       throw std::runtime_error(std::string("SDL Vulkan extensions: ") +
                                SDL_GetError());
+    }
+    if (headless) {
+      // Diagnostic WSI only: retain the ordinary swapchain, rendering,
+      // submission and readback paths even without a desktop/display server.
+      // An unsupported extension fails initialization; never fall back to M0.
+      extensions = {VK_KHR_SURFACE_EXTENSION_NAME,
+                    VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME};
+      extensionCount = static_cast<unsigned int>(extensions.size());
     }
 
     // Fragment-interlock feature discovery is an extension query on the
@@ -2517,8 +2596,17 @@ struct RendererVulkan::Impl {
     createInfo.pApplicationInfo = &application;
     createInfo.enabledExtensionCount = extensionCount;
     createInfo.ppEnabledExtensionNames = extensions.data();
+    const char *validationLayer = "VK_LAYER_KHRONOS_validation";
+    const bool requireValidation = environmentSwitchEnabled("PS1_VULKAN_REQUIRE_VALIDATION");
+    if (requireValidation) {
+      // Explicit enablement fails vkCreateInstance if the layer is absent;
+      // an ignored loader environment override cannot certify a test run.
+      createInfo.enabledLayerCount = 1;
+      createInfo.ppEnabledLayerNames = &validationLayer;
+    }
     requireVulkan(vkCreateInstance(&createInfo, nullptr, &instance),
                   "vkCreateInstance");
+    ps1::metrics::setState("host.renderer.vulkan_validation_required", requireValidation ? 1 : 0);
   }
 
   void choosePhysicalDevice(int requestedReplayScale) {
@@ -2536,9 +2624,17 @@ struct RendererVulkan::Impl {
     const VulkanReplayResourcePlan replayPlan =
         planVulkanReplayResources(requestedReplayScale);
     int bestScore = -1;
+    const bool requireHardware = environmentSwitchEnabled("PS1_VULKAN_REQUIRE_HARDWARE");
     for (VkPhysicalDevice candidate : devices) {
       VkPhysicalDeviceProperties properties{};
       vkGetPhysicalDeviceProperties(candidate, &properties);
+      if (requireHardware &&
+          properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU &&
+          properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+        fmt::print(stderr, "[RendererVK] hardware test rejects device {} (type {})\n",
+                   properties.deviceName, static_cast<uint32_t>(properties.deviceType));
+        continue;
+      }
       const VulkanReplayCapabilityAssessment candidateReplay =
           probeReplayCapability(candidate, replayPlan);
       if (candidateReplay.capable())
@@ -2578,7 +2674,9 @@ struct RendererVulkan::Impl {
     }
     if (physicalDevice == VK_NULL_HANDLE)
       throw std::runtime_error(
-          "no Vulkan device supports swapchain + sampled R16_UINT snapshots");
+          requireHardware
+              ? "hardware Vulkan required: no usable integrated/discrete GPU; software fallback is forbidden"
+              : "no Vulkan device supports swapchain + sampled R16_UINT snapshots");
 
     uint32_t queueFamilyCount = 0u;
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount,
@@ -3303,7 +3401,7 @@ struct RendererVulkan::Impl {
     allocation.allocationSize = requirements.size;
     allocation.memoryTypeIndex =
         findMemoryType(requirements.memoryTypeBits, properties);
-    requireVulkan(vkAllocateMemory(device, &allocation, nullptr, &memory),
+    requireVulkan(ps1::gpu::allocateTrackedVulkanMemory(device, &allocation, nullptr, &memory),
                   "vkAllocateMemory(buffer)");
     requireVulkan(vkBindBufferMemory(device, buffer, memory, 0),
                   "vkBindBufferMemory");
@@ -3335,13 +3433,13 @@ struct RendererVulkan::Impl {
       allocation.memoryTypeIndex = findMemoryType(
           requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
       requireVulkan(
-          vkAllocateMemory(device, &allocation, nullptr, &allocatedMemory),
+          ps1::gpu::allocateTrackedVulkanMemory(device, &allocation, nullptr, &allocatedMemory),
           "vkAllocateMemory(image)");
       requireVulkan(vkBindImageMemory(device, createdImage, allocatedMemory, 0),
                     "vkBindImageMemory");
     } catch (...) {
       if (allocatedMemory != VK_NULL_HANDLE)
-        vkFreeMemory(device, allocatedMemory, nullptr);
+        ps1::gpu::freeTrackedVulkanMemory(device, allocatedMemory, nullptr);
       vkDestroyImage(device, createdImage, nullptr);
       throw;
     }
@@ -3427,7 +3525,7 @@ struct RendererVulkan::Impl {
       if (resource.image != VK_NULL_HANDLE)
         vkDestroyImage(device, resource.image, nullptr);
       if (resource.memory != VK_NULL_HANDLE)
-        vkFreeMemory(device, resource.memory, nullptr);
+        ps1::gpu::freeTrackedVulkanMemory(device, resource.memory, nullptr);
     }
     resource = {};
   }
@@ -3439,7 +3537,7 @@ struct RendererVulkan::Impl {
       if (resource.buffer != VK_NULL_HANDLE)
         vkDestroyBuffer(device, resource.buffer, nullptr);
       if (resource.memory != VK_NULL_HANDLE)
-        vkFreeMemory(device, resource.memory, nullptr);
+        ps1::gpu::freeTrackedVulkanMemory(device, resource.memory, nullptr);
     }
     resource = {};
   }
@@ -3449,7 +3547,7 @@ struct RendererVulkan::Impl {
       if (resource.buffer != VK_NULL_HANDLE)
         vkDestroyBuffer(device, resource.buffer, nullptr);
       if (resource.memory != VK_NULL_HANDLE)
-        vkFreeMemory(device, resource.memory, nullptr);
+        ps1::gpu::freeTrackedVulkanMemory(device, resource.memory, nullptr);
     }
     resource = {};
   }
@@ -3504,7 +3602,7 @@ struct RendererVulkan::Impl {
       if (readback.buffer != VK_NULL_HANDLE)
         vkDestroyBuffer(device, readback.buffer, nullptr);
       if (readback.memory != VK_NULL_HANDLE)
-        vkFreeMemory(device, readback.memory, nullptr);
+        ps1::gpu::freeTrackedVulkanMemory(device, readback.memory, nullptr);
     }
     readback = {};
   }
@@ -3591,6 +3689,7 @@ struct RendererVulkan::Impl {
       appendPlane(hostSceneDepthBytes, hostSceneDepthOffset,
                   "host scene depth");
     if (photoCapture || replayReadbackConfig.temporalMidpoint ||
+        !replayReadbackConfig.videoPipe.empty() ||
         !replayReadbackConfig.colorDumpDirectory.empty()) {
       const VkDeviceSize scanoutPixels =
           static_cast<VkDeviceSize>(scanoutExtent.width) * scanoutExtent.height;
@@ -3698,7 +3797,7 @@ struct RendererVulkan::Impl {
         allocation.memoryTypeIndex = findReplayReadbackMemoryType(
             requirements.memoryTypeBits, memoryFlags);
         requireVulkan(
-            vkAllocateMemory(device, &allocation, nullptr, &candidate.memory),
+            ps1::gpu::allocateTrackedVulkanMemory(device, &allocation, nullptr, &candidate.memory),
             "vkAllocateMemory(replay readback)");
         requireVulkan(
             vkBindBufferMemory(device, candidate.buffer, candidate.memory, 0),
@@ -4091,7 +4190,7 @@ struct RendererVulkan::Impl {
       }
       VkImageMemoryBarrier scanoutToTransfer{
           VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
-      scanoutToTransfer.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      scanoutToTransfer.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
       scanoutToTransfer.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
       scanoutToTransfer.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       scanoutToTransfer.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -4102,7 +4201,7 @@ struct RendererVulkan::Impl {
       scanoutToTransfer.subresourceRange.levelCount = 1u;
       scanoutToTransfer.subresourceRange.layerCount = 1u;
       vkCmdPipelineBarrier(commandBuffer,
-                           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                           VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
                            VK_PIPELINE_STAGE_TRANSFER_BIT, 0u, 0u, nullptr, 0u,
                            nullptr, 1u, &scanoutToTransfer);
       VkBufferImageCopy scanoutCopy{};
@@ -4475,6 +4574,37 @@ struct RendererVulkan::Impl {
           {base + readback.depthOffset,
            static_cast<std::size_t>(readback.depthBytes),
            static_cast<std::size_t>(scaledWidth) * sizeof(float)}};
+      if (!replayReadbackConfig.videoPipe.empty() && readback.hasScanoutColor) {
+        if (!videoStream.is_open()) {
+          videoStream.open(replayReadbackConfig.videoPipe, std::ios::binary);
+          if (!videoStream) throw std::runtime_error("Cannot open Vulkan video pipe");
+          if (const char *path=std::getenv("PS1_VULKAN_VIDEO_TIMELINE")) {
+            videoTimeline.open(path);
+            if (!videoTimeline) throw std::runtime_error("Cannot open video timeline");
+            videoTimeline << "vblank,presentation\n";
+          }
+        }
+        // An encoder receives complete scanouts, including modern postprocessing.
+        // Guest time selects frames; disk/encoder backpressure cannot change speed.
+        if (videoLastFrame && readback.guestFrame !=
+                                  videoLastFrame + replayReadbackConfig.interval)
+          throw std::runtime_error("Non-contiguous Vulkan video capture");
+        videoStream.write(reinterpret_cast<const char *>(base + readback.scanoutColorOffset),
+                          static_cast<std::streamsize>(readback.scanoutColorBytes));
+        if (!videoStream) throw std::runtime_error("Cannot write Vulkan video pipe");
+        if (videoTimeline.is_open()) {
+          videoTimeline << readback.guestFrame << ','
+                        << replayDiagnosticPresentationName(readback.presentation) << '\n';
+          if (!videoTimeline) throw std::runtime_error("Cannot write video timeline");
+        }
+        videoLastFrame = readback.guestFrame;
+        metrics::count("host.renderer.video.frames");
+        if (readback.presentation==ReplayDiagnosticPresentation::TemporalMidpoint)
+          metrics::count("host.renderer.video.interpolated_frames");
+        metrics::setState("host.renderer.video.last_vblank", videoLastFrame);
+        metrics::setState("host.renderer.video.width", readback.scanoutWidth);
+        metrics::setState("host.renderer.video.height", readback.scanoutHeight);
+      }
       if(readback.mgsPhotoCapture && readback.hasScanoutColor) {
         // Additional host photograph. The game's JPEG encoder, ghost code,
         // card format and CPU readbacks keep their original native image.
@@ -5465,6 +5595,8 @@ struct RendererVulkan::Impl {
       return "interpolation_restore";
     case GpuTimingPoint::ReplayEnd:
       return "replay_tail";
+    case GpuTimingPoint::MgsSsaoEnd:
+      return "mgs_ssao";
     case GpuTimingPoint::ResolveEnd:
       return "resolve";
     case GpuTimingPoint::PresentEnd:
@@ -6183,12 +6315,11 @@ struct RendererVulkan::Impl {
       constexpr VkColorComponentFlags replaySeedWriteMask =
           VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
           VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-      // The device does not request independentBlend. Keep both attachment
-      // states byte-identical as Vulkan therefore requires; components absent
-      // from the R8_UINT mask target are ignored.
+      // Keep all attachment states identical on devices without
+      // independentBlend; absent components in R8/R32 targets are ignored.
       blendAttachments[0].colorWriteMask = replaySeedWriteMask;
       blendAttachments[1].colorWriteMask = replaySeedWriteMask;
-      blendAttachments[2].colorWriteMask = VK_COLOR_COMPONENT_R_BIT;
+      blendAttachments[2].colorWriteMask = replaySeedWriteMask;
       VkPipelineColorBlendStateCreateInfo blend{
           VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
       blend.attachmentCount = static_cast<uint32_t>(blendAttachments.size());
@@ -6522,9 +6653,7 @@ struct RendererVulkan::Impl {
     // replay_precise.vert consumes the first word as a presentation-depth
     // multiplier. replay_copy_scratch.frag consumes the complete 32-byte
     // range on its separate fullscreen pipeline.
-    pushRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT |
-                           VK_SHADER_STAGE_FRAGMENT_BIT |
-                           VK_SHADER_STAGE_COMPUTE_BIT;
+    pushRange.stageFlags = kReplayPushStages;
     pushRange.offset = 0;
     pushRange.size = sizeof(replay::vulkan_abi::ScratchCopyPushConstants);
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{
@@ -6538,6 +6667,12 @@ struct RendererVulkan::Impl {
                                          &resources.pipelineLayout),
                   "vkCreatePipelineLayout(replay geometry)");
   }
+
+  // Every update of the shared range must include ALL declared stages,
+  // including CPU-upload/copy passes and compute/vertex draw variants.
+  static constexpr VkShaderStageFlags kReplayPushStages =
+      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT |
+      VK_SHADER_STAGE_COMPUTE_BIT;
 
   void createReplayGeometryRenderPass(ReplayGeometryResources &resources) {
     std::array<VkAttachmentDescription, 4> attachments{};
@@ -6830,8 +6965,7 @@ struct RendererVulkan::Impl {
           VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
       blendAttachments[0].colorWriteMask = colorWrites ? writeMask : 0u;
       blendAttachments[1].colorWriteMask = colorWrites ? writeMask : 0u;
-      blendAttachments[2].colorWriteMask =
-          colorWrites ? VK_COLOR_COMPONENT_R_BIT : 0u;
+      blendAttachments[2].colorWriteMask = colorWrites ? writeMask : 0u;
       if (storageInterlock) {
         if (fixedFunctionAbr.has_value() || !crash3SemiInterlockEnabled ||
             resources.crash3SemiInterlockRenderPass == VK_NULL_HANDLE) {
@@ -18336,7 +18470,8 @@ struct RendererVulkan::Impl {
       const replay::VulkanReplayBakedBatch &batch, uint32_t frameIndex,
       const Crash3ResidentSupplement *supplement,
       const Crash3ObjectSupplement *objectSupplement,
-      const Crash3TemporalMidpoint *midpoint = nullptr) {
+      const Crash3TemporalMidpoint *midpoint = nullptr,
+      const games::mgs::TemporalPair *mgsPair = nullptr) {
     if (!replayGeometryResources.complete() ||
         frameIndex >= replayGeometryResources.uploads.size() ||
         !liveReplayBatchSupported(batch)) {
@@ -20064,8 +20199,16 @@ struct RendererVulkan::Impl {
     }
     const VkDeviceSize uniformBase =
         ((sceneUploadEnd + stride - 1u) / stride) * stride;
-    const uint64_t uniformCount =
+    const uint64_t ordinaryUniformCount =
         drawCount + supplementUniformCount + scenerySemiUniformCount;
+    const uint32_t mgsPhaseCount = mgsPair ? mgsPair->steps - 1 : 0;
+    if (mgsPhaseCount > 2) return std::nullopt;
+    std::array<VkDeviceSize, 2> mgsPhaseUniformBase{};
+    for (uint32_t phase=0; phase<mgsPhaseCount; ++phase) {
+      if (mgsPair->phases[phase].size()!=drawCount) return std::nullopt;
+      mgsPhaseUniformBase[phase]=uniformBase+(ordinaryUniformCount+phase*drawCount)*stride;
+    }
+    const uint64_t uniformCount = ordinaryUniformCount + uint64_t(mgsPhaseCount)*drawCount;
     if (uniformCount >
         (std::numeric_limits<VkDeviceSize>::max() - uniformBase) / stride) {
       return std::nullopt;
@@ -20330,6 +20473,13 @@ struct RendererVulkan::Impl {
           uniforms.mgsPointLights[0] += uint32_t(pointLightBase / 4u);
         }
         std::memcpy(destination + offset, &uniforms, sizeof(uniforms));
+        for (uint32_t phase=0; phase<mgsPhaseCount; ++phase) {
+          auto temporal=mgsPair->phases[phase][drawIndex];
+          if (temporal.mgsPointLights[1])
+            temporal.mgsPointLights[0] += uint32_t(pointLightBase/4u);
+          std::memcpy(destination+mgsPhaseUniformBase[phase]+drawIndex*stride,
+                      &temporal,sizeof(temporal));
+        }
         ++drawIndex;
       }
     }
@@ -20517,6 +20667,8 @@ struct RendererVulkan::Impl {
       prepared.presentationPageValid = true;
     }
     prepared.uniformBase = uniformBase;
+    prepared.mgsPhaseUniformBase = mgsPhaseUniformBase;
+    prepared.mgsPhaseCount = mgsPhaseCount;
     prepared.nativeUploadBase = nativeUploadBase;
     prepared.vertexBufferOffset = 0u;
     prepared.residentBatchedOpaqueMaterialIndexBufferOffset =
@@ -21413,13 +21565,20 @@ struct RendererVulkan::Impl {
     return VK_PRESENT_MODE_FIFO_KHR;
   }
 
+  static void drawableSize(SDL_Window *window, int *width, int *height) {
+    if (environmentSwitchEnabled("PS1_VULKAN_HEADLESS_SURFACE"))
+      SDL_GetWindowSize(window, width, height);
+    else
+      SDL_Vulkan_GetDrawableSize(window, width, height);
+  }
+
   VkExtent2D chooseSwapchainExtent(SDL_Window *window,
                                    const VkSurfaceCapabilitiesKHR &caps) const {
     if (caps.currentExtent.width != std::numeric_limits<uint32_t>::max())
       return caps.currentExtent;
     int width = 0;
     int height = 0;
-    SDL_Vulkan_GetDrawableSize(window, &width, &height);
+    drawableSize(window, &width, &height);
     return {std::clamp(static_cast<uint32_t>(std::max(width, 1)),
                        caps.minImageExtent.width, caps.maxImageExtent.width),
             std::clamp(static_cast<uint32_t>(std::max(height, 1)),
@@ -21567,7 +21726,7 @@ struct RendererVulkan::Impl {
   bool drawableIsZero(SDL_Window *window) const {
     int width = 0;
     int height = 0;
-    SDL_Vulkan_GetDrawableSize(window, &width, &height);
+    drawableSize(window, &width, &height);
     return width <= 0 || height <= 0;
   }
 
@@ -21575,8 +21734,55 @@ struct RendererVulkan::Impl {
     if (drawableIsZero(window))
       return;
     requireVulkan(vkDeviceWaitIdle(device), "vkDeviceWaitIdle(resize)");
+    if (hostUiInitialized) ImGui_ImplVulkan_Shutdown();
     destroySwapchain();
     createSwapchain(window);
+    if (hostUiInitialized) initHostUiBackend();
+  }
+
+  void ensureMgsTemporalImages(uint32_t count) {
+    for (uint32_t i=0;i<count;++i) if (!mgsTemporalImages[i].image)
+      createImageResource(mgsTemporalImages[i], "MGS temporal scanout",scanoutExtent,
+          kScanoutColorFormat, VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+          VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+          VK_FORMAT_FEATURE_TRANSFER_SRC_BIT | VK_FORMAT_FEATURE_TRANSFER_DST_BIT |
+          VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT,VK_IMAGE_ASPECT_COLOR_BIT);
+  }
+
+  void copyMgsTemporalScanout(VkCommandBuffer cmd,uint32_t index,bool save) {
+    auto &image=mgsTemporalImages.at(index);
+    std::array<VkImageMemoryBarrier,2> before{};
+    for (unsigned i=0;i<2;++i) {
+      auto &b=before[i]; b.sType=VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+      b.image=i ? image.image : scanoutColorImage;
+      b.oldLayout=i && !mgsTemporalImageInitialized[index]
+          ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      b.newLayout=(i==unsigned(save)) ? VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+                                       : VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+      b.srcAccessMask=b.oldLayout==VK_IMAGE_LAYOUT_UNDEFINED ? 0 :
+          VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+      b.dstAccessMask=b.newLayout==VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+          ? VK_ACCESS_TRANSFER_READ_BIT : VK_ACCESS_TRANSFER_WRITE_BIT;
+      b.srcQueueFamilyIndex=b.dstQueueFamilyIndex=VK_QUEUE_FAMILY_IGNORED;
+      b.subresourceRange={VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1};
+    }
+    vkCmdPipelineBarrier(cmd,VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT,0,0,nullptr,0,nullptr,2,before.data());
+    VkImageCopy copy{};
+    copy.srcSubresource=copy.dstSubresource={VK_IMAGE_ASPECT_COLOR_BIT,0,0,1};
+    copy.extent={scanoutExtent.width,scanoutExtent.height,1};
+    vkCmdCopyImage(cmd,save ? scanoutColorImage : image.image,
+        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,save ? image.image : scanoutColorImage,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,1,&copy);
+    auto after=before;
+    for (auto &b:after) {
+      b.srcAccessMask=b.dstAccessMask;
+      b.dstAccessMask=VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+      b.oldLayout=b.newLayout; b.newLayout=VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
+    vkCmdPipelineBarrier(cmd,VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,0,0,nullptr,0,nullptr,2,after.data());
+    mgsTemporalImageInitialized[index]=true;
   }
 
   void destroyScanoutTarget() {
@@ -21589,13 +21795,17 @@ struct RendererVulkan::Impl {
     if (scanoutColorImage != VK_NULL_HANDLE)
       vkDestroyImage(device, scanoutColorImage, nullptr);
     if (scanoutColorMemory != VK_NULL_HANDLE)
-      vkFreeMemory(device, scanoutColorMemory, nullptr);
+      ps1::gpu::freeTrackedVulkanMemory(device, scanoutColorMemory, nullptr);
     scanoutFramebuffer = VK_NULL_HANDLE;
     scanoutColorView = VK_NULL_HANDLE;
     scanoutColorImage = VK_NULL_HANDLE;
     scanoutColorMemory = VK_NULL_HANDLE;
     scanoutExtent = {};
     scanoutColorInitialized = false;
+    for (auto &image:mgsTemporalImages) destroyImageResource(image);
+    mgsTemporalImageInitialized={};
+    mgsPendingScanout.reset();
+    mgsInterpolator.reset();
   }
 
   void ensureScanoutTarget(const DisplayScanoutPlan &scanout,
@@ -21650,7 +21860,7 @@ struct RendererVulkan::Impl {
     createImage(wanted.width, wanted.height, kScanoutColorFormat,
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
                     VK_IMAGE_USAGE_SAMPLED_BIT |
-                    VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+                    VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
                 scanoutColorImage, scanoutColorMemory);
     scanoutColorView = createImageView(scanoutColorImage, kScanoutColorFormat);
     VkFramebufferCreateInfo framebufferInfo{
@@ -21762,7 +21972,18 @@ struct RendererVulkan::Impl {
     replaySeedSmokeRequested =
         seedSmoke != nullptr && std::strcmp(seedSmoke, "1") == 0;
     createInstance(window);
-    if (SDL_Vulkan_CreateSurface(window, instance, &surface) != SDL_TRUE) {
+    if (environmentSwitchEnabled("PS1_VULKAN_HEADLESS_SURFACE")) {
+      const auto create = reinterpret_cast<PFN_vkCreateHeadlessSurfaceEXT>(
+          vkGetInstanceProcAddr(instance, "vkCreateHeadlessSurfaceEXT"));
+      if (!create)
+        throw std::runtime_error("Vulkan headless surface entry point unavailable");
+      const VkHeadlessSurfaceCreateInfoEXT info{
+          VK_STRUCTURE_TYPE_HEADLESS_SURFACE_CREATE_INFO_EXT};
+      requireVulkan(create(instance, &info, nullptr, &surface),
+                    "vkCreateHeadlessSurfaceEXT");
+      fmt::print("[RendererVK] diagnostic headless Vulkan surface; rendering remains active\n");
+      metrics::setState("host.renderer.headless_surface", 1);
+    } else if (SDL_Vulkan_CreateSurface(window, instance, &surface) != SDL_TRUE) {
       throw std::runtime_error(std::string("SDL Vulkan surface: ") +
                                SDL_GetError());
     }
@@ -22026,6 +22247,12 @@ struct RendererVulkan::Impl {
                VK_VERSION_MAJOR(properties.apiVersion),
                VK_VERSION_MINOR(properties.apiVersion),
                VK_VERSION_PATCH(properties.apiVersion), properties.deviceName);
+    // The actual selected device, not a machine inventory or a name heuristic.
+    ps1::metrics::setState("host.renderer.vulkan_device_type", properties.deviceType);
+    ps1::metrics::setState("host.renderer.vulkan_vendor_id", properties.vendorID);
+    ps1::metrics::setState("host.renderer.vulkan_device_id", properties.deviceID);
+    ps1::metrics::setState("host.renderer.vulkan_driver_version", properties.driverVersion);
+    ps1::metrics::setState("host.renderer.vulkan_api_version", properties.apiVersion);
     fmt::print(
         "[RendererVK] selected replay resource gate at {}x: {} "
         "(eligible M1 executor active)\n",
@@ -23026,7 +23253,7 @@ struct RendererVulkan::Impl {
           throw std::runtime_error("Crash 3 midpoint dispatch is empty");
         vkCmdPushConstants(commandBuffer,
                            replayGeometryResources.pipelineLayout,
-                           VK_SHADER_STAGE_COMPUTE_BIT, 0u,
+                           kReplayPushStages, 0u,
                            sizeof(dispatch.push), &dispatch.push);
         vkCmdDispatch(commandBuffer, (dispatch.triangleCount + 63u) / 64u, 1u,
                       1u);
@@ -23098,7 +23325,10 @@ struct RendererVulkan::Impl {
                             uint32_t frameIndex, bool visibilityAudit,
                             bool useMidpointVertices = false,
                             bool feedbackScratchAlreadyInitialized = false,
-                            bool visibilityDepthDisplayOnly = false) {
+                            bool visibilityDepthDisplayOnly = false,
+                            uint32_t mgsPhase = 0) {
+    if (mgsPhase > prepared.mgsPhaseCount)
+      throw std::runtime_error("MGS temporal uniform phase unavailable");
     if (visibilityAudit)
       refreshReplayVisibilityManifest();
     if (replayPresentationWipRequested)
@@ -24341,7 +24571,7 @@ struct RendererVulkan::Impl {
             replay::makeVulkanReplayScratchCopyPushConstants(region, copy.mask);
         vkCmdPushConstants(
             commandBuffer, replayGeometryResources.pipelineLayout,
-            VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(push), &push);
+            kReplayPushStages, 0, sizeof(push), &push);
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
       }
 
@@ -24505,7 +24735,7 @@ struct RendererVulkan::Impl {
                 &replayDraw.dynamicOffset);
             vkCmdPushConstants(commandBuffer,
                                replayGeometryResources.pipelineLayout,
-                               VK_SHADER_STAGE_VERTEX_BIT, 0,
+                               kReplayPushStages, 0,
                                sizeof(replayDraw.push), &replayDraw.push);
           };
 
@@ -24513,7 +24743,7 @@ struct RendererVulkan::Impl {
         vkCmdSetScissor(commandBuffer, 0, 1,
                         &prepared.residentSupplementScissor);
         for (const auto &draw : prepared.residentBackgroundUnderlayDraws) {
-          if (draw.textured) {
+          { // Shared material shaders statically use set 0, even for untextured draws.
             vkCmdBindDescriptorSets(
                 commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                 replayGeometryResources.pipelineLayout, 0, 1,
@@ -24526,7 +24756,7 @@ struct RendererVulkan::Impl {
               &draw.dynamicOffset);
           vkCmdPushConstants(
               commandBuffer, replayGeometryResources.pipelineLayout,
-              VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(draw.depth), &draw.depth);
+              kReplayPushStages, 0, sizeof(draw.depth), &draw.depth);
           vkCmdBindPipeline(
               commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
               draw.textured ? replayGeometryResources.opaqueTexturedPipeline
@@ -24683,16 +24913,16 @@ struct RendererVulkan::Impl {
           if (useRawProjection) {
             vkCmdPushConstants(
                 commandBuffer, replayGeometryResources.pipelineLayout,
-                VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(rawPull), &rawPull);
+                kReplayPushStages, 0, sizeof(rawPull), &rawPull);
           } else if (useModelProjection) {
             vkCmdPushConstants(commandBuffer,
                                replayGeometryResources.pipelineLayout,
-                               VK_SHADER_STAGE_VERTEX_BIT, 0,
+                               kReplayPushStages, 0,
                                sizeof(draw.modelPull), &draw.modelPull);
           } else {
             vkCmdPushConstants(
                 commandBuffer, replayGeometryResources.pipelineLayout,
-                VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pull), &pull);
+                kReplayPushStages, 0, sizeof(pull), &pull);
           }
           vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             opaquePipeline);
@@ -24743,8 +24973,8 @@ struct RendererVulkan::Impl {
           for (const auto &draw : prepared.residentSupplementDraws) {
             vkCmdPushConstants(
                 commandBuffer, replayGeometryResources.pipelineLayout,
-                VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(draw.depth), &draw.depth);
-            if (draw.textured) {
+                kReplayPushStages, 0, sizeof(draw.depth), &draw.depth);
+            { // Shared material shaders statically use set 0, even for untextured draws.
               vkCmdBindDescriptorSets(
                   commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                   replayGeometryResources.pipelineLayout, 0, 1,
@@ -24911,7 +25141,7 @@ struct RendererVulkan::Impl {
           }
         }
         vkCmdSetScissor(commandBuffer, 0, 1, &draw.scissor);
-        if (draw.textured || draw.fragmentInterlock) {
+        { // Shared material shaders statically use set 0, even for untextured draws.
           vkCmdBindDescriptorSets(
               commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
               replayGeometryResources.pipelineLayout, 0, 1,
@@ -24925,12 +25155,12 @@ struct RendererVulkan::Impl {
         if (draw.rawProjection) {
           vkCmdPushConstants(commandBuffer,
                              replayGeometryResources.pipelineLayout,
-                             VK_SHADER_STAGE_VERTEX_BIT, 0,
+                             kReplayPushStages, 0,
                              sizeof(draw.rawPull), &draw.rawPull);
         } else {
           vkCmdPushConstants(
               commandBuffer, replayGeometryResources.pipelineLayout,
-              VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(draw.push), &draw.push);
+              kReplayPushStages, 0, sizeof(draw.push), &draw.push);
         }
         const VkPipeline firstPipeline =
             draw.rawProjection
@@ -25085,7 +25315,7 @@ struct RendererVulkan::Impl {
                              &ordinaryVertexBufferOffset);
       vkCmdSetScissor(commandBuffer, 0, 1, &prepared.objectSupplementScissor);
       for (const auto &draw : prepared.objectBackgroundUnderlayDraws) {
-        if (draw.textured) {
+        { // Shared material shaders statically use set 0, even for untextured draws.
           vkCmdBindDescriptorSets(
               commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
               replayGeometryResources.pipelineLayout, 0, 1,
@@ -25101,7 +25331,7 @@ struct RendererVulkan::Impl {
                                         : backgroundOpaqueUntextured);
         vkCmdPushConstants(
             commandBuffer, replayGeometryResources.pipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(draw.depth), &draw.depth);
+            kReplayPushStages, 0, sizeof(draw.depth), &draw.depth);
         vkCmdDraw(commandBuffer, draw.vertexCount, 1, draw.firstVertex, 0);
         ps1::metrics::count(
             "host.renderer.crash3_profile.object_background_underlay_draw");
@@ -25112,7 +25342,7 @@ struct RendererVulkan::Impl {
       for (const auto &draw : prepared.objectSupplementDraws) {
         if (!draw.background)
           continue;
-        if (draw.textured) {
+        { // Shared material shaders statically use set 0, even for untextured draws.
           vkCmdBindDescriptorSets(
               commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
               replayGeometryResources.pipelineLayout, 0, 1,
@@ -25128,13 +25358,13 @@ struct RendererVulkan::Impl {
                                         : backgroundOpaqueUntextured);
         vkCmdPushConstants(
             commandBuffer, replayGeometryResources.pipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(draw.depth), &draw.depth);
+            kReplayPushStages, 0, sizeof(draw.depth), &draw.depth);
         vkCmdDraw(commandBuffer, draw.vertexCount, 1, draw.firstVertex, 0);
       }
       for (const auto &draw : prepared.objectOrderedSemiDraws) {
         if (!draw.background)
           continue;
-        if (draw.textured) {
+        { // Shared material shaders statically use set 0, even for untextured draws.
           vkCmdBindDescriptorSets(
               commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
               replayGeometryResources.pipelineLayout, 0, 1,
@@ -25171,7 +25401,7 @@ struct RendererVulkan::Impl {
         }
         vkCmdPushConstants(
             commandBuffer, replayGeometryResources.pipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(draw.depth), &draw.depth);
+            kReplayPushStages, 0, sizeof(draw.depth), &draw.depth);
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                           firstPipeline);
         vkCmdDraw(commandBuffer, draw.vertexCount, 1, draw.firstVertex, 0);
@@ -25251,7 +25481,7 @@ struct RendererVulkan::Impl {
                              &ordinaryVertexBufferOffset);
       for (const ObjectDepthGuideDraw &draw : objectDepthGuideDraws) {
         vkCmdSetScissor(commandBuffer, 0, 1, &draw.scissor);
-        if (draw.textured) {
+        { // Shared material shaders statically use set 0, even for untextured draws.
           vkCmdBindDescriptorSets(
               commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
               replayGeometryResources.pipelineLayout, 0, 1,
@@ -25264,7 +25494,7 @@ struct RendererVulkan::Impl {
             &draw.dynamicOffset);
         vkCmdPushConstants(
             commandBuffer, replayGeometryResources.pipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(draw.depth), &draw.depth);
+            kReplayPushStages, 0, sizeof(draw.depth), &draw.depth);
         const VkPipeline pipeline =
             draw.textured
                 ? replayGeometryResources.opaqueTexturedDepthGuidePipeline
@@ -25326,7 +25556,7 @@ struct RendererVulkan::Impl {
       for (const auto &draw : prepared.objectSupplementDraws) {
         if (draw.background)
           continue;
-        if (draw.textured) {
+        { // Shared material shaders statically use set 0, even for untextured draws.
           vkCmdBindDescriptorSets(
               commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
               replayGeometryResources.pipelineLayout, 0, 1,
@@ -25351,7 +25581,7 @@ struct RendererVulkan::Impl {
                           pipeline);
         vkCmdPushConstants(
             commandBuffer, replayGeometryResources.pipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(draw.depth), &draw.depth);
+            kReplayPushStages, 0, sizeof(draw.depth), &draw.depth);
         recordWithObjectScissor(draw.marginOnly, [&] {
           vkCmdDraw(commandBuffer, draw.vertexCount, 1, draw.firstVertex, 0);
         });
@@ -25406,7 +25636,7 @@ struct RendererVulkan::Impl {
                {"y2_milli",
                 static_cast<int64_t>(vertices[2].positionNative[1] * 1000)}});
         }
-        if (draw.textured) {
+        { // Shared material shaders statically use set 0, even for untextured draws.
           vkCmdBindDescriptorSets(
               commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
               replayGeometryResources.pipelineLayout, 0, 1,
@@ -25432,7 +25662,7 @@ struct RendererVulkan::Impl {
         }
         vkCmdPushConstants(
             commandBuffer, replayGeometryResources.pipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(draw.depth), &draw.depth);
+            kReplayPushStages, 0, sizeof(draw.depth), &draw.depth);
         const bool needsStpPass =
             draw.textured && (draw.abr == 0u || draw.abr == 2u);
         const VkPipeline blendPipeline =
@@ -25568,7 +25798,7 @@ struct RendererVulkan::Impl {
                                 0, nullptr);
         vkCmdPushConstants(commandBuffer,
                            replayGeometryResources.pipelineLayout,
-                           VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(uint32_t),
+                           kReplayPushStages, 0, sizeof(uint32_t),
                            &batch.internalScale);
         for (const replay::VulkanReplayBakedCpuUploadRun &run :
              cpuUpload->runs) {
@@ -25877,7 +26107,7 @@ struct RendererVulkan::Impl {
             draw->segments[segmentIndex];
         const uint32_t preparedSegmentIndex = drawIndex;
         const VkDeviceSize dynamicOffset64 =
-            prepared.uniformBase + static_cast<VkDeviceSize>(drawIndex) *
+            (mgsPhase ? prepared.mgsPhaseUniformBase[mgsPhase-1] : prepared.uniformBase) + static_cast<VkDeviceSize>(drawIndex) *
                                        replayGeometryResources.uniformStride;
         const uint32_t dynamicOffset = static_cast<uint32_t>(dynamicOffset64);
         ++drawIndex;
@@ -25898,7 +26128,7 @@ struct RendererVulkan::Impl {
                                 static_cast<int32_t>(segment.scissor.y)},
                                {segment.scissor.width, segment.scissor.height}};
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-        if (textured || !opaqueFastPath) {
+        { // Shared material shaders statically use set 0, even for untextured draws.
           vkCmdBindDescriptorSets(
               commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
               replayGeometryResources.pipelineLayout, 0, 1,
@@ -26431,7 +26661,7 @@ struct RendererVulkan::Impl {
               std::bit_cast<uint32_t>(plan.surfaceBias)};
           vkCmdPushConstants(
               commandBuffer, replayGeometryResources.pipelineLayout,
-              VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(push), &push);
+              kReplayPushStages, 0, sizeof(push), &push);
           vkCmdDraw(commandBuffer, vertexCount, 1, firstVertex, 0);
           ps1::metrics::count("host.renderer.vulkan_replay_geometry_draw");
           ps1::metrics::count(plan.pipelineMetric);
@@ -26617,6 +26847,256 @@ struct RendererVulkan::Impl {
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
   }
 
+  void destroyMgsSsao() {
+    if (device == VK_NULL_HANDLE)
+      return;
+    for (auto pipeline : {mgsSsao.generate, mgsSsao.blur, mgsSsao.resolve})
+      if (pipeline)
+        vkDestroyPipeline(device, pipeline, nullptr);
+    for (auto layout : {mgsSsao.computeLayout, mgsSsao.resolveLayout})
+      if (layout)
+        vkDestroyPipelineLayout(device, layout, nullptr);
+    if (mgsSsao.pool)
+      vkDestroyDescriptorPool(device, mgsSsao.pool, nullptr);
+    for (auto layout : {mgsSsao.computeSetLayout, mgsSsao.resolveSetLayout})
+      if (layout)
+        vkDestroyDescriptorSetLayout(device, layout, nullptr);
+    if (mgsSsao.sampler)
+      vkDestroySampler(device, mgsSsao.sampler, nullptr);
+    for (auto &image : mgsSsao.images)
+      destroyImageResource(image);
+    mgsSsao = {};
+  }
+
+  void ensureMgsSsao(const DisplayScanoutPlan &scanout) {
+    const uint32_t scale = replayResources.internalScale;
+    const VkExtent2D extent{(scanout.activeExtent.width * scale + 1u) / 2u,
+                            (scanout.activeExtent.height * scale + 1u) / 2u};
+    if (mgsSsao.resolve && mgsSsao.images[0].extent.width == extent.width &&
+        mgsSsao.images[0].extent.height == extent.height &&
+        mgsSsao.sourceDepth == replayResources.surfaceDepth.view)
+      return;
+    requireVulkan(vkDeviceWaitIdle(device), "vkDeviceWaitIdle(SSAO resize)");
+    destroyMgsSsao();
+    try {
+      for (auto &image : mgsSsao.images)
+        createImageResource(image, "MGS SSAO", extent, VK_FORMAT_R8G8B8A8_UNORM,
+                            VK_IMAGE_USAGE_STORAGE_BIT |
+                                VK_IMAGE_USAGE_SAMPLED_BIT,
+                            VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT |
+                                VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT,
+                            VK_IMAGE_ASPECT_COLOR_BIT);
+      mgsSsao.sampler = createSampler(VK_FILTER_NEAREST);
+      for (unsigned pass = 0; pass < 2; ++pass) {
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings{};
+        for (unsigned i = 0; i < 3; ++i) {
+          bindings[i].binding = i;
+          bindings[i].descriptorCount = 1;
+          bindings[i].descriptorType =
+              pass == 0 && i == 2 ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE
+                                  : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+          bindings[i].stageFlags = pass == 0 ? VK_SHADER_STAGE_COMPUTE_BIT
+                                             : VK_SHADER_STAGE_FRAGMENT_BIT;
+        }
+        VkDescriptorSetLayoutCreateInfo info{
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+        info.bindingCount = 3;
+        info.pBindings = bindings.data();
+        auto &layout =
+            pass == 0 ? mgsSsao.computeSetLayout : mgsSsao.resolveSetLayout;
+        requireVulkan(
+            vkCreateDescriptorSetLayout(device, &info, nullptr, &layout),
+            "vkCreateDescriptorSetLayout(SSAO)");
+        VkPushConstantRange range{bindings[0].stageFlags, 0,
+                                  sizeof(MgsSsaoPush)};
+        VkPipelineLayoutCreateInfo pipeline{
+            VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+        pipeline.setLayoutCount = 1;
+        pipeline.pSetLayouts = &layout;
+        pipeline.pushConstantRangeCount = 1;
+        pipeline.pPushConstantRanges = &range;
+        auto &pipelineLayout =
+            pass == 0 ? mgsSsao.computeLayout : mgsSsao.resolveLayout;
+        requireVulkan(
+            vkCreatePipelineLayout(device, &pipeline, nullptr, &pipelineLayout),
+            "vkCreatePipelineLayout(SSAO)");
+      }
+      const std::array<VkDescriptorPoolSize, 2> sizes{
+          {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 7},
+           {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 2}}};
+      VkDescriptorPoolCreateInfo pool{
+          VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
+      pool.maxSets = 3;
+      pool.poolSizeCount = sizes.size();
+      pool.pPoolSizes = sizes.data();
+      requireVulkan(
+          vkCreateDescriptorPool(device, &pool, nullptr, &mgsSsao.pool),
+          "vkCreateDescriptorPool(SSAO)");
+      const std::array<VkDescriptorSetLayout, 3> layouts{
+          mgsSsao.computeSetLayout, mgsSsao.computeSetLayout,
+          mgsSsao.resolveSetLayout};
+      VkDescriptorSetAllocateInfo allocate{
+          VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+      allocate.descriptorPool = mgsSsao.pool;
+      allocate.descriptorSetCount = 3;
+      allocate.pSetLayouts = layouts.data();
+      requireVulkan(
+          vkAllocateDescriptorSets(device, &allocate, mgsSsao.sets.data()),
+          "vkAllocateDescriptorSets(SSAO)");
+      for (unsigned pass = 0; pass < 3; ++pass) {
+        std::array<VkDescriptorImageInfo, 3> images{};
+        images[0] = {mgsSsao.sampler,
+                     pass == 2 ? replayResources.color.view
+                               : replayResources.surfaceDepth.view,
+                     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+        images[1] = {mgsSsao.sampler,
+                     pass == 2 ? replayResources.surfaceDepth.view
+                               : mgsSsao.images[0].view,
+                     pass == 2 ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                               : VK_IMAGE_LAYOUT_GENERAL};
+        images[2] = {pass == 2 ? mgsSsao.sampler : VK_NULL_HANDLE,
+                     mgsSsao.images[pass == 0 ? 0 : 1].view,
+                     VK_IMAGE_LAYOUT_GENERAL};
+        std::array<VkWriteDescriptorSet, 3> writes{};
+        for (unsigned i = 0; i < 3; ++i) {
+          writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+          writes[i].dstSet = mgsSsao.sets[pass];
+          writes[i].dstBinding = i;
+          writes[i].descriptorCount = 1;
+          writes[i].descriptorType =
+              pass != 2 && i == 2 ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE
+                                  : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+          writes[i].pImageInfo = &images[i];
+        }
+        vkUpdateDescriptorSets(device, writes.size(), writes.data(), 0,
+                               nullptr);
+      }
+      for (unsigned pass = 0; pass < 2; ++pass) {
+        VkShaderModule shader = createShaderModule(
+            pass == 0 ? "mgs_ssao.comp.spv" : "mgs_ssao_blur.comp.spv");
+        VkComputePipelineCreateInfo pipeline{
+            VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO};
+        pipeline.stage.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        pipeline.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+        pipeline.stage.module = shader;
+        pipeline.stage.pName = "main";
+        pipeline.layout = mgsSsao.computeLayout;
+        const VkResult result = vkCreateComputePipelines(
+            device, VK_NULL_HANDLE, 1, &pipeline, nullptr,
+            pass == 0 ? &mgsSsao.generate : &mgsSsao.blur);
+        vkDestroyShaderModule(device, shader, nullptr);
+        requireVulkan(result, "vkCreateComputePipelines(SSAO)");
+      }
+      mgsSsao.resolve =
+          createFullscreenPipeline(scanoutRenderPass, mgsSsao.resolveLayout,
+                                   "present_replay_ssao.frag.spv");
+      mgsSsao.sourceDepth = replayResources.surfaceDepth.view;
+    } catch (...) {
+      destroyMgsSsao();
+      throw;
+    }
+    ps1::metrics::setState("mgs.ssao.width", extent.width);
+    ps1::metrics::setState("mgs.ssao.height", extent.height);
+    ps1::metrics::count("mgs.ssao.resource_creations");
+  }
+
+  void rememberMgsSsaoCameras(const replay::VulkanReplayBakedBatch &batch) {
+    for (const auto &command : batch.commands) {
+      const auto *draw =
+          std::get_if<replay::VulkanReplayBakedDraw>(&command.payload);
+      if (!draw)
+        continue;
+      for (unsigned s = 0; s < draw->segmentCount; ++s) {
+        const auto &segment = draw->segments[s];
+        const auto &projection = segment.uniforms.mgsProjection;
+        if ((projection[3] != 1 && projection[3] != 3) || projection[0] <= 0 ||
+            !std::all_of(projection.begin(), projection.end(),
+                         [](float v) { return std::isfinite(v); }))
+          continue;
+        auto found = std::find_if(
+            mgsSsaoCameras.begin(), mgsSsaoCameras.end(),
+            [&](const auto &c) { return c.area == segment.scissor; });
+        if (found == mgsSsaoCameras.end()) {
+          if (mgsSsaoCameras.size() == 16)
+            mgsSsaoCameras.erase(mgsSsaoCameras.begin());
+          mgsSsaoCameras.push_back({segment.scissor, projection});
+        } else
+          found->projection = projection;
+      }
+    }
+  }
+
+  std::optional<MgsSsaoPush>
+  mgsSsaoPush(const DisplayScanoutPlan &scanout) const {
+    // Only a camera belonging to this atlas page may reconstruct view-space W.
+    // No guessed lens or history from a different display page is accepted.
+    const uint32_t scale = replayResources.internalScale;
+    const uint32_t x =
+        (scanout.sourceByteX / 2 + scanout.activeExtent.width / 2) * scale;
+    const uint32_t y =
+        (scanout.sourceY + scanout.activeExtent.height / 2) * scale;
+    for (auto it = mgsSsaoCameras.rbegin(); it != mgsSsaoCameras.rend(); ++it) {
+      const auto &r = it->area;
+      if (x < r.x || y < r.y || x >= r.x + r.width || y >= r.y + r.height)
+        continue;
+      MgsSsaoPush push;
+      push.scanout = makeVulkanScanoutPushConstants(scanout, scale);
+      const auto &p = it->projection;
+      push.camera = {p[0] * (games::mgs::widescreen16x9() ? 0.75f : 1.0f), p[0],
+                     p[1], p[2]};
+      return push;
+    }
+    return std::nullopt;
+  }
+
+  void recordMgsSsao(VkCommandBuffer commandBuffer, const MgsSsaoPush &push) {
+    std::array<VkImageMemoryBarrier, 2> barriers{};
+    for (unsigned i = 0; i < 2; ++i) {
+      auto &b = barriers[i];
+      b.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+      b.srcAccessMask = mgsSsao.initialized ? VK_ACCESS_SHADER_READ_BIT |
+                                                  VK_ACCESS_SHADER_WRITE_BIT
+                                            : 0;
+      b.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+      b.oldLayout = mgsSsao.initialized ? VK_IMAGE_LAYOUT_GENERAL
+                                        : VK_IMAGE_LAYOUT_UNDEFINED;
+      b.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+      b.image = mgsSsao.images[i].image;
+      b.srcQueueFamilyIndex = b.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+      b.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+    }
+    vkCmdPipelineBarrier(commandBuffer,
+                         mgsSsao.initialized
+                             ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
+                                   VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+                             : VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0,
+                         nullptr, 2, barriers.data());
+    vkCmdPushConstants(commandBuffer, mgsSsao.computeLayout,
+                       VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push), &push);
+    for (unsigned pass = 0; pass < 2; ++pass) {
+      vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE,
+                        pass == 0 ? mgsSsao.generate : mgsSsao.blur);
+      vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE,
+                              mgsSsao.computeLayout, 0, 1, &mgsSsao.sets[pass],
+                              0, nullptr);
+      const auto extent = mgsSsao.images[0].extent;
+      vkCmdDispatch(commandBuffer, (extent.width + 7) / 8,
+                    (extent.height + 7) / 8, 1);
+      auto b = barriers[pass];
+      b.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+      b.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+      b.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+      vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                           pass == 0 ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT
+                                     : VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                           0, 0, nullptr, 0, nullptr, 1, &b);
+    }
+    mgsSsao.initialized = true;
+    ps1::metrics::count("mgs.ssao.dispatches", 2);
+  }
+
   void recordNativeSnapshotResolve(VkCommandBuffer commandBuffer,
                                    const DisplayScanoutPlan &scanout) {
     VkClearValue clear{};
@@ -26652,7 +27132,8 @@ struct RendererVulkan::Impl {
       VkCommandBuffer commandBuffer, const DisplayScanoutPlan &scanout,
       bool seededThisSubmit, VulkanPresentationView presentationView,
       bool preCorrectionDepthAvailable, bool temporalHoleFill = false,
-      const DisplayScanoutPlan *temporalPreviousEndpoint = nullptr) {
+      const DisplayScanoutPlan *temporalPreviousEndpoint = nullptr,
+      const MgsSsaoPush *aoPush = nullptr) {
     if (!displayScanoutSupportsPrecisionAtlas(scanout)) {
       throw std::runtime_error(
           "Vulkan replay atlas cannot satisfy this scanout format or field");
@@ -26665,6 +27146,8 @@ struct RendererVulkan::Impl {
 
     const bool visualizeDepth =
         vulkanPresentationViewUsesDepth(presentationView);
+    if (aoPush && (visualizeDepth || temporalHoleFill || !mgsSsao.resolve))
+      throw std::runtime_error("SSAO requires an ordinary complete color resolve");
     if (temporalHoleFill &&
         (visualizeDepth || presentationView != VulkanPresentationView::Color ||
          temporalPreviousEndpoint == nullptr ||
@@ -26728,10 +27211,10 @@ struct RendererVulkan::Impl {
                                     VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                                 VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                                 replayAtlasDescriptor};
-      if (temporalHoleFill) {
+      if (temporalHoleFill || aoPush) {
         sources[sourceCount++] = surfaceDepthSource(
             replayResources.surfaceDepth, replayDepthDescriptor);
-        if (!temporalPreviousUsesAtlas) {
+        if (temporalHoleFill && !temporalPreviousUsesAtlas) {
           sources[sourceCount++] = {
               replayInterpolationBackupResources.color.image,
               VK_IMAGE_ASPECT_COLOR_BIT,
@@ -26786,9 +27269,16 @@ struct RendererVulkan::Impl {
       barrier.subresourceRange.layerCount = 1;
       attachmentStages |= source.attachmentStages;
     }
+    const VkPipelineStageFlags sampleStages=VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
+        (aoPush ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT : 0u);
     vkCmdPipelineBarrier(commandBuffer, attachmentStages,
-                         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr,
+                         sampleStages, 0, 0, nullptr,
                          0, nullptr, sourceCount, toSample.data());
+
+    if (aoPush) {
+      recordMgsSsao(commandBuffer,*aoPush);
+      writeGpuTiming(frames[currentFrame],GpuTimingPoint::MgsSsaoEnd);
+    }
 
     VkClearValue clear{};
     clear.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
@@ -26802,11 +27292,11 @@ struct RendererVulkan::Impl {
     if (displayScanoutHasActiveImage(scanout)) {
       setScanoutActiveViewport(commandBuffer, scanout);
       const VkPipelineLayout resolveLayout =
-          temporalHoleFill ? replayTemporalResolvePipelineLayout
+          aoPush ? mgsSsao.resolveLayout : temporalHoleFill ? replayTemporalResolvePipelineLayout
                            : nativeSnapshotPipelineLayout;
       vkCmdBindPipeline(
           commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-          temporalHoleFill
+          aoPush ? mgsSsao.resolve : temporalHoleFill
               ? replayTemporalResolvePipeline
               : (visualizeDepth
                      ? (presentationView ==
@@ -26814,7 +27304,9 @@ struct RendererVulkan::Impl {
                             ? replayPreDepthResolvePipeline
                             : replayDepthResolvePipeline)
                      : replayAtlasResolvePipeline));
-      if (temporalHoleFill) {
+      if (aoPush) {
+        vkCmdPushConstants(commandBuffer,resolveLayout,VK_SHADER_STAGE_FRAGMENT_BIT,0,sizeof(*aoPush),aoPush);
+      } else if (temporalHoleFill) {
         const VulkanTemporalScanoutPushConstants push =
             makeVulkanTemporalScanoutPushConstants(
                 scanout, *temporalPreviousEndpoint,
@@ -26843,7 +27335,12 @@ struct RendererVulkan::Impl {
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
       };
       const VkRect2D activeRect = scanoutActiveRect(scanout);
-      if (temporalHoleFill) {
+      if (aoPush) {
+        vkCmdSetScissor(commandBuffer,0,1,&activeRect);
+        vkCmdBindDescriptorSets(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,resolveLayout,0,1,&mgsSsao.sets[2],0,nullptr);
+        vkCmdDraw(commandBuffer,3,1,0,0);
+        ps1::metrics::count("mgs.ssao.resolves");
+      } else if (temporalHoleFill) {
         vkCmdSetScissor(commandBuffer, 0, 1, &activeRect);
         const std::array<VkDescriptorSet, 4> temporalDescriptors{
             sources[0].descriptor, sources[1].descriptor,
@@ -26890,7 +27387,7 @@ struct RendererVulkan::Impl {
       barrier.oldLayout = sources[index].sampledLayout;
       barrier.newLayout = sources[index].attachmentLayout;
     }
-    vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+    vkCmdPipelineBarrier(commandBuffer, sampleStages,
                          attachmentStages, 0, 0, nullptr, 0, nullptr,
                          sourceCount, toAttachment.data());
   }
@@ -26940,6 +27437,8 @@ struct RendererVulkan::Impl {
                             presentPipelineLayout, 0, 1, &scanoutDescriptor, 0,
                             nullptr);
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+    if (hostUiInitialized && hostUiDrawValid)
+      ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
     vkCmdEndRenderPass(commandBuffer);
   }
 
@@ -26978,6 +27477,7 @@ struct RendererVulkan::Impl {
   }
 
   void rebaseGuestTimeline() {
+    mgsSsaoCameras.clear();
     if (replayScheduler == nullptr)
       return;
     requireVulkan(vkDeviceWaitIdle(device),
@@ -27007,7 +27507,7 @@ struct RendererVulkan::Impl {
               const replay::ReplayNativeSnapshotIdentity *replaySnapshot,
               VulkanPresentationView presentationView) {
     int drawableWidth = 0, drawableHeight = 0;
-    SDL_Vulkan_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+    drawableSize(window, &drawableWidth, &drawableHeight);
     if (drawableWidth <= 0 || drawableHeight <= 0)
       return false;
     // Wayland may keep presenting/scaling an old swapchain without reporting
@@ -27061,6 +27561,10 @@ struct RendererVulkan::Impl {
     std::optional<Crash3ObjectSupplement> crash3ObjectSupplement;
     std::optional<Crash3TemporalEndpoint> crash3CurrentTemporalEndpoint;
     std::optional<Crash3TemporalMidpoint> crash3TemporalMidpoint;
+    std::optional<games::mgs::TemporalPair> mgsTemporalPair;
+    const bool mgsTemporalEnabled=games::mgs::active() &&
+        environmentSwitchEnabled("PS1_MGS_FRAME_INTERPOLATION");
+    metrics::setState("mgs.interpolation.enabled",mgsTemporalEnabled);
     std::optional<PreparedReplayGeometry> preparedReplayGeometry;
     std::optional<replay::ReplayPrecisionCoverage> replayPrecisionCoverage;
     bool liveReplayAtlas = false;
@@ -27086,6 +27590,9 @@ struct RendererVulkan::Impl {
           crash3ObjectSupplement.reset();
           crash3CurrentTemporalEndpoint.reset();
           crash3TemporalMidpoint.reset();
+          mgsTemporalPair.reset();
+          mgsInterpolator.reset();
+          mgsPendingScanout.reset();
           preparedReplayGeometry.reset();
         };
 
@@ -27399,6 +27906,13 @@ struct RendererVulkan::Impl {
                crash3ObjectSupplement.has_value())) {
             try {
               ensureReplayGeometryResources(baked.batch.internalScale);
+              if (mgsTemporalEnabled) {
+                mgsTemporalPair=mgsInterpolator.advance(baked.batch,replaySnapshot->frameNumber);
+                if (mgsTemporalPair) {
+                  ensureReplayInterpolationBackupResources(baked.batch.internalScale);
+                  ensureMgsTemporalImages(mgsTemporalPair->steps-1);
+                }
+              }
               {
                 const ScopedMetricTimer prepareTimer(
                     "host.renderer.vulkan_replay_prepare_upload_us");
@@ -27412,7 +27926,7 @@ struct RendererVulkan::Impl {
                         : nullptr,
                     crash3TemporalMidpoint.has_value()
                         ? &*crash3TemporalMidpoint
-                        : nullptr);
+                        : nullptr, mgsTemporalPair ? &*mgsTemporalPair : nullptr);
               }
             } catch (const std::exception &exception) {
               fmt::print(stderr,
@@ -27577,6 +28091,17 @@ struct RendererVulkan::Impl {
       throw std::runtime_error("M1 replay has no accepted atlas baseline");
     }
 
+    std::optional<MgsSsaoPush> aoPush;
+    if (recordSeed) mgsSsaoCameras.clear();
+    if (options.ambientOcclusion && games::mgs::active() && presentReplayAtlas &&
+        displayScanoutHasActiveImage(scanout)) {
+      if (replayBatch && preparedReplayGeometry) rememberMgsSsaoCameras(*replayBatch);
+      aoPush=mgsSsaoPush(scanout);
+      if (aoPush) ensureMgsSsao(scanout);
+      else ps1::metrics::count("mgs.ssao.no_camera");
+    }
+    ps1::metrics::setState("mgs.ssao.enabled",options.ambientOcclusion && games::mgs::active());
+
     bool recordDiagnosticReadback = false;
     bool recordVisibilityAudit = false;
     const uint64_t photoCapture=replaySnapshot && replaySnapshot->sealedFrame
@@ -27696,6 +28221,17 @@ struct RendererVulkan::Impl {
       ps1::metrics::count(
           "host.renderer.crash3_profile.presentation_canvas_discontinuity");
     }
+    if (!mgsTemporalEnabled || recordSeed || !presentReplayAtlas ||
+        activePresentationView!=VulkanPresentationView::Color ||
+        (mgsPendingScanout && (!replaySnapshot ||
+          replaySnapshot->frameNumber!=mgsPendingFrame+1))) {
+      mgsInterpolator.reset(); mgsPendingScanout.reset(); mgsTemporalPair.reset();
+    }
+    if (mgsTemporalPair && mgsPendingScanout) {
+      metrics::count("mgs.interpolation.cadence_rejected");
+      mgsPendingScanout.reset(); mgsTemporalPair.reset(); mgsInterpolator.reset();
+    }
+    bool mgsTemporalPresented=false, mgsIntermediatePresented=false, mgsEndpointPresented=false;
     const bool presentationViewChanged =
         scanoutColorInitialized &&
         activePresentationView != lastResolvedPresentationView;
@@ -28050,6 +28586,21 @@ struct RendererVulkan::Impl {
       // can mutate the atlas. On the normal 25 Hz cadence this is the sealed
       // latch-only VBlank; a surprise consecutive geometry frame still
       // preserves every endpoint with one-frame presentation latency.
+      if (mgsPendingScanout) {
+        if (mgsPendingPhase<mgsPendingSteps-1) {
+          copyMgsTemporalScanout(frame.commandBuffer,mgsPendingPhase++,false);
+          mgsIntermediatePresented=true;
+        } else {
+          auto pendingAo=options.ambientOcclusion ? mgsSsaoPush(*mgsPendingScanout) : std::nullopt;
+          recordReplayAtlasResolve(frame.commandBuffer,*mgsPendingScanout,false,
+              VulkanPresentationView::Color,false,false,nullptr,pendingAo ? &*pendingAo : nullptr);
+          mgsPendingScanout.reset();
+          mgsEndpointPresented=true;
+          metrics::count("mgs.interpolation.presented_endpoints");
+        }
+        mgsPendingFrame=replaySnapshot->frameNumber;
+        mgsTemporalPresented=true; scanoutColorInitialized=true;
+      }
       if (presentPendingEndpoint) {
         recordReplayAtlasResolve(frame.commandBuffer,
                                  *temporalPendingEndpointScanout, false,
@@ -28064,7 +28615,37 @@ struct RendererVulkan::Impl {
             "host.renderer.vulkan_replay_record_geometry_us");
         recordCrash3RawSceneUpload(frame.commandBuffer, *preparedReplayGeometry,
                                    currentFrame);
-        if (recordTemporalMidpoint) {
+        if (mgsTemporalPair) {
+          auto temporalScanout=scanout;
+          temporalScanout.sourceByteX=mgsTemporalPair->pageX*2;
+          temporalScanout.sourceY=mgsTemporalPair->pageY;
+          auto temporalAo=options.ambientOcclusion ? mgsSsaoPush(temporalScanout) : std::nullopt;
+          const auto copyPlan=makeReplayInterpolationCopyPlan(*replayBatch,*preparedReplayGeometry);
+          recordReplayInterpolationBackup(frame.commandBuffer,copyPlan);
+          interpolationBackupRecordedThisSubmit=true;
+          for (uint32_t phase=1;phase<mgsTemporalPair->steps;++phase) {
+            frame.hostSceneDepthRecorded=false;
+            feedbackScratchInitializedThisSubmit |= recordReplayGeometry(
+                frame.commandBuffer,*replayBatch,*preparedReplayGeometry,currentFrame,
+                false,false,feedbackScratchInitializedThisSubmit,false,phase);
+            recordReplayAtlasResolve(frame.commandBuffer,temporalScanout,false,
+                VulkanPresentationView::Color,false,false,nullptr,temporalAo ? &*temporalAo : nullptr);
+            copyMgsTemporalScanout(frame.commandBuffer,phase-1,true);
+            recordReplayInterpolationRestore(frame.commandBuffer,copyPlan);
+          }
+          frame.hostSceneDepthRecorded=false;
+          feedbackScratchInitializedThisSubmit |= recordReplayGeometry(
+              frame.commandBuffer,*replayBatch,*preparedReplayGeometry,currentFrame,
+              recordVisibilityAudit,false,feedbackScratchInitializedThisSubmit,
+              preCorrectionDepthDisplayOnly);
+          copyMgsTemporalScanout(frame.commandBuffer,0,false);
+          mgsPendingScanout=temporalScanout; mgsPendingPhase=1;
+          mgsPendingSteps=mgsTemporalPair->steps; mgsPendingFrame=replaySnapshot->frameNumber;
+          metrics::count(mgsPendingSteps==2 ? "mgs.interpolation.pairs_30hz" : "mgs.interpolation.pairs_20hz");
+          mgsTemporalPresented=mgsIntermediatePresented=true;
+          scanoutColorInitialized=true;
+          lastResolvedPresentationView=VulkanPresentationView::Color;
+        } else if (recordTemporalMidpoint) {
           recordCrash3VulkanMidpointGeometry(
               frame.commandBuffer, *preparedReplayGeometry, currentFrame);
           const ReplayInterpolationCopyPlan interpolationCopyPlan =
@@ -28120,7 +28701,7 @@ struct RendererVulkan::Impl {
       writeGpuTiming(frame, GpuTimingPoint::ReplayEnd);
       const bool normalResolve =
           !stablePresentationHold && !presentPendingEndpoint &&
-          !recordTemporalMidpoint && !deferCurrentEndpoint;
+          !recordTemporalMidpoint && !deferCurrentEndpoint && !mgsTemporalPresented;
       if (normalResolve) {
         if (presentReplayAtlas) {
           const auto &ordinaryScanout = resolveCurrentEndpointDirectly
@@ -28131,7 +28712,8 @@ struct RendererVulkan::Impl {
                                 "endpoint_direct_resolve");
           recordReplayAtlasResolve(frame.commandBuffer, ordinaryScanout,
                                    recordSeed, activePresentationView,
-                                   preCorrectionDepthAvailable);
+                                   preCorrectionDepthAvailable, false, nullptr,
+                                   activePresentationView==VulkanPresentationView::Color && aoPush ? &*aoPush : nullptr);
           lastResolvedPresentationView = activePresentationView;
         } else {
           recordNativeSnapshotResolve(frame.commandBuffer, scanout);
@@ -28142,7 +28724,8 @@ struct RendererVulkan::Impl {
       if (recordDiagnosticReadback && !diagnosticReadbackRecordedThisSubmit) {
         recordReplayDiagnosticReadback(
             frame.commandBuffer, frame,
-            presentPendingEndpoint
+            mgsIntermediatePresented ? ReplayDiagnosticPresentation::TemporalMidpoint :
+            (presentPendingEndpoint || mgsEndpointPresented)
                 ? ReplayDiagnosticPresentation::TemporalEndpoint
                 : ReplayDiagnosticPresentation::Ordinary,
             !presentPendingEndpoint);
@@ -28293,6 +28876,7 @@ struct RendererVulkan::Impl {
       ps1::metrics::setState(
           "host.renderer.vulkan_replay_feedback_scratch_initialized", 1);
     }
+    if (mgsIntermediatePresented) metrics::count("mgs.interpolation.presented_intermediates");
     if (interpolationBackupRecordedThisSubmit) {
       replayInterpolationBackupResources.layoutsInitialized = true;
       ps1::metrics::setState(
@@ -28462,6 +29046,12 @@ struct RendererVulkan::Impl {
     drainReplayDiagnosticReadbacks();
     if (device != VK_NULL_HANDLE)
       vkDeviceWaitIdle(device);
+    if (hostUiInitialized) {
+      ImGui_ImplVulkan_Shutdown();
+      ImGui_ImplSDL2_Shutdown();
+      ImGui::DestroyContext();
+      hostUiInitialized = false;
+    }
     if (device != VK_NULL_HANDLE) {
       for (FrameContext &frame : frames)
         consumeGpuTimings(frame);
@@ -28469,6 +29059,7 @@ struct RendererVulkan::Impl {
     reportGpuTimings();
     if (mgsAssetCache) games::mgs::setSceneAssetCache(nullptr);
     mgsAssetCache.reset();
+    destroyMgsSsao();
     destroySwapchain();
     destroyScanoutTarget();
     destroyReplayVisibilityResources();
@@ -28501,7 +29092,7 @@ struct RendererVulkan::Impl {
     if (device != VK_NULL_HANDLE && nativeSnapshotImage != VK_NULL_HANDLE)
       vkDestroyImage(device, nativeSnapshotImage, nullptr);
     if (device != VK_NULL_HANDLE && nativeSnapshotMemory != VK_NULL_HANDLE)
-      vkFreeMemory(device, nativeSnapshotMemory, nullptr);
+      ps1::gpu::freeTrackedVulkanMemory(device, nativeSnapshotMemory, nullptr);
     if (device != VK_NULL_HANDLE &&
         nativeSnapshotPipelineLayout != VK_NULL_HANDLE)
       vkDestroyPipelineLayout(device, nativeSnapshotPipelineLayout, nullptr);
@@ -28523,7 +29114,7 @@ struct RendererVulkan::Impl {
         if (frame.stagingBuffer != VK_NULL_HANDLE)
           vkDestroyBuffer(device, frame.stagingBuffer, nullptr);
         if (frame.stagingMemory != VK_NULL_HANDLE)
-          vkFreeMemory(device, frame.stagingMemory, nullptr);
+          ps1::gpu::freeTrackedVulkanMemory(device, frame.stagingMemory, nullptr);
         if (frame.imageAvailable != VK_NULL_HANDLE)
           vkDestroySemaphore(device, frame.imageAvailable, nullptr);
         if (frame.inFlight != VK_NULL_HANDLE)
@@ -28579,7 +29170,9 @@ bool RendererVulkan::init(const std::string &windowTitle, int width, int height,
     }
     uint32_t flags =
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-    const bool hidden = environmentSwitchEnabled("PS1_VULKAN_HIDDEN_WINDOW");
+    const bool headless = environmentSwitchEnabled("PS1_VULKAN_HEADLESS_SURFACE");
+    if (headless) flags &= ~SDL_WINDOW_VULKAN;
+    const bool hidden = headless || environmentSwitchEnabled("PS1_VULKAN_HIDDEN_WINDOW");
     if (hidden)
       flags |= SDL_WINDOW_HIDDEN;
     if (fullscreen && !hidden)
@@ -28643,10 +29236,47 @@ bool RendererVulkan::init(const std::string &windowTitle, int width, int height,
   }
 }
 
+void RendererVulkan::setHostOverlay(std::function<void()> draw) {
+  if (!impl_ || !window_) return;
+  if (!impl_->hostUiInitialized) {
+    ImGui::CreateContext();
+    auto &io = ImGui::GetIO();
+    io.IniFilename = nullptr;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
+    ImFontConfig font; font.SizePixels = 24.0f;
+    io.Fonts->AddFontDefault(&font);
+    ImGui::StyleColorsDark();
+    ImGui::GetStyle().ScaleAllSizes(1.4f);
+    ImGui_ImplSDL2_InitForVulkan(window_);
+    ImGui_ImplSDL2_SetGamepadMode(ImGui_ImplSDL2_GamepadMode_Manual, nullptr, 0);
+    impl_->initHostUiBackend();
+    impl_->hostUiInitialized = true;
+  }
+  impl_->hostOverlay = std::move(draw);
+}
+
+void RendererVulkan::processHostEvent(const SDL_Event &event) {
+  if (impl_ && impl_->hostUiInitialized) ImGui_ImplSDL2_ProcessEvent(&event);
+}
+
+void RendererVulkan::setHostController(_SDL_GameController *controller) {
+  if (impl_ && impl_->hostUiInitialized)
+    ImGui_ImplSDL2_SetGamepadMode(ImGui_ImplSDL2_GamepadMode_Manual,
+                                controller ? &controller : nullptr, controller ? 1 : 0);
+}
+
 void RendererVulkan::renderFrame() {
   if (impl_ == nullptr || window_ == nullptr)
     return;
   try {
+    if (impl_->hostUiInitialized) {
+      ImGui_ImplVulkan_NewFrame();
+      ImGui_ImplSDL2_NewFrame();
+      ImGui::NewFrame();
+      if (impl_->hostOverlay) impl_->hostOverlay();
+      ImGui::Render();
+      impl_->hostUiDrawValid = true;
+    }
     GPU::DisplayState displayState;
     replay::CrashReplayFramePtr replayFrame;
     const GPU::DisplayCopyStatus copyStatus = gpu_.copyDisplayVRAMIfChanged(

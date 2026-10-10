@@ -13,10 +13,6 @@ using detail::readString;
 // PS1 BIOS Table A (0xA0) -- string/memory/heap helpers, printf, GPU stubs,
 // CD-ROM low-level stubs. Dispatched from Bios::executeA0() in bios.cpp.
 
-namespace {
-uint32_t sRandSeed = 1;
-}
-
 void Bios::handleA0(uint32_t index) {
   if (index <= 4) { handleB0(index + 0x32); return; }
   switch (index) {
@@ -228,11 +224,11 @@ void Bios::handleA0(uint32_t index) {
     break;
   }
   case 0x2F: // rand
-    sRandSeed = sRandSeed * 1103515245 + 12345;
-    ctx_.r[V0] = (sRandSeed >> 16) & 0x7FFF;
+    randomSeed_ = randomSeed_ * 1103515245 + 12345;
+    ctx_.r[V0] = (randomSeed_ >> 16) & 0x7FFF;
     break;
   case 0x30: // srand
-    sRandSeed = ctx_.r[A0];
+    randomSeed_ = ctx_.r[A0];
     break;
 
   // Character functions

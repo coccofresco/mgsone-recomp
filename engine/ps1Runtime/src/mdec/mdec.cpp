@@ -1,4 +1,5 @@
 #include "runtime/mdec/mdec.h"
+#include "runtime/metrics.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -9,10 +10,10 @@ namespace ps1::mdec {
 
 // Zigzag Scan Order
 const uint8_t MDEC::ZIGZAG[64] = {
-    0,  1,  5,  6,  14, 15, 27, 28, 2,  4,  7,  13, 16, 26, 29, 42,
-    3,  8,  12, 17, 25, 30, 41, 43, 9,  11, 18, 24, 31, 40, 44, 53,
-    10, 19, 23, 32, 39, 45, 52, 54, 20, 22, 33, 38, 46, 51, 55, 60,
-    21, 34, 37, 47, 50, 56, 59, 61, 35, 36, 48, 49, 57, 58, 62, 63};
+    0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5,
+    12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28,
+    35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
+    58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
 
 // Default Quantization Table
 const uint8_t MDEC::DEFAULT_QUANT_TABLE[64] = {
@@ -25,7 +26,6 @@ const uint8_t MDEC::DEFAULT_QUANT_TABLE[64] = {
 
 MDEC::MDEC() {
   reset();
-  initCosineTable();
 }
 
 void MDEC::reset() {
@@ -40,6 +40,8 @@ void MDEC::reset() {
   hasCustomQuantTable_ = false;
   inputBuffer_.clear();
   outputBuffer_.clear();
+  outputReadIndex_ = 0;
+  initCosineTable();
   std::memset(block_, 0, sizeof(block_));
 }
 
@@ -55,7 +57,8 @@ MDEC::Snapshot MDEC::snapshot() const {
   state.chromaQuantTable = chromaQuantTable_;
   state.hasCustomQuantTable = hasCustomQuantTable_;
   state.inputBuffer = inputBuffer_;
-  state.outputBuffer = outputBuffer_;
+  state.outputBuffer.assign(outputBuffer_.begin() + outputReadIndex_, outputBuffer_.end());
+  state.scaleTable = scaleTable_;
   std::copy(std::begin(block_), std::end(block_), state.block.begin());
   return state;
 }
@@ -76,22 +79,21 @@ void MDEC::restore(const Snapshot &state) {
   hasCustomQuantTable_ = state.hasCustomQuantTable;
   inputBuffer_ = state.inputBuffer;
   outputBuffer_ = state.outputBuffer;
+  outputReadIndex_ = 0;
+  scaleTable_ = state.scaleTable;
   std::copy(state.block.begin(), state.block.end(), std::begin(block_));
 }
 
 // Cosine Table
 
 void MDEC::initCosineTable() {
-  if (cosineTableReady_)
-    return;
   for (int u = 0; u < 8; u++) {
     for (int x = 0; x < 8; x++) {
       double cu = (u == 0) ? (1.0 / std::sqrt(2.0)) : 1.0;
-      cosineTable_[u * 8 + x] = static_cast<int32_t>(
-          cu * std::cos((2.0 * x + 1.0) * u * M_PI / 16.0) * 4096);
+      scaleTable_[u * 8 + x] = static_cast<int16_t>(
+          cu * std::cos((2.0 * x + 1.0) * u * M_PI / 16.0) * 32768);
     }
   }
-  cosineTableReady_ = true;
 }
 
 // Register I/O
@@ -118,9 +120,12 @@ void MDEC::writeControl(uint32_t val) {
 }
 
 uint32_t MDEC::readData() {
-  if (!outputBuffer_.empty()) {
-    uint32_t val = outputBuffer_.front();
-    outputBuffer_.erase(outputBuffer_.begin());
+  if (!dataOutEmpty()) {
+    uint32_t val = outputBuffer_[outputReadIndex_++];
+    if (dataOutEmpty()) {
+      outputBuffer_.clear();
+      outputReadIndex_ = 0;
+    }
     return val;
   }
   return 0;
@@ -134,17 +139,18 @@ uint32_t MDEC::readStatus() const {
     status |= (1 << 30); // Data-in FIFO full
   if (busy_)
     status |= (1 << 29); // Busy
-  // bits 23-25: current block (0-5)
+  // Output format lives in bits 23-26; block index is not modeled here.
   // bit 27: data-out request (for DMA)
   if (!dataOutEmpty())
     status |= (1 << 27);
   // bit 28: data-in request (for DMA)
   if (!dataInFull())
     status |= (1 << 28);
-  if (outputDepth24_)
-    status |= (1 << 25);
+  status |= ((currentCommand_ >> 27) & 3u) << 25;
   if (outputSigned_)
-    status |= (1 << 26);
+    status |= (1 << 24);
+  status |= ((currentCommand_ >> 25) & 1u) << 23;
+  status |= (remainingWords_ - 1u) & 0xFFFFu;
   return status;
 }
 
@@ -170,7 +176,7 @@ void MDEC::processCommand(uint32_t cmd) {
 
   case 1: // Decode macroblock(s)
     currentCommand_ = cmd;
-    outputDepth24_ = (cmd >> 27) & 1;
+    outputDepth24_ = ((cmd >> 27) & 3u) == 2;
     outputSigned_ = (cmd >> 26) & 1;
     remainingWords_ = cmd & 0xFFFF;
     if (remainingWords_ == 0)
@@ -188,7 +194,8 @@ void MDEC::processCommand(uint32_t cmd) {
     inputBuffer_.clear();
     break;
 
-  case 3: // Set scale table (cosine table) -- we use precomputed, just consume
+  case 3: // Upload the game's fixed-point IDCT scale table.
+    currentCommand_ = cmd;
     remainingWords_ = 32;
     state_ = State::ReceivingData;
     busy_ = true;
@@ -208,6 +215,7 @@ bool MDEC::rleDecode(const uint16_t *&src, const uint16_t *end, int16_t *block,
                      const uint8_t *quantTable) {
   std::memset(block, 0, 64 * sizeof(int16_t));
 
+  while (src < end && *src == 0xFE00) ++src; // DMA alignment padding
   if (src >= end)
     return false;
 
@@ -218,55 +226,52 @@ bool MDEC::rleDecode(const uint16_t *&src, const uint16_t *end, int16_t *block,
   int16_t dc =
       static_cast<int16_t>((dcWord & 0x3FF) << 6) >> 6; // sign-extend 10-bit
   block[0] = static_cast<int16_t>(
-      std::clamp(((int32_t)dc * quantTable[0] + 4) >> 3, -1024, 1023));
+      std::clamp(int32_t(dc) * (qScale ? quantTable[0] : 2), -1024, 1023));
 
   int pos = 0;
   while (src < end) {
     uint16_t rlWord = *src++;
 
     if (rlWord == 0xFE00)
-      break; // End of block marker
+      return true; // Explicit end of block, including a DC-only block.
 
     uint8_t runLength = (rlWord >> 10) & 0x3F;
     int16_t level = static_cast<int16_t>((rlWord & 0x3FF) << 6) >> 6;
 
     pos += runLength + 1;
     if (pos >= 64)
-      break;
+      return true;
 
     // Dequantize: AC uses both q_scale and quantization table entry
-    int32_t val = ((int32_t)level * qScale * quantTable[ZIGZAG[pos]] + 4) >> 3;
-    block[ZIGZAG[pos]] = static_cast<int16_t>(std::clamp(val, -1024, 1023));
+    int32_t val = qScale ? (int32_t(level) * qScale * quantTable[pos] + 4) / 8 : int32_t(level) * 2;
+    block[qScale ? ZIGZAG[pos] : pos] = static_cast<int16_t>(std::clamp(val, -1024, 1023));
+    if (pos == 63) return true;
   }
 
-  return true;
+  // Exhausting the command is not an end-of-block marker. In particular a
+  // truncated sixth block must never fabricate a complete macroblock.
+  return false;
 }
 
 // iDCT
 
 void MDEC::idct(int16_t *block) {
-  int32_t temp[64];
-
-  // Row transform
-  for (int y = 0; y < 8; y++) {
-    for (int x = 0; x < 8; x++) {
-      int32_t sum = 0;
-      for (int u = 0; u < 8; u++) {
-        sum += block[y * 8 + u] * cosineTable_[u * 8 + x];
-      }
-      temp[y * 8 + x] = (sum + 2048) >> 12;
-    }
-  }
-
-  // Column transform
-  for (int x = 0; x < 8; x++) {
-    for (int y = 0; y < 8; y++) {
-      int32_t sum = 0;
-      for (int v = 0; v < 8; v++) {
-        sum += temp[v * 8 + x] * cosineTable_[v * 8 + y];
-      }
-      block[y * 8 + x] =
-          static_cast<int16_t>(std::clamp((sum + 2048) >> 12, -128, 127));
+  // The uploaded matrix uses signed 15-bit fractional coefficients. Keep
+  // both passes wide and round once; this also handles non-default tables.
+  int64_t intermediate[64]{};
+  for (int row = 0; row < 8; ++row)
+    for (int col = 0; col < 8; ++col)
+      for (int frequency = 0; frequency < 8; ++frequency)
+        intermediate[row * 8 + col] +=
+            int64_t(block[frequency * 8 + col]) * scaleTable_[frequency * 8 + row];
+  for (int row = 0; row < 8; ++row) {
+    for (int col = 0; col < 8; ++col) {
+      int64_t sum = 0;
+      for (int frequency = 0; frequency < 8; ++frequency)
+        sum += intermediate[row * 8 + frequency] * scaleTable_[frequency * 8 + col];
+      const int value = int((sum + (int64_t(1) << 31)) >> 32);
+      const int signedNineBits = ((value & 0x1ff) ^ 0x100) - 0x100;
+      block[row * 8 + col] = int16_t(std::clamp(signedNineBits, -128, 127));
     }
   }
 }
@@ -304,13 +309,16 @@ void MDEC::yuvToRgb15(const int16_t *cr, const int16_t *cb, const int16_t *y1,
         int32_t crVal = cr[cy * 8 + cx];
         int32_t cbVal = cb[cy * 8 + cx];
 
-        int32_t r = yVal + ((crVal * 91881) >> 16);
-        int32_t g = yVal - ((cbVal * 22554 + crVal * 46802) >> 16);
-        int32_t b = yVal + ((cbVal * 116130) >> 16);
+        int32_t r = yVal + ((crVal * 22970) / 16384);
+        int32_t g = yVal - ((cbVal * 5631 + crVal * 11703) / 16384);
+        int32_t b = yVal + ((cbVal * 29032) / 16384);
 
-        uint16_t rgb15 = ((clampU8(r) >> 3) & 0x1F) |
-                         (((clampU8(g) >> 3) & 0x1F) << 5) |
-                         (((clampU8(b) >> 3) & 0x1F) << 10);
+        const auto component = [&](int32_t channel) {
+          const uint8_t byte = clampU8(channel) ^ (outputSigned_ ? 0x80 : 0);
+          return std::min((uint32_t(byte) + 4) >> 3, 31u);
+        };
+        uint16_t rgb15 = component(r) | (component(g) << 5) |
+                         (component(b) << 10) | ((currentCommand_ & (1u << 25)) ? 0x8000u : 0u);
         word |= (uint32_t)rgb15 << (i * 16);
       }
       outputBuffer_.push_back(word);
@@ -351,13 +359,14 @@ void MDEC::yuvToRgb24(const int16_t *cr, const int16_t *cb, const int16_t *y1,
       int32_t crVal = cr[cy * 8 + cx];
       int32_t cbVal = cb[cy * 8 + cx];
 
-      int32_t r = yVal + ((crVal * 91881) >> 16);
-      int32_t g = yVal - ((cbVal * 22554 + crVal * 46802) >> 16);
-      int32_t b = yVal + ((cbVal * 116130) >> 16);
+      int32_t r = yVal + ((crVal * 22970) / 16384);
+      int32_t g = yVal - ((cbVal * 5631 + crVal * 11703) / 16384);
+      int32_t b = yVal + ((cbVal * 29032) / 16384);
 
-      pushByte(clampU8(r));
-      pushByte(clampU8(g));
-      pushByte(clampU8(b));
+      const uint8_t signMask = outputSigned_ ? 0x80 : 0;
+      pushByte(clampU8(r) ^ signMask);
+      pushByte(clampU8(g) ^ signMask);
+      pushByte(clampU8(b) ^ signMask);
     }
   }
 
@@ -409,8 +418,11 @@ void MDEC::decodeSlice() {
     return;
   }
 
-  if (opcode == 3)
-    return; // Scale table -- ignore, using precomputed
+  if (opcode == 3) {
+    for (size_t i = 0; i < scaleTable_.size() && i < inputBuffer_.size(); ++i)
+      scaleTable_[i] = static_cast<int16_t>(inputBuffer_[i]);
+    return;
+  }
 
   if (opcode == 1) {
     // Decode macroblocks
@@ -422,35 +434,27 @@ void MDEC::decodeSlice() {
                  inputBuffer_.size());
 
     int mbCount = 0;
+    bool truncated = false;
 
     while (src < end) {
+      // Leading/trailing DMA alignment is legal and carries no pixels.
+      while (src < end && *src == 0xfe00) ++src;
+      if (src == end) break;
       // Each macroblock = 6 blocks: Cr, Cb, Y1, Y2, Y3, Y4
-      int16_t crBlock[64], cbBlock[64], y1Block[64], y2Block[64], y3Block[64],
-          y4Block[64];
-
-      if (!rleDecode(src, end, crBlock, chromaQuantTable_.data()))
-        break;
-      idct(crBlock);
-      if (!rleDecode(src, end, cbBlock, chromaQuantTable_.data()))
-        break;
-      idct(cbBlock);
-      if (!rleDecode(src, end, y1Block, lumaQuantTable_.data()))
-        break;
-      idct(y1Block);
-      if (!rleDecode(src, end, y2Block, lumaQuantTable_.data()))
-        break;
-      idct(y2Block);
-      if (!rleDecode(src, end, y3Block, lumaQuantTable_.data()))
-        break;
-      idct(y3Block);
-      if (!rleDecode(src, end, y4Block, lumaQuantTable_.data()))
-        break;
-      idct(y4Block);
+      int16_t blocks[6][64];
+      for (unsigned i = 0; i < 6; ++i) {
+        if (!rleDecode(src, end, blocks[i], i < 2 ? chromaQuantTable_.data() : lumaQuantTable_.data())) {
+          truncated = true;
+          break;
+        }
+        idct(blocks[i]);
+      }
+      if (truncated) break; // Keep previously completed macroblocks available.
 
       if (outputDepth24_) {
-        yuvToRgb24(crBlock, cbBlock, y1Block, y2Block, y3Block, y4Block);
+        yuvToRgb24(blocks[0], blocks[1], blocks[2], blocks[3], blocks[4], blocks[5]);
       } else {
-        yuvToRgb15(crBlock, cbBlock, y1Block, y2Block, y3Block, y4Block);
+        yuvToRgb15(blocks[0], blocks[1], blocks[2], blocks[3], blocks[4], blocks[5]);
       }
 
       mbCount++;
@@ -458,6 +462,12 @@ void MDEC::decodeSlice() {
         fmt::print("[MDEC]   macroblock {} ok\n", mbCount);
     }
 
+    ps1::metrics::count("mdec.decode_command");
+    if (truncated) ps1::metrics::count("mdec.truncated_command");
+    // The game submits one complete movie frame per command. Certifying its
+    // dimensions still requires the macroblock count from the source catalog.
+    if (mbCount && !truncated) ps1::metrics::count("mdec.decoded_frame");
+    ps1::metrics::count("mdec.decoded_macroblock", mbCount);
     if (kMdecDebug)
       fmt::print("[MDEC] decodeSlice: {} macroblocks decoded\n", mbCount);
   }

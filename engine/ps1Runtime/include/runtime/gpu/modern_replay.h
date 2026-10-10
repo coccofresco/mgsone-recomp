@@ -504,6 +504,11 @@ struct OriginalMeshLighting {
   bool operator==(const OriginalMeshLighting &) const = default;
 };
 struct OriginalMeshGeometry {
+  // Producer-owned identity and camera witness. Never inferred from draw
+  // order, packet allocations or screen position; not part of the GPU ABI.
+  std::array<uint64_t, 4> temporalIdentity{};
+  std::array<float, 16> temporalCamera{};
+  uint32_t temporalFrame = 0;
   uint32_t textureId = ~0u; // live logical KMD material ID, for PCX provenance
   bool sourceRecovery =
       false; // host-only draw without a native GP0 counterpart

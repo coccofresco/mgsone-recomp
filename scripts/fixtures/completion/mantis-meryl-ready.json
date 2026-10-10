@@ -1,0 +1,54 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-original-first-meryl-phase",
+  "source": "USA s07b/ea54 96e2 establishes story123 and Snake spawn after original films; main123 Meryl initialization. Wait for original scripted input release before combat.",
+  "requires": {
+    "stage": "s07b",
+    "story": 123,
+    "actor_meryl07b_count": 1,
+    "gcl_12000046": 1
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000046"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-meryl-scene-releases-control",
+        "until": {
+          "stage": "s07b",
+          "story": 123,
+          "control": {
+            "ne": 0
+          },
+          "pause_level": 0,
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          },
+          "life": {
+            "min": 1
+          }
+        },
+        "max_frames": 6000,
+        "stable_frames": 12
+      }
+    ]
+  }
+}

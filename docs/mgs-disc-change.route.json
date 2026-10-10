@@ -1,0 +1,132 @@
+{
+  "format": "mgs-tas-route-1",
+  "steps": [
+    {
+      "name": "corridor-2",
+      "until": {
+        "x": {
+          "min": -5930,
+          "max": -5570
+        },
+        "z": {
+          "min": -25180,
+          "max": -24820
+        }
+      },
+      "guard": {
+        "game_over_timer": 0
+      },
+      "action": {
+        "move_to": {
+          "x": -5750,
+          "z": -25000
+        }
+      },
+      "max_frames": 1100
+    },
+    {
+      "name": "change",
+      "until": {
+        "stage": "change"
+      },
+      "action": {
+        "move_to": {
+          "x": -5750,
+          "z": -29000
+        }
+      },
+      "max_frames": 1100
+    },
+    {
+      "name": "disc2-gameplay",
+      "until": {
+        "stage": "s13a",
+        "disc": 2,
+        "control": {
+          "ne": 0
+        },
+        "pause_level": 0,
+        "game_status": {
+          "mask": 3691511808,
+          "eq": 0
+        },
+        "player_status": {
+          "mask": 536870912,
+          "eq": 0
+        },
+        "load_request": 0,
+        "actor_snake_count": 1,
+        "actor_loader_count": 0,
+        "actor_fadeio_count": 0
+      },
+      "max_frames": 2000,
+      "guard": {
+        "game_over_timer": 0,
+        "life": {
+          "min": 1
+        }
+      },
+      "stable_frames": 30
+    },
+    {
+      "name": "move-after-disc-change",
+      "guard": {
+        "stage": "s13a",
+        "disc": 2,
+        "game_over_timer": 0,
+        "life": {
+          "min": 1
+        }
+      },
+      "until": {
+        "z": {
+          "max": 9600
+        }
+      },
+      "action": {
+        "move_to": {
+          "x": 7750,
+          "z": 9500
+        }
+      },
+      "max_frames": 180
+    },
+    {
+      "name": "settled-disc2-gameplay",
+      "until": {
+        "stage": "s13a",
+        "disc": 2,
+        "control": {
+          "ne": 0
+        },
+        "pause_level": 0,
+        "game_status": {
+          "mask": 3691511808,
+          "eq": 0
+        },
+        "player_status": {
+          "mask": 536870912,
+          "eq": 0
+        },
+        "load_request": 0,
+        "actor_snake_count": 1,
+        "actor_loader_count": 0,
+        "actor_fadeio_count": 0,
+        "z": {
+          "max": 9800
+        }
+      },
+      "stable_frames": 60,
+      "max_frames": 240,
+      "guard": {
+        "stage": "s13a",
+        "disc": 2,
+        "game_over_timer": 0,
+        "life": {
+          "min": 1
+        }
+      }
+    }
+  ],
+  "description": "Input-only route from the s12c warehouse checkpoint, through automatic disc change to controllable s13a."
+}

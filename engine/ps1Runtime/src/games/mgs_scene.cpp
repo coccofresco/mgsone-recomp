@@ -19,6 +19,9 @@ std::unordered_map<uint32_t, std::vector<uint32_t>> assetNames;
 std::mutex snapshotMutex;
 std::shared_ptr<const SceneSnapshot> latest;
 uint64_t sequence = 0;
+uint64_t sceneEpoch = 1, nextLifetime = 0, stageIdentity = 0;
+struct InstanceLifetime { uint32_t definition, asset; uint64_t capture, serial; };
+std::unordered_map<uint32_t, InstanceLifetime> instanceLifetimes;
 bool precisePose = true;
 bool ramRange(uint32_t address, uint64_t size) {
   const uint32_t physical = address & 0x1fffffffu;
@@ -324,6 +327,8 @@ void setSceneAssetCache(const AssetCache *cache) {
   resetSceneCapture();
 }
 void resetSceneCapture() {
+  ++sceneEpoch;
+  instanceLifetimes.clear();
   std::lock_guard lock(snapshotMutex);
   latest.reset();
   resetMeshReplay();
@@ -341,12 +346,29 @@ void captureSceneBeforeBounds(recomp_context *ctx) {
   const uint32_t count = u16(c + 86), queue = u32(c + 88);
   if (count > 256 || !ramRange(queue, uint64_t(count)*4)) { resetSceneCapture(); return; }
   auto snap = std::make_shared<SceneSnapshot>();
+  const uint64_t stage = uint64_t(m.read32(0x800ADB34u)) |
+                         uint64_t(m.read32(0x800ADB38u)) << 32;
+  if (stage != stageIdentity) {
+    stageIdentity = stage;
+    ++sceneEpoch;
+    instanceLifetimes.clear();
+  }
+  snap->epoch = sceneEpoch;
   snap->sequence = ++sequence;
   snap->vblank = psyq::psyq_state().vsyncCounter.load();
   snap->channel = channel; snap->bufferIndex = ctx->r5;
   snap->view = matrix(m, channel + 16);
+  // DG_Ambient is the scene light, whereas GTE RBK/GBK/BBK are scratch
+  // registers also used by actors and projection effects. Sampling those at
+  // the bounds pass made presentation lighting depend on the previous user
+  // of the GTE. USA DG_SetAmbient writes this SVECTOR at gp+0xd0 (gp=800ad9fc).
+  // Per-object DG_FLAG_AMBIENT overrides remain in sourceMeshMaterial.
   for (unsigned k = 0; k < 3; ++k)
-    snap->ambient[k] = int32_t(ctx->cop2c[13 + k]) / 16.0f;
+    snap->ambient[k] = int16_t(m.read16(0x800ADACCu + k * 2));
+  metrics::trace("mgs.scene.ambient", {{"vblank", int64_t(snap->vblank)},
+      {"r", int64_t(snap->ambient[0])}, {"g", int64_t(snap->ambient[1])},
+      {"b", int64_t(snap->ambient[2])}, {"gte_r", int32_t(ctx->cop2c[13])},
+      {"gte_g", int32_t(ctx->cop2c[14])}, {"gte_b", int32_t(ctx->cop2c[15])}});
   snap->projection = int16_t(u16(c + 80));
   snap->widescreen = widescreen16x9();
   snap->currentGroup = u32(ram(m, 0x800AE0E0));
@@ -376,6 +398,14 @@ void captureSceneBeforeBounds(recomp_context *ctx) {
                                               it->second.second);
     instance.asset = it->second.first;
     instance.deformed = it->second.second;
+    auto &life = instanceLifetimes[address];
+    if (life.capture + 1 != snap->sequence ||
+        life.definition != instance.definition || life.asset != instance.asset)
+      life.serial = ++nextLifetime;
+    life.definition = instance.definition;
+    life.asset = instance.asset;
+    life.capture = snap->sequence;
+    instance.lifetime = life.serial;
     if (instance.asset != ~0u) ++matched;
     if (instance.visible) ++visible;
     for (uint32_t j = 0; j < total; ++j) {
@@ -393,6 +423,9 @@ void captureSceneBeforeBounds(recomp_context *ctx) {
     }
     snap->instances.push_back(std::move(instance));
   }
+  std::erase_if(instanceLifetimes, [&](const auto &entry) {
+    return entry.second.capture != snap->sequence;
+  });
   if (precisePose) {
     reconstructScenePoses(m, *snap);
     for (const auto &instance : snap->instances) {

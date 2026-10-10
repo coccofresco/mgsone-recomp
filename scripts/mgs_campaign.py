@@ -29,10 +29,17 @@ def intervals(sequence, first_vblank):
     return cursor - first_vblank, '\n'.join(lines) + '\n'
 
 
-def terminal_checkpoint(parent):
+def terminal_checkpoint(parent, allow_route_timeout=False):
     result = json.loads((parent / 'result.json').read_text())
     manifest = json.loads((parent / 'manifest.json').read_text())
-    if result['status'] != 'complete' or manifest['status'] != 'complete':
+    clean_timeout = (allow_route_timeout and result.get('status') == 'failed'
+                     and manifest.get('status') == 'failed'
+                     and not result.get('timeout')
+                     and result.get('termination_error') in (None, 'adaptive route did not complete')
+                     and not result.get('game_errors') and not result.get('interpreter_counters')
+                     and bool(result.get('route_log'))
+                     and result['route_log'][-1].startswith('[Route] status: failed condition timeout: '))
+    if not clean_timeout and (result['status'] != 'complete' or manifest['status'] != 'complete'):
         raise ValueError('parent recording is incomplete')
     movie = parent / 'movie.mgst'
     if sha256(movie) != manifest['artifacts']['movie.mgst']:

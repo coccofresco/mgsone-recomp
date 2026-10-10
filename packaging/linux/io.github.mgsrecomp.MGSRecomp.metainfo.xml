@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.mgsrecomp.MGSRecomp</id>
+  <name>MGS Recomp</name>
+  <summary>Native MGS runtime with modern Vulkan graphics</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>An experimental native runtime for the original USA v1.0 game, with a modern Vulkan presentation and controller-accessible launcher.</p>
+    <p>Import both original discs locally. Game data is not included. Continuous campaign completion is not yet certified.</p>
+  </description>
+  <launchable type="desktop-id">io.github.mgsrecomp.MGSRecomp.desktop</launchable>
+  <supports><control>gamepad</control><control>keyboard</control><control>pointing</control></supports>
+  <content_rating type="oars-1.1"/>
+</component>

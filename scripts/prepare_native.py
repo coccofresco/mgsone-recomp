@@ -18,6 +18,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--exe', type=Path, default=ROOT / 'data/assets/usa/disc1/SLUS_005.94')
     parser.add_argument('--cue', type=Path, required=True)
+    parser.add_argument('--disc2-cue', type=Path, help='USA second disc for seamless transitions')
     parser.add_argument('--campaign', action='store_true', help='compile all story-stage overlay candidates from the original USA archive')
     args = parser.parse_args()
     exe = args.exe.resolve(strict=True)
@@ -40,6 +41,9 @@ def main():
     # 0x800D8A00). The analyzer includes it after the preceding routine's JR.
     assert struct.unpack_from('<4I', data, 0x3b090 - 0x10000 + 2048) == (
         0x3c02800a, 0x24420a1c, 0x03e00008, 0)
+    # USA DG_GetDisplayEnv leaf used by the credits overlay.
+    assert struct.unpack_from('<4I', data, 0x18008 - 0x10000 + 2048) == (
+        0x3c02800b, 0x24422d78, 0x03e00008, 0)
     analysis = ROOT / 'data/mgs.usa.analysis.toml'
     with (ROOT / '.local/analyze-usa.log').open('w') as log:
         subprocess.run([str(ROOT / 'build/ps1Analyzer/ps1Analyzer'), str(exe), str(analysis)],
@@ -66,11 +70,17 @@ def main():
     # Direct overlay JALs into verified main-function interiors.
     # Register native entries rather than taking the private interpreter path.
     main_entries = {
+        # Credits/ending2 call DG_GetDisplayEnv directly at the leaf after
+        # DG_BackGroundBlack. USA JALs return to 800C9AFC and 800C9BF8.
+        0x80017f64: [0x80018008],
         0x8001c65c: [0x8001c680],
         # s04c post-Ocelot demo, direct JAL at USA 0x800C777C.
         0x80024b0c: [0x80024c64],
         0x8002778c: [0x80027838],
-        0x800279ec: [0x80027a94],
+        0x800279ec: [0x80027a44, 0x80027a94],
+        # Direct calls in tower geometry/rope, Meryl and escape overlays.
+        0x80027ed4: [0x80027f58],
+        0x80032380: [0x80032498],
         0x8002f610: [0x8002f6c0],
         0x8003189c: [0x80031940],
         0x80033428: [0x800334d4],
@@ -83,10 +93,14 @@ def main():
         # Retail memory-card load menu (abst: caller return 800C6CEC).
         0x80044c5c: [0x80044d2c],
         0x80052254: [0x80052288, 0x8005229c],
+        0x80062744: [0x800627b0],
         0x800723f8: [0x800724f4],
+        0x80081aa4: [0x80081be0, 0x80081c20, 0x80081cf8],
         0x8008b168: [0x8008b180],
-        0x8008f7d0: [0x8008f7f0],
+        0x8008f7d0: [0x8008f7f0, 0x8008f8f4],
         0x80093134: [0x80093174],
+        0x80095244: [0x80095360],
+        0x80095ee8: [0x80095f40],
     }
     for owner, entries in main_entries.items():
         aliases = ", ".join(f'"0x{x:08X}"' for x in entries)
@@ -110,8 +124,15 @@ def main():
     import json
     s += f'\n[recompiler]\ntranslation_units = {160 if args.campaign else 32}\n'
     s += f'\n[disc]\nexe_path = {json.dumps(str(exe))}\ncue_path = {json.dumps(str(cue))}\n'
+    second = args.disc2_cue
+    if second is None:
+        candidates = sorted((ROOT / 'data/discs/usa/disc2').glob('*.cue'))
+        if len(candidates) == 1:
+            second = candidates[0]
+    if second is not None:
+        s += f'additional_cues = [{json.dumps(str(second.resolve(strict=True)))}]\n'
     s += '\n[video]\nbackend = "vulkan"\nvsync = false\npgxp = false\ntrue_depth = false\ntrue_color = false\n'
-    s += '\n[game]\nprofile = "mgs_usa_v1_0"\nwidescreen_16_9 = true\n\n[timing]\nvideo_standard = "ntsc"\n'
+    s += '\n[game]\nprofile = "mgs_usa_v1_0"\nwidescreen_16_9 = true\nfast_loading = true\n\n[timing]\nvideo_standard = "ntsc"\n'
     s += '\n[instruction_overrides]\n"0x8008FF54" = "if (ctx->bios) ps1::runtimeBiosDrainPendingCallbacks(ctx->bios, 0x8008FF50u); pgxp_addiu(ctx, 4, 0, -1);"\n'
     s += '\n"0x80017B38" = "extern void mgsAdjustProjection(recomp_context*); mgsAdjustProjection(ctx); pgxp_invalidate_gpr(ctx, 3); ctx->r3 = (int16_t)MEM_READ16(ctx, ctx->r4 + 6);"\n'
     # Observe DG_ChanlUnits[1] before bounds and [6] before sorting. Hooks at
@@ -148,6 +169,11 @@ def main():
     # Verified callback references in USA overlay code/actor tables. These
     # entries follow JR RA/NOP but lack prologues or direct JAL callers.
     callbacks = {
+        # USA GV_SetNamedActor third argument: title destructor at 800D6070
+        # stores 2 to 800AFBA8; opening's destructor is an empty JR RA/NOP.
+        # Neither leaf has a stack prologue or a direct JAL caller.
+        'title': [0x800d5f30],
+        'opening': [0x800c7f6c],
         'd00a': [0x800c850c, 0x800c8bb4, 0x800c9abc, 0x800d29ac,
                  0x800d4210, 0x800d634c, 0x800db2c0, 0x800db7c8,
                  0x800dd940, 0x800e38e4],
@@ -183,7 +209,16 @@ def main():
                 if name in known:
                     if entry['code_size'] != known[name][2] - 0x800c5968:
                         parser.error(f'Candidate extent disagrees with verified {name}')
-                    entry['derivation'] = 'previously donor-verified extent; existing callback list retained'
+                    # Verified boot/menu stages still need newly discovered
+                    # callback boundaries. Preserve explicit historical entries
+                    # and merge the same scan used for every campaign overlay.
+                    addresses = sorted(set(callbacks[name] + entry['additional_functions']))
+                    pattern = rf'(name = "usa_{re.escape(name)}"\n(?:[^\n]*\n)*?additional_functions = )\[[^\n]*\]'
+                    s, count = re.subn(pattern, lambda m: m[1] + str(addresses), s, count=1)
+                    if count != 1:
+                        parser.error(f'Missing callback section for verified {name}')
+                    entry['additional_functions'] = addresses
+                    entry['derivation'] = 'previously donor-verified extent; historical entries plus current callback scan'
                     catalogue.append(entry)
                     continue
                 overlay = ROOT / f'data/overlays/usa/{name}.bin'

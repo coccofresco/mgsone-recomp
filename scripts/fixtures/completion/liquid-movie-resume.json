@@ -1,0 +1,69 @@
+{
+  "format": "mgs-situation-1",
+  "name": "liquid-movie-e80c-resume-midstream",
+  "source": {
+    "retail": "USA d18a/ea54: 913c chara3453/e80c",
+    "decomp": "game/movie.c Work.n_frames+62; FS_MOVIE_FILE.frame+2; native MDEC/DMA telemetry"
+  },
+  "requires": {
+    "current_stage": "d18a",
+    "story": 265,
+    "actor_movie_count": 1,
+    "movie_total_frames": 482,
+    "movie_frame": {
+      "min": 120,
+      "max": 121
+    }
+  },
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life",
+    "life"
+  ],
+  "compare": [
+    "current_stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "life",
+    "actor_movie_count"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "movie-reaches-last-frames",
+        "until": {
+          "current_stage": "d18a",
+          "story": 265,
+          "movie_frame": {
+            "min": 450
+          }
+        },
+        "max_frames": 12000,
+        "guard": {
+          "current_stage": "d18a",
+          "story": 265,
+          "actor_movie_count": 1,
+          "movie_total_frames": 482
+        }
+      },
+      {
+        "name": "movie-finishes-through-retail-end-proc",
+        "until": {
+          "current_stage": "d18a",
+          "story": 267,
+          "actor_movie_count": 0
+        },
+        "max_frames": 1200
+      }
+    ]
+  },
+  "native_counters_min": {
+    "mdec.decoded_frame": 360,
+    "cdrom.xa_decoded_sector": 440,
+    "spu.cd_nonzero_frame": 900000
+  }
+}

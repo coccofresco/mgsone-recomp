@@ -1,0 +1,58 @@
+{
+  "format": "mgs-situation-1",
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000066",
+    "gcl_1200005c"
+  ],
+  "name": "prison-otacon-arrival",
+  "source": {
+    "retail": "USA s03c/ea54 main @11396, 3abf, f323, 507b, 0c0c; post-submission global5c bit8 schedules Otacon without further torture"
+  },
+  "requires": {
+    "stage": "s03c",
+    "story": 158,
+    "gcl_12000066": 0,
+    "gcl_1200005c": {
+      "mask": 8,
+      "eq": 8
+    }
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-otacon-visit",
+        "until": {
+          "actor_otacom_count": 1,
+          "gcl_12000066": 1,
+          "game_status": {
+            "mask": 3623878656,
+            "eq": 0
+          }
+        },
+        "action": {
+          "sequence": "cross:3,wait:12"
+        },
+        "attempts": 1500,
+        "max_frames": 16000,
+        "when": {
+          "pause_level": {
+            "mask": 1,
+            "eq": 1
+          }
+        }
+      }
+    ]
+  }
+}

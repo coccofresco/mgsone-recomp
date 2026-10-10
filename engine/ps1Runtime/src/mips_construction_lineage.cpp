@@ -100,9 +100,11 @@ struct ConstructionSeedFilter {
 
 std::atomic<int> g_enabled{-1};
 std::atomic<uint64_t> g_transformFilterGeneration{0};
-std::atomic<std::shared_ptr<const TransformLineageFilter>> g_transformFilter;
+// C++20 libc++ on Windows lacks atomic<shared_ptr>; the standard shared_ptr
+// atomic operations provide the same synchronized publication contract.
+std::shared_ptr<const TransformLineageFilter> g_transformFilter;
 std::atomic<uint64_t> g_seedFilterGeneration{0};
-std::atomic<std::shared_ptr<const ConstructionSeedFilter>> g_seedFilter;
+std::shared_ptr<const ConstructionSeedFilter> g_seedFilter;
 thread_local ConstructionLineageState t_state;
 thread_local std::shared_ptr<const TransformLineageFilter>
     t_transformFilterCache;
@@ -343,7 +345,7 @@ synchronizeTransformFilter() noexcept {
   if (t_transformFilterGeneration == generation)
     return t_transformFilterCache;
   std::shared_ptr<const TransformLineageFilter> filter =
-      g_transformFilter.load(std::memory_order_acquire);
+      std::atomic_load_explicit(&g_transformFilter, std::memory_order_acquire);
 
   t_transformFilterCache = filter;
   t_transformFilterGeneration = generation;
@@ -360,7 +362,7 @@ synchronizeSeedFilter() noexcept {
   if (t_seedFilterGeneration == generation)
     return t_seedFilterCache;
   std::shared_ptr<const ConstructionSeedFilter> filter =
-      g_seedFilter.load(std::memory_order_acquire);
+      std::atomic_load_explicit(&g_seedFilter, std::memory_order_acquire);
 
   t_seedFilterCache = filter;
   t_seedFilterGeneration = generation;
@@ -409,9 +411,9 @@ void resetConstructionLineageForTesting() noexcept {
   t_seedFilterGeneration = 0;
   t_seedFilterCache.reset();
   t_seedAdmitted = true;
-  g_transformFilter.store(nullptr, std::memory_order_release);
+  std::atomic_store_explicit(&g_transformFilter, std::shared_ptr<const TransformLineageFilter>{}, std::memory_order_release);
   g_transformFilterGeneration.store(0, std::memory_order_release);
-  g_seedFilter.store(nullptr, std::memory_order_release);
+  std::atomic_store_explicit(&g_seedFilter, std::shared_ptr<const ConstructionSeedFilter>{}, std::memory_order_release);
   g_seedFilterGeneration.store(0, std::memory_order_release);
   g_enabled.store(-1, std::memory_order_release);
 }
@@ -427,7 +429,7 @@ void setConstructionLineageTransformFilter(
   next->generation =
       g_transformFilterGeneration.load(std::memory_order_relaxed) + 1;
   const uint64_t generation = next->generation;
-  g_transformFilter.store(std::move(next), std::memory_order_release);
+  std::atomic_store_explicit(&g_transformFilter, std::shared_ptr<const TransformLineageFilter>(std::move(next)), std::memory_order_release);
   g_transformFilterGeneration.store(generation, std::memory_order_release);
 }
 
@@ -454,7 +456,7 @@ void setConstructionLineageSeedFilter(
   next->generation =
       g_seedFilterGeneration.load(std::memory_order_relaxed) + 1;
   const uint64_t generation = next->generation;
-  g_seedFilter.store(std::move(next), std::memory_order_release);
+  std::atomic_store_explicit(&g_seedFilter, std::shared_ptr<const ConstructionSeedFilter>(std::move(next)), std::memory_order_release);
   g_seedFilterGeneration.store(generation, std::memory_order_release);
 }
 

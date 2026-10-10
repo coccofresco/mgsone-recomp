@@ -324,10 +324,9 @@ public:
   uint16_t read16(uint32_t addr) const {
     uint32_t phys = toPhysical(addr);
 
-    if ((phys >= 0x1F801C00 && phys < 0x1F802000) ||
-        (phys >= 0x1F801100 && phys < 0x1F801130) ||
-        (phys >= 0x1F801040 && phys < 0x1F801050) || phys == 0x1F801070 ||
-        phys == 0x1F801074) {
+    // Device transactions must retain their width. Splitting a halfword into
+    // two byte accesses can consume FIFOs twice or execute an interim DMA.
+    if (phys >= 0x1F801000 && phys < 0x1F802000) {
       return read16Slow(addr, phys);
     }
 
@@ -401,10 +400,7 @@ public:
   void write16(uint32_t addr, uint16_t val) {
     uint32_t phys = toPhysical(addr);
 
-    if ((phys >= 0x1F801C00 && phys < 0x1F802000) ||
-        (phys >= 0x1F801100 && phys < 0x1F801130) ||
-        (phys >= 0x1F801040 && phys < 0x1F801050) || phys == 0x1F801070 ||
-        phys == 0x1F801074) {
+    if (phys >= 0x1F801000 && phys < 0x1F802000) {
       write16Slow(addr, phys, val);
       return;
     }

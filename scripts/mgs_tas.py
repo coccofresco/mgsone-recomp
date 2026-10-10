@@ -34,7 +34,11 @@ def game_state(ram):
         raise ValueError("game state requires complete main RAM")
     word = lambda address: struct.unpack_from("<I", ram, address & 0x1FFFFF)[0]
     control = word(0x800AE16C)
+    # Keep the historical stage field as GM_SaveStageName for old recordings.
+    # USA GM_SetArea (8002BD84) writes GM_CurrentStageName at 800ADB34;
+    # returning to title does not overwrite the saved gameplay area.
     result = {"stage": ram[0xB7500:0xB7508].split(b"\0")[0].decode("ascii", errors="replace"),
+              "current_stage": ram[0xADB34:0xADB3C].split(b"\0")[0].decode("ascii", errors="replace"),
               "player_position": list(struct.unpack_from("<3h", ram, 0xAE188)),
               "game_status": word(0x800ADB3C), "load_request": word(0x800ADB40),
               "player_status": word(0x800AE1C8), "alert_mode": word(0x800AE178),
@@ -59,7 +63,7 @@ def write_json(path, value):
     temporary.replace(path)
 
 
-def identity():
+def identity(asset_cache=None, shaders=False):
     config = tomllib.loads(CONFIG.read_text())
     files = {"runtime": BINARY, "config": CONFIG,
              "exe": Path(config["disc"]["exe_path"]),
@@ -67,11 +71,20 @@ def identity():
     # The CUE is only a descriptor: fingerprint every referenced data track.
     for index, name in enumerate(re.findall(r'^\s*FILE\s+"([^"]+)"', files["cue"].read_text(), re.M)):
         files[f"track_{index}"] = files["cue"].parent / name
-    for candidate in ("usa-source", "usa"):
-        cache = ROOT / f"data/presentation/{candidate}/assets.mgsc"
+    for disc, path in enumerate(config['disc'].get('additional_cues', [])):
+        cue = Path(path)
+        files[f'additional_cue_{disc}'] = cue
+        for index, name in enumerate(re.findall(r'^\s*FILE\s+"([^"]+)"', cue.read_text(), re.M)):
+            files[f'additional_track_{disc}_{index}'] = cue.parent / name
+    candidates = ([asset_cache.resolve()] if asset_cache else
+                  [ROOT / f"data/presentation/{name}/assets.mgsc" for name in ("usa-source", "usa")])
+    for cache in candidates:
         if cache.is_file():
             files["asset_cache"] = cache
             break
+    if shaders:
+        for shader in sorted((BINARY.parent/'shaders').glob('*.spv')):
+            files['shader_' + shader.name] = shader
     return {key: {"path": str(path), "sha256": sha256(path)} for key, path in files.items()}
 
 
@@ -90,15 +103,17 @@ def recording_extent_error(frames, requested_frames, at_checkpoint, route_status
 
 
 def run(args):
+    if getattr(args, 'require_hardware', False) and args.headless:
+        raise ValueError('--require-hardware cannot be combined with --headless')
     session = args.session.resolve()
     replay = args.command == "replay"
     if replay:
         source = json.loads((session / "manifest.json").read_text())
         if source.get("format") != "mgs-native-tas-1" or source.get("status") != "complete":
             raise ValueError("sessione incompleta: non è una registrazione validata")
-        current = identity()
+        current = identity(getattr(args, 'asset_cache', None), shaders=not args.headless)
         for key, expected in source["identity"].items():
-            if (key == "runtime" and args.allow_runtime_change) or (key == "config" and args.allow_config_change):
+            if ((key == "runtime" or key.startswith('shader_')) and args.allow_runtime_change) or (key == "config" and args.allow_config_change):
                 continue
             if current.get(key, {}).get("sha256") != expected["sha256"]:
                 raise ValueError(f"identità diversa: {key}; replay rifiutato")
@@ -129,7 +144,7 @@ def run(args):
             shutil.copy2(path, cards / path.name)
         source = {"format": "mgs-native-tas-1", "status": "recording",
                   "created": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-                  "identity": identity(), "initial_source": str(args.state.resolve()),
+                  "identity": identity(getattr(args, 'asset_cache', None), shaders=not args.headless), "initial_source": str(args.state.resolve()),
                   "git_head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
                   "validation": {"min_game_ticks": args.min_game_ticks},
                   "termination": {"requested_frames": args.frames,
@@ -143,6 +158,9 @@ def run(args):
     # Do not inherit diagnostic/TAS controls from a previous shell session.
     env = {key: value for key, value in os.environ.items() if not key.startswith("PS1_")}
     env.update(PS1_NATIVE_RUNTIME=str(BINARY), PS1_NATIVE_CONFIG=str(CONFIG))
+    if getattr(args, 'require_hardware', False):
+        env.update(PS1_VULKAN_REQUIRE_HARDWARE='1', PS1_VULKAN_GPU_TIMINGS='1',
+                   PS1_VULKAN_REQUIRE_VALIDATION='1')
     env.update(PS1_TAS_REPLAY=str(movie)) if replay else env.update(PS1_TAS_RECORD=str(movie))
     env.update(PS1_DIAGNOSTIC_SAVESTATE_DIR=str(states), PS1_AUTOLOAD_VBLANK="1",
                PS1_MEMORY_CARD_DIR=str(output / "cards"),
@@ -165,6 +183,17 @@ def run(args):
         env.update(PS1_DIAGNOSTIC_HEADLESS="1", SDL_AUDIODRIVER="dummy")
     elif args.hidden:
         env.update(PS1_VULKAN_HIDDEN_WINDOW="1", PS1_PRESENT_WINDOWED="1", SDL_AUDIODRIVER="dummy")
+    if getattr(args, 'headless_surface', False):
+        if args.headless:
+            raise ValueError('--headless-surface requires active Vulkan, not --headless')
+        env.update(PS1_VULKAN_HEADLESS_SURFACE='1', SDL_VIDEODRIVER='dummy',
+                   SDL_AUDIODRIVER='dummy', PS1_PRESENT_WINDOWED='1')
+    if getattr(args, 'asset_cache', None):
+        env.update(PS1_MGS_ASSET_CACHE=str(args.asset_cache.resolve()),
+                   PS1_MGS_MESH_REPLAY='1', PS1_MGS_ASSET_VERIFY='1')
+    if getattr(args, 'trace_presentation', False):
+        env.update(PS1_TRACE_JSONL=str(output/'presentation.jsonl'),
+                   PS1_TRACE_EVENTS='mgs.material.missing_input,mgs.material.invalid_normal,mgs.source.material_missing,mgs.texture.miss')
     if args.capture_every:
         if args.headless:
             raise ValueError("--capture-every richiede Vulkan")
@@ -181,6 +210,16 @@ def run(args):
     if args.trace_private:
         env.update(PS1_TRACE_JSONL=str(output / "private-calls.jsonl"),
                    PS1_TRACE_EVENTS="mips.static_private_entry,mips.static_private_exit")
+    if args.trace_cd_clock:
+        events = env.get("PS1_TRACE_EVENTS", "")
+        env.update(PS1_TRACE_JSONL=str(output / "cd-clock.jsonl"),
+                   PS1_TRACE_EVENTS=(events + "," if events else "") +
+                   "cdrom.credit_discarded,cdrom.read_begin,cdrom.command,cdrom.interrupt,dma.transfer,callback.dispatch")
+    if getattr(args, 'trace_loading', False):
+        events = env.get("PS1_TRACE_EVENTS", "")
+        env.update(PS1_TRACE_JSONL=str(output / "loading.jsonl"),
+                   PS1_TRACE_EVENTS=(events + "," if events else "") +
+                   "cdrom.read_begin,cdrom.sector_read,mgs.loading_sample")
     if not replay and args.input_script:
         shutil.copy2(args.input_script, output / "seed.input")
         env["PS1_INPUT_SCRIPT"] = str(output / "seed.input")
@@ -198,7 +237,15 @@ def run(args):
     if launched_runtime_sha != expected_runtime_sha:
         raise ValueError("runtime ricompilato durante la preparazione; ripetere con una nuova destinazione")
     with (output / "runtime.log").open("w") as log:
-        process = subprocess.Popen([str(ROOT / "scripts/run_native.sh")], cwd=ROOT, env=env,
+        command = [str(ROOT / "scripts/run_native.sh")]
+        if getattr(args, 'wine', None):
+            from mgs_windows_check import configuration, win
+            windows_config = output / 'windows-runtime.toml'
+            configuration(CONFIG, windows_config, output / 'cards', states)
+            env = {key:win(value) if key.startswith('PS1_') and value.startswith('/') else value
+                   for key,value in env.items()}
+            command = [str(args.wine), str(BINARY), '--config', win(windows_config)]
+        process = subprocess.Popen(command, cwd=ROOT, env=env,
                                    stdout=log, stderr=subprocess.STDOUT)
         previous = {}
         for sig in (signal.SIGINT, signal.SIGTERM):
@@ -258,11 +305,11 @@ def run(args):
                               or "[DISPATCH] FATAL:" in line]
     result["playability"] = "unverified beyond this recorded route"
     # USA GV_Time is independently identified by gvd.c's GP-relative operand
-    # (also used by mgs_screen_effects.cpp). v6/v7 retain this disk RAM prefix.
+    # (also used by mgs_screen_effects.cpp). v6-v12 retain this disk RAM prefix.
     seed = initial.read_bytes()
     ram_path = output / "final-ram.bin"
     minimum = max(args.min_game_ticks, source.get("validation", {}).get("min_game_ticks", 0))
-    if len(seed) >= 476 + 2 * 1024 * 1024 and seed[:4] == b"PS1S" and struct.unpack_from("<I", seed, 4)[0] in (6, 7) and ram_path.is_file():
+    if len(seed) >= 476 + 2 * 1024 * 1024 and seed[:4] == b"PS1S" and struct.unpack_from("<I", seed, 4)[0] in (6, 7, 8, 9, 10, 11, 12) and ram_path.is_file():
         ram = ram_path.read_bytes()
         if len(ram) == 2 * 1024 * 1024:
             result["game_state"] = game_state(ram)
@@ -445,14 +492,21 @@ def main():
         sub = commands.add_parser(command)
         sub.add_argument("session", type=Path)
         sub.add_argument("--runtime", type=Path, default=BINARY)
+        sub.add_argument("--wine", type=Path, help="execute the real Windows PE runtime via this Wine binary (isolated WINEPREFIX recommended)")
         sub.add_argument("--config", type=Path, default=CONFIG)
         sub.add_argument("--frames", type=int, default=0)
         sub.add_argument("--min-game-ticks", type=int, default=0, help="richiede almeno N avanzamenti di GV_Time")
         sub.add_argument("--headless", action="store_true")
         sub.add_argument("--hidden", action="store_true", help="Vulkan 4K in una finestra nascosta")
+        sub.add_argument("--headless-surface", action="store_true", help="execute Vulkan via VK_EXT_headless_surface (no desktop required)")
+        sub.add_argument("--require-hardware", action="store_true", help="require an integrated/discrete Vulkan GPU and collect GPU timestamps; reject CPU/virtual devices")
+        sub.add_argument("--asset-cache", type=Path, help="explicit original-asset Vulkan cache with upload readback verification")
+        sub.add_argument("--trace-presentation", action="store_true", help="record original material/pose rejection evidence")
         sub.add_argument("--capture-every", type=int, default=0, help="cattura Vulkan ogni N VBlank")
         sub.add_argument("--native-every", type=int, default=0, help="cattura diagnostica del framebuffer nativo ogni N VBlank")
         sub.add_argument("--period-us", type=int, default=0)
+        sub.add_argument("--trace-cd-clock", action="store_true", help="trace CD credit loss and DMA/callback ordering")
+        sub.add_argument("--trace-loading", action="store_true", help="measure original loader lifetime and per-file CD delivery")
         sub.add_argument("--trace-private", action="store_true", help="trace unresolved native entries and their callers")
         sub.add_argument("--checkpoint-interval", type=int, default=3600)
         sub.add_argument("--timeout", type=int, default=0)

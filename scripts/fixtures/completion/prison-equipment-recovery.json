@@ -1,0 +1,210 @@
+{
+  "format": "mgs-situation-1",
+  "name": "prison-escape-and-original-equipment-recovery",
+  "source": "USA s03c HZD c6c3 corridor geometry; ea54 creates equipment actor at (500,250,-4000), callback791e clears confiscation via menu -n0, sets global004e bit2 and removes ketchup. Procedure842a opens medical door only while level6 card is equipped.",
+  "requires": {
+    "stage": "s03c",
+    "story": 162,
+    "gcl_14000267": 1,
+    "gcl_1401004e": 0,
+    "stance": 0
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "gcl_1180006c"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_1401004e",
+    "weapons",
+    "items"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "leave-open-cell",
+        "until": {
+          "x": {
+            "min": 4320,
+            "max": 4680
+          },
+          "z": {
+            "min": 7620,
+            "max": 7980
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": 4500,
+            "z": 7800
+          }
+        },
+        "max_frames": 1000,
+        "guard": {
+          "stage": "s03c",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      },
+      {
+        "name": "equip-level-six-card",
+        "until": {
+          "item": 17,
+          "pause_level": 0
+        },
+        "action": {
+          "sequence": "l2:24,l2+left:3,l2:24,wait:18"
+        },
+        "attempts": 6,
+        "max_frames": 600
+      },
+      {
+        "name": "reach-holding-corridor",
+        "until": {
+          "x": {
+            "min": 4320,
+            "max": 4680
+          },
+          "z": {
+            "min": 2820,
+            "max": 3180
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": 4500,
+            "z": 3000
+          }
+        },
+        "max_frames": 1000,
+        "guard": {
+          "stage": "s03c",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      },
+      {
+        "name": "cross-corridor-to-medical-door",
+        "until": {
+          "x": {
+            "min": -4930,
+            "max": -4570
+          },
+          "z": {
+            "min": 2820,
+            "max": 3180
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -4750,
+            "z": 3000
+          }
+        },
+        "max_frames": 1600,
+        "guard": {
+          "stage": "s03c",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      },
+      {
+        "name": "pass-medical-room-door",
+        "until": {
+          "x": {
+            "min": -4930,
+            "max": -4570
+          },
+          "z": {
+            "min": 820,
+            "max": 1180
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -4750,
+            "z": 1000
+          }
+        },
+        "max_frames": 1000,
+        "guard": {
+          "stage": "s03c",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      },
+      {
+        "name": "approach-equipment-from-north",
+        "until": {
+          "x": {
+            "min": 320,
+            "max": 680
+          },
+          "z": {
+            "min": 320,
+            "max": 680
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": 500,
+            "z": 500
+          }
+        },
+        "max_frames": 1000,
+        "guard": {
+          "stage": "s03c",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      },
+      {
+        "name": "original-equipment-pickup",
+        "until": {
+          "gcl_1401004e": 1,
+          "gcl_11800022": {
+            "min": 0
+          },
+          "gcl_1180005c": -1,
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        },
+        "action": {
+          "move_to": {
+            "x": 500,
+            "z": -4000
+          }
+        },
+        "max_frames": 1800,
+        "stable_frames": 12,
+        "guard": {
+          "stage": "s03c",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      }
+    ]
+  }
+}

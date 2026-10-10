@@ -4,6 +4,7 @@
 #include "runtime/cdrom/cdrom_controller.h"
 #include "runtime/dma/dma.h"
 #include "runtime/games/crash3_profile.h"
+#include "runtime/games/mgs_profile.h"
 #include "runtime/gpu/gpu.h"
 #include "runtime/input/input.h"
 #include "runtime/metrics.h"
@@ -93,6 +94,11 @@ Bios::~Bios() = default;
 
 Bios::Snapshot Bios::snapshot() const {
   Snapshot state;
+  state.heap = heap_.snapshot();
+  state.files = fileIo_.snapshot();
+  state.kernelHeapNext = kernelHeapNext_;
+  state.kernelHeapEnd = kernelHeapEnd_;
+  state.randomSeed = randomSeed_;
   state.eventSystem = eventSystem_.snapshot();
   state.kernelThreads = kernelThreads_.snapshot();
   auto cardEvents = cardEvents_;
@@ -119,7 +125,12 @@ Bios::Snapshot Bios::snapshot() const {
   return state;
 }
 
-bool Bios::restore(const Snapshot &state) {
+bool Bios::validSnapshot(const Snapshot &state) {
+  if (!Heap::validSnapshot(state.heap) || !FileIO::validSnapshot(state.files) ||
+      state.kernelHeapNext > state.kernelHeapEnd ||
+      (state.kernelHeapNext & 0xe0000000u) != (state.kernelHeapEnd & 0xe0000000u) ||
+      (state.kernelHeapEnd & 0x1fffffffu) > Memory::RAM_SIZE)
+    return false;
   const auto validRamAddress = [](uint32_t address, uint32_t bytes) {
     if (address == 0)
       return true;
@@ -134,9 +145,24 @@ bool Bios::restore(const Snapshot &state) {
       !std::all_of(
           state.cdEventQueue.begin(), state.cdEventQueue.end(),
           [](uint8_t interrupt) { return interrupt >= 1 && interrupt <= 5; }) ||
-      !eventSystem_.restore(state.eventSystem))
+      !EventSystem::validSnapshot(state.eventSystem))
     return false;
 
+  return true;
+}
+
+bool Bios::canRestore(const Snapshot &state) const {
+  return validSnapshot(state) && fileIo_.canRestore(state.files);
+}
+
+bool Bios::restore(const Snapshot &state) {
+  if (!canRestore(state)) return false;
+  heap_.restore(state.heap);
+  fileIo_.restore(state.files);
+  kernelHeapNext_ = state.kernelHeapNext;
+  kernelHeapEnd_ = state.kernelHeapEnd;
+  randomSeed_ = state.randomSeed;
+  eventSystem_.restore(state.eventSystem);
   pendingKernelThreads_ = state.kernelThreads;
   cardEvents_ = {};
   for (auto event : state.cardEvents) cardEvents_.push({event[0], event[1]});
@@ -172,6 +198,12 @@ bool Bios::restore(const Snapshot &state) {
 }
 
 void Bios::rebaseAfterTimelineLoad() {
+  // Pre-HLE snapshots cannot reconstruct these host objects. Never retain
+  // allocator metadata or descriptors from the abandoned timeline.
+  heap_.restore({});
+  fileIo_.restore({});
+  kernelHeapNext_ = kernelHeapEnd_ = 0;
+  randomSeed_ = 1;
   eventSystem_.discardPendingTimeline();
   cdIntPending_.store(0, std::memory_order_release);
   cdExceptionPending_.store(0, std::memory_order_release);
@@ -612,7 +644,56 @@ void Bios::triggerRootCounterEvents(uint32_t timerIndex, uint32_t count) {
   ps1::metrics::count(fmt::format("timer.irq{}", timerIndex), count);
 }
 
+bool Bios::queueDmaInterrupts() {
+  bool queued = false;
+  if (!dma_) return queued;
+  auto &st = ps1::psyq::psyq_state();
+  for (std::size_t ch = 0; ch < lastDmaCompletion_.size(); ++ch) {
+    const uint32_t completed = dma_->completionGeneration(ch);
+    const uint32_t pending = completed - lastDmaCompletion_[ch];
+    // A normal DMA channel cannot complete thousands of transfers between
+    // two cooperative yield points. A huge unsigned delta means an older
+    // hardware generation was restored without its host delivery epoch.
+    // Rebase instead of wrapping through 2^32 and filling the callback
+    // queue until std::bad_alloc.
+    constexpr uint32_t kMaxDmaCallbacksPerDrain = 4096;
+    if (pending > kMaxDmaCallbacksPerDrain) {
+      ps1::metrics::count("savestate.dma_epoch_rebased");
+      lastDmaCompletion_[ch] = completed;
+      continue;
+    }
+    lastDmaCompletion_[ch] = completed;
+    const uint32_t dicr = dma_->readRegister(0x1F8010F4);
+    const uint32_t flag = 1u << (24 + ch);
+    if ((dicr & (1u << 23)) && (dicr & (1u << (16 + ch))) &&
+        (dicr & flag)) {
+      // Acknowledge only this channel before its callback can start another
+      // transfer. Other pending flags survive the write-one-to-clear store.
+      dma_->writeRegister(0x1F8010F4, (dicr & 0x00FFFFFFu) | flag);
+      if (uint32_t cb = st.dmaCallback[ch]; cb != 0) {
+        eventSystem_.queueCallback(cb);
+        queued = true;
+      }
+    }
+  }
+  return queued;
+}
+
+bool Bios::serviceUnpacedDataSector() {
+  if (ctx_.callbackDrainBlockDepth || !cdrom_ || !cdrom_->unpacedDataRead() ||
+      !ps1::psyq::psyq_state().intrCallback[2]) return false;
+  const bool advanced = cdrom_->serviceMaturedSector();
+  drainCdromEventQueue();
+  eventSystem_.drainPendingCallbacks();
+  for (unsigned chain = 0; chain < 256; ++chain) {
+    if (!queueDmaInterrupts()) break;
+    eventSystem_.drainPendingCallbacks();
+  }
+  return advanced;
+}
+
 void Bios::drainPendingCallbacks(uint32_t resumePc) {
+  checkShutdown(); // polling loops remain cancellable even with callbacks blocked.
   // Some assembly renderers temporarily use $sp as a list/data cursor. The
   // recompiler marks that whole native call subtree with a depth guard. Keep
   // queued work pending until execution returns to a genuine guest stack;
@@ -651,7 +732,9 @@ void Bios::drainPendingCallbacks(uint32_t resumePc) {
   if (cdrom_)
     cdrom_->serviceClock();
 
-  if (spu_ && spu_->serviceClock()) {
+  if (spu_ && ps1::games::mgs::audioClockReady(
+                  *ctx_.mem, psyq::psyq_state().intrCallback[9]) &&
+      spu_->serviceClock()) {
     if (const uint32_t cb = psyq::psyq_state().intrCallback[9])
       eventSystem_.queueCallback(cb);
   }
@@ -659,33 +742,8 @@ void Bios::drainPendingCallbacks(uint32_t resumePc) {
   // Drain controller IRQs before consuming the remaining callback surfaces.
   drainCdromEventQueue();
 
-  // Convert synchronous hardware completions into the asynchronous callback
-  // surface exposed by PsyQ DMACallback().  A generation counter preserves
-  // multiple transfers completed between yield points, while queueing through
-  // EventSystem avoids re-entering MIPS code from DMA::writeRegister().
-  if (dma_) {
-    auto &st = ps1::psyq::psyq_state();
-    for (std::size_t ch = 0; ch < lastDmaCompletion_.size(); ++ch) {
-      const uint32_t completed = dma_->completionGeneration(ch);
-      const uint32_t pending = completed - lastDmaCompletion_[ch];
-      // A normal DMA channel cannot complete thousands of transfers between
-      // two cooperative yield points. A huge unsigned delta means an older
-      // hardware generation was restored without its host delivery epoch.
-      // Rebase instead of wrapping through 2^32 and filling the callback
-      // queue until std::bad_alloc.
-      constexpr uint32_t kMaxDmaCallbacksPerDrain = 4096;
-      if (pending > kMaxDmaCallbacksPerDrain) {
-        ps1::metrics::count("savestate.dma_epoch_rebased");
-        lastDmaCompletion_[ch] = completed;
-        continue;
-      }
-      for (uint32_t delivery = 0; delivery < pending; ++delivery) {
-        ++lastDmaCompletion_[ch];
-        if (uint32_t cb = st.dmaCallback[ch]; cb != 0)
-          eventSystem_.queueCallback(cb);
-      }
-    }
-  }
+
+  queueDmaInterrupts();
 
   // Tick the VBlank InterruptCallback once for every elapsed guest VBlank.
   // Root-counter slots 4-6 are delivered from triggerRootCounterEvents() at
@@ -721,6 +779,37 @@ void Bios::drainPendingCallbacks(uint32_t resumePc) {
   }
   kernelThreads_.captureCurrent(resumePc);
   eventSystem_.drainPendingCallbacks();
+  // A completed MDEC slice callback arms the next slice. These transfers
+  // already finished synchronously; deliver their IRQs before advancing the
+  // clock or publishing another CD sector. One slice per VBlank turns a
+  // sub-frame operation into 20 frames and reaches retail Movie's panic loop.
+  // Bound pathological callback chains without inventing any new clock credit.
+  constexpr unsigned kMaxDmaChain = 256;
+  for (unsigned chain = 0; chain < kMaxDmaChain; ++chain) {
+    if (!queueDmaInterrupts()) break;
+    eventSystem_.drainPendingCallbacks();
+    if (chain + 1 == kMaxDmaChain)
+      ps1::metrics::count("dma.callback_chain_budget");
+  }
+  // The original low-level driver owns its ACK and does not set cdIntPending.
+  // Complete its matured CD/DMA transactions before switching fibers. Without
+  // this pump a wait in the selected fiber admits another VBlank first, losing
+  // drive credit and stretching STR video/audio despite an idle controller.
+  if (cdrom_ && ps1::psyq::psyq_state().intrCallback[2]) {
+    // Asset reads may drain up to 8 MiB at one safe yield. Check the policy
+    // again for every sector: callbacks can stop, seek or start a movie. The
+    // original callbacks and DMA chains finish before reusing the CD buffer.
+    for (unsigned sector = 0; sector < 4096; ++sector) {
+      if (sector >= 8 && !cdrom_->unpacedDataRead()) break;
+      if (!cdrom_->serviceMaturedSector()) break;
+      drainCdromEventQueue();
+      eventSystem_.drainPendingCallbacks();
+      for (unsigned chain = 0; chain < kMaxDmaChain; ++chain) {
+        if (!queueDmaInterrupts()) break;
+        eventSystem_.drainPendingCallbacks();
+      }
+    }
+  }
   kernelThreads_.scheduleSelected(resumePc);
 
   // Deferred CD customExceptionExit dispatch
@@ -817,19 +906,22 @@ void Bios::drainPendingCallbacks(uint32_t resumePc) {
     // Restore registers
     static_cast<ps1::CPUContext &>(ctx_) = saved;
 
-    // End the stream when the callback consumed the final sector. If another
-    // sector already matured from host-clock cycles while this INT1 waited
-    // for its ACK, the bounded stream pump may release one without adding
-    // emulated time.
-    if (cdrom_ && (intType == 1) && state.cdRemaining != 0) {
-      int32_t remainAfterCb = static_cast<int32_t>(state.cdRemaining);
-      if (remainAfterCb > 0) {
-        cdrom_->serviceMaturedSector();
-      } else {
-        // Read complete -- stop the CDROM so it doesn't generate more INT1s.
+    // Finish the payload DMA callback before exposing another sector. STR
+    // publishes its ring entry from that callback, after the header DMA.
+    for (unsigned chain = 0; chain < kMaxDmaChain; ++chain) {
+      if (!queueDmaInterrupts()) break;
+      eventSystem_.drainPendingCallbacks();
+    }
+    // Native register/STR readers do not use HLE cdRemaining. Their already
+    // matured sectors need the same pump as CdRead, otherwise the clock is
+    // throttled to one sector per cooperative VBlank instead of 150/second.
+    if (cdrom_ && intType == 1) {
+      if (static_cast<int32_t>(state.cdRemaining) < 0) {
         cdrom_->stopReading();
         cdIntPending_.store(0, std::memory_order_release);
         state.cdClockDemand.store(false, std::memory_order_release);
+      } else {
+        cdrom_->serviceMaturedSector();
       }
     }
   }

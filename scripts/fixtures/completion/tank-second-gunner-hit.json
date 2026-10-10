@@ -1,0 +1,80 @@
+{
+  "format": "mgs-situation-1",
+  "name": "tank-second-gunner-victory-and-card",
+  "requires": {
+    "stage": "s05a",
+    "story": 66,
+    "actor_m1e1sold_count": 1,
+    "life": {
+      "min": 1
+    }
+  },
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_1180006c"
+  ],
+  "fixture": {
+    "scope": "Synthetic terminal health (E0C=0) of second gunner. Original death, victory callback, level3 card, aftermath and nuclear building entry must execute; player throw, damage calculation and full fight are not established.",
+    "patches": [
+      {
+        "actor": "m1e1.c",
+        "act": "0x800d78ec",
+        "offset": "0xe0c",
+        "width": 4,
+        "expect": 640,
+        "value": 0,
+        "reason": "Enter terminal health boundary after damage resolution; do not alter death, gunner count, story or callback",
+        "source": "m1e1sold.c original death predicate: GM_Vitality!=0 && GameOverTimer==0 && target!=NULL && parent.E0C<=0; next gunner initially has F5C invulnerability"
+      }
+    ]
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-tank-victory",
+        "until": {
+          "story": 68,
+          "gcl_1180006c": 3
+        },
+        "max_frames": 1800,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "original-nuclear-building-entry",
+        "until": {
+          "stage": "s06a",
+          "story": 69,
+          "gcl_1180006c": 3,
+          "control": {
+            "ne": 0
+          },
+          "pause_level": 0,
+          "load_request": 0,
+          "actor_loader_count": 0,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "wait:30,start:6,wait:30,cross:6"
+        },
+        "attempts": 150,
+        "max_frames": 9000,
+        "stable_frames": 30
+      }
+    ]
+  }
+}

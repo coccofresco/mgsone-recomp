@@ -8,6 +8,18 @@ from mgs_tas_route import action_runs, actor_counts, actor_variable, check, comp
 
 
 class RouteTests(unittest.TestCase):
+    def test_current_area_is_independent_of_saved_gameplay_stage(self):
+        ram = bytearray(2097152)
+        ram[0xB7500:0xB7505] = b's03b\0'
+        ram[0xADB34:0xADB3A] = b'title\0'
+        state = snapshot(ram)
+        self.assertEqual(state['stage'], 's03b')
+        self.assertEqual(state['current_stage'], 'title')
+        goal = dict(stage='s03b', current_stage='title')
+        self.assertTrue(check(goal, state))
+        route = compile_route(dict(format='mgs-tas-route-1', steps=[dict(name='exit', until=goal)]), [], {})
+        self.assertIn('UNTIL current_stage eq title ', route)
+
     def test_effect_actor_counts_require_complete_lists_and_ignore_stale_heap(self):
         ram = bytearray(2097152)
         word = lambda p, v: struct.pack_into('<I', ram, p & 0x1fffffff, v)
@@ -36,11 +48,53 @@ class RouteTests(unittest.TestCase):
         ram[:] = original; word(head + 4, head + 32); word(head + 32, head)
         self.assertEqual(actor_counts(ram).get('bakudan.c', 0), 0)
 
+    def test_movie_progress_requires_verified_live_usa_actor(self):
+        from test_mgs_fixture import actor_ram
+        ram = actor_ram()
+        ram[0xADB34:0xADB39] = b'd18a\0'
+        ram[0x130000:0x130008] = b'movie.c\0'
+        struct.pack_into('<I', ram, 0x120008, 0x800c7718)
+        struct.pack_into('<I', ram, 0x120020, 0x80140000)
+        struct.pack_into('<H', ram, 0x12003e, 450)
+        struct.pack_into('<H', ram, 0x140002, 482)
+        fields = ['movie_frame', 'movie_total_frames']
+        observed = snapshot(ram, fields)
+        self.assertEqual([observed[f] for f in fields], [450, 482])
+        self.assertEqual(snapshot(ram)['movie_frame'], 450)
+        for address, value in [(0x120008, 0x80010000), (0x120020, 0x801fffff), (0x120000, 0)]:
+            bad = bytearray(ram)
+            struct.pack_into('<I', bad, address, value)
+            self.assertIsNone(snapshot(bad, fields)['movie_frame'])
+        ram[0xADB34:0xADB39] = b's18a\0'
+        self.assertIsNone(snapshot(ram, fields)['movie_frame'])
+
     def test_actor_observation_has_bounded_filename_only(self):
         for field in ('actor__count', 'actor_kogaku2_timer', 'actor_../foo_count',
                       'actor_RedAlert_count', 'actor_' + 'a' * 49 + '_count'):
             self.assertIsNone(actor_variable(field))
         self.assertEqual(actor_variable('actor_red_alrt_count'), 'red_alrt.c')
+
+    def test_work_views_reject_wrong_implementation_ambiguity_and_bad_pointers(self):
+        from test_mgs_fixture import actor_ram
+        from mgs_tas_route import work_variable
+        ram = actor_ram()
+        direct = 'work_snake_8005ce1c_0040_s16'
+        indirect = 'work_snake_8005ce1c_0044_p0026_u16'
+        struct.pack_into('<h', ram, 0x120040, -7)
+        struct.pack_into('<I', ram, 0x120044, 0x80140000)
+        struct.pack_into('<H', ram, 0x140026, 65530)
+        original = bytes(ram)
+        self.assertEqual([snapshot(ram, [direct, indirect])[f] for f in (direct, indirect)], [-7, 65530])
+        self.assertEqual(ram, original)
+        self.assertIn(direct, compile_route(dict(format='mgs-tas-route-1', steps=[dict(name='phase', until={direct: -7})]), [], {}))
+        for at, value in ((0x120008, 0x80010000), (0x120044, 0x801ffffc), (0x120044, 0x80140001), (0x120000, 0)):
+            bad = bytearray(ram); struct.pack_into('<I', bad, at, value)
+            self.assertIsNone(snapshot(bad, [indirect])[indirect])
+        self.assertIsNone(snapshot(actor_ram(2), [direct])[direct])
+        self.assertFalse(check({direct: {'ne': 1}}, snapshot(actor_ram(2), [direct])))
+        for field in ('work_snake_8005ce1d_0040_s16', 'work_snake_8005ce1c_0041_s16',
+                      'work_snake_8005ce1c_4000_s16', 'work_snake_8005ce1c_0044_p0027_s16'):
+            self.assertIsNone(work_variable(field))
 
     def test_game_over_can_occur_with_snake_alive(self):
         ram = bytearray(2097152)
@@ -277,7 +331,8 @@ class RouteTests(unittest.TestCase):
 
     def test_title_actor_uses_usa_offsets_and_requires_unique_live_actor(self):
         ram = bytearray(2097152)
-        ram[0xB7500:0xB7506] = b'title\0'
+        ram[0xB7500:0xB7505] = b's03b\0'
+        ram[0xADB34:0xADB3A] = b'title\0'
         ram[0x10000:0x10007] = b'open.c\0'
         for base in (0x20000,):
             struct.pack_into('<I', ram, base + 8, 0x800D26E0)

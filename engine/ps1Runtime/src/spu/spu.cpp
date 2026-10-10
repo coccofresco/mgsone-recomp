@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <cstdlib>
+#include <stdexcept>
 #include <fmt/format.h>
 
 namespace ps1::spu {
@@ -13,7 +15,25 @@ constexpr int32_t SPU::ADPCM_FILTER_NEG[5];
 
 // Constructor / Destructor
 
-SPU::SPU() { reset(); }
+SPU::SPU() {
+  reset();
+  if (const char *path = std::getenv("PS1_SPU_CAPTURE_PCM"); path && *path) {
+    capturePcm_.open(path, std::ios::binary | std::ios::trunc);
+    if (!capturePcm_) throw std::runtime_error("Cannot open SPU PCM capture");
+  }
+}
+
+void SPU::captureSamples(const int16_t *samples, uint32_t count) {
+  if (!capturePcm_.is_open() || count == 0) return;
+  // Explicit little endian, stereo S16 at SAMPLE_RATE, independent of SDL's
+  // consumption rate and of video readback stalls. Never capture queue padding.
+  for (uint32_t i = 0; i < count * 2; ++i) {
+    const auto value = static_cast<uint16_t>(samples[i]);
+    capturePcm_.put(static_cast<char>(value & 0xff));
+    capturePcm_.put(static_cast<char>(value >> 8));
+  }
+  if (!capturePcm_) throw std::runtime_error("Cannot write SPU PCM capture");
+}
 
 SPU::~SPU() = default;
 
@@ -26,6 +46,7 @@ void SPU::reset() {
   spuStat_ = 0;
   mainVolL_ = 0;
   mainVolR_ = 0;
+  cdVolL_ = cdVolR_ = 0;
   irqAddr_ = 0;
   irqPending_ = false;
   keyOnLatch_ = 0;
@@ -59,6 +80,8 @@ SPU::Snapshot SPU::snapshot() const {
   state.spuStat = spuStat_;
   state.mainVolL = mainVolL_;
   state.mainVolR = mainVolR_;
+  state.cdVolL = cdVolL_;
+  state.cdVolR = cdVolR_;
   state.irqAddr = irqAddr_;
   state.irqPending = irqPending_;
   state.keyOnLatch = keyOnLatch_;
@@ -90,6 +113,8 @@ void SPU::restore(const Snapshot &state) {
   spuStat_ = state.spuStat;
   mainVolL_ = state.mainVolL;
   mainVolR_ = state.mainVolR;
+  cdVolL_ = state.cdVolL;
+  cdVolR_ = state.cdVolR;
   irqAddr_ = state.irqAddr;
   irqPending_ = state.irqPending;
   keyOnLatch_ = state.keyOnLatch;
@@ -327,9 +352,11 @@ void SPU::writeRegister(uint32_t addr, uint16_t val) {
 
   // CD Volume L/R
   case 0x1B0:
-    break; // CD audio volume left
+    cdVolL_ = static_cast<int16_t>(val);
+    break;
   case 0x1B2:
-    break; // CD audio volume right
+    cdVolR_ = static_cast<int16_t>(val);
+    break;
 
   // External Audio Volume
   case 0x1B4:
@@ -407,6 +434,10 @@ uint16_t SPU::readRegister(uint32_t addr) const {
     return transferCtrl_;
   case 0x1AE:
     return spuStat_;
+  case 0x1B0:
+    return static_cast<uint16_t>(cdVolL_);
+  case 0x1B2:
+    return static_cast<uint16_t>(cdVolR_);
   }
   return 0;
 }
@@ -854,7 +885,8 @@ void SPU::generateSamples(int16_t *outputBuffer, uint32_t numSamples) {
   std::lock_guard<std::mutex> lock(mutex_);
   ps1::metrics::count("spu.audio_callback");
   if (!guestClock_) {
-    generateSamplesLocked(outputBuffer, numSamples, false);
+    const auto generated = generateSamplesLocked(outputBuffer, numSamples, false);
+    captureSamples(outputBuffer, generated);
     return;
   }
   const auto available = std::min<size_t>(numSamples * 2, playbackQueue_.size());
@@ -880,6 +912,7 @@ bool SPU::serviceClock() {
   const uint32_t generated = irqPending_ ? 0 :
       generateSamplesLocked(output.data(), requested, true);
   clockSamplesPending_ -= generated;
+  captureSamples(output.data(), generated);
   playbackQueue_.insert(playbackQueue_.end(), output.begin(), output.begin() + generated * 2);
   // A missing/paused audio device must never stall the guest clock.
   constexpr size_t maxQueued = SAMPLE_RATE / 4 * 2;
@@ -942,7 +975,7 @@ uint32_t SPU::generateSamplesLocked(int16_t *outputBuffer, uint32_t numSamples,
     voices_[i].pitchMod = (i > 0) && ((pitchModOn_ >> i) & 1);
   }
 
-  uint64_t nonzeroOutputSamples = 0;
+  uint64_t nonzeroOutputSamples = 0, xaConsumedFrames = 0, cdNonzeroFrames = 0;
   int32_t peakOutput = 0;
   uint32_t generated = 0;
   for (uint32_t s = 0; s < numSamples; s++) {
@@ -967,18 +1000,24 @@ uint32_t SPU::generateSamplesLocked(int16_t *outputBuffer, uint32_t numSamples,
       }
     }
 
-    // Mix XA-ADPCM audio (stereo interleaved)
+    // Consume CD input even with CD mixing disabled: re-enabling it must
+    // not replay stale samples from the previous scene.
+    int32_t cdL = 0, cdR = 0;
     if (xaReadPos_ + 1 < xaBuffer_.size()) {
-      mixL += xaBuffer_[xaReadPos_];
-      mixR += xaBuffer_[xaReadPos_ + 1];
-      xaReadPos_ += 2;
+      cdL += xaBuffer_[xaReadPos_++];
+      cdR += xaBuffer_[xaReadPos_++];
+      ++xaConsumedFrames;
     }
-
-    // Mix CD-DA audio (stereo interleaved)
     if (cdDaReadPos_ + 1 < cdDaBuffer_.size()) {
-      mixL += cdDaBuffer_[cdDaReadPos_];
-      mixR += cdDaBuffer_[cdDaReadPos_ + 1];
-      cdDaReadPos_ += 2;
+      cdL += cdDaBuffer_[cdDaReadPos_++];
+      cdR += cdDaBuffer_[cdDaReadPos_++];
+    }
+    if (spuCtrl_ & 1) {
+      const int32_t left = static_cast<int32_t>((int64_t(cdL) * cdVolL_) >> 15);
+      const int32_t right = static_cast<int32_t>((int64_t(cdR) * cdVolR_) >> 15);
+      mixL += left;
+      mixR += right;
+      if (left != 0 || right != 0) ++cdNonzeroFrames;
     }
 
     // Apply master volume
@@ -1006,6 +1045,8 @@ uint32_t SPU::generateSamplesLocked(int16_t *outputBuffer, uint32_t numSamples,
     ++generated;
     if (stopAtIrq && irqPending_) break;
   }
+  ps1::metrics::count("spu.xa_consumed_frame", xaConsumedFrames);
+  ps1::metrics::count("spu.cd_nonzero_frame", cdNonzeroFrames);
   ps1::metrics::count("spu.output_sample", generated);
   generatedSampleCount_ += generated;
   ps1::metrics::count("spu.nonzero_output_sample", nonzeroOutputSamples);

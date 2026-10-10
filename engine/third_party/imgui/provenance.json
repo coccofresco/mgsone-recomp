@@ -1,0 +1,23 @@
+{
+  "upstream": "https://github.com/ocornut/imgui",
+  "version": "1.91.9b",
+  "files_sha256": {
+    "imgui.cpp": "2faf54df0db896fcb30b8e528e064f2c3227f2f695fe1c8fe62aa8b71f228084",
+    "imgui_draw.cpp": "8823f49f5c7a5181c0435a5fa01a03c3ff5bece283482b81001e71a66993f997",
+    "imgui_tables.cpp": "4ea380fa9d49cac6cbfbc8b969969f9b0705518ec9ca340681d8c70e3eefbc28",
+    "imgui_widgets.cpp": "215eae588d52b455344ab5bd9847ab133d8bafff70841f992f7701b9fbda4dbc",
+    "imgui.h": "ea876e477f06f9619206284551638171c7ba4ed4dbc6ba67002e8f2e4ad7d3c7",
+    "imgui_internal.h": "b6a9b40031c95c83d27595ce0b71f7e102d705ccac6bee6d03ff931fdd370569",
+    "imconfig.h": "f8def8cc3e96c9dcc966fbebdc05eacb334690a0604edfdf6bb09d13a4a12ef5",
+    "imstb_rectpack.h": "2efa3d5f7d003c19743b15155dad9f46d9f9fc783a18893d703b431d3c990972",
+    "imstb_textedit.h": "77010e494caf72c178b573569612aec409d24380409676325a31d02de0ec64b7",
+    "imstb_truetype.h": "87f08919ae8e7223451d0e9d06b62829075d3e920c9e6ad436db9d7e7427ffce",
+    "LICENSE.txt": "c80c5789748d955c4a650562baa0d750494e2c7128c2ca66aaebe2e3c4e198bf",
+    "backends/imgui_impl_sdl2.h": "82b35689eca4e7c63b06d9f82b93d9ae19ec92eb69779fda9c4f4a838ca01b53",
+    "backends/imgui_impl_sdl2.cpp": "62bb99e485d9852244ad8f0b36c567b7f655c11d4fa78610a7fdc329eb31b9ae",
+    "backends/imgui_impl_vulkan.h": "ae11dabd8303c6ad627ca62eccf77f861fb246942a72574403444fea49d9ac56",
+    "backends/imgui_impl_vulkan.cpp": "616b1bb715fa3c987ae1b838674099434e8c59f73fec29a861fc8ed810d3d170",
+    "backends/imgui_impl_sdlrenderer2.h": "0333573b8199b3299c1827d753c8d77eca93acfa36979a18c1f7b34ed2ecf4fd",
+    "backends/imgui_impl_sdlrenderer2.cpp": "89438e76c8f0a85209772ef5528865e78274a634cc508bfbcbf30dfa4e609431"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-office-to-caves",
+  "source": "USA s07b HZD c742 to_s09a boundsx2500..5000 z-17500..-15750 y-1500..500; GCL2bc9/eb90/c3c7 performs original load s09a. Input-only traversal after original Mantis victory and films. Require original s09a initialization/story141 (138 is a transient loader/intro state) and live Snake, not only GM_SetArea and loader removal.",
+  "requires": {
+    "current_stage": "s07b",
+    "story": 137,
+    "max_life": 512,
+    "player_status": 0
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life"
+  ],
+  "compare": [
+    "current_stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-caves-passage",
+        "until": {
+          "current_stage": "s09a",
+          "actor_loader_count": 0,
+          "load_request": 0,
+          "life": {
+            "min": 1
+          },
+          "story": 141,
+          "actor_snake_count": 1,
+          "pause_level": 0
+        },
+        "action": {
+          "move_to": {
+            "x": 3750,
+            "z": -16600
+          }
+        },
+        "max_frames": 3000,
+        "stable_frames": 10,
+        "abort_when": {
+          "life": 0
+        },
+        "when": {
+          "current_stage": "s07b"
+        }
+      }
+    ]
+  }
+}

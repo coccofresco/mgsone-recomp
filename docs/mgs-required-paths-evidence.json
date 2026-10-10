@@ -1,0 +1,644 @@
+{
+  "format": "mgs-required-paths-evidence-1",
+  "date": "2026-10-06",
+  "status": "partial-with-open-findings",
+  "scope": "Mandatory progression contracts from isolated source-bound checkpoints. No full fights, continuous campaign, every difficulty, audiovisual correctness or performance certification.",
+  "runtime": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+  },
+  "counts": {
+    "new_passed_contracts": 6,
+    "newly_partially_exercised_cases": 2,
+    "fully_certified_cases": 0
+  },
+  "passed": [
+    {
+      "case": "tank",
+      "name": "tank-close",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/tank-close/result.json",
+        "sha256": "b47055d490f0e6eefa576eb278caea2f355dfdb6c6f26c3b30aae68d54f8cea5"
+      },
+      "scope": "Synthetic Snake approach; original first gunner activation. Minefield and player approach unverified.",
+      "synthetic": true,
+      "diagnostic_ancestry": [],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 6,
+          "final": {
+            "stage": "s05a",
+            "story": 66,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 192,
+            "max_life": 256,
+            "game_status": 32768,
+            "player_status": 0,
+            "pause_level": 0,
+            "control": 2148890488
+          }
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 2,
+          "final": {
+            "stage": "s05a",
+            "story": 66,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 192,
+            "max_life": 256,
+            "game_status": 32768,
+            "player_status": 0,
+            "pause_level": 0,
+            "control": 2148890488
+          }
+        }
+      }
+    },
+    {
+      "case": "tank",
+      "name": "tank-gunner1",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/tank-gunner1/result.json",
+        "sha256": "e21675bc5bd9206a176fa78c1c64ae069b269e9235618143ddafdc631bef484f"
+      },
+      "scope": "Synthetic TARGET damage; original first gunner death and second gunner creation.",
+      "synthetic": true,
+      "diagnostic_ancestry": [],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 423,
+          "final": {
+            "stage": "s05a",
+            "story": 66,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 192,
+            "max_life": 256,
+            "game_status": 273326080,
+            "player_status": 536870912,
+            "pause_level": 0,
+            "control": 2148890488
+          }
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 416,
+          "final": {
+            "stage": "s05a",
+            "story": 66,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 192,
+            "max_life": 256,
+            "game_status": 32768,
+            "player_status": 0,
+            "pause_level": 0,
+            "control": 2148890488
+          }
+        }
+      }
+    },
+    {
+      "case": "tank",
+      "name": "tank-victory-health",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/tank-victory-health/result.json",
+        "sha256": "13746f19a46500875fe6c4ddaeef5d6d6fcdcec871ef766ed4a1344254426723"
+      },
+      "scope": "Synthetic second-gunner terminal health; original death, victory, level-3 card and s06a/story69 load. Grenade throw, damage calculation and full combat unverified.",
+      "synthetic": true,
+      "diagnostic_ancestry": [],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 297,
+          "final": {
+            "stage": "s06a",
+            "story": 69,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 192,
+            "max_life": 256,
+            "game_status": 273154112,
+            "player_status": 612401156,
+            "pause_level": 0,
+            "control": 2148957084,
+            "gcl_1180006c": 3
+          }
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 519,
+          "final": {
+            "stage": "s06a",
+            "story": 69,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 192,
+            "max_life": 256,
+            "game_status": 273154112,
+            "player_status": 612401156,
+            "pause_level": 0,
+            "control": 2148957084,
+            "gcl_1180006c": 3
+          }
+        }
+      }
+    },
+    {
+      "case": "tank",
+      "name": "tank-control-verified",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/tank-control-verified/result.json",
+        "sha256": "92c7da4a18a3890cb645b4e84f1e84dbf9a76256c61ba7eea0c5c43b32fd2b29"
+      },
+      "scope": "Continuation from the previous pair with no new fixture; original s06a entry animation ends, input blocks clear, max life and life become 384 per retail procedure 8a53.",
+      "synthetic": true,
+      "diagnostic_ancestry": [],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 305,
+          "final": {
+            "stage": "s06a",
+            "story": 69,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 384,
+            "max_life": 384,
+            "game_status": 0,
+            "player_status": 0,
+            "pause_level": 0,
+            "control": 2148957084,
+            "gcl_1180006c": 3
+          }
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 302,
+          "final": {
+            "stage": "s06a",
+            "story": 69,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 384,
+            "max_life": 384,
+            "game_status": 0,
+            "player_status": 0,
+            "pause_level": 0,
+            "control": 2148957084,
+            "gcl_1180006c": 3
+          }
+        }
+      }
+    },
+    {
+      "case": "prison-escape",
+      "name": "prison-proximity-verified",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/prison-proximity-verified/result.json",
+        "sha256": "13b1832954bcb6a6ebc5ebec5144eb8b2621f64d53abdbb14b0ae53655ecd6e1"
+      },
+      "scope": "Original player proximity triggers Otacon dialogue. Inherits synthetic capture and explicit failed-timeout ancestry.",
+      "synthetic": true,
+      "diagnostic_ancestry": [
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-arrival/result.json",
+            "sha256": "ae17c8049588c362add9eb3fdbaa0e496bffcf1cbac8c46416c70667705552c2"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        }
+      ],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 121,
+          "final": {
+            "stage": "s03c",
+            "story": 162,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 576,
+            "max_life": 576,
+            "game_status": 2147483680,
+            "player_status": 0,
+            "pause_level": 0,
+            "control": 0,
+            "gcl_12000066": 2
+          }
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 126,
+          "final": {
+            "stage": "s03c",
+            "story": 162,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 576,
+            "max_life": 576,
+            "game_status": 2147483680,
+            "player_status": 0,
+            "pause_level": 0,
+            "control": 0,
+            "gcl_12000066": 2
+          }
+        }
+      }
+    },
+    {
+      "case": "prison-escape",
+      "name": "prison-original-gifts",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/prison-original-gifts/result.json",
+        "sha256": "02f300053856c9169e6369082f28c65cf205e7a493c37099a061073be97d3ec5"
+      },
+      "scope": "Original film delivers ketchup and level-6 card, Otacon leaves and controls return. No new RAM writes; inherited synthetic capture and failed-timeout ancestry. Cell escape remains unverified.",
+      "synthetic": true,
+      "diagnostic_ancestry": [
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-arrival/result.json",
+            "sha256": "ae17c8049588c362add9eb3fdbaa0e496bffcf1cbac8c46416c70667705552c2"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        },
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-contact-resumed/result.json",
+            "sha256": "16c8897f9d9ec347772c0fc996ff65a62b59de9acce30f9b2faed492d8dc451a"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        }
+      ],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 7533,
+          "final": {
+            "stage": "s03c",
+            "story": 162,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 576,
+            "max_life": 576,
+            "game_status": 0,
+            "player_status": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "gcl_1180005c": 1,
+            "gcl_1180006c": 6,
+            "gcl_12000066": 2
+          }
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 7511,
+          "final": {
+            "stage": "s03c",
+            "story": 162,
+            "disc": 1,
+            "difficulty": 1,
+            "life": 576,
+            "max_life": 576,
+            "game_status": 0,
+            "player_status": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "gcl_1180005c": 1,
+            "gcl_1180006c": 6,
+            "gcl_12000066": 2
+          }
+        }
+      }
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "hind-aftermath-stream-under-synthetic-entry",
+      "status": "unresolved",
+      "observation": "Both native and SwanStation reach story188 after terminal Hind health but stall in GV_PAUSE_READERROR (pause8); DMO packets remain buffered with demothrd.c absent. Repeated without aftermath inputs. Cached required models are present; cause is not established.",
+      "scope": "Synthetic health/entry conditions; identical donor behavior does not establish a native runtime bug or a retail bug. No scene bypass applied.",
+      "next_check": "Validate the synthetic battle prerequisites against the original entrance and trace DM_ThreadStream/CreateDemo lifecycle through a natural terminal hit.",
+      "evidence": [
+        {
+          "path": "data/validation/completion/required-paths-20261006/hind-aftermath/result.json",
+          "sha256": "00a8ec6cab46731341db261fe59e76e0df822cdf332f09ad088ef5621c7b0537"
+        },
+        {
+          "path": "data/validation/completion/required-paths-20261006/hind-unskipped/result.json",
+          "sha256": "bb2e27f499204dee6075db052c88afb748149e625a5bcdd2cac3e1b145c2bcc8"
+        }
+      ]
+    }
+  ],
+  "failed_diagnostics": [
+    {
+      "name": "hind-aftermath",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/hind-aftermath/result.json",
+        "sha256": "00a8ec6cab46731341db261fe59e76e0df822cdf332f09ad088ef5621c7b0537"
+      },
+      "status": "needs-review",
+      "observations": {
+        "native": {
+          "status": "failed",
+          "frames": 10914,
+          "final": {
+            "stage": "s11h",
+            "story": 188,
+            "pause_level": 8,
+            "game_status": 2147516512,
+            "actor_hind_count": 0
+          },
+          "demothrd_count": 0,
+          "strctrl_count": 1,
+          "ram": {
+            "path": "data/validation/completion/required-paths-20261006/hind-aftermath/native/session/final-ram.bin",
+            "sha256": "50fe44006a99937436f0fa7ee3071a9cdbdf3bac693572274e8dfe90ebebbc9f"
+          }
+        },
+        "donor": {
+          "status": "failed",
+          "frames": 10869,
+          "final": {
+            "stage": "s11h",
+            "story": 188,
+            "pause_level": 8,
+            "game_status": 2147516512,
+            "actor_hind_count": 0
+          },
+          "demothrd_count": 0,
+          "strctrl_count": 1,
+          "ram": {
+            "path": "data/validation/completion/required-paths-20261006/hind-aftermath/donor/session/final-ram.bin",
+            "sha256": "a0b15ef15f4e7a0021e706b7abd788d9fcb027aac617ef7cb392ad25b72dab64"
+          }
+        }
+      }
+    },
+    {
+      "name": "hind-unskipped",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/hind-unskipped/result.json",
+        "sha256": "bb2e27f499204dee6075db052c88afb748149e625a5bcdd2cac3e1b145c2bcc8"
+      },
+      "status": "needs-review",
+      "observations": {
+        "native": {
+          "status": "failed",
+          "frames": 25920,
+          "final": {
+            "stage": "s11h",
+            "story": 188,
+            "pause_level": 8,
+            "game_status": 2147516512,
+            "actor_hind_count": 0
+          },
+          "demothrd_count": 0,
+          "strctrl_count": 1,
+          "ram": {
+            "path": "data/validation/completion/required-paths-20261006/hind-unskipped/native/session/final-ram.bin",
+            "sha256": "1db631dd41e96cc096ff26b116502fc68c6873d2f302254b275f05737950bf85"
+          }
+        },
+        "donor": {
+          "status": "failed",
+          "frames": 25869,
+          "final": {
+            "stage": "s11h",
+            "story": 188,
+            "pause_level": 8,
+            "game_status": 2147516512,
+            "actor_hind_count": 0
+          },
+          "demothrd_count": 0,
+          "strctrl_count": 1,
+          "ram": {
+            "path": "data/validation/completion/required-paths-20261006/hind-unskipped/donor/session/final-ram.bin",
+            "sha256": "6133faaa24cb9dc9e5d1378e18ab02173b79a4e727b2a4acfdb10fb782961b45"
+          }
+        }
+      }
+    }
+  ],
+  "entry_preparations": [
+    {
+      "name": "tank",
+      "scope": "Stage/story plus recorded source assignments only; does not certify combat readiness or previous route.",
+      "results": [
+        {
+          "path": "data/validation/completion/required-paths-20261006/tank-source/native/result.json",
+          "sha256": "a63019179f2820f1cec2860c27fb2014059dda4093e96754356ce0a40107899d"
+        },
+        {
+          "path": "data/validation/completion/required-paths-20261006/tank-source/donor/result.json",
+          "sha256": "9b718bd51d25de8201b19036eaf3cb5440bf26c44cf544eb1af0bf21291768a5"
+        }
+      ]
+    },
+    {
+      "name": "mantis",
+      "scope": "Stage/story plus recorded source assignments only; does not certify combat readiness or previous route.",
+      "results": [
+        {
+          "path": "data/validation/completion/required-paths-20261006/mantis-source/native/result.json",
+          "sha256": "1e13f644a15bb33d41192f9e19997fae7133be89c89494cfd623db6397a0916d"
+        },
+        {
+          "path": "data/validation/completion/required-paths-20261006/mantis-source/donor/result.json",
+          "sha256": "6cefe03d38f616f459ae1e78b36919950a9e40b7819b6816599620c3f357a320"
+        }
+      ]
+    },
+    {
+      "name": "hind",
+      "scope": "Stage/story plus recorded source assignments only; does not certify combat readiness or previous route.",
+      "results": [
+        {
+          "path": "data/validation/completion/required-paths-20261006/hind-source/native/result.json",
+          "sha256": "f23a2a1bf180226d5e765c986e908b7b509842e276701726bdb96b40ec1ddf2c"
+        },
+        {
+          "path": "data/validation/completion/required-paths-20261006/hind-source/donor/result.json",
+          "sha256": "27577babf59e39a43107988873cad6255f25ec7329b72314c23a13cef24ffbcf"
+        }
+      ]
+    }
+  ],
+  "source_snapshots": [
+    {
+      "path": "data/validation/completion/disc1-scripts.json",
+      "sha256": "87cbc4cfaa4dd47727ca694c2815755e46a9d71baca03c43d86a98600829d749"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/overlays/s05a/kojo/m1e1act.c",
+      "sha256": "f677ae90a23d13fb171cc3b1ea2778d0e80a91539a947de6edad7fb64147a38b"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/overlays/s05a/kojo/m1e1sold.c",
+      "sha256": "81300f8368ff3b6310784bff9e7b45a37173019b16992edb9b121c01fa189ace"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/chara/torture/otacom.c",
+      "sha256": "b3745a8effb430127cde7f3301c2fe08836db9efe802efec179c26afa624add0"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/overlays/s11g/kojo/hindact.c",
+      "sha256": "781c80db59a5c75f92a82c734c1eb4f8e17f782248bff4efd8c0089e9fcbb607"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/game/strctrl.c",
+      "sha256": "6be63c91215d3b54e211135db84e231a7842e8e0c9d16f9de0154724646f9e5e"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/kojo/demothrd.c",
+      "sha256": "f9533cee68e17a76c3284c9ee8235aba0e351ca3a49e44652defef9dd8801e2b"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/kojo/demoexec.c",
+      "sha256": "ae5ba29b0e129a8d30bc337ffa43f39a6442cb758a24ddb8b645cac2f7ad618f"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/game/gamed.c",
+      "sha256": "3686da51547b486ac1cb3076e1c229333873cf487b0e4e3dd7f77edae7e53b94"
+    }
+  ],
+  "harness_sources": [
+    {
+      "path": "scripts/mgs_fixture.py",
+      "sha256": "5cfb3c776d2867dd4838b8bf7ed4345d31f8933a25f7085108a7b001371d8c42"
+    },
+    {
+      "path": "scripts/mgs_required_paths.py",
+      "sha256": "00f5e45ff9cb85aa102e723bbae2aab3dcd26143907d9e44aeb7115336c1de70"
+    },
+    {
+      "path": "scripts/mgs_campaign.py",
+      "sha256": "6fb720f69710e0357b610b2546057e1b7014b24fb1957d5e042e289dd714fe05"
+    },
+    {
+      "path": "scripts/mgs_situations.py",
+      "sha256": "5e26c281854741e39245b4061abb1ce7bf7abeecbcaabc19f30515166fa2ed67"
+    },
+    {
+      "path": "scripts/mgs_completion.py",
+      "sha256": "000193d7cc333b6400cf6f8595e02839bd9864c3d26146fb46349b877d6f99d9"
+    }
+  ],
+  "recipes": [
+    {
+      "path": "scripts/fixtures/completion/tank-first-gunner-entry.json",
+      "sha256": "501962db832307dc7a80bb5c83b227404563b8d874b47c4381b875f35d0524d9"
+    },
+    {
+      "path": "scripts/fixtures/completion/tank-first-gunner-hit.json",
+      "sha256": "2e7c5d3466e10c2d2e37985b5ed03cfdb824b90e846c6b4db4e8a1f9fcd579ff"
+    },
+    {
+      "path": "scripts/fixtures/completion/tank-second-gunner-hit.json",
+      "sha256": "bed1a4263939572610b7e1f029849f5f9b1be7f5b411dc38e5c80eacd6cde8ba"
+    },
+    {
+      "path": "scripts/fixtures/completion/tank-post-victory-control.json",
+      "sha256": "737a220241e4751e71aa3e06a2e4e92c9254883453a07c2fdde7ec0d9e213651"
+    },
+    {
+      "path": "scripts/fixtures/completion/prison-otacon-arrival.json",
+      "sha256": "6f32b791cacbe83f3a17fc10f4356cd62293c4c48973e1e3076392f3386a36fc"
+    },
+    {
+      "path": "scripts/fixtures/completion/prison-otacon-contact.json",
+      "sha256": "fcb8a3dfdffd5abe55af618bd2fef485fd26f897c59e2c6b995d3d0fc591ff77"
+    },
+    {
+      "path": "scripts/fixtures/completion/prison-otacon-gifts.json",
+      "sha256": "3d492f8efb34a6293149b1c05f6c9553e813b2042b6fee03ad70685f58c231cb"
+    },
+    {
+      "path": "scripts/fixtures/completion/hind-terminal-hit.json",
+      "sha256": "82d572f92430886f2aac21890ed48185b2bc40c9349bd44fd21f983b3f2ec764"
+    },
+    {
+      "path": "scripts/fixtures/completion/hind-terminal-hit-unskipped.json",
+      "sha256": "0c06799db1b7b2c1b8ab907f325c8f38927f8662dd8ad37f8f73a5db4d5c01df"
+    }
+  ],
+  "test_validation": {
+    "python_tests_passed": 148,
+    "log": {
+      "path": "data/validation/completion/required-paths-20261006/final-python-tests.log",
+      "sha256": "55b568dcf071d13dc3ed96fe29f1cbbcd2c5f873bfe5330f6b55f57a14d3b3e0"
+    },
+    "recipe_routes_compiled": 9
+  },
+  "personal_files": {
+    "status": "unchanged",
+    "original_fingerprints": {
+      "path": ".local/tas-protected.sha256",
+      "sha256": "5414ea1b5bfa9556900c4c540bb0392f2dfe435caf980612e0f22a2f7ddfda8e"
+    },
+    "verification": {
+      "path": "data/validation/completion/required-paths-20261006/protected-files.log",
+      "sha256": "47928750547a87d628691b664cbc1aa2c409fafc917061523b7125a2d0cba221"
+    }
+  },
+  "next_required_gates": [
+    "Prison cell escape, equipment recovery and exit",
+    "Valid Mantis battle entry, original victory and passage",
+    "Hind post-victory scene and bridge exit"
+  ],
+  "rejected_or_superseded_diagnostics": [
+    {
+      "name": "tank-victory",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/tank-victory/result.json",
+        "sha256": "b9c2f6fbfffd0a3f906964493b00d8659ea0b8803f37200c4d3723796035acd5"
+      }
+    },
+    {
+      "name": "prison-arrival",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/prison-arrival/result.json",
+        "sha256": "ae17c8049588c362add9eb3fdbaa0e496bffcf1cbac8c46416c70667705552c2"
+      }
+    },
+    {
+      "name": "prison-contact-resumed",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/prison-contact-resumed/result.json",
+        "sha256": "16c8897f9d9ec347772c0fc996ff65a62b59de9acce30f9b2faed492d8dc451a"
+      }
+    },
+    {
+      "name": "tank-post-victory-control",
+      "result": {
+        "path": "data/validation/completion/required-paths-20261006/tank-post-victory-control/result.json",
+        "sha256": "eea24c503f1622a8ef1cea8c18514f9d03c9588377fde6584727ef3726287637"
+      }
+    }
+  ],
+  "notes": [
+    "A source-derived literal entry importer rejects conditional/dynamic effects rather than guessing missing initialization.",
+    "Explicit clean-timeout continuation preserves failed ancestry in child and aggregate reports. Crashes, process timeouts, corrupted witnesses and invariant changes are rejected.",
+    "Prison arrival recipe was corrected after a wrong global66>=4 milestone; its corrected full preparation has not been rerun or counted.",
+    "Mantis actor initialization with inherited unsuitable Snake spawn is not combat readiness and adds no campaign contract.",
+    "Tank control probe initially rejected the original max-life increase. Corrected contract requires retail s06a/ea54 8a53 max-life=384 instead of preserving 256.",
+    "The runtime and Vulkan code were not modified in this verification round."
+  ]
+}

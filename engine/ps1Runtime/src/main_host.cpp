@@ -1,4 +1,5 @@
 #include <runtime/games/mgs_profile.h>
+#include "runtime/games/mgs_disc.h"
 // ps1Runtime -- PS1 Hardware Simulation Runtime
 // Full system integration: CPU, GPU, SPU, CD-ROM, DMA, Input, MDEC, Timers
 // Game code runs in separate thread; main thread handles SDL events + rendering
@@ -6,6 +7,10 @@
 #include "runtime/games/crash3_profile.h"
 #include "runtime/ps1_runtime_macros.h"
 #include <SDL2/SDL.h>
+#include <imgui.h>
+#include <runtime/input/host_input.h>
+#include <runtime/input/controller_hub.h>
+#include <runtime/input/controller_ui.h>
 #include <algorithm>
 #include <atomic>
 #include <cctype>
@@ -46,6 +51,8 @@
 #include <runtime/psyq/psyq_registry.h>
 #include <runtime/psyq/psyq_state.h>
 #include <runtime/save_state.h>
+#include <runtime/save_files.h>
+#include <runtime/soak_probe.h>
 #include <runtime/spu/spu.h>
 #include <runtime/timers/timers.h>
 #include <runtime/vblank_scheduler.h>
@@ -55,6 +62,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 // SDL2 Audio Callback
 static ps1::spu::SPU *g_spu = nullptr;
@@ -223,6 +233,44 @@ static constexpr uint32_t CPU_CLOCK = 33868800; // 33.8688 MHz
 // before the OS reaps us.
 static volatile std::sig_atomic_t g_shutdown_requested = 0;
 static void onTerminate(int) { g_shutdown_requested = 1; }
+#if defined(_WIN32)
+static std::atomic<bool> g_windows_shutdown{false};
+static BOOL WINAPI onConsoleControl(DWORD event) {
+  if (event == CTRL_C_EVENT || event == CTRL_BREAK_EVENT || event == CTRL_CLOSE_EVENT ||
+      event == CTRL_LOGOFF_EVENT || event == CTRL_SHUTDOWN_EVENT) {
+    g_windows_shutdown.store(true, std::memory_order_relaxed);
+    return TRUE;
+  }
+  return FALSE;
+}
+struct WindowsLifetime {
+  HANDLE event = nullptr, parent = nullptr;
+  WindowsLifetime() {
+    if (const char *name = std::getenv("PS1_SHUTDOWN_EVENT")) {
+      event = OpenEventA(SYNCHRONIZE, FALSE, name);
+      if (!event) throw std::runtime_error("Cannot open launcher shutdown event");
+    }
+    if (const char *pid = std::getenv("PS1_LAUNCHER_PID")) {
+      parent = OpenProcess(SYNCHRONIZE, FALSE, std::stoul(pid));
+      if (!parent) {
+        if (event) CloseHandle(event);
+        throw std::runtime_error("Cannot supervise launcher process");
+      }
+    }
+    SetConsoleCtrlHandler(onConsoleControl, TRUE);
+  }
+  ~WindowsLifetime() {
+    SetConsoleCtrlHandler(onConsoleControl, FALSE);
+    if (event) CloseHandle(event);
+    if (parent) CloseHandle(parent);
+  }
+  bool stopped() const {
+    return g_windows_shutdown.load(std::memory_order_relaxed) ||
+           (event && WaitForSingleObject(event, 0) == WAIT_OBJECT_0) ||
+           (parent && WaitForSingleObject(parent, 0) == WAIT_OBJECT_0);
+  }
+};
+#endif
 
 // Serialize full 1024x512 VRAM (ABGR1555) as a P6 PPM at `path`.
 // Used by tools/smoke_test.py as the regression contract for game bring-up.
@@ -463,6 +511,9 @@ int main(int argc, char *argv[]) {
 
   std::signal(SIGTERM, onTerminate);
   std::signal(SIGINT, onTerminate);
+#if defined(_WIN32)
+  WindowsLifetime windowsLifetime;
+#endif
 
   // Parse arguments: support --config flag anywhere
   std::string input_path;
@@ -725,6 +776,16 @@ int main(int argc, char *argv[]) {
                inputScript.intervalCount(), path);
   }
   ps1::SaveStateCoordinator stateCoordinator;
+  ps1::SoakProbe soak;
+  if (const char* manifest = std::getenv("PS1_SOAK_MANIFEST")) {
+    std::string error;
+    if (!mgsProfile || inputScriptEnabled || std::getenv("PS1_TAS_RECORD") ||
+        std::getenv("PS1_TAS_REPLAY") || std::getenv("PS1_AUTOSAVE_VBLANK") ||
+        std::getenv("PS1_AUTOLOAD_VBLANK") || !soak.load(manifest, error)) {
+      fmt::print(stderr, "[Soak] invalid isolated diagnostic configuration: {}\n", error);
+      return 1;
+    }
+  }
   ps1::input::TasRoute tasRoute;
   const char* tasRoutePath = std::getenv("PS1_TAS_ROUTE");
   const bool tasRouteEnabled = tasRoutePath && *tasRoutePath;
@@ -737,6 +798,7 @@ int main(int argc, char *argv[]) {
     }
   }
   ps1::input::TasMovie tas;
+  if (soak.enabled()) { tas.openProbe(); input.setFrameSampling(true); }
   const char *tasRecord = std::getenv("PS1_TAS_RECORD");
   const char *tasReplay = std::getenv("PS1_TAS_REPLAY");
   if ((tasRecord && *tasRecord) || (tasReplay && *tasReplay)) {
@@ -788,6 +850,14 @@ int main(int argc, char *argv[]) {
 
   // Wire CDROM to VirtualFS
   cdromCtrl.attachVirtualFs(&fs);
+  if (mgsProfile && runtimeConfig.game.fastLoading) {
+    // libfs/file.cnf: these are random-access assets. DEMO, VOX, ZMOVIE and
+    // BRF remain timed streams. Their consumers depend on audio/video pacing.
+    fs.setUnpacedDataFiles({"/MGS/STAGE.DIR", "/MGS/RADIO.DAT", "/MGS/FACE.DAT"});
+    fs.setUnpacedDataGuard(ps1::games::mgs::fastDataAllowed);
+  }
+  ps1::games::mgs::configureFastLoading(mgsProfile && runtimeConfig.game.fastLoading, &cdromCtrl);
+  ps1::metrics::setState("mgs.fast_loading", mgsProfile && runtimeConfig.game.fastLoading);
 
   // Wire XA-ADPCM from CDROM -> SPU
   cdromCtrl.setXaCallback([&spu](const int16_t *samples, uint32_t count) {
@@ -858,14 +928,16 @@ int main(int argc, char *argv[]) {
     };
     hleCfg.stateCheckpoint = [&stateCoordinator, &bios](recomp_context *checkpointCtx,
                                                  uint32_t resumePc) {
+      bios.checkShutdown();
       if (!bios.hasNativeThreadContinuations())
         stateCoordinator.checkpoint(*checkpointCtx, resumePc);
+      bios.checkShutdown();
     };
-    if (tas.enabled())
-      hleCfg.clockWaitCheckpoint = [&](recomp_context *waitingCtx) {
-        if (tas.active())
-          tas.checkpoint(waitingCtx->r[31], false);
-      };
+    hleCfg.clockWaitCheckpoint = [&](recomp_context *waitingCtx) {
+      bios.checkShutdown(); // includes VSync(-1), which never drains callbacks
+      if (tas.active()) tas.checkpoint(waitingCtx->r[31], false);
+      bios.checkShutdown();
+    };
     if (tas.enabled())
       bios.setClockCheckpoint([&](uint32_t pc, bool resumable) {
         if (tas.active()) {
@@ -873,7 +945,11 @@ int main(int argc, char *argv[]) {
           tas.checkpoint(pc, resumable);
         }
       });
-    bios.setStateCheckpoint([&](uint32_t pc) { stateCoordinator.checkpoint(ctx, pc); });
+    bios.setStateCheckpoint([&](uint32_t pc) {
+      bios.checkShutdown();
+      stateCoordinator.checkpoint(ctx, pc);
+      bios.checkShutdown();
+    });
     ps1::psyq::configure(hleCfg);
     psyq_registry_init_defaults();
     psyq_register_rayman_boot();
@@ -904,6 +980,7 @@ int main(int argc, char *argv[]) {
   const uint32_t sdlSubsystems =
       SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER |
       (diagnosticHeadless ? 0u : static_cast<uint32_t>(SDL_INIT_VIDEO));
+  ps1::input::ControllerHub::configureBeforeSDL();
   if (SDL_Init(sdlSubsystems) < 0) {
     fmt::print(stderr, "SDL_Init failed: {}\n", SDL_GetError());
     return 1;
@@ -953,11 +1030,19 @@ int main(int argc, char *argv[]) {
       std::strcmp(meshMode, "1") == 0) {
     // Use the inherited, tested complete replay executor. The authoritative
     // native raster remains 1x; these options affect presentation only.
-    // 320 native columns × 12 = 3840 genuine geometry samples. The 224-line
-    // dock is supersampled vertically (2688) and resolved DOWN to 2160.
-    rendererOptions.internalScale = 12;
-    rendererOptions.presentationWidth = 3840;
-    rendererOptions.presentationHeight = 2160;
+    // Width remains an exact multiple of 320, with a fixed 16:9 resolve.
+    // The native-height raster is supersampled then resolved down, never
+    // upscaled to advertise a higher presentation resolution.
+    const int height = runtimeConfig.game.presentationHeight;
+    if (height != 720 && height != 1080 && height != 1440 && height != 2160) {
+      fmt::print(stderr, "game.presentation_height must be 720, 1080, 1440 or 2160\n");
+      SDL_Quit();
+      return 1;
+    }
+    rendererOptions.presentationWidth = height * 16 / 9;
+    rendererOptions.presentationHeight = height;
+    rendererOptions.ambientOcclusion = runtimeConfig.game.ambientOcclusion;
+    rendererOptions.internalScale = rendererOptions.presentationWidth / 320;
     rendererOptions.preserveAspect = true;
     rendererOptions.presentationAspectWidth = 16;
     rendererOptions.presentationAspectHeight = 9;
@@ -966,9 +1051,10 @@ int main(int argc, char *argv[]) {
     rendererOptions.trueDepth = true;
     rendererOptions.trueDepthMode = "hybrid";
     rendererOptions.trueColor = true;
-    fmt::print("[MGS mesh] original-cache Vulkan projection, 3840x2160, fixed "
-               "16:9, 12x "
-               "geometry raster; native oracle stays 1x\n");
+    fmt::print("[MGS mesh] original-cache Vulkan projection, {}x{}, fixed "
+               "16:9, {}x geometry raster; native oracle stays 1x\n",
+               rendererOptions.presentationWidth, height,
+               rendererOptions.internalScale);
   }
   if (const char *disableReplay = std::getenv("PS1_DISABLE_PRECISION_REPLAY");
       disableReplay != nullptr && *disableReplay != '\0' &&
@@ -995,7 +1081,7 @@ int main(int argc, char *argv[]) {
   const char *presentationTitle = std::getenv("PS1_WINDOW_TITLE");
   if (presentationTitle == nullptr || presentationTitle[0] == '\0')
     presentationTitle = "ps1Recomp";
-  const bool uhdPresentation = rendererOptions.presentationWidth == 3840;
+  const bool uhdPresentation = mgsProfile && rendererOptions.presentationWidth != 0;
   const char *windowed = std::getenv("PS1_PRESENT_WINDOWED");
   const bool startFullscreen = uhdPresentation
       ? !(windowed && std::strcmp(windowed, "1") == 0)
@@ -1037,19 +1123,11 @@ int main(int argc, char *argv[]) {
                SDL_GetError());
   }
 
-  // SDL2 GameController
-  SDL_GameController *gamepad = nullptr;
+  ps1::input::ControllerHub controllers;
+  controllers.initialize();
+  SDL_GameController *gamepad = controllers.active(); // borrowed; hub owns it
+  SDL_JoystickID hostControllerId = controllers.activeId();
   std::array<Sint16, SDL_CONTROLLER_AXIS_MAX> gamepadAxes{};
-  for (int i = 0; i < SDL_NumJoysticks(); i++) {
-    if (SDL_IsGameController(i)) {
-      gamepad = SDL_GameControllerOpen(i);
-      if (gamepad) {
-        fmt::print("[Input] GameController: {}\n",
-                   SDL_GameControllerName(gamepad));
-        break;
-      }
-    }
-  }
 
   // Load ELF or ISO
 
@@ -1087,6 +1165,31 @@ int main(int argc, char *argv[]) {
       if (fs.loadDisc(disc_path)) {
         fmt::print("[CDROM] Mounted disc image: {}\n", disc_path);
       }
+    }
+  }
+
+  if (mgsProfile) {
+    try {
+      if (!config_path.empty()) {
+        const auto config = toml::parse(config_path);
+        if (config.contains("disc") && toml::find(config, "disc").contains("additional_cues")) {
+          for (const auto &path : toml::find<std::vector<std::string>>(config, "disc", "additional_cues")) {
+            if (!fs.registerDisc(path))
+              throw std::runtime_error("Cannot prepare additional disc: " + path);
+          }
+          if (fs.identityForBoot("SLUS_005.94").empty() || fs.identityForBoot("SLUS_007.76").empty())
+            throw std::runtime_error("MGS disc set must contain USA SLUS_005.94 and SLUS_007.76");
+        }
+      }
+      if (fs.mediaIdentity().empty() ||
+          (fs.identityForBoot("SLUS_005.94").empty() && fs.identityForBoot("SLUS_007.76").empty()))
+        throw std::runtime_error("MGS USA profile requires a matching mounted disc");
+      ps1::games::mgs::configureDiscChange(&fs, &cdromCtrl);
+    } catch (const std::exception &error) {
+      fmt::print(stderr, "[MGS Disc] {}\n", error.what());
+      renderer.destroy();
+      SDL_Quit();
+      return 1;
     }
   }
 
@@ -1171,6 +1274,7 @@ int main(int argc, char *argv[]) {
   // destructing `cdEventQueue_`.  See ISSUES.md #1.
   std::atomic<bool> gameFinished{false};
   std::atomic<bool> gameThreadDone{false};
+  std::atomic<bool> gameThreadFailed{false};
   uint64_t frameCount = 0;
   // Set once PS1_VRAM_DUMP_FRAME has been honoured, so the shutdown dump does
   // not overwrite the requested frame -- both write PS1_VRAM_DUMP_PATH, and
@@ -1197,11 +1301,40 @@ int main(int argc, char *argv[]) {
                saveStateDirectory.string(), saveDirectoryError.message());
   }
   unsigned saveStateSlot = 0;
+  std::array<ps1::SaveState::Info, 10> slotInfo;
+  std::vector<std::filesystem::path> slotBackups;
+  std::vector<ps1::SaveState::Info> backupInfo;
+  unsigned inspectedSlot = UINT_MAX;
+  auto inspectedAt = std::chrono::steady_clock::time_point{};
   uint32_t stateWindowId = 0;
   const auto saveStatePath = [&]() {
     return (saveStateDirectory /
             fmt::format("quick_slot_{}.ps1s", saveStateSlot))
         .string();
+  };
+  ps1::input::HostInput hostInput;
+  const bool playerHostUi = mgsProfile && !tas.enabled() && !ignoreDiagnosticInput;
+  bool hostMenu = false, hostMenuFocus = false, confirmQuit = false;
+  bool hostAudioPaused = false;
+  std::string recoveryNotice;
+  std::string hostNotice;
+  auto hostNoticeUntil = std::chrono::steady_clock::now();
+  const auto notifyHost = [&](std::string message) {
+    hostNotice = std::move(message);
+    hostNoticeUntil = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    fmt::print("[Host UI] {}\n", hostNotice);
+  };
+  const auto showHostMenu = [&](bool show) {
+    hostMenu = show; hostMenuFocus = show; confirmQuit = false;
+    hostInput.clear(); controllers.requireNeutral();
+    if (playerHostUi) hostInput.apply(input, true);
+    stateCoordinator.setHostPaused(show);
+  };
+  const auto requestHostState = [&](ps1::SaveStateCoordinator::Action action) {
+    if (stateCoordinator.request(action, saveStatePath()))
+      notifyHost(fmt::format("{} slot {}...", action == ps1::SaveStateCoordinator::Action::Save
+                                                  ? "Saving" : "Loading", saveStateSlot));
+    else notifyHost("A save/load operation is already pending.");
   };
   if (mgsProfile)
     fmt::print("[Input] keyboard + SDL GameController enabled; F5 save, F9 load, F6/F7 slot\n");
@@ -1300,11 +1433,15 @@ int main(int argc, char *argv[]) {
     }
   }
   std::atomic<uint64_t> scheduledVblanks{0};
+  std::mutex tickerMutex;
+  std::condition_variable tickerStopped;
   std::thread vblankThread([&]() {
     using namespace std::chrono;
     auto next = steady_clock::now() + vblankPeriod;
     while (!gameFinished.load(std::memory_order_acquire)) {
-      std::this_thread::sleep_until(next);
+      std::unique_lock lock(tickerMutex);
+      if (tickerStopped.wait_until(lock, next, [&] { return gameFinished.load(std::memory_order_acquire); })) break;
+      lock.unlock();
       const auto now = steady_clock::now();
       next += vblankPeriod;
       if (next <= now)
@@ -1327,19 +1464,24 @@ int main(int argc, char *argv[]) {
         else
           recomp_dispatch(memory.ramPtr(), &ctx, ctx.pc);
         break;
+      } catch (const ps1::bios::ShutdownRequested &) {
+        break; // unwound through the active BIOS fiber back to the host stack
       } catch (const ps1::SaveStateTimelineReload &) {
         bios.restartNativeThreads();
         fmt::print("[SaveState] guest dispatcher resumed at 0x{:08X}\n",
                    ctx.pc);
         ctx.nativeResumePc = ctx.pc;
       } catch (const ps1::CpuException &e) {
+        gameThreadFailed = true;
         fmt::print("[Game] CPU Exception {} at PC=0x{:08X}\n",
                    static_cast<uint32_t>(e.cause), ctx.pc);
         break;
       } catch (const std::exception &e) {
+        gameThreadFailed = true;
         fmt::print("[Game] Exception: {}\n", e.what());
         break;
       } catch (...) {
+        gameThreadFailed = true;
         fmt::print("[Game] Unknown exception\n");
         break;
       }
@@ -1472,14 +1614,206 @@ int main(int argc, char *argv[]) {
   if (tas.enabled())
     fmt::print("[TAS] F5 checkpoint, F10 pause, F12 advance one VBlank; branch "
                "from a checkpoint with mgs_tas.py record --state\n");
+  const auto quitHostGame = [&] { running = false; };
+  if (playerHostUi) {
+    for (int port = 0; port < 2; ++port) if (!input.getMemoryCard(port).recoverySource().empty()) {
+      showHostMenu(true);
+      recoveryNotice += fmt::format("Memory card {} recovered from backup. Review your progress before saving. ", port + 1);
+      notifyHost(recoveryNotice);
+    }
+  }
+  if (playerHostUi && !diagnosticHeadless) {
+    renderer.setHostOverlay([&] {
+      const auto &io = ImGui::GetIO();
+      if (hostMenu) {
+        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * .5f, io.DisplaySize.y * .5f),
+                               ImGuiCond_Always, ImVec2(.5f, .5f));
+        ImGui::SetNextWindowSize(ImVec2(std::min(600.f, io.DisplaySize.x - 32.f), 0));
+        ImGui::SetNextWindowSizeConstraints(ImVec2(300,0),ImVec2(io.DisplaySize.x-32,io.DisplaySize.y-32));
+        ImGui::Begin("MGS Recomp", nullptr, ImGuiWindowFlags_AlwaysAutoResize |
+                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
+        if (!recoveryNotice.empty()) ImGui::TextWrapped("%s", recoveryNotice.c_str());
+        if (hostMenuFocus) { ImGui::SetWindowFocus(); ImGui::SetKeyboardFocusHere(); hostMenuFocus = false; }
+        if (ImGui::Button("Resume", ImVec2(-1, 42))) showHostMenu(false);
+        const bool paused = stateCoordinator.hostPaused();
+        if (!paused) ImGui::TextUnformatted("Pausing at the next safe game boundary...");
+        const auto now = std::chrono::steady_clock::now();
+        if (inspectedSlot != saveStateSlot || now - inspectedAt > std::chrono::seconds(2)) {
+          for (unsigned slot = 0; slot < slotInfo.size(); ++slot)
+            slotInfo[slot] = ps1::SaveState::inspect((saveStateDirectory / fmt::format("quick_slot_{}.ps1s", slot)).string());
+          slotBackups = ps1::storage::backups(saveStatePath());
+          backupInfo.clear();
+          for (const auto &path : slotBackups) backupInfo.push_back(ps1::SaveState::inspect(path.string()));
+          inspectedSlot = saveStateSlot; inspectedAt = now;
+        }
+        ImGui::BeginDisabled(!paused || stateCoordinator.pending());
+        const auto slotLabel = [](unsigned slot, const ps1::SaveState::Info &info) {
+          return fmt::format("Slot {} - {}", slot, info.exists ?
+              fmt::format("{} | format v{}{}", info.savedAt, info.version, info.supported ? "" : " (unsupported/damaged)") : "Empty");
+        };
+        if (ImGui::BeginCombo("Save slot", slotLabel(saveStateSlot, slotInfo[saveStateSlot]).c_str())) {
+          for (unsigned slot = 0; slot < slotInfo.size(); ++slot)
+            if (ImGui::Selectable(slotLabel(slot, slotInfo[slot]).c_str(), slot == saveStateSlot)) saveStateSlot = slot;
+          ImGui::EndCombo();
+        }
+        if (ImGui::Button("Save state", ImVec2(-1, 42)))
+          requestHostState(ps1::SaveStateCoordinator::Action::Save);
+        if (ImGui::Button("Load state", ImVec2(-1, 42)))
+          requestHostState(ps1::SaveStateCoordinator::Action::Load);
+        if (ImGui::Button("Previous slot")) saveStateSlot = (saveStateSlot + 9) % 10;
+        ImGui::SameLine(); ImGui::Text("%u", saveStateSlot); ImGui::SameLine();
+        if (ImGui::Button("Next slot")) saveStateSlot = (saveStateSlot + 1) % 10;
+        if (!slotBackups.empty() && inspectedSlot == saveStateSlot && ImGui::TreeNode("Previous versions")) {
+          ImGui::TextWrapped("Loads older progress; the current slot stays on disk until you save again.");
+          for (size_t index = 0; index < slotBackups.size(); ++index) {
+            ImGui::PushID(int(index));
+            const auto &info = backupInfo[index];
+            ImGui::BeginDisabled(!info.supported);
+            if (ImGui::Button(fmt::format("Load {} | format v{}", info.savedAt, info.version).c_str())) {
+              if (stateCoordinator.request(ps1::SaveStateCoordinator::Action::Load, slotBackups[index].string()))
+                notifyHost("Loading previous version...");
+            }
+            ImGui::EndDisabled(); ImGui::PopID();
+          }
+          ImGui::TreePop();
+        }
+        const auto portLabel = fmt::format("Controller port: {} (change)", hostInput.port + 1);
+        if (ImGui::Button(portLabel.c_str(), ImVec2(-1, 42))) {
+          hostInput.port = 1 - hostInput.port; hostInput.clear(); hostInput.apply(input, true);
+          notifyHost(fmt::format("Controller connected to original port {}", hostInput.port + 1));
+        }
+        ps1::input::controllerPanel(controllers);
+        ImGui::SliderInt("Volume", &g_audioVolume, 0, 100);
+        ImGui::Checkbox("Mute", &g_audioMute);
+        ImGui::EndDisabled(); // quitting must work even if no save boundary is reachable
+        if (!confirmQuit) {
+          if (ImGui::Button("Quit game...", ImVec2(-1, 42))) confirmQuit = true;
+        } else {
+          ImGui::TextWrapped("Quit this session? Unsaved progress will be lost.");
+          if (ImGui::Button("Keep playing")) confirmQuit = false;
+          ImGui::SameLine();
+          if (ImGui::Button("Quit now")) quitHostGame();
+        }
+        ImGui::Separator();
+        ImGui::TextWrapped("D-pad / left stick: navigate. %s: select. %s: back.\nR3 / Esc: host menu.", controllers.confirmLabel(), controllers.cancelLabel());
+        if (ImGui::IsKeyPressed(ImGuiKey_GamepadFaceRight)) {
+          if (confirmQuit) confirmQuit = false; else showHostMenu(false);
+        }
+        ImGui::End();
+      }
+      if (!hostNotice.empty() && std::chrono::steady_clock::now() < hostNoticeUntil) {
+        ImGui::SetNextWindowPos(ImVec2(20, 20));
+        ImGui::SetNextWindowBgAlpha(.95f);
+        ImGui::Begin("Host notification", nullptr, ImGuiWindowFlags_NoDecoration |
+                     ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav |
+                     ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing);
+        ImGui::TextUnformatted(hostNotice.c_str()); ImGui::End();
+      }
+    });
+    notifyHost("R3 / Esc: pause menu | F5: save | F9: load");
+  }
+  const bool hostProbe = playerHostUi && diagnosticHeadless &&
+      std::getenv("PS1_HOST_UI_PROBE") && std::strcmp(std::getenv("PS1_HOST_UI_PROBE"), "1") == 0;
+  // Isolated headless integration checks exercise the same SDL event paths
+  // and quit action as the UI. The launcher strips diagnostic variables.
+  const char *exitProbe = playerHostUi && diagnosticHeadless ? std::getenv("PS1_HOST_EXIT_PROBE") : nullptr;
+  int exitProbePhase = 0;
+  const auto exitProbeDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(20);
+  bool hostProbePassed = false, hostProbeFailed = false;
+  int hostProbePhase = 0;
+  uint64_t hostProbeVblank = 0;
+  uint32_t hostProbeRam = 0;
+  auto hostProbeHold = std::chrono::steady_clock::now();
+  const auto hostProbeDeadline = hostProbeHold + std::chrono::seconds(20);
+  const auto probeKey = [](SDL_Keycode key) {
+    SDL_Event event{}; event.type = SDL_KEYDOWN; event.key.keysym.sym = key;
+    SDL_PushEvent(&event);
+  };
+  const auto probeRam = [&] {
+    uint32_t hash = 2166136261u;
+    for (size_t i = 0; i < ps1::Memory::RAM_SIZE; ++i) hash = (hash ^ memory.ramPtr()[i]) * 16777619u;
+    return hash;
+  };
   while (running) {
+    if (soak.enabled()) {
+      soak.tick(stateCoordinator, ps1::psyq::psyq_state().vsyncCounter.load(), memory.ramPtr());
+      if (soak.finished()) { running = false; break; }
+      if (soak.running() && !tas.active()) tas.start(ps1::psyq::psyq_state().vsyncCounter.load());
+      if (!soak.running() && tas.active()) tas.suspendProbe();
+    }
+    // Host pause skips hardware work below. Process termination here so Steam
+    // and SIGTERM can close a paused or disconnected session too.
+    if (g_shutdown_requested
+#if defined(_WIN32)
+        || windowsLifetime.stopped()
+#endif
+    ) {
+      fmt::print("[Main] Shutdown signal received at frame {}\n", frameCount);
+      running = false;
+      break;
+    }
+    if (exitProbe) {
+      const uint64_t tick = ps1::psyq::psyq_state().vsyncCounter.load(std::memory_order_acquire);
+      if (std::chrono::steady_clock::now() > exitProbeDeadline) {
+        fmt::print(stderr, "[Shutdown probe] timed out\n"); gameThreadFailed = true; running = false; break;
+      }
+      if (exitProbePhase == 0 && tick >= 180) {
+        if (std::strcmp(exitProbe, "signal-running") == 0) {
+          fmt::print("[Shutdown probe] READY running\n"); std::fflush(stdout); exitProbePhase = 2;
+        } else {
+          if (std::strcmp(exitProbe, "window") == 0) { SDL_Event event{}; event.type = SDL_QUIT; SDL_PushEvent(&event); }
+          else probeKey(SDLK_ESCAPE);
+          exitProbePhase = 1;
+        }
+      } else if (exitProbePhase == 1 && stateCoordinator.hostPaused()) {
+        if (std::strcmp(exitProbe, "signal-paused") == 0) {
+          fmt::print("[Shutdown probe] READY paused\n"); std::fflush(stdout); exitProbePhase = 2;
+        } else if (std::strcmp(exitProbe, "window") == 0 || std::strcmp(exitProbe, "menu") == 0) {
+          if (std::strcmp(exitProbe, "window") == 0 && !confirmQuit) gameThreadFailed = true;
+          fmt::print("[Shutdown probe] {} confirmation while parked\n", exitProbe);
+          quitHostGame(); break;
+        } else { gameThreadFailed = true; running = false; break; }
+      }
+    }
+    if (hostProbe && !hostProbePassed) {
+      const auto now = std::chrono::steady_clock::now();
+      const auto tick = ps1::psyq::psyq_state().vsyncCounter.load();
+      if (now > hostProbeDeadline) { hostProbeFailed = true; running = false; break; }
+      if (hostProbePhase == 0 && tick >= 180) { probeKey(SDLK_ESCAPE); hostProbePhase = 1; }
+      else if (hostProbePhase == 1 && stateCoordinator.hostPaused()) {
+        hostProbeVblank = tick; hostProbeRam = probeRam(); hostProbeHold = now; hostProbePhase = 2;
+      } else if (hostProbePhase == 2 && now - hostProbeHold >= std::chrono::milliseconds(120)) {
+        if (tick != hostProbeVblank || probeRam() != hostProbeRam) {
+          hostProbeFailed = true; running = false; break;
+        }
+        fmt::print("[Host probe] RAM and guest clock unchanged during pause at {}\n", tick);
+        probeKey(SDLK_F5); hostProbePhase = 3;
+      } else if (hostProbePhase == 3 && autoSaveCompleted) { probeKey(SDLK_F9); hostProbePhase = 4; }
+      else if (hostProbePhase == 4 && autoLoadCompleted) {
+        if (!stateCoordinator.hostPaused() || tick != hostProbeVblank) {
+          hostProbeFailed = true; running = false; break;
+        }
+        autoSaveCompleted = false;
+        probeKey(SDLK_F5); hostProbePhase = 5;
+      } else if (hostProbePhase == 5 && autoSaveCompleted) {
+        probeKey(SDLK_ESCAPE); hostProbePhase = 6;
+      } else if (hostProbePhase == 6 && tick >= hostProbeVblank + 30) {
+        hostProbePassed = true; running = false;
+        fmt::print("[Host probe] PASS: pause, save/load/save while paused, resume original clock\n");
+        std::fflush(stdout);
+        break;
+      }
+    }
     bool diagnosticExitAfterPresent = false;
     // 1. Poll SDL2 Events
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+      controllers.event(event);
+      if (playerHostUi && !diagnosticHeadless) renderer.processHostEvent(event);
       switch (event.type) {
       case SDL_QUIT:
-        if (tas.active() && !tas.replaying())
+        if (playerHostUi) { showHostMenu(true); confirmQuit = true; }
+        else if (tas.active() && !tas.replaying())
           tasStopRequested = true;
         else
           running = false;
@@ -1493,8 +1827,9 @@ int main(int argc, char *argv[]) {
             if (SDL_SetWindowFullscreen(window, full ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP) != 0)
               fmt::print(stderr, "[Window] fullscreen change failed: {}\n", SDL_GetError());
           }
-        } else if (event.key.keysym.sym == SDLK_ESCAPE) {
-          if (tas.active() && !tas.replaying())
+        } else if (event.key.keysym.sym == SDLK_ESCAPE && event.key.repeat == 0) {
+          if (playerHostUi) showHostMenu(!hostMenu);
+          else if (tas.active() && !tas.replaying())
             tasStopRequested = true;
           else
             running = false;
@@ -1504,6 +1839,7 @@ int main(int argc, char *argv[]) {
             break;
           }
           stateWindowId = event.key.windowID;
+          if (playerHostUi) { requestHostState(ps1::SaveStateCoordinator::Action::Save); break; }
           const std::string path = saveStatePath();
           if (stateCoordinator.request(ps1::SaveStateCoordinator::Action::Save,
                                        path))
@@ -1516,6 +1852,7 @@ int main(int argc, char *argv[]) {
             break;
           }
           stateWindowId = event.key.windowID;
+          if (playerHostUi) { requestHostState(ps1::SaveStateCoordinator::Action::Load); break; }
           const std::string path = saveStatePath();
           if (stateCoordinator.request(ps1::SaveStateCoordinator::Action::Load,
                                        path))
@@ -1523,9 +1860,11 @@ int main(int argc, char *argv[]) {
         } else if (event.key.keysym.sym == SDLK_F6 && event.key.repeat == 0) {
           saveStateSlot = (saveStateSlot + 9u) % 10u;
           fmt::print("[SaveState] selected slot {}\n", saveStateSlot);
+          if (playerHostUi) notifyHost(fmt::format("State slot {}", saveStateSlot));
         } else if (event.key.keysym.sym == SDLK_F7 && event.key.repeat == 0) {
           saveStateSlot = (saveStateSlot + 1u) % 10u;
           fmt::print("[SaveState] selected slot {}\n", saveStateSlot);
+          if (playerHostUi) notifyHost(fmt::format("State slot {}", saveStateSlot));
         } else if (tas.enabled() && event.key.keysym.sym == SDLK_F10 &&
                    event.key.repeat == 0) {
           tasPaused = !tasPaused;
@@ -1539,18 +1878,32 @@ int main(int argc, char *argv[]) {
                    event.key.repeat == 0) {
           renderer.toggleDepthVisualization();
         } else {
-          if (!tas.replaying())
+          if (playerHostUi) {
+            const auto key = keyboardMap.find(event.key.keysym.sym);
+            if (!hostMenu && key != keyboardMap.end())
+              ps1::input::HostInput::button(hostInput.keyboard, key->second, true);
+          } else if (!tas.replaying())
             mapKeyToButton(event.key.keysym.sym, keyboardMap, input, true);
         }
         break;
       case SDL_KEYUP:
-        if (!ignoreDiagnosticInput && !tas.replaying())
+        if (playerHostUi) {
+          const auto key = keyboardMap.find(event.key.keysym.sym);
+          if (key != keyboardMap.end()) ps1::input::HostInput::button(hostInput.keyboard, key->second, false);
+        } else if (!ignoreDiagnosticInput && !tas.replaying())
           mapKeyToButton(event.key.keysym.sym, keyboardMap, input, false);
         break;
       case SDL_CONTROLLERBUTTONDOWN:
       case SDL_CONTROLLERBUTTONUP: {
         if (ignoreDiagnosticInput || tas.replaying())
           break;
+        if (playerHostUi) {
+          if (!gamepad || event.cbutton.which != SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(gamepad))) break;
+          if (event.cbutton.button == SDL_CONTROLLER_BUTTON_RIGHTSTICK) {
+            if (event.type == SDL_CONTROLLERBUTTONDOWN) showHostMenu(!hostMenu);
+          }
+          break;
+        }
         const uint16_t button = controllerButton(event.cbutton.button);
         if (button != 0) {
           if (event.type == SDL_CONTROLLERBUTTONDOWN)
@@ -1563,6 +1916,7 @@ int main(int argc, char *argv[]) {
       case SDL_CONTROLLERAXISMOTION: {
         if (ignoreDiagnosticInput || tas.replaying())
           break;
+        if (playerHostUi) break; // sampled once from the selected controller below
         const auto axis = static_cast<SDL_GameControllerAxis>(event.caxis.axis);
         if (axis >= 0 && axis < SDL_CONTROLLER_AXIS_MAX)
           gamepadAxes[axis] = event.caxis.value;
@@ -1584,7 +1938,29 @@ int main(int argc, char *argv[]) {
         }
         break;
       }
+      case SDL_WINDOWEVENT:
+        if (playerHostUi && event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) showHostMenu(true);
+        break;
+      case SDL_CONTROLLERDEVICEADDED:
+      case SDL_CONTROLLERDEVICEREMOVED:
+      case SDL_CONTROLLERDEVICEREMAPPED:
+        break; // hub resolves device indices/instance IDs after the event batch
       }
+    }
+    controllers.refresh();
+    gamepad = controllers.active();
+    if (playerHostUi) {
+      if (hostControllerId != controllers.activeId()) {
+        hostControllerId = controllers.activeId();
+        showHostMenu(true);
+        notifyHost(controllers.name()+". Resume when ready.");
+      }
+      if (!diagnosticHeadless) renderer.setHostController(gamepad);
+      const auto pad = controllers.gameplay(hostMenu);
+      hostInput.gamepad = pad.buttons;
+      hostInput.axes = pad.axes;
+      hostInput.deadzone = controllers.deadzone();
+      hostInput.apply(input, hostMenu);
     }
 
     const uint64_t inputVblank =
@@ -1610,16 +1986,27 @@ int main(int argc, char *argv[]) {
         [&](const ps1::SaveStateCoordinator::Request &req) {
           if (audioDevice > 0)
             SDL_LockAudioDevice(audioDevice);
+          std::string recoverySource;
           const bool succeeded =
               req.action == ps1::SaveStateCoordinator::Action::Save
                   ? ps1::SaveState::save(req.path, ctx, memory, gpu, spu, dma,
                                          cdromCtrl, timers, irqCtrl, input,
                                          &mdec, &bios)
+                  : playerHostUi ? ps1::SaveState::loadRecovering(req.path, ctx, memory, gpu, spu, dma,
+                                         cdromCtrl, timers, irqCtrl, input, &mdec, &bios, recoverySource)
                   : ps1::SaveState::load(req.path, ctx, memory, gpu, spu, dma,
-                                         cdromCtrl, timers, irqCtrl, input,
-                                         &mdec, &bios);
+                                         cdromCtrl, timers, irqCtrl, input, &mdec, &bios);
           if (audioDevice > 0)
             SDL_UnlockAudioDevice(audioDevice);
+          inspectedAt = {};
+          if (playerHostUi) notifyHost(fmt::format("{} - {}",
+              succeeded ? (req.action == ps1::SaveStateCoordinator::Action::Save ? "State saved" : "State loaded")
+                        : "Save/load failed (see diagnostics)", std::filesystem::path(req.path).filename().string()));
+          if (playerHostUi && !recoverySource.empty()) {
+            showHostMenu(true);
+            recoveryNotice = "Recovered an older savestate from backup. Review your progress before saving again.";
+            notifyHost(recoveryNotice);
+          }
           if (!succeeded && tas.enabled() &&
               req.action == ps1::SaveStateCoordinator::Action::Load) {
             fmt::print(stderr, "[TAS] initial savestate rejected; recording/replay aborted\n");
@@ -1653,7 +2040,7 @@ int main(int argc, char *argv[]) {
                 input.setAnalog(port, 128, 128, 128, 128);
               }
             }
-            if (tas.enabled())
+            if (tas.enabled() && !soak.enabled())
               tas.start(restoredVblank);
             tasNextTick = std::chrono::steady_clock::now() + vblankPeriod;
             if (exitAfterLoadVblanks != 0) {
@@ -1682,8 +2069,33 @@ int main(int argc, char *argv[]) {
           if (succeeded &&
               req.action == ps1::SaveStateCoordinator::Action::Save)
             autoSaveCompleted = true;
+          if (soak.enabled())
+            soak.completed(req, succeeded, ps1::psyq::psyq_state().vsyncCounter.load(), memory.ramPtr());
           return succeeded;
         });
+
+    if (playerHostUi) {
+      if (auto warning = ps1::storage::takeWarning(); !warning.empty()) {
+        recoveryNotice = warning; showHostMenu(true); notifyHost(warning);
+      }
+    }
+
+    if ((playerHostUi || soak.enabled()) && stateCoordinator.hostPaused()) {
+      if (!hostAudioPaused && audioDevice > 0) SDL_PauseAudioDevice(audioDevice, 1);
+      hostAudioPaused = true;
+      scheduledVblanks.store(processedVblanks, std::memory_order_release);
+      if (!diagnosticHeadless) {
+        renderer.renderFrame();
+        if (!renderer.processEvents()) running = false;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(16));
+      continue;
+    }
+    if (hostAudioPaused) {
+      scheduledVblanks.store(processedVblanks, std::memory_order_release);
+      if (audioDevice > 0) SDL_PauseAudioDevice(audioDevice, 0);
+      hostAudioPaused = false;
+    }
 
     // The title screen has no resident scenery construction.  A sufficiently
     // long capture gap therefore arms the next stable intrinsic resource
@@ -1884,6 +2296,7 @@ int main(int argc, char *argv[]) {
           for (const auto& event : tasRoute.takeEvents())
             fmt::print("[Route] {}\n", event);
         }
+        if (soak.enabled()) soak.input(currentGuestVblank + 1, input, memory.ramPtr());
         input.latchVBlank();
         if (!tas.frame(currentGuestVblank + 1, memory.ramPtr(),
                        ps1::Memory::RAM_SIZE, input)) {
@@ -2054,6 +2467,7 @@ int main(int argc, char *argv[]) {
       continue;
     }
     if (guestAdvanced) {
+      const auto presentStart = std::chrono::steady_clock::now();
       if (diagnosticHeadless) {
         // Replay capture is normally configured by RendererVulkan::init(). A
         // future diagnostic may enable it independently; keep this sink here
@@ -2066,6 +2480,8 @@ int main(int argc, char *argv[]) {
         ps1::metrics::count("host.present");
       }
       frameCount++;
+      if (soak.enabled()) soak.presented(!diagnosticHeadless,
+          std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now()-presentStart).count());
     } else {
       // Swap interval is not guaranteed (headless drivers and some compositors
       // ignore it). Avoid a busy present loop while waiting for the next
@@ -2128,14 +2544,7 @@ int main(int argc, char *argv[]) {
       running = false;
     }
 
-    if (g_shutdown_requested) {
-      fmt::print("[Main] Shutdown signal received at frame {}\n", frameCount);
-      if (tas.active() && !tas.replaying()) {
-        tasStopRequested = true;
-        g_shutdown_requested = 0;
-      } else
-        running = false;
-    }
+
 
     // Guest pacing comes exclusively from scheduledVblanks. SDL swap interval
     // may additionally block presentation but can never advance emulation.
@@ -2153,6 +2562,34 @@ int main(int argc, char *argv[]) {
     fmt::print("[TAS] divergence checkpoint {}: {}\n",
                saved ? "saved" : "FAILED", path.string());
   }
+  // Stop the guest before inspecting final state or destroying its owners.
+  // Wake every parked path: host pause, TAS rendezvous and pacing timer.
+  const bool tasIncomplete = tas.replaying() && !tas.done();
+  const auto shutdownStart = std::chrono::steady_clock::now();
+  bios.requestShutdown();
+  { std::lock_guard lock(tickerMutex); gameFinished.store(true, std::memory_order_release); }
+  stateCoordinator.cancel();
+  tas.finish();
+  tickerStopped.notify_all();
+  if (gameThread.joinable()) {
+    const auto deadline = shutdownStart + std::chrono::seconds(2);
+    while (!gameThreadDone.load(std::memory_order_acquire) &&
+           std::chrono::steady_clock::now() < deadline)
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    if (!gameThreadDone.load(std::memory_order_acquire)) {
+      // Emergency containment for an uninstrumented/infinite guest loop.
+      // Never detach into destructed hardware and never report success.
+      fmt::print(stderr, "[Shutdown] FAILED: guest did not acknowledge cancellation in 2s\n");
+      std::fflush(stdout); std::fflush(stderr);
+      std::_Exit(45);
+    }
+    gameThread.join();
+  }
+  if (vblankThread.joinable()) vblankThread.join();
+  fmt::print("[Shutdown] guest and ticker joined cleanly in {} ms\n",
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::steady_clock::now() - shutdownStart).count());
+
   if (const char *vramDump = std::getenv("PS1_VRAM_DUMP_PATH")) {
     if (!frameDumpWritten)
       dumpVramPpm(gpu, vramDump);
@@ -2192,10 +2629,7 @@ int main(int argc, char *argv[]) {
                               : 0.0;
       fmt::print("[Benchmark] after load: {} VBlanks in {} us ({:.2f}/s)\n",
                  vblanksAfterLoad, elapsedAfterLoadUs, rate);
-      // The recompiled guest can remain inside a polling dispatcher after the
-      // host has reached its diagnostic frame bound.  That shutdown path uses
-      // _Exit() deliberately, so flush this opt-in report before joining the
-      // guest thread instead of losing it with the buffered stdout stream.
+      // Make the completed benchmark available immediately to diagnostic tools.
       std::fflush(stdout);
     }
   }
@@ -2210,9 +2644,8 @@ int main(int argc, char *argv[]) {
 
   // Cleanup
 
-  const bool tasIncomplete = tas.replaying() && !tas.done();
-  tas.finish();
-  const int resultCode = tas.failed() || tasIncomplete ? 42 :
+  const int resultCode = gameThreadFailed ? 46 : (soak.enabled() && !soak.passed()) ? 47 : (hostProbe && (!hostProbePassed || hostProbeFailed)) ? 44 :
+      tas.failed() || tasIncomplete ? 42 :
       (tasRouteEnabled && (tasRoute.failed() || !tasRoute.done()) ? 43 : 0);
   if (tasRouteEnabled)
     fmt::print("[Route] status: {} {}\n", tasRoute.failed() ? "failed" :
@@ -2226,50 +2659,12 @@ int main(int argc, char *argv[]) {
     std::fflush(stdout);
   }
 
-  // Wait for game thread (with timeout)
-  stateCoordinator.cancel();
-  if (gameThread.joinable()) {
-    gameFinished.store(true, std::memory_order_release); // shutdown signal
-    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
-    while (!gameThreadDone.load(std::memory_order_acquire) &&
-           std::chrono::steady_clock::now() < deadline) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-    if (gameThreadDone.load(std::memory_order_acquire)) {
-      gameThread.join(); // lambda returned -- safe to join
-    } else {
-      // Game thread is still inside `recomp_dispatch` (recompiled MIPS is a
-      // tight polling loop that does not check `gameFinished`).  Detaching
-      // and letting destructors run is UB -- the thread will be reading
-      // `Bios::cdEventQueue_` etc. while we destruct them.  Skip C++
-      // destructors entirely and exit immediately; the OS will reclaim
-      // memory and SDL/audio handles.
-      fmt::print("[Main] Game thread did not finish in 2s -- forcing exit "
-                 "(skipping destructors to avoid UAF race)\n");
-      fmt::print("Simulation ended after {} frames.\n", frameCount);
-      // Re-publish: the game thread kept issuing GP0 words during the 2s
-      // deadline above.  publishMetrics() only hands over what has accrued
-      // since the call before the join, so this adds those words without
-      // doubling the ones already reported.
-      gpu.publishMetrics();
-      ps1::publishPGXPStageMetrics();
-      ps1::metrics::dumpJson();
-      std::_Exit(resultCode);
-    }
-  }
-
-  // Join vblank ticker (gameFinished is already set above, so it will exit)
-  if (vblankThread.joinable())
-    vblankThread.join();
-
   if (audioDevice > 0) {
     SDL_CloseAudioDevice(audioDevice);
   }
-  if (gamepad) {
-    SDL_GameControllerClose(gamepad);
-  }
   if (!diagnosticHeadless)
     renderer.destroy();
+  controllers.close();
   SDL_Quit();
 
   fmt::print("Simulation ended after {} frames.\n", frameCount);

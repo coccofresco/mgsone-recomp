@@ -5,6 +5,7 @@
 
 #include <array>
 #include <deque>
+#include <fstream>
 #include <cstdint>
 #include <cstring>
 #include <mutex>
@@ -80,6 +81,7 @@ public:
     uint16_t spuStat = 0;
     int16_t mainVolL = 0;
     int16_t mainVolR = 0;
+    int16_t cdVolL = 0, cdVolR = 0;
     uint16_t irqAddr = 0;
     bool irqPending = false;
     uint32_t keyOnLatch = 0;
@@ -175,6 +177,9 @@ public:
   VoiceDebugState debugVoiceState(uint32_t voiceIdx) const;
 
 private:
+  // Optional diagnostic PCM tap; deliberately excluded from guest snapshots.
+  std::ofstream capturePcm_;
+  void captureSamples(const int16_t *samples, uint32_t count);
   uint32_t generateSamplesLocked(int16_t *output, uint32_t count, bool stopAtIrq);
   bool guestClock_ = false;
   uint64_t clockSamplesPending_ = 0;
@@ -189,7 +194,8 @@ private:
   uint16_t spuCtrl_ = 0; // SPUCNT (0x1F801D80)
   uint16_t spuStat_ = 0; // SPUSTAT (0x1F801D86)
   int16_t mainVolL_ = 0; // Main Volume Left
-  int16_t mainVolR_ = 0; // Main Volume Right
+  int16_t mainVolR_ = 0;
+  int16_t cdVolL_ = 0, cdVolR_ = 0; // Main Volume Right
   uint16_t irqAddr_ = 0; // IRQ trigger address (in 8-byte units)
   bool irqPending_ = false;
 

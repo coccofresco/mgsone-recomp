@@ -237,8 +237,8 @@ void hle_libc_sprintf(recomp_context *ctx) {
 // Test-only state hooks
 
 void psyq_libc_reset_for_tests() {
-  // RNG state lives inside bios.cpp (`sRandSeed`), which exposes srand
-  // via A0:0x1F -- re-seed via a direct dispatchA when needed in tests.
+  // RNG state belongs to the Bios instance and its savestate; srand uses
+  // A0:0x30 -- re-seed via a direct dispatchA when needed in tests.
   // Nothing local to reset here yet.
 }
 

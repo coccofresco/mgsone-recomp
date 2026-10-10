@@ -1,0 +1,217 @@
+{
+  "format": "mgs-situation-1",
+  "name": "hind-roof-original-stair-exit",
+  "source": "USA s11h/ca88 HZD roof west door gap z-7250..-5750, go_s11c_b trap x[-6500,-5375],z[-5500,-4000]; ea54 ntrap2bfd -> bdb1 -> e5fb loads s11c mapf1f2, position -4000,24000,-3375. Door requires equipped card6. Ntrap -b0 is a fresh Circle press (libhzd/bind.c pad mask0x20), direction0 +/-512. Walk alone is insufficient. Gate requires global02e7 bit2 clear. Current synthetic Hind seed inherits it set from the tower save; reject that seed before execution. This recipe is not yet verified from a valid entrance.",
+  "requires": {
+    "stage": "s11h",
+    "story": 190,
+    "life": {
+      "min": 1
+    },
+    "gcl_1180006c": 6,
+    "pause_level": 0,
+    "gcl_140102e7": 0
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "life",
+    "game_over_timer",
+    "weapons",
+    "items"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "equip-roof-door-card",
+        "until": {
+          "item": 17,
+          "pause_level": 0
+        },
+        "action": {
+          "sequence": "l2:24,l2+left:3,l2:24,wait:18"
+        },
+        "attempts": 20,
+        "max_frames": 1800
+      },
+      {
+        "name": "approach-west-roof-door",
+        "until": {
+          "x": {
+            "min": -3180,
+            "max": -2820
+          },
+          "z": {
+            "min": -6680,
+            "max": -6320
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -3000,
+            "z": -6500
+          }
+        },
+        "max_frames": 1500,
+        "guard": {
+          "stage": "s11h",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      },
+      {
+        "name": "pass-level-six-roof-door",
+        "until": {
+          "x": {
+            "min": -5180,
+            "max": -4820
+          },
+          "z": {
+            "min": -6680,
+            "max": -6320
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -5000,
+            "z": -6500
+          }
+        },
+        "max_frames": 1500,
+        "guard": {
+          "stage": "s11h",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      },
+      {
+        "name": "align-stair-entry",
+        "until": {
+          "x": {
+            "min": -5930,
+            "max": -5570
+          },
+          "z": {
+            "min": -6680,
+            "max": -6320
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -5750,
+            "z": -6500
+          }
+        },
+        "max_frames": 1500,
+        "guard": {
+          "stage": "s11h",
+          "life": {
+            "min": 1
+          },
+          "game_over_timer": 0
+        }
+      },
+      {
+        "name": "enter-stair-interaction-zone",
+        "until": {
+          "x": {
+            "min": -6200,
+            "max": -5400
+          },
+          "z": {
+            "min": -5375,
+            "max": -4400
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -5750,
+            "z": -4750
+          }
+        },
+        "max_frames": 900,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "face-stair-interaction",
+        "until": {
+          "yaw": {
+            "max": 400
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -5750,
+            "z": -4100
+          }
+        },
+        "max_frames": 500,
+        "guard": {
+          "stage": "s11h",
+          "life": {
+            "min": 1
+          }
+        }
+      },
+      {
+        "name": "original-roof-stair-circle-interaction",
+        "until": {
+          "stage": "s11c",
+          "actor_loader_count": 0,
+          "load_request": 0
+        },
+        "action": {
+          "sequence": "circle:3,wait:30"
+        },
+        "attempts": 30,
+        "max_frames": 2400,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "tower-control-after-roof-exit",
+        "until": {
+          "stage": "s11c",
+          "story": 190,
+          "pause_level": 0,
+          "actor_loader_count": 0,
+          "load_request": 0,
+          "control": {
+            "ne": 0
+          },
+          "life": {
+            "min": 1
+          },
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          }
+        },
+        "stable_frames": 30,
+        "max_frames": 3000
+      }
+    ]
+  }
+}

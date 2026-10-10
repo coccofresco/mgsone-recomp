@@ -24,6 +24,10 @@ public:
   };
 
   bool open(const std::filesystem::path &path, bool replay, std::string &error);
+  // Diagnostic rendezvous without a movie/hash per frame. Timelines may be
+  // restarted ONLY in this mode, after suspendProbe releases the old gate.
+  void openProbe();
+  void suspendProbe();
   void start(uint64_t vblank); // after the initial savestate has been restored
   void requestTick();          // host: request the next native safe boundary
   void checkpoint(uint32_t resumePc, bool resumable = true); // guest rendezvous
@@ -50,6 +54,7 @@ private:
   mutable std::mutex mutex_;
   std::condition_variable resumed_;
   bool enabled_ = false, replay_ = false, active_ = false;
+  bool probe_ = false;
   bool requested_ = false, parked_ = false, stopped_ = false;
   bool sealed_ = false;
   bool resumable_ = false;

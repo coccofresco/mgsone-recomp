@@ -76,6 +76,14 @@ normalCorner(const AssetCache &assets, const SceneInstance &instance,
       normal &= 127u;
     if (normal >= source->normals)
       return {};
+    const auto *authored = bytes + source->normalsByte + normal * 8;
+    // Retail KMDs contain authored zero normals, including zero-area padding
+    // faces in s11h. Zero is a defined lighting input (ambient only), not a
+    // missing stream. The Vulkan shader already guards its normalization.
+    if (!u16(authored) && !u16(authored + 2) && !u16(authored + 4)) {
+      metrics::count("mgs.material.authored_zero_normal");
+      return std::array<float, 4>{0, 0, 0, 0};
+    }
     std::array<double, 3> worldNormal{};
     const auto &world = instance.models[owners[model]].presentationWorld;
     // Inverse transpose, including non-uniform model scaling. The magnitude
@@ -142,8 +150,14 @@ sourceMeshMaterial(const AssetCache &assets, const Memory &memory,
   // UpdateThermalTexture preserves normals and UVs even while thermal is on.
   const bool specialMaterial = (instance.flags & 0x400u) != 0;
   if ((!texture && id != 0 && !packetValid) ||
-      (specialMaterial && !packetValid))
+      (specialMaterial && !packetValid)) {
+    metrics::count(specialMaterial ? "mgs.material.missing_actor_packet"
+                                  : "mgs.material.missing_texture");
+    metrics::trace("mgs.material.missing_input",
+                   {{"instance", instance.guestAddress}, {"model", model},
+                    {"face", face}, {"texture", id}, {"flags", instance.flags}});
     return {};
+  }
   // The zero material in original KMDs is DG_NullTexture/EmptyTex, not a
   // missing PCX. DG_WriteObjPacketUV defines its zero page, CLUT and UVs even
   // if the model currently has no allocated packets.
@@ -189,6 +203,10 @@ sourceMeshMaterial(const AssetCache &assets, const Memory &memory,
                              draw.surfaceEffect.kind==SurfaceKind::Camo || draw.surfaceEffect.kind==SurfaceKind::Afterimage ||
                              draw.surfaceEffect.kind==SurfaceKind::Energy;
   draw.originalMesh.emplace();
+  draw.originalMesh->temporalIdentity = {scene.epoch, instance.lifetime,
+      (uint64_t(instance.asset) << 32) | model, face};
+  draw.originalMesh->temporalCamera = scene.view;
+  draw.originalMesh->temporalFrame = scene.vblank;
   auto &lighting = draw.originalMesh->lighting;
   if (model >= owners.size() || owners[model] >= instance.models.size())
     return {};
@@ -222,8 +240,10 @@ sourceMeshMaterial(const AssetCache &assets, const Memory &memory,
   if (shaded) {
     const uint32_t lights =
         stageShaded ? 0x8009fad0 : u32(ptr(instance.guestAddress + 52));
-    if (!lights || !range(lights, 64))
+    if (!lights || !range(lights, 64)) {
+      metrics::count("mgs.material.missing_lights");
       return {};
+    }
     const auto *light = ptr(lights);
     for (unsigned row = 0; row < 3; ++row) {
       lighting.ambient[row] = instance.flags & 0x100u
@@ -293,8 +313,15 @@ sourceMeshMaterial(const AssetCache &assets, const Memory &memory,
     if (shaded || opticalNormals) {
       const auto normal =
           normalCorner(assets, instance, owners, model, face * 4 + order[k]);
-      if (!normal)
+      if (!normal) {
+        metrics::count("mgs.material.invalid_normal");
+        metrics::trace("mgs.material.invalid_normal",
+                       {{"instance", instance.guestAddress}, {"asset", instance.asset},
+                        {"model", model}, {"face", face}, {"corner", order[k]},
+                        {"texture", id}, {"flags", instance.flags},
+                        {"source_flags", source->flags}});
         return {};
+      }
       lighting.normals[k] = *normal;
       if(opticalNormals && draw.surfaceEffect.kind!=SurfaceKind::Afterimage) {
         for(unsigned row=0;row<3;++row) {

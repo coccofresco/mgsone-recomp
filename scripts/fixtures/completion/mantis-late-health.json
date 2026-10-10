@@ -1,0 +1,66 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-late-health-gate",
+  "source": "USA original actor psyco.c act800D3ACC, TARGET pointer+7e0 life+26; phase callback800D32C8 compares target life against retail table800C5AEA=480. Fixture supplies only post-damage life; original actor and GCL 0b90->9ae1 must advance.",
+  "requires": {
+    "stage": "s07b",
+    "story": 129,
+    "actor_psyco_count": 1,
+    "gcl_12000046": 3
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000046",
+    "work_psyco_800d3acc_0844_s16"
+  ],
+  "fixture": {
+    "scope": "Synthetic post-damage boss life boundary only; original phase transition executes. Does not validate player damage delivery.",
+    "patches": [
+      {
+        "actor": "psyco.c",
+        "act": "0x800d3acc",
+        "offset": "0x7e0",
+        "indirect_offset": 38,
+        "width": 2,
+        "expect": 1080,
+        "value": 480,
+        "source": "USA s07b original TARGET life; threshold table800C5AEA and comparison800D3304",
+        "reason": "Damage boundary at first original phase threshold"
+      }
+    ]
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-late-health-phase",
+        "until": {
+          "work_psyco_800d3acc_0844_s16": 3,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "wait:30"
+        },
+        "attempts": 200,
+        "max_frames": 6000,
+        "abort_when": {
+          "life": 0
+        }
+      }
+    ]
+  }
+}

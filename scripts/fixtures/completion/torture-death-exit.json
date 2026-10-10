@@ -1,0 +1,80 @@
+{
+  "format": "mgs-situation-1",
+  "name": "torture-death-exit",
+  "source": {
+    "decomp": "chara/torture/torture.c 800C5CC8 calls NewGameOver(FALSE); USA actor800C9194, work health+804"
+  },
+  "requires": {
+    "stage": "s03b",
+    "story": 157,
+    "actor_torture_count": 1,
+    "gcl_14010064": 1,
+    "game_over_timer": 0,
+    "current_stage": "s03b"
+  },
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "life",
+    "game_over_timer",
+    "gcl_1200005c",
+    "current_stage"
+  ],
+  "fixture": {
+    "scope": "Synthetic low health in the isolated original torture actor. Original shock, death and no-Continue exit execute unchanged.",
+    "patches": [
+      {
+        "actor": "torture.c",
+        "act": "0x800c9194",
+        "offset": "0x804",
+        "width": 2,
+        "signed": true,
+        "expect": {
+          "min": 1
+        },
+        "value": 1,
+        "source": "USA torture work+804 and original Integral TortureAct health copy / shock-end death check",
+        "reason": "Exercise original lethal shock and the deliberate no-Continue rule"
+      }
+    ]
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-lethal-shock",
+        "until": {
+          "actor_over_count": 1
+        },
+        "max_frames": 6000
+      },
+      {
+        "name": "original-no-continue-exit",
+        "until": {
+          "actor_over_count": 0,
+          "load_request": 0,
+          "actor_loader_count": 0,
+          "current_stage": "title",
+          "actor_open_count": 1
+        },
+        "action": {
+          "sequence": "wait:30,circle:6,wait:90"
+        },
+        "attempts": 70,
+        "max_frames": 6000,
+        "stable_frames": 30,
+        "when": {
+          "actor_over_count": 1
+        }
+      }
+    ]
+  }
+}

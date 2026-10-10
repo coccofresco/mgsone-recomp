@@ -99,14 +99,26 @@ bool TasMovie::open(const std::filesystem::path &path, bool replay,
   return true;
 }
 
+void TasMovie::openProbe() {
+  std::lock_guard lock(mutex_);
+  if (enabled_) { failLocked("probe requires a fresh rendezvous"); return; }
+  enabled_ = probe_ = true;
+}
+void TasMovie::suspendProbe() {
+  std::lock_guard lock(mutex_);
+  if (!probe_) { failLocked("cannot suspend a recorded movie"); return; }
+  active_ = requested_ = parked_ = false;
+  resumed_.notify_all();
+}
 void TasMovie::start(uint64_t vblank) {
   std::lock_guard lock(mutex_);
-  if (active_ || count_ != 0) {
+  if (active_ || (!probe_ && count_ != 0)) {
     failLocked(
         "a movie cannot silently cross a savestate load; create a branch");
     return;
   }
   lastVblank_ = vblank;
+  if (probe_) count_ = 0;
   boundary_ = 0;
   active_ = true;
   if (replay_ && frames_.front().vblank != vblank + 1)
@@ -160,6 +172,7 @@ bool TasMovie::frame(uint64_t vblank, const uint8_t *ram, size_t size,
     failLocked("TAS clock advanced without its native rendezvous");
     return false;
   }
+  if (probe_) { lastVblank_ = vblank; ++count_; return true; }
   Frame frame;
   frame.boundary = boundary_;
   frame.vblank = vblank;

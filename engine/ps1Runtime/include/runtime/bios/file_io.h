@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <array>
 namespace ps1::input { class InputController; class MemoryCard; }
 
 namespace ps1::bios {
@@ -24,6 +25,24 @@ struct FileDescriptor {
 
 class FileIO {
 public:
+  static constexpr int32_t MAX_FDS = 16;
+  static constexpr size_t MAX_SNAPSHOT_DATA = 512u * 1024u * 1024u;
+  static constexpr size_t MAX_SNAPSHOT_PATH = 4096;
+  struct DescriptorSnapshot {
+    uint8_t kind = 0; // 0 closed, 1 cached CD file, 2 memory card (slot, not pointer)
+    std::string path;
+    std::vector<uint8_t> data;
+    uint32_t cursor = 0, firstBlock = 0, cardSlot = 0;
+  };
+  struct Snapshot {
+    std::array<DescriptorSnapshot, MAX_FDS> descriptors;
+    std::vector<std::pair<std::string, uint32_t>> directory;
+    uint32_t directoryIndex = 0;
+  };
+  Snapshot snapshot() const;
+  static bool validSnapshot(const Snapshot &state);
+  bool canRestore(const Snapshot &state) const;
+  bool restore(const Snapshot &state);
   FileIO(cdrom::VirtualFs &fs, Memory &mem);
   ~FileIO() = default;
 
@@ -53,7 +72,6 @@ private:
   OverlayManager *overlayMgr_ = nullptr;
 
   std::vector<FileDescriptor> fds_;
-  static constexpr int32_t MAX_FDS = 16;
 };
 
 } // namespace ps1::bios

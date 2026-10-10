@@ -1,0 +1,14 @@
+{
+  "upstream": "https://github.com/godotengine/godot",
+  "tag": "4.7.2-stable",
+  "commit": "ed1daf0bf001b61586d9930840f2f1394092c079",
+  "retrieved": "2026-10-08",
+  "files": {
+    "LICENSE.txt": "b0435e3b3e4e55238f05f4b306f30524a1b2e20147810d436eaa554fa6855c80",
+    "ssao.glsl": "0e5323dfc91b91d43186fbb5101d309215b5220fab2db658ce31af23e382a3b8",
+    "ssao_blur.glsl": "e1fdb610c8aac0ecfb1c9eff5867a83cca8731671cb3feae66bfe44663411144",
+    "ssao_interleave.glsl": "08a4966ce463028f64223cc3baac0877c5b53787e9dcf9cbce53e183b210086f",
+    "ASSAO-LICENSE.txt": "31627f9519cbff139202bb8cc499dfe69d3a9c3687c2d4a3f4a3e08061a2d2fc"
+  },
+  "adaptation": "ps1Runtime/shaders/mgs_ssao.comp and mgs_ssao_blur.comp use ASSAO disk sampling, obscurance, halo rejection, radius limiting, edge packing and edge-aware blur. Depth/normal reconstruction and Vulkan resource integration are project-specific; no Godot runtime dependency."
+}

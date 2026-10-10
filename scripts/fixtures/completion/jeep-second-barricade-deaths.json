@@ -1,0 +1,242 @@
+{
+  "format": "mgs-situation-1",
+  "name": "jeep-second-barricade-original-deaths",
+  "source": "s19b/takabe/jeep_emy/jeep_emy.c s19b_jbullet_800C5010: target1 damaged4 +attackmode1 +vital<=0 selects original death handler; USA Work target1+8c8 Act800C7014; CONTROL.name+50 uniquely binds GCL118b actors1466/1467/1468.",
+  "requires": {
+    "current_stage": "s19b",
+    "actor_jeep_emy_count": 3,
+    "life": {
+      "min": 1
+    }
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life"
+  ],
+  "compare": [
+    "current_stage",
+    "story",
+    "disc",
+    "difficulty",
+    "game_over_timer",
+    "actor_jeep_emy_count"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-second-guard-wave-deaths",
+        "until": {
+          "actor_jeep_emy_count": 0,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "wait:30"
+        },
+        "attempts": 200,
+        "max_frames": 6000,
+        "abort_when": {
+          "life": 0
+        },
+        "stable_frames": 10
+      },
+      {
+        "name": "original-liquid-chase-spawn",
+        "until": {
+          "actor_jeep_liq_count": 1,
+          "life": {
+            "min": 1
+          }
+        },
+        "action": {
+          "sequence": "wait:30"
+        },
+        "attempts": 200,
+        "max_frames": 6000,
+        "abort_when": {
+          "life": 0
+        },
+        "stable_frames": 10
+      }
+    ]
+  },
+  "fixture": {
+    "scope": "Synthetic post-projectile TARGET boundary for three authored guards. No actor phase, global scroll state, callbacks or story patched; original deaths must release barrier and spawn Liquid.",
+    "patches": [
+      {
+        "actor": "jeep_emy.c",
+        "act": "0x800c7014",
+        "where": [
+          {
+            "offset": "0x50",
+            "width": 2,
+            "value": 5222
+          }
+        ],
+        "offset": "0x8c8",
+        "indirect_offset": 38,
+        "width": 2,
+        "signed": true,
+        "expect": 319,
+        "value": 0,
+        "reason": "Original projectile death boundary",
+        "source": "s19b/takabe/jeep_emy/jeep_emy.c s19b_jbullet_800C5010: target1 damaged4 +attackmode1 +vital<=0 selects original death handler; USA Work target1+8c8 Act800C7014; CONTROL.name+50 uniquely binds GCL118b actors1466/1467/1468."
+      },
+      {
+        "actor": "jeep_emy.c",
+        "act": "0x800c7014",
+        "where": [
+          {
+            "offset": "0x50",
+            "width": 2,
+            "value": 5222
+          }
+        ],
+        "offset": "0x8c8",
+        "indirect_offset": 6,
+        "width": 2,
+        "signed": false,
+        "expect": 0,
+        "value": 4,
+        "reason": "Original projectile death boundary",
+        "source": "s19b/takabe/jeep_emy/jeep_emy.c s19b_jbullet_800C5010: target1 damaged4 +attackmode1 +vital<=0 selects original death handler; USA Work target1+8c8 Act800C7014; CONTROL.name+50 uniquely binds GCL118b actors1466/1467/1468."
+      },
+      {
+        "actor": "jeep_emy.c",
+        "act": "0x800c7014",
+        "where": [
+          {
+            "offset": "0x50",
+            "width": 2,
+            "value": 5222
+          }
+        ],
+        "offset": "0x8c8",
+        "indirect_offset": 62,
+        "width": 2,
+        "signed": true,
+        "expect": -1,
+        "value": 1,
+        "reason": "Original projectile death boundary",
+        "source": "s19b/takabe/jeep_emy/jeep_emy.c s19b_jbullet_800C5010: target1 damaged4 +attackmode1 +vital<=0 selects original death handler; USA Work target1+8c8 Act800C7014; CONTROL.name+50 uniquely binds GCL118b actors1466/1467/1468."
+      },
+      {
+        "actor": "jeep_emy.c",
+        "act": "0x800c7014",
+        "where": [
+          {
+            "offset": "0x50",
+            "width": 2,
+            "value": 5223
+          }
+        ],
+        "offset": "0x8c8",
+        "indirect_offset": 38,
+        "width": 2,
+        "signed": true,
+        "expect": 319,
+        "value": 0,
+        "reason": "Original projectile death boundary",
+        "source": "s19b/takabe/jeep_emy/jeep_emy.c s19b_jbullet_800C5010: target1 damaged4 +attackmode1 +vital<=0 selects original death handler; USA Work target1+8c8 Act800C7014; CONTROL.name+50 uniquely binds GCL118b actors1466/1467/1468."
+      },
+      {
+        "actor": "jeep_emy.c",
+        "act": "0x800c7014",
+        "where": [
+          {
+            "offset": "0x50",
+            "width": 2,
+            "value": 5223
+          }
+        ],
+        "offset": "0x8c8",
+        "indirect_offset": 6,
+        "width": 2,
+        "signed": false,
+        "expect": 0,
+        "value": 4,
+        "reason": "Original projectile death boundary",
+        "source": "s19b/takabe/jeep_emy/jeep_emy.c s19b_jbullet_800C5010: target1 damaged4 +attackmode1 +vital<=0 selects original death handler; USA Work target1+8c8 Act800C7014; CONTROL.name+50 uniquely binds GCL118b actors1466/1467/1468."
+      },
+      {
+        "actor": "jeep_emy.c",
+        "act": "0x800c7014",
+        "where": [
+          {
+            "offset": "0x50",
+            "width": 2,
+            "value": 5223
+          }
+        ],
+        "offset": "0x8c8",
+        "indirect_offset": 62,
+        "width": 2,
+        "signed": true,
+        "expect": -1,
+        "value": 1,
+        "reason": "Original projectile death boundary",
+        "source": "s19b/takabe/jeep_emy/jeep_emy.c s19b_jbullet_800C5010: target1 damaged4 +attackmode1 +vital<=0 selects original death handler; USA Work target1+8c8 Act800C7014; CONTROL.name+50 uniquely binds GCL118b actors1466/1467/1468."
+      },
+      {
+        "actor": "jeep_emy.c",
+        "act": "0x800c7014",
+        "where": [
+          {
+            "offset": "0x50",
+            "width": 2,
+            "value": 5224
+          }
+        ],
+        "offset": "0x8c8",
+        "indirect_offset": 38,
+        "width": 2,
+        "signed": true,
+        "expect": 319,
+        "value": 0,
+        "reason": "Original projectile death boundary",
+        "source": "s19b/takabe/jeep_emy/jeep_emy.c s19b_jbullet_800C5010: target1 damaged4 +attackmode1 +vital<=0 selects original death handler; USA Work target1+8c8 Act800C7014; CONTROL.name+50 uniquely binds GCL118b actors1466/1467/1468."
+      },
+      {
+        "actor": "jeep_emy.c",
+        "act": "0x800c7014",
+        "where": [
+          {
+            "offset": "0x50",
+            "width": 2,
+            "value": 5224
+          }
+        ],
+        "offset": "0x8c8",
+        "indirect_offset": 6,
+        "width": 2,
+        "signed": false,
+        "expect": 0,
+        "value": 4,
+        "reason": "Original projectile death boundary",
+        "source": "s19b/takabe/jeep_emy/jeep_emy.c s19b_jbullet_800C5010: target1 damaged4 +attackmode1 +vital<=0 selects original death handler; USA Work target1+8c8 Act800C7014; CONTROL.name+50 uniquely binds GCL118b actors1466/1467/1468."
+      },
+      {
+        "actor": "jeep_emy.c",
+        "act": "0x800c7014",
+        "where": [
+          {
+            "offset": "0x50",
+            "width": 2,
+            "value": 5224
+          }
+        ],
+        "offset": "0x8c8",
+        "indirect_offset": 62,
+        "width": 2,
+        "signed": true,
+        "expect": -1,
+        "value": 1,
+        "reason": "Original projectile death boundary",
+        "source": "s19b/takabe/jeep_emy/jeep_emy.c s19b_jbullet_800C5010: target1 damaged4 +attackmode1 +vital<=0 selects original death handler; USA Work target1+8c8 Act800C7014; CONTROL.name+50 uniquely binds GCL118b actors1466/1467/1468."
+      }
+    ]
+  }
+}

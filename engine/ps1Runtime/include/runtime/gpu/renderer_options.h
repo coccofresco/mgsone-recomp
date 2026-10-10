@@ -28,6 +28,8 @@ struct RendererOptions {
   // Zero preserves the display-canvas × internalScale behavior.
   uint32_t presentationWidth = 0;
   uint32_t presentationHeight = 0;
+  // Godot/ASSAO adapter, presentation only; enabled by the MGS host profile.
+  bool ambientOcclusion = false;
 };
 
 inline constexpr std::optional<DisplayAreaPolicy>

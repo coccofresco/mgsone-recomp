@@ -137,7 +137,7 @@ TEST_F(BiosTableBTest, KernelAllocatorHonorsArenaAndOverflow) {
   EXPECT_EQ(allocate(8), 0xA000E818u);
 }
 
-#if defined(__unix__) || defined(__APPLE__)
+#if defined(__unix__) || defined(__APPLE__) || defined(_WIN32)
 extern void (*g_testRecompDispatchHook)(recomp_context *, uint32_t);
 namespace {
 KernelThreads *threadProbe = nullptr;
@@ -228,7 +228,7 @@ TEST_F(BiosTableBTest, FileWriteDeliversOneHardwareEventPerSectorThenSoftwareCom
   EXPECT_EQ(cardSoftwareCompletions, 1u);
 }
 
-#if defined(__unix__) || defined(__APPLE__)
+#if defined(__unix__) || defined(__APPLE__) || defined(_WIN32)
 namespace {
 void runPortableThreadProbe(recomp_context *ctx, uint32_t address) {
   if (address == 0x80012340u) {

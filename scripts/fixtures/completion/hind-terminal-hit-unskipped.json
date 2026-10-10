@@ -1,0 +1,110 @@
+{
+  "format": "mgs-situation-1",
+  "name": "hind-terminal-hit-unskipped-aftermath",
+  "requires": {
+    "stage": "s11h",
+    "story": 186,
+    "actor_hind_count": 1,
+    "life": {
+      "min": 1
+    }
+  },
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000047"
+  ],
+  "fixture": {
+    "scope": "Synthetic final-hit boundary: remaining hits/life zero and end of hit cooldown. Original Hind state machine, crash, GCL callback and roof aftermath must execute. Does not establish complete Stinger combat or prior approach.",
+    "patches": [
+      {
+        "actor": "hind.c",
+        "act": "0x800d3554",
+        "offset": "0x434",
+        "width": 4,
+        "expect": 16,
+        "value": 0,
+        "reason": "Remaining hits after terminal impact",
+        "source": "USA s11h act800d3554, 800d3bc0 tests hits after --50c; 800d4394 subtracts hits/life; decomp s11g/kojo/hind.h and hindact.c same verified fields"
+      },
+      {
+        "actor": "hind.c",
+        "act": "0x800d3554",
+        "offset": "0x654",
+        "width": 4,
+        "expect": 1024,
+        "value": 0,
+        "reason": "Life after terminal impact",
+        "source": "USA s11h act800d3554, 800d3bc0 tests hits after --50c; 800d4394 subtracts hits/life; decomp s11g/kojo/hind.h and hindact.c same verified fields"
+      },
+      {
+        "actor": "hind.c",
+        "act": "0x800d3554",
+        "offset": "0x50c",
+        "width": 4,
+        "expect": 0,
+        "value": 1,
+        "reason": "Last original hit-cooldown tick",
+        "source": "USA s11h act800d3554, 800d3bc0 tests hits after --50c; 800d4394 subtracts hits/life; decomp s11g/kojo/hind.h and hindact.c same verified fields"
+      }
+    ]
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-hind-defeat-callback",
+        "until": {
+          "story": 188,
+          "actor_hind_count": 0
+        },
+        "abort_when": {
+          "life": 0
+        },
+        "max_frames": 5000
+      },
+      {
+        "name": "original-roof-aftermath",
+        "until": {
+          "stage": "s11h",
+          "story": 190,
+          "pause_level": 0,
+          "actor_loader_count": 0,
+          "load_request": 0,
+          "control": {
+            "ne": 0
+          },
+          "life": {
+            "min": 1
+          },
+          "game_status": {
+            "mask": 3623878656,
+            "eq": 0
+          }
+        },
+        "max_frames": 24000,
+        "stable_frames": 30,
+        "when": {
+          "pause_level": {
+            "mask": 1,
+            "eq": 1
+          }
+        },
+        "action": {
+          "sequence": "cross:3,wait:12"
+        },
+        "attempts": 1500
+      }
+    ]
+  },
+  "source": "USA s11h/ea54: terminal Hind callback2324 -> story188; original roof movie callback9504 -> story190. No inputs during the film; Cross only while Codec is active."
+}

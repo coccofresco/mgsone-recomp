@@ -1,0 +1,323 @@
+{
+  "format": "mgs-hle-state-verification-1",
+  "date": "2026-10-06",
+  "status": "complete",
+  "scope": "BIOS HLE file/allocator/RNG continuity and NSV12 serialization. Targeted native/donor headless regressions; no new complete campaign segment or visual certification.",
+  "runtime": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+  },
+  "git_head": "6f30e2cfb5e94ec71c0e337347a9495c3b829b8a",
+  "source_files": [
+    {
+      "path": "engine/ps1Runtime/include/runtime/bios/bios.h",
+      "sha256": "3497d90492742c69426885a14e4220403891870c99622416eeaa0dc969764590"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/bios/file_io.h",
+      "sha256": "2ad9155233e97e047d56b8e09effbb13509de58b9a4e93ca0175d7fe98643c09"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/bios/heap.h",
+      "sha256": "aaa0985611e23e051795d8d64e80efa1081fa1bf02b447172967d8d0baeab365"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/save_state.h",
+      "sha256": "780c50aa4fb0abce5c2df417fd7916389771e596e309db9b64f7ab2d0170495d"
+    },
+    {
+      "path": "engine/ps1Runtime/src/bios/bios.cpp",
+      "sha256": "5bb7272d172e34ae5c90ffc67b4d2db3fdea97ec802989dcee67df3b355b0c1f"
+    },
+    {
+      "path": "engine/ps1Runtime/src/bios/file_io.cpp",
+      "sha256": "f7e8d8802a0c620203302ce870764c185ee58a4392bbefb7bc6aa4182780d469"
+    },
+    {
+      "path": "engine/ps1Runtime/src/bios/heap.cpp",
+      "sha256": "41773c9c2cd9253ac26482af0fed337f7b4a518d98593bc81ec740a90dd44097"
+    },
+    {
+      "path": "engine/ps1Runtime/src/bios/syscall_a.cpp",
+      "sha256": "756c5b2b916e1f2a6fe2148304db3e914561f8072ee6cbc72b025e3b92524247"
+    },
+    {
+      "path": "engine/ps1Runtime/src/save_state.cpp",
+      "sha256": "66a07c85f8f228db7eb1b557f0b605f6c4fe18f62df63c4229d2bcd3881c1a78"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_save_state.cpp",
+      "sha256": "42adbeef573415aacc4f6ffa99403c3d635a808b0f446df6ce56d7b5e8a45316"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_file_io.cpp",
+      "sha256": "d63efb9400bb868dbd7d265218c549053bc6eff717332e35abca79bedf82a18b"
+    },
+    {
+      "path": "scripts/mgs_tas.py",
+      "sha256": "aa729dc6e5394311c68c2b9356bae402700fa4c52d18ed5974d8437ba02b5664"
+    },
+    {
+      "path": "scripts/mgs_fixture.py",
+      "sha256": "b5bdb19b4f3971ac4af87fb8608cfc3e97a0c044455854d4ff92f861dbe8dc0d"
+    },
+    {
+      "path": "scripts/tests/test_mgs_fixture.py",
+      "sha256": "5542ebbff149c202ec3d8f9afd6169b8380c261ea4b96ba5e3f46ae88e41ba77"
+    }
+  ],
+  "red_regressions": [
+    {
+      "total": 2,
+      "failed": 2,
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/red-tests.json",
+        "sha256": "4171c2aacf84501629cefe50472c3cb3c8c77952354a70efa87b0e96c516677f"
+      },
+      "log": {
+        "path": "data/validation/completion/hle-state-20261006/red-tests.log",
+        "sha256": "12abe2f17f7f6ed03058afb269703db4d7f86cb8216a50ba126f7570b71259ff"
+      }
+    },
+    {
+      "total": 1,
+      "failed": 1,
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/rng-red-tests.json",
+        "sha256": "4327586aa77665abf737073071ed0a6e6ce54b2511a42839378abb2ec12d51f1"
+      },
+      "log": {
+        "path": "data/validation/completion/hle-state-20261006/rng-red-tests.log",
+        "sha256": "ed40c216937ad3edb0d24afb454460f0babd269d269818809dbb0b517cf66634"
+      }
+    }
+  ],
+  "validation": {
+    "runtime_release": {
+      "total": 1356,
+      "passed": 1325,
+      "skipped": 31,
+      "suites": 129,
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-runtime-tests.json",
+        "sha256": "e7182b7d7e154476ee1a054661cc1311242e87528a89be6bed0e378630fae968"
+      },
+      "log": {
+        "path": "data/validation/completion/hle-state-20261006/final-runtime-tests.log",
+        "sha256": "404366311dffd611c19d86ad6db1fb8b13ebe053a0451434adf98ce32cc6be8b"
+      },
+      "binary": {
+        "path": "build/ps1Test/ps1Runtime_tests",
+        "sha256": "5629e01b0a503b3527045fb9dfca8baf0c2993f78c50587245b2769f8a89a1c9"
+      }
+    },
+    "runtime_sanitized": {
+      "total": 1356,
+      "passed": 1325,
+      "skipped": 31,
+      "suites": 129,
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-asan-tests.json",
+        "sha256": "95d61360f42d6a2af73ed5933a8711865ff2f52a2b723d5e8436b929bcb79be5"
+      },
+      "log": {
+        "path": "data/validation/completion/hle-state-20261006/final-asan-tests.log",
+        "sha256": "f0780ca87baf5915bdd155c5991b6508fae92d7421ebaf19cdd8abb49fe7159c"
+      },
+      "binary": {
+        "path": "build-sanitize/ps1Test/ps1Runtime_tests",
+        "sha256": "45d354b2ce2feb9c202560b2c88080749176063839a9f43ecd969d9ddf079fbf"
+      }
+    },
+    "python": {
+      "passed": 142,
+      "log": {
+        "path": "data/validation/completion/hle-state-20261006/python-tests.log",
+        "sha256": "d843e2bad7e699e29ddf38d0b86d6bc5b17c64889a5dc96e8c22f5f42582905d"
+      }
+    }
+  },
+  "native_execution_checks": {
+    "codec": {
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-codec/native/session/result.json",
+        "sha256": "a21a44cbef89027928b1ae22c4999f81742ff3376127b6c1161aa77db9dd3ab4"
+      },
+      "frames": 146,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "codec_replay": {
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-codec/verified-replay/result.json",
+        "sha256": "053cf8ed85024955262f816fbe636a329132e53b90ec97ab6ef0c46ee784dc12"
+      },
+      "frames": 146,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "v12_first_person": {
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-v12-first-person/native/session/result.json",
+        "sha256": "f3943ef9f3fdeb33be26ed5d20ae089ccec63263f40cbb7c3242eb658c196ac9"
+      },
+      "frames": 48,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "v12_first_person_replay": {
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-v12-first-person/verified-replay/result.json",
+        "sha256": "635066ce6307e779f1c30d2a61c8f68eb8e9c7580ea35377c32277ba0e55d5b1"
+      },
+      "frames": 48,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "disc_change": {
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-disc-change/session/result.json",
+        "sha256": "1dd606301fab3c3a144d22500b8dc42906d262519058d491b4e4503ca6722311"
+      },
+      "frames": 504,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "disc_change_replay": {
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-disc-change/replay/result.json",
+        "sha256": "a2c18f66e55029b1ab2a7daa9beedd276fbcc7e0656f8737a30bcebf2cb75787"
+      },
+      "frames": 504,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "legacy_movie": {
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-movie-replay/result.json",
+        "sha256": "afb76523d7243758a411b3d0e2e4e01e9ee80f24543c4b15bbf41d3b5813d9d4"
+      },
+      "frames": 1460,
+      "game_errors": [],
+      "interpreter_counters": {}
+    },
+    "liquid_load": {
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-liquid-load/session/result.json",
+        "sha256": "7b637cb5e5d6d4efd43855295e9a6c0912ed19352d527260e559eabc10b0b725"
+      },
+      "frames": 3629,
+      "game_errors": [],
+      "interpreter_counters": {}
+    }
+  },
+  "paired_regressions": {
+    "final-codec": {
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-codec/result.json",
+        "sha256": "790ee92148409a7c2a8cfe0a9831d7069e84f31634861191361a1c8906c5e742"
+      },
+      "synthetic_ancestry": true,
+      "frames": {
+        "native": 146,
+        "donor": 148
+      }
+    },
+    "final-v12-first-person": {
+      "result": {
+        "path": "data/validation/completion/hle-state-20261006/final-v12-first-person/result.json",
+        "sha256": "3a48e19d6845cbcc620c82d40dae40532a0251b9d8649e6a765eb51dfcb040ee"
+      },
+      "synthetic_ancestry": true,
+      "frames": {
+        "native": 48,
+        "donor": 46
+      }
+    }
+  },
+  "fresh_process_seed": {
+    "version": 12,
+    "flags": "NSVC",
+    "artifact": {
+      "path": "data/validation/completion/hle-state-20261006/final-v12-first-person/native/session/initial.ps1s",
+      "sha256": "ceea922c2f7cf113630da8e4de732622931cf45f542d12e05a192d6587849de8"
+    }
+  },
+  "disc_change": {
+    "path": "data/validation/completion/hle-state-20261006/final-disc-change/evidence.json",
+    "sha256": "9291a12fc85a9ffecef308e177a600389f11dd517fe31e0d06e181bd655bb245"
+  },
+  "loading": {
+    "loads": [
+      {
+        "begin": 81,
+        "end": 85,
+        "vblanks": 4,
+        "seconds_at_60hz": 0.06666666666666667,
+        "stages": [
+          "init"
+        ],
+        "sectors": [
+          275
+        ]
+      },
+      {
+        "begin": 95,
+        "end": 99,
+        "vblanks": 4,
+        "seconds_at_60hz": 0.06666666666666667,
+        "stages": [
+          "title"
+        ],
+        "sectors": [
+          191
+        ]
+      },
+      {
+        "begin": 412,
+        "end": 416,
+        "vblanks": 4,
+        "seconds_at_60hz": 0.06666666666666667,
+        "stages": [
+          "abst"
+        ],
+        "sectors": [
+          76
+        ]
+      },
+      {
+        "begin": 1522,
+        "end": 1527,
+        "vblanks": 5,
+        "seconds_at_60hz": 0.08333333333333333,
+        "stages": [
+          "s18a"
+        ],
+        "sectors": [
+          547
+        ]
+      }
+    ],
+    "unpaced_sectors": 1089,
+    "session": "/home/xander/mgs_recomp/data/validation/completion/hle-state-20261006/final-liquid-load/session",
+    "result_sha256": "7b637cb5e5d6d4efd43855295e9a6c0912ed19352d527260e559eabc10b0b725",
+    "trace_sha256": "199379f345a7f440cea317d17da26dfcfd05434c069b5a44e18bcbadbab5f503",
+    "runtime_sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+  },
+  "protected_files_unchanged": true,
+  "protected_check": {
+    "path": "data/validation/completion/hle-state-20261006/protected.log",
+    "sha256": "47928750547a87d628691b664cbc1aa2c409fafc917061523b7125a2d0cba221"
+  },
+  "limits": [
+    "Nine new runtime test contracts; parameter loops and release/sanitized repeats do not represent distinct campaign segments.",
+    "31 opt-in tests skipped per suite. Sanitizers cover the test executable with stub game, not the full recompiled runtime; leak detection disabled and makecontext/swapcontext support limited.",
+    "The initial ASan build/discovery attempt failed because LeakSanitizer cannot operate under ptrace. Final test discovery and execution explicitly disable leak detection.",
+    "Versions before NSV12 never recorded file cursors, heap ownership or BIOS RNG. Migration clears resources and seeds RNG at 1; it cannot recreate absent history.",
+    "NSV12 permits at most 512 MiB aggregate cached CD data and 4096-byte paths. No host pointers or backing paths serialized.",
+    "Codec and first-person inherit declared synthetic clear-game ancestry; they verify original UI behavior against SwanStation, not reachability through a full campaign.",
+    "Eight final native executions include replays; headless results and loader VBlank intervals do not certify Vulkan visuals, audio perception or physical display latency.",
+    "Intermediate runs without the final- prefix predate RNG serialization and do not certify the final NSV12 layout.",
+    "Analyzer and recompiler suites not rerun: their code and emitted instructions are unchanged."
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "date": "2026-10-07",
+  "candidate": "0.1.0-alpha.1-dev.4",
+  "status": "implemented-and-headless-verified",
+  "runtime_sha256": "a39c9e7a548aed8bc86c01258287d7a72911b445416d5b61d2445d5cc63cfae4",
+  "source_changes_committed": false,
+  "shutdown": {
+    "native_cases_passed": 12,
+    "total_cases_including_previous_build": 14,
+    "join_ms_min": 1,
+    "join_ms_max": 15,
+    "report": "data/validation/shutdown-saves-20261007/lifecycle-final/report.json",
+    "forced_exit_used_by_new_build": false,
+    "emergency_noncooperative_exit_code": 45,
+    "guest_exception_exit_code": 46,
+    "signals_tested": [
+      "SIGTERM",
+      "SIGINT"
+    ],
+    "signal_states": [
+      "running",
+      "host-paused"
+    ],
+    "quit_paths": [
+      "SDL_QUIT with headless confirmation",
+      "shared host-menu quit action"
+    ],
+    "launcher_supervision": {
+      "tested_signals": [
+        "SIGTERM",
+        "SIGINT"
+      ],
+      "lock_inherited_by_child": true,
+      "parent_sigkill_keeps_profile_locked": true,
+      "native_launcher_signal_report": "data/validation/shutdown-saves-20261007/launcher-signal.json",
+      "native_clean_exit": 0,
+      "launcher_requested_exit": 143,
+      "appimage_wrapper_death_regression": "exact parent executable identity + Linux PR_SET_PDEATHSIG; process regression passed",
+      "pre_fix_appimage_failure": "data/validation/shutdown-saves-20261007/appimage-final-test-r2.json"
+    }
+  },
+  "persistence": {
+    "savestate_format": 12,
+    "previous_versions": 3,
+    "card_history": "before first changed write per attachment or restored timeline",
+    "publication": "unique temporary, file fsync, backup copy/fsync, atomic rename, directory fsync",
+    "backup_zip": "complete archive, fsync, atomic exclusive publication; includes committed history",
+    "integrity_scope": "savestate checksum and staged structure; raw card size, MC signature and header checksum",
+    "failure_tests": [
+      "ENOSPC/EIO/EROFS injected at four pre-publication fsync phases",
+      "RLIMIT_FSIZE partial write",
+      "unwritable directory",
+      "blocked/symlink backup destination",
+      "process exit during temporary write",
+      "process exit after backup publication",
+      "directory fsync failure after rename: notice and retained history",
+      "backward wall clock preserves newest backup ordering",
+      "corrupt primary and corrupt newest backup",
+      "newer state format refusal",
+      "pre-load on-disk card preserved on subsequent write"
+    ],
+    "upgrade": {
+      "format": 12,
+      "previous_state_sha256": "c8b38df15895c7844b5252352665e4445b899fdc87032b4395dfeaa0a679f635",
+      "updated_state_sha256": "9a6ca357ef2fef77487a338536c0d634833874ebcd9dbd2c0261259af6525d3f",
+      "pre_update_backup_preserved": true,
+      "cards_unchanged": true,
+      "previous_build_can_read_new_state": true
+    }
+  },
+  "tests": {
+    "runtime": {
+      "total": 1383,
+      "passed": 1352,
+      "skipped": 31,
+      "failures": 0,
+      "report": "data/validation/shutdown-saves-20261007/runtime-final.json"
+    },
+    "controller": {
+      "total": 19,
+      "failures": 0,
+      "report": "data/validation/shutdown-saves-20261007/controllers-final.json"
+    },
+    "python": {
+      "passed": 180,
+      "report": "data/validation/shutdown-saves-20261007/python-wrapper.log"
+    }
+  },
+  "protected_personal_files": {
+    "savestates/quick_slot_0.ps1s": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953",
+    "data/memory_cards/card1.mcd": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0",
+    "data/memory_cards/card2.mcd": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+  },
+  "limits": [
+    "Headless checks do not qualify Vulkan teardown/presentation, physical SteamOS suspend or Steam UI/controller interaction.",
+    "Injected syscall failures and abrupt process exits are not a physical power-loss qualification.",
+    "Raw memory cards have no whole-file integrity checksum; arbitrary game-payload corruption is not detected.",
+    "Recovery may restore older progress; primary remains unchanged until a later save.",
+    "Compatibility verified for the dev.3/dev.4 NSV12 build pair, not all future updates.",
+    "Noncooperative native loops retain a failing bounded emergency exit, never a successful result."
+  ]
+}

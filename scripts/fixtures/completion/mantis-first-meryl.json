@@ -1,0 +1,105 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-first-meryl-knockout-and-boss-entry",
+  "source": "USA s07b/ea54 phase1 Meryl callback0b90 -> 9adf (story124, spawn -750,0,-1500); original film callback0417 -> story125. Unarmed player inputs only.",
+  "requires": {
+    "stage": "s07b",
+    "story": 123,
+    "gcl_12000046": 1,
+    "actor_meryl07b_count": 1,
+    "weapon": -1
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000046",
+    "actor_psyco_count"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "approach-possessed-meryl",
+        "until": {
+          "z": {
+            "max": 6900
+          },
+          "x": {
+            "min": -1300,
+            "max": -700
+          }
+        },
+        "action": {
+          "move_to": {
+            "x": -1000,
+            "z": 6700
+          }
+        },
+        "max_frames": 600,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "original-nonlethal-meryl-knockout",
+        "until": {
+          "story": 124
+        },
+        "action": {
+          "sequence": "up:3,circle:3,wait:3"
+        },
+        "attempts": 200,
+        "max_frames": 2200,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "original-mantis-film-and-battle-entry",
+        "until": {
+          "stage": "s07b",
+          "story": 125,
+          "actor_psyco_count": 1,
+          "control": {
+            "ne": 0
+          },
+          "pause_level": 0,
+          "game_status": {
+            "mask": 3691511808,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          },
+          "life": {
+            "min": 1
+          },
+          "actor_loader_count": 0,
+          "load_request": 0
+        },
+        "when": {
+          "pause_level": {
+            "mask": 1,
+            "eq": 1
+          }
+        },
+        "action": {
+          "sequence": "cross:3,wait:12"
+        },
+        "attempts": 1000,
+        "max_frames": 10000,
+        "stable_frames": 30
+      }
+    ]
+  }
+}

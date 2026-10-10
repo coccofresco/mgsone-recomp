@@ -1,0 +1,3470 @@
+{
+  "format": "mgs-required-paths-evidence-2",
+  "date": "2026-10-06",
+  "status": "partial-with-explicit-limits",
+  "scope": "Mandatory gameplay transitions from source-bound isolated entries. Prison continuation uses real inputs. Synthetic ancestors and terminal Hind damage remain explicit. Headless logic only; no continuous campaign, all difficulties, Vulkan visuals or real-time performance certification.",
+  "previous": {
+    "path": "docs/mgs-required-paths-evidence.json",
+    "sha256": "7bb6aa351cad7d9901812a9a09fe7e3b427801479a8347ceabf6921458190a99"
+  },
+  "runtime": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "sha256": "9916ff0d288dbb6b3ae428aa054be4355920c9b8bf3b42e431bda1cd0848f660"
+  },
+  "previous_runtime_preserved": {
+    "path": ".local/runtime-before-callback-delay-fix",
+    "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+  },
+  "counts": {
+    "new_passed_contracts": 7,
+    "new_partially_exercised_cases": 2,
+    "fully_certified_cases": 0
+  },
+  "passed": [
+    {
+      "case": "prison-escape",
+      "name": "prison-ketchup-use",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/prison-ketchup-use/result.json",
+        "sha256": "de36d085ee8f00fe201a76513c2312a4dda0a2516687b1ddd6de101b5c38fdc3"
+      },
+      "scope": "Inputs only: equip and use ketchup while prone in the original trigger; original item consumption and fake-death state.",
+      "status": "complete",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-arrival/result.json",
+            "sha256": "ae17c8049588c362add9eb3fdbaa0e496bffcf1cbac8c46416c70667705552c2"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        },
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-contact-resumed/result.json",
+            "sha256": "16c8897f9d9ec347772c0fc996ff65a62b59de9acce30f9b2faed492d8dc451a"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        }
+      ],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 373,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+          },
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              1067,
+              136,
+              7927
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 1048640,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 576,
+            "max_life": 576,
+            "weapon": -1,
+            "item": -1,
+            "stance": 2,
+            "weapons": [
+              -32647,
+              -32517,
+              -32744,
+              -32752,
+              -1,
+              -1,
+              -32758,
+              -32758,
+              -32755,
+              -32764
+            ],
+            "items": [
+              -32767,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -32767,
+              -32767,
+              6,
+              -1,
+              -32767,
+              -32767,
+              -1,
+              1,
+              -32767
+            ],
+            "control_position": [
+              1067,
+              136,
+              7927
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 4054,
+            "yaw": 3030,
+            "turn_yaw": 3030,
+            "socom_ammo": -32647,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 1067,
+            "y": 136,
+            "z": 7927,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180005c": -1,
+            "gcl_1180006c": 6
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 374,
+          "runtime": null,
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              1067,
+              136,
+              7927
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 1048640,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 576,
+            "max_life": 576,
+            "weapon": -1,
+            "item": -1,
+            "stance": 2,
+            "weapons": [
+              -32647,
+              -32517,
+              -32744,
+              -32752,
+              -1,
+              -1,
+              -32758,
+              -32758,
+              -32755,
+              -32764
+            ],
+            "items": [
+              -32767,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -32767,
+              -32767,
+              6,
+              -1,
+              -32767,
+              -32767,
+              -1,
+              1,
+              -32767
+            ],
+            "control_position": [
+              1067,
+              136,
+              7927
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 4054,
+            "yaw": 3030,
+            "turn_yaw": 3030,
+            "socom_ammo": -32647,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 1067,
+            "y": 136,
+            "z": 7927,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180005c": -1,
+            "gcl_1180006c": 6
+          },
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "case": "prison-escape",
+      "name": "prison-guard-ketchup",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/prison-guard-ketchup/result.json",
+        "sha256": "0671b2791ca6047145a4cddef4cf68e9a34c84a1092481253586089512482528"
+      },
+      "scope": "Inputs only: original guard notices fake death, opens cell and approaches Snake.",
+      "status": "complete",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-arrival/result.json",
+            "sha256": "ae17c8049588c362add9eb3fdbaa0e496bffcf1cbac8c46416c70667705552c2"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        },
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-contact-resumed/result.json",
+            "sha256": "16c8897f9d9ec347772c0fc996ff65a62b59de9acce30f9b2faed492d8dc451a"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        }
+      ],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 1146,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+          },
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              1067,
+              136,
+              7927
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 1048640,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 576,
+            "max_life": 576,
+            "weapon": -1,
+            "item": -1,
+            "stance": 2,
+            "weapons": [
+              -32647,
+              -32517,
+              -32744,
+              -32752,
+              -1,
+              -1,
+              -32758,
+              -32758,
+              -32755,
+              -32764
+            ],
+            "items": [
+              -32767,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -32767,
+              -32767,
+              6,
+              -1,
+              -32767,
+              -32767,
+              -1,
+              1,
+              -32767
+            ],
+            "control_position": [
+              1067,
+              136,
+              7927
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 4054,
+            "yaw": 3030,
+            "turn_yaw": 3030,
+            "socom_ammo": -32647,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 1067,
+            "y": 136,
+            "z": 7927,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_12000066": 3,
+            "gcl_1180006c": 6
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 1129,
+          "runtime": null,
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              1067,
+              136,
+              7927
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 1048640,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 576,
+            "max_life": 576,
+            "weapon": -1,
+            "item": -1,
+            "stance": 2,
+            "weapons": [
+              -32647,
+              -32517,
+              -32744,
+              -32752,
+              -1,
+              -1,
+              -32758,
+              -32758,
+              -32755,
+              -32764
+            ],
+            "items": [
+              -32767,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -32767,
+              -32767,
+              6,
+              -1,
+              -32767,
+              -32767,
+              -1,
+              1,
+              -32767
+            ],
+            "control_position": [
+              1067,
+              136,
+              7927
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 4054,
+            "yaw": 3030,
+            "turn_yaw": 3030,
+            "socom_ammo": -32647,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 1067,
+            "y": 136,
+            "z": 7927,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_12000066": 3,
+            "gcl_1180006c": 6
+          },
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "case": "prison-escape",
+      "name": "prison-guard-knockout",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/prison-guard-knockout/result.json",
+        "sha256": "56e0e0bea15cd8b9453a521df15ff7ddacbe7894790ef94728ac7572f463a185"
+      },
+      "scope": "Inputs only: stand, turn and knock out Johnny with original melee and callback. Snake loses 64 life in both engines.",
+      "status": "complete",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-arrival/result.json",
+            "sha256": "ae17c8049588c362add9eb3fdbaa0e496bffcf1cbac8c46416c70667705552c2"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        },
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-contact-resumed/result.json",
+            "sha256": "16c8897f9d9ec347772c0fc996ff65a62b59de9acce30f9b2faed492d8dc451a"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        }
+      ],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 482,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+          },
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              2216,
+              1062,
+              7636
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 512,
+            "max_life": 576,
+            "weapon": -1,
+            "item": -1,
+            "stance": 0,
+            "weapons": [
+              -32647,
+              -32517,
+              -32744,
+              -32752,
+              -1,
+              -1,
+              -32758,
+              -32758,
+              -32755,
+              -32764
+            ],
+            "items": [
+              -32767,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -32767,
+              -32767,
+              6,
+              -1,
+              -32767,
+              -32767,
+              -1,
+              1,
+              -32767
+            ],
+            "control_position": [
+              2216,
+              1062,
+              7636
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 4054,
+            "yaw": 1180,
+            "turn_yaw": 1180,
+            "socom_ammo": -32647,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 2216,
+            "y": 1062,
+            "z": 7636,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180006c": 6,
+            "gcl_14070243": 1,
+            "gcl_14000267": 1
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 486,
+          "runtime": null,
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              2077,
+              1062,
+              7558
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 512,
+            "max_life": 576,
+            "weapon": -1,
+            "item": -1,
+            "stance": 0,
+            "weapons": [
+              -32647,
+              -32517,
+              -32744,
+              -32752,
+              -1,
+              -1,
+              -32758,
+              -32758,
+              -32755,
+              -32764
+            ],
+            "items": [
+              -32767,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -32767,
+              -32767,
+              6,
+              -1,
+              -32767,
+              -32767,
+              -1,
+              1,
+              -32767
+            ],
+            "control_position": [
+              2077,
+              1062,
+              7558
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 4054,
+            "yaw": 1034,
+            "turn_yaw": 1034,
+            "socom_ammo": -32647,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 2077,
+            "y": 1062,
+            "z": 7558,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180006c": 6,
+            "gcl_14070243": 1,
+            "gcl_14000267": 1
+          },
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "case": "prison-escape",
+      "name": "prison-equipment-with-card",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/prison-equipment-with-card/result.json",
+        "sha256": "0713de672c68f64f196dad8095bb39e03d7c66cda931a7ebda587ece80ac15df"
+      },
+      "scope": "Inputs only: traverse prison with equipped level-6 card and trigger original equipment restoration.",
+      "status": "complete",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-arrival/result.json",
+            "sha256": "ae17c8049588c362add9eb3fdbaa0e496bffcf1cbac8c46416c70667705552c2"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        },
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-contact-resumed/result.json",
+            "sha256": "16c8897f9d9ec347772c0fc996ff65a62b59de9acce30f9b2faed492d8dc451a"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        }
+      ],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 645,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+          },
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              389,
+              1132,
+              -4056
+            ],
+            "game_status": 273285120,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 512,
+            "max_life": 576,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              121,
+              251,
+              24,
+              16,
+              -1,
+              -1,
+              10,
+              10,
+              13,
+              4
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              2,
+              -1,
+              1,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              1
+            ],
+            "control_position": [
+              389,
+              1132,
+              -4056
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 2163,
+            "turn_yaw": 2048,
+            "socom_ammo": 121,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 389,
+            "y": 1132,
+            "z": -4056,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180006c": 6,
+            "gcl_11800022": 121,
+            "gcl_14000267": 1,
+            "gcl_1180005c": -1,
+            "gcl_1401004e": 1
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 661,
+          "runtime": null,
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              429,
+              1132,
+              -4049
+            ],
+            "game_status": 273285120,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 512,
+            "max_life": 576,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              121,
+              251,
+              24,
+              16,
+              -1,
+              -1,
+              10,
+              10,
+              13,
+              4
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              2,
+              -1,
+              1,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              1
+            ],
+            "control_position": [
+              429,
+              1132,
+              -4049
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 2135,
+            "turn_yaw": 2048,
+            "socom_ammo": 121,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 429,
+            "y": 1132,
+            "z": -4049,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180006c": 6,
+            "gcl_11800022": 121,
+            "gcl_14000267": 1,
+            "gcl_1180005c": -1,
+            "gcl_1401004e": 1
+          },
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "case": "prison-escape",
+      "name": "prison-exit",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/prison-exit/result.json",
+        "sha256": "1c1cd8591bc27f0817bb7e6c0d885fc0d2a5f52e704afa1585747a86faa570e8"
+      },
+      "scope": "Inputs only: finish original equipment animation, use card door and exit to s03a/story163 with control and matching inventory.",
+      "status": "complete",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-arrival/result.json",
+            "sha256": "ae17c8049588c362add9eb3fdbaa0e496bffcf1cbac8c46416c70667705552c2"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        },
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-contact-resumed/result.json",
+            "sha256": "16c8897f9d9ec347772c0fc996ff65a62b59de9acce30f9b2faed492d8dc451a"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        }
+      ],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 712,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+          },
+          "final": {
+            "stage": "s03a",
+            "current_stage": "s03a",
+            "player_position": [
+              -1000,
+              1104,
+              -5250
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148935520,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 512,
+            "max_life": 576,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              121,
+              251,
+              24,
+              16,
+              -1,
+              -1,
+              10,
+              10,
+              13,
+              4
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              2,
+              -1,
+              1,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              1
+            ],
+            "control_position": [
+              -1000,
+              1104,
+              -5250
+            ],
+            "story": 163,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 1024,
+            "turn_yaw": 1024,
+            "socom_ammo": 121,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -1000,
+            "y": 1104,
+            "z": -5250,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180006c": 6,
+            "actor_loader_count": 0,
+            "gcl_1401004e": 1
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 929,
+          "runtime": null,
+          "final": {
+            "stage": "s03a",
+            "current_stage": "s03a",
+            "player_position": [
+              -1000,
+              1104,
+              -5250
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148935520,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 512,
+            "max_life": 576,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              121,
+              251,
+              24,
+              16,
+              -1,
+              -1,
+              10,
+              10,
+              13,
+              4
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              2,
+              -1,
+              1,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              1
+            ],
+            "control_position": [
+              -1000,
+              1104,
+              -5250
+            ],
+            "story": 163,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 1024,
+            "turn_yaw": 1024,
+            "socom_ammo": 121,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -1000,
+            "y": 1104,
+            "z": -5250,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180006c": 6,
+            "actor_loader_count": 0,
+            "gcl_1401004e": 1
+          },
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "case": "mantis",
+      "name": "mantis-first-meryl-fixed",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/mantis-first-meryl-fixed/result.json",
+        "sha256": "47e9add30393a7f63c3010eb17e03d59ab5260df59e2ab459049567afb13bb6a"
+      },
+      "scope": "Inputs only after synthetic story120 entry: approach and nonlethally knock out first possessed Meryl, original film and Mantis battle entry/story125. Does not certify boss combat or passage.",
+      "status": "complete",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 3016,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "9916ff0d288dbb6b3ae428aa054be4355920c9b8bf3b42e431bda1cd0848f660"
+          },
+          "final": {
+            "stage": "s07b",
+            "current_stage": "s07b",
+            "player_position": [
+              -750,
+              1104,
+              -1500
+            ],
+            "game_status": 4227072,
+            "load_request": 0,
+            "player_status": 268435456,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148971260,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 414,
+            "max_life": 448,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              24,
+              151,
+              9,
+              12,
+              -1,
+              -1,
+              5,
+              7,
+              7,
+              -1
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              5,
+              -1,
+              1,
+              1,
+              -1,
+              -1,
+              -1
+            ],
+            "control_position": [
+              -750,
+              1104,
+              -1500
+            ],
+            "story": 125,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 180,
+            "turn_yaw": 180,
+            "socom_ammo": 24,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -750,
+            "y": 1104,
+            "z": -1500,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "actor_loader_count": 0,
+            "actor_psyco_count": 1,
+            "gcl_12000046": 2,
+            "actor_meryl07b_count": 1
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 3058,
+          "runtime": null,
+          "final": {
+            "stage": "s07b",
+            "current_stage": "s07b",
+            "player_position": [
+              -750,
+              1104,
+              -1500
+            ],
+            "game_status": 4227072,
+            "load_request": 0,
+            "player_status": 268435456,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148971260,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 414,
+            "max_life": 448,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              24,
+              151,
+              9,
+              12,
+              -1,
+              -1,
+              5,
+              7,
+              7,
+              -1
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              5,
+              -1,
+              1,
+              1,
+              -1,
+              -1,
+              -1
+            ],
+            "control_position": [
+              -750,
+              1104,
+              -1500
+            ],
+            "story": 125,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 180,
+            "turn_yaw": 180,
+            "socom_ammo": 24,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -750,
+            "y": 1104,
+            "z": -1500,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "actor_loader_count": 0,
+            "actor_psyco_count": 1,
+            "gcl_12000046": 2,
+            "actor_meryl07b_count": 1
+          },
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "case": "hind-bridge",
+      "name": "hind-map-unskipped",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/hind-map-unskipped/result.json",
+        "sha256": "5ad1d6fe258fe8e322a18f56505cfca79e570da07163f1c4b6daad12870604e0"
+      },
+      "scope": "Synthetic terminal hit, source-bound roof map: original Hind death, full unskipped roof film and Codec return to story190/control. Does not certify Stinger combat, acquisition or exit.",
+      "status": "complete",
+      "inputs_only": false,
+      "synthetic": true,
+      "diagnostic_ancestry": [],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 4867,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "9916ff0d288dbb6b3ae428aa054be4355920c9b8bf3b42e431bda1cd0848f660"
+          },
+          "final": {
+            "stage": "s11h",
+            "current_stage": "s11h",
+            "player_position": [
+              5320,
+              1104,
+              -3193
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148914144,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 640,
+            "max_life": 640,
+            "weapon": -1,
+            "item": -1,
+            "stance": 0,
+            "weapons": [
+              145,
+              301,
+              28,
+              12,
+              7,
+              -1,
+              14,
+              4,
+              10,
+              21
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              0,
+              4,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              0
+            ],
+            "control_position": [
+              5320,
+              1104,
+              -3193
+            ],
+            "story": 190,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 1024,
+            "turn_yaw": 1024,
+            "socom_ammo": 145,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 5320,
+            "y": 1104,
+            "z": -3193,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "actor_loader_count": 0,
+            "gcl_12000047": 64,
+            "actor_hind_count": 0
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 4858,
+          "runtime": null,
+          "final": {
+            "stage": "s11h",
+            "current_stage": "s11h",
+            "player_position": [
+              5320,
+              1104,
+              -3193
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148914144,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 640,
+            "max_life": 640,
+            "weapon": -1,
+            "item": -1,
+            "stance": 0,
+            "weapons": [
+              145,
+              301,
+              28,
+              12,
+              7,
+              -1,
+              14,
+              4,
+              10,
+              21
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              0,
+              4,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              0
+            ],
+            "control_position": [
+              5320,
+              1104,
+              -3193
+            ],
+            "story": 190,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 1024,
+            "turn_yaw": 1024,
+            "socom_ammo": 145,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 5320,
+            "y": 1104,
+            "z": -3193,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "actor_loader_count": 0,
+            "gcl_12000047": 64,
+            "actor_hind_count": 0
+          },
+          "game_errors": []
+        }
+      }
+    }
+  ],
+  "regressions": [
+    {
+      "case": null,
+      "name": "prison-exit-regression",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/prison-exit-regression/result.json",
+        "sha256": "573c999cba219b6d59ffb631ae1de8062ebadae6fa968b08e9b11d68d846cd17"
+      },
+      "scope": "Only the recorded transitions and invariants; no campaign completion claim.",
+      "status": "complete",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-arrival/result.json",
+            "sha256": "ae17c8049588c362add9eb3fdbaa0e496bffcf1cbac8c46416c70667705552c2"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        },
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-contact-resumed/result.json",
+            "sha256": "16c8897f9d9ec347772c0fc996ff65a62b59de9acce30f9b2faed492d8dc451a"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        }
+      ],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 726,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "9916ff0d288dbb6b3ae428aa054be4355920c9b8bf3b42e431bda1cd0848f660"
+          },
+          "final": {
+            "stage": "s03a",
+            "current_stage": "s03a",
+            "player_position": [
+              -1000,
+              1104,
+              -5250
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148935520,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 512,
+            "max_life": 576,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              121,
+              251,
+              24,
+              16,
+              -1,
+              -1,
+              10,
+              10,
+              13,
+              4
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              2,
+              -1,
+              1,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              1
+            ],
+            "control_position": [
+              -1000,
+              1104,
+              -5250
+            ],
+            "story": 163,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 1024,
+            "turn_yaw": 1024,
+            "socom_ammo": 121,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -1000,
+            "y": 1104,
+            "z": -5250,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1401004e": 1,
+            "actor_loader_count": 0,
+            "gcl_1180006c": 6
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 929,
+          "runtime": null,
+          "final": {
+            "stage": "s03a",
+            "current_stage": "s03a",
+            "player_position": [
+              -1000,
+              1104,
+              -5250
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148935520,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 512,
+            "max_life": 576,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              121,
+              251,
+              24,
+              16,
+              -1,
+              -1,
+              10,
+              10,
+              13,
+              4
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              2,
+              -1,
+              1,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              1
+            ],
+            "control_position": [
+              -1000,
+              1104,
+              -5250
+            ],
+            "story": 163,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 1024,
+            "turn_yaw": 1024,
+            "socom_ammo": 121,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -1000,
+            "y": 1104,
+            "z": -5250,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1401004e": 1,
+            "actor_loader_count": 0,
+            "gcl_1180006c": 6
+          },
+          "game_errors": []
+        }
+      }
+    }
+  ],
+  "supporting_runs": [
+    {
+      "case": null,
+      "name": "hind-map-aftermath",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/hind-map-aftermath/result.json",
+        "sha256": "80274ba8c709b399d3e881364424eca1bc200bf45a993e77bdad9991c4bde3a5"
+      },
+      "scope": "Only the recorded transitions and invariants; no campaign completion claim.",
+      "status": "complete",
+      "inputs_only": false,
+      "synthetic": true,
+      "diagnostic_ancestry": [],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 4778,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+          },
+          "final": {
+            "stage": "s11h",
+            "current_stage": "s11h",
+            "player_position": [
+              5320,
+              1104,
+              -3193
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148914144,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 640,
+            "max_life": 640,
+            "weapon": -1,
+            "item": -1,
+            "stance": 0,
+            "weapons": [
+              145,
+              301,
+              28,
+              12,
+              7,
+              -1,
+              14,
+              4,
+              10,
+              21
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              0,
+              4,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              0
+            ],
+            "control_position": [
+              5320,
+              1104,
+              -3193
+            ],
+            "story": 190,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 1024,
+            "turn_yaw": 1024,
+            "socom_ammo": 145,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 5320,
+            "y": 1104,
+            "z": -3193,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "actor_hind_count": 0,
+            "actor_loader_count": 0,
+            "gcl_12000047": 64
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 4739,
+          "runtime": null,
+          "final": {
+            "stage": "s11h",
+            "current_stage": "s11h",
+            "player_position": [
+              5320,
+              1104,
+              -3193
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148914144,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 640,
+            "max_life": 640,
+            "weapon": -1,
+            "item": -1,
+            "stance": 0,
+            "weapons": [
+              145,
+              301,
+              28,
+              12,
+              7,
+              -1,
+              14,
+              4,
+              10,
+              21
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              0,
+              4,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              0
+            ],
+            "control_position": [
+              5320,
+              1104,
+              -3193
+            ],
+            "story": 190,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 1024,
+            "turn_yaw": 1024,
+            "socom_ammo": 145,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 5320,
+            "y": 1104,
+            "z": -3193,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "actor_hind_count": 0,
+            "actor_loader_count": 0,
+            "gcl_12000047": 64
+          },
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "case": null,
+      "name": "mantis-meryl-ready",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/mantis-meryl-ready/result.json",
+        "sha256": "a8830cba35bedc28a9c4f15d0a08b35f6b271d98950cb165f328696d809ec606"
+      },
+      "scope": "Only the recorded transitions and invariants; no campaign completion claim.",
+      "status": "complete",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [],
+      "native_replay": "complete",
+      "engines": {
+        "native": {
+          "status": "complete",
+          "frames": 303,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+          },
+          "final": {
+            "stage": "s07b",
+            "current_stage": "s07b",
+            "player_position": [
+              -663,
+              1104,
+              8137
+            ],
+            "game_status": 32768,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148971308,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 414,
+            "max_life": 448,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              24,
+              151,
+              9,
+              12,
+              -1,
+              -1,
+              5,
+              7,
+              7,
+              -1
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              5,
+              -1,
+              1,
+              1,
+              -1,
+              -1,
+              -1
+            ],
+            "control_position": [
+              -663,
+              1104,
+              8137
+            ],
+            "story": 123,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 2048,
+            "turn_yaw": 2048,
+            "socom_ammo": 24,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -663,
+            "y": 1104,
+            "z": 8137,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_12000046": 1,
+            "actor_meryl07b_count": 1
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 296,
+          "runtime": null,
+          "final": {
+            "stage": "s07b",
+            "current_stage": "s07b",
+            "player_position": [
+              -663,
+              1104,
+              8137
+            ],
+            "game_status": 32768,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148971308,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 414,
+            "max_life": 448,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              24,
+              151,
+              9,
+              12,
+              -1,
+              -1,
+              5,
+              7,
+              7,
+              -1
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              5,
+              -1,
+              1,
+              1,
+              -1,
+              -1,
+              -1
+            ],
+            "control_position": [
+              -663,
+              1104,
+              8137
+            ],
+            "story": 123,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 2048,
+            "turn_yaw": 2048,
+            "socom_ammo": 24,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -663,
+            "y": 1104,
+            "z": 8137,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_12000046": 1,
+            "actor_meryl07b_count": 1
+          },
+          "game_errors": []
+        }
+      }
+    }
+  ],
+  "rejected_diagnostics": [
+    {
+      "case": null,
+      "name": "mantis-first-meryl",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/mantis-first-meryl/result.json",
+        "sha256": "66435a1961fbdf993ea2843299c9a86c3478efbeb345a824878c9fce5f1450f3"
+      },
+      "scope": "Only the recorded transitions and invariants; no campaign completion claim.",
+      "status": "needs-review",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [],
+      "native_replay": "not-run",
+      "engines": {
+        "native": {
+          "status": "failed",
+          "frames": null,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+          },
+          "final": {},
+          "game_errors": [
+            "[Route] action original-nonlethal-meryl-knockout vblank=5530 elapsed=1243 attempts=139 stage=s07b current_stage=s07b difficulty=1 life=414 sta[DISPATCH] FATAL: unmapped call to 0x800DA870 (RA=0x800153C4, phys=0x000DA870)"
+          ]
+        },
+        "donor": {
+          "status": "complete",
+          "frames": 3058,
+          "runtime": null,
+          "final": {
+            "stage": "s07b",
+            "current_stage": "s07b",
+            "player_position": [
+              -750,
+              1104,
+              -1500
+            ],
+            "game_status": 4227072,
+            "load_request": 0,
+            "player_status": 268435456,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148971260,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 414,
+            "max_life": 448,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              24,
+              151,
+              9,
+              12,
+              -1,
+              -1,
+              5,
+              7,
+              7,
+              -1
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              5,
+              -1,
+              1,
+              1,
+              -1,
+              -1,
+              -1
+            ],
+            "control_position": [
+              -750,
+              1104,
+              -1500
+            ],
+            "story": 125,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 180,
+            "turn_yaw": 180,
+            "socom_ammo": 24,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -750,
+            "y": 1104,
+            "z": -1500,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "actor_loader_count": 0,
+            "gcl_12000046": 2,
+            "actor_psyco_count": 1,
+            "actor_meryl07b_count": 1
+          },
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "case": null,
+      "name": "prison-escape-open-cell",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/prison-escape-open-cell/result.json",
+        "sha256": "5b3af30e234a00031c3678f2512cc45e004a21038eed838c2adf12dd10359f67"
+      },
+      "scope": "Only the recorded transitions and invariants; no campaign completion claim.",
+      "status": "needs-review",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-arrival/result.json",
+            "sha256": "ae17c8049588c362add9eb3fdbaa0e496bffcf1cbac8c46416c70667705552c2"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        },
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-contact-resumed/result.json",
+            "sha256": "16c8897f9d9ec347772c0fc996ff65a62b59de9acce30f9b2faed492d8dc451a"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        }
+      ],
+      "native_replay": "not-run",
+      "engines": {
+        "native": {
+          "status": "failed",
+          "frames": 949,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+          },
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              2432,
+              1122,
+              8821
+            ],
+            "game_status": 16,
+            "load_request": 0,
+            "player_status": 65536,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 448,
+            "max_life": 576,
+            "weapon": -1,
+            "item": -1,
+            "stance": 0,
+            "weapons": [
+              -32647,
+              -32517,
+              -32744,
+              -32752,
+              -1,
+              -1,
+              -32758,
+              -32758,
+              -32755,
+              -32764
+            ],
+            "items": [
+              -32767,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -32767,
+              -32767,
+              6,
+              -1,
+              -32767,
+              -32767,
+              -1,
+              1,
+              -32767
+            ],
+            "control_position": [
+              2432,
+              1122,
+              8821
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 4054,
+            "yaw": 3072,
+            "turn_yaw": 3072,
+            "socom_ammo": -32647,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 2432,
+            "y": 1122,
+            "z": 8821,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_14070243": 0,
+            "gcl_1180006c": 6,
+            "gcl_12000066": 3
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "failed",
+          "frames": 947,
+          "runtime": null,
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              2432,
+              1122,
+              8838
+            ],
+            "game_status": 16,
+            "load_request": 0,
+            "player_status": 65536,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 384,
+            "max_life": 576,
+            "weapon": -1,
+            "item": -1,
+            "stance": 0,
+            "weapons": [
+              -32647,
+              -32517,
+              -32744,
+              -32752,
+              -1,
+              -1,
+              -32758,
+              -32758,
+              -32755,
+              -32764
+            ],
+            "items": [
+              -32767,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -32767,
+              -32767,
+              6,
+              -1,
+              -32767,
+              -32767,
+              -1,
+              1,
+              -32767
+            ],
+            "control_position": [
+              2432,
+              1122,
+              8838
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 4054,
+            "yaw": 3072,
+            "turn_yaw": 3072,
+            "socom_ammo": -32647,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": 2432,
+            "y": 1122,
+            "z": 8838,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_14070243": 0,
+            "gcl_1180006c": 6,
+            "gcl_12000066": 3
+          },
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "case": null,
+      "name": "prison-equipment-recovery",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/prison-equipment-recovery/result.json",
+        "sha256": "ba9adcce5248dba3cd9c890e6e06c334d0b5725ef41757ecfbc5ffe619cfb525"
+      },
+      "scope": "Only the recorded transitions and invariants; no campaign completion claim.",
+      "status": "needs-review",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-arrival/result.json",
+            "sha256": "ae17c8049588c362add9eb3fdbaa0e496bffcf1cbac8c46416c70667705552c2"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        },
+        {
+          "parent": {
+            "path": "/home/xander/mgs_recomp/data/validation/completion/required-paths-20261006/prison-contact-resumed/result.json",
+            "sha256": "16c8897f9d9ec347772c0fc996ff65a62b59de9acce30f9b2faed492d8dc451a"
+          },
+          "status": "needs-review",
+          "reason": "Explicit clean-timeout resume. The failed parent contract remains unverified."
+        }
+      ],
+      "native_replay": "not-run",
+      "engines": {
+        "native": {
+          "status": "failed",
+          "frames": 1333,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "d5c5168bcda861d5c6c413c419760968fd9d981fb00377dea954084116a327b7"
+          },
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              -5124,
+              1122,
+              2177
+            ],
+            "game_status": 64,
+            "load_request": 0,
+            "player_status": 65536,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 512,
+            "max_life": 576,
+            "weapon": -1,
+            "item": -1,
+            "stance": 0,
+            "weapons": [
+              -32647,
+              -32517,
+              -32744,
+              -32752,
+              -1,
+              -1,
+              -32758,
+              -32758,
+              -32755,
+              -32764
+            ],
+            "items": [
+              -32767,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -32767,
+              -32767,
+              6,
+              -1,
+              -32767,
+              -32767,
+              -1,
+              1,
+              -32767
+            ],
+            "control_position": [
+              -5124,
+              1122,
+              2177
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 0,
+            "turn_yaw": 0,
+            "socom_ammo": -32647,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -5124,
+            "y": 1122,
+            "z": 2177,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180005c": -1,
+            "gcl_14000267": 1,
+            "gcl_1401004e": 0,
+            "gcl_1180006c": 6,
+            "gcl_11800022": -32647
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "failed",
+          "frames": 1339,
+          "runtime": null,
+          "final": {
+            "stage": "s03c",
+            "current_stage": "s03c",
+            "player_position": [
+              -5179,
+              1122,
+              2177
+            ],
+            "game_status": 64,
+            "load_request": 0,
+            "player_status": 65536,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148898744,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 512,
+            "max_life": 576,
+            "weapon": -1,
+            "item": -1,
+            "stance": 0,
+            "weapons": [
+              -32647,
+              -32517,
+              -32744,
+              -32752,
+              -1,
+              -1,
+              -32758,
+              -32758,
+              -32755,
+              -32764
+            ],
+            "items": [
+              -32767,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -32767,
+              -32767,
+              -32767,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              -1,
+              -32767,
+              -32767,
+              6,
+              -1,
+              -32767,
+              -32767,
+              -1,
+              1,
+              -32767
+            ],
+            "control_position": [
+              -5179,
+              1122,
+              2177
+            ],
+            "story": 162,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 0,
+            "turn_yaw": 0,
+            "socom_ammo": -32647,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -5179,
+            "y": 1122,
+            "z": 2177,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180005c": -1,
+            "gcl_14000267": 1,
+            "gcl_1401004e": 0,
+            "gcl_1180006c": 6,
+            "gcl_11800022": -32647
+          },
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "case": null,
+      "name": "hind-roof-exit",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/hind-roof-exit/result.json",
+        "sha256": "195e618054ea2dfc0b0bacfcb8e89067d3171ba2c674f31c1b18eed3876e4a3b"
+      },
+      "scope": "Only the recorded transitions and invariants; no campaign completion claim.",
+      "status": "needs-review",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [],
+      "native_replay": "not-run",
+      "engines": {
+        "native": {
+          "status": "failed",
+          "frames": 2714,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "9916ff0d288dbb6b3ae428aa054be4355920c9b8bf3b42e431bda1cd0848f660"
+          },
+          "final": {
+            "stage": "s11h",
+            "current_stage": "s11h",
+            "player_position": [
+              -5482,
+              1076,
+              -5141
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 16,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148914144,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 640,
+            "max_life": 640,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              145,
+              301,
+              28,
+              12,
+              7,
+              -1,
+              14,
+              4,
+              10,
+              21
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              0,
+              4,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              0
+            ],
+            "control_position": [
+              -5482,
+              1076,
+              -5141
+            ],
+            "story": 190,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 2799,
+            "turn_yaw": 3584,
+            "socom_ammo": 145,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -5482,
+            "y": 1076,
+            "z": -5141,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180006c": 6,
+            "actor_loader_count": 0
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "failed",
+          "frames": 2714,
+          "runtime": null,
+          "final": {
+            "stage": "s11h",
+            "current_stage": "s11h",
+            "player_position": [
+              -5381,
+              1087,
+              -4759
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 16,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148914144,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 640,
+            "max_life": 640,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              145,
+              301,
+              28,
+              12,
+              7,
+              -1,
+              14,
+              4,
+              10,
+              21
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              0,
+              4,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              0
+            ],
+            "control_position": [
+              -5381,
+              1087,
+              -4759
+            ],
+            "story": 190,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 1809,
+            "turn_yaw": 3072,
+            "socom_ammo": 145,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -5381,
+            "y": 1087,
+            "z": -4759,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "gcl_1180006c": 6,
+            "actor_loader_count": 0
+          },
+          "game_errors": []
+        }
+      }
+    },
+    {
+      "case": null,
+      "name": "hind-roof-exit-button",
+      "result": {
+        "path": "data/validation/completion/required-paths-next-20261006/hind-roof-exit-button/result.json",
+        "sha256": "d3567844ac8d1cec84f0ec7a0a3b9e301573df81137d9298562d6ccfe38f5955"
+      },
+      "scope": "Only the recorded transitions and invariants; no campaign completion claim.",
+      "status": "needs-review",
+      "inputs_only": true,
+      "synthetic": true,
+      "diagnostic_ancestry": [],
+      "native_replay": "not-run",
+      "engines": {
+        "native": {
+          "status": "failed",
+          "frames": 2750,
+          "runtime": {
+            "path": "/home/xander/mgs_recomp/build/ps1Runtime/ps1Runtime",
+            "sha256": "9916ff0d288dbb6b3ae428aa054be4355920c9b8bf3b42e431bda1cd0848f660"
+          },
+          "final": {
+            "stage": "s11h",
+            "current_stage": "s11h",
+            "player_position": [
+              -4846,
+              1104,
+              -3103
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148914144,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 640,
+            "max_life": 640,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              145,
+              301,
+              28,
+              12,
+              7,
+              -1,
+              14,
+              4,
+              10,
+              21
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              0,
+              4,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              0
+            ],
+            "control_position": [
+              -4846,
+              1104,
+              -3103
+            ],
+            "story": 190,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 512,
+            "turn_yaw": 512,
+            "socom_ammo": 145,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -4846,
+            "y": 1104,
+            "z": -3103,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "actor_loader_count": 0,
+            "gcl_1180006c": 6
+          },
+          "game_errors": []
+        },
+        "donor": {
+          "status": "failed",
+          "frames": 2748,
+          "runtime": null,
+          "final": {
+            "stage": "s11h",
+            "current_stage": "s11h",
+            "player_position": [
+              -4846,
+              1104,
+              -3103
+            ],
+            "game_status": 0,
+            "load_request": 0,
+            "player_status": 0,
+            "alert_mode": 0,
+            "alert_level": 0,
+            "pause_level": 0,
+            "control": 2148914144,
+            "difficulty": 1,
+            "disc": 1,
+            "life": 640,
+            "max_life": 640,
+            "weapon": -1,
+            "item": 17,
+            "stance": 0,
+            "weapons": [
+              145,
+              301,
+              28,
+              12,
+              7,
+              -1,
+              14,
+              4,
+              10,
+              21
+            ],
+            "items": [
+              1,
+              1,
+              1,
+              1,
+              -1,
+              1,
+              1,
+              1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              1,
+              0,
+              4,
+              1,
+              6,
+              -1,
+              1,
+              -1,
+              -1,
+              1,
+              0
+            ],
+            "control_position": [
+              -4846,
+              1104,
+              -3103
+            ],
+            "story": 190,
+            "game_over_timer": 0,
+            "pad_origin": 0,
+            "yaw": 512,
+            "turn_yaw": 512,
+            "socom_ammo": 145,
+            "guards_alive": null,
+            "guards_in_room": null,
+            "ambush_phase": null,
+            "ambush_kills": null,
+            "x": -4846,
+            "y": 1104,
+            "z": -3103,
+            "title_state": null,
+            "title_selection": null,
+            "title_level": null,
+            "movie_frame": null,
+            "movie_total_frames": null,
+            "actor_loader_count": 0,
+            "gcl_1180006c": 6
+          },
+          "game_errors": []
+        }
+      }
+    }
+  ],
+  "entry_preparations": [
+    {
+      "path": "data/validation/completion/required-paths-next-20261006/mantis-original-entry/scenario.json",
+      "sha256": "8444fb943c3fb6be9ca5c047b9d18366f01782c060650f640c72fac123fd083a"
+    },
+    {
+      "path": "data/validation/completion/required-paths-next-20261006/hind-map-entry/scenario.json",
+      "sha256": "cfc7ba48395daee48fc22f06f3a9e1bfbd0613a01a30e64ff29ec5bd03c0b788"
+    }
+  ],
+  "fixes": [
+    {
+      "kind": "recompiler-callback-discovery",
+      "regression": "mantis-first-meryl",
+      "fixed": "mantis-first-meryl-fixed",
+      "cause": "Referenced leaf Die callback800DA870 followed JR RA/SH rather than JR RA/NOP. General scanner accepts useful return delay slots, still requires an explicit address reference and rejects control transfers in that slot. Verified boot/menu entries also merge the current scan.",
+      "missing_entries_before": [
+        {
+          "stage": "usa_title",
+          "selected": "usa_title",
+          "target": "0x800d5d9c",
+          "kind": "callback-candidate",
+          "empty_return": false
+        },
+        {
+          "stage": "usa_abst",
+          "selected": "usa_abst",
+          "target": "0x800d1674",
+          "kind": "callback-candidate",
+          "empty_return": false
+        },
+        {
+          "stage": "usa_d18a",
+          "selected": "usa_d18a",
+          "target": "0x800d1978",
+          "kind": "callback-candidate",
+          "empty_return": false
+        },
+        {
+          "stage": "usa_d18a",
+          "selected": "usa_d18a",
+          "target": "0x800d86e8",
+          "kind": "callback-candidate",
+          "empty_return": true
+        },
+        {
+          "stage": "usa_s07b",
+          "selected": "usa_s07b",
+          "target": "0x800da870",
+          "kind": "callback-candidate",
+          "empty_return": false
+        },
+        {
+          "stage": "usa_s10a",
+          "selected": "usa_s10a",
+          "target": "0x800d8c80",
+          "kind": "callback-candidate",
+          "empty_return": true
+        },
+        {
+          "stage": "usa_s11c",
+          "selected": "usa_s11c",
+          "target": "0x800cbe60",
+          "kind": "callback-candidate",
+          "empty_return": true
+        },
+        {
+          "stage": "usa_s13a",
+          "selected": "usa_s13a",
+          "target": "0x800df280",
+          "kind": "callback-candidate",
+          "empty_return": true
+        },
+        {
+          "stage": "usa_s13a",
+          "selected": "usa_s13a",
+          "target": "0x800e48a8",
+          "kind": "callback-candidate",
+          "empty_return": true
+        },
+        {
+          "stage": "usa_s18a",
+          "selected": "usa_s18a",
+          "target": "0x800dc430",
+          "kind": "callback-candidate",
+          "empty_return": false
+        },
+        {
+          "stage": "usa_s18a",
+          "selected": "usa_s18a",
+          "target": "0x800e31a0",
+          "kind": "callback-candidate",
+          "empty_return": true
+        },
+        {
+          "stage": "usa_s19b",
+          "selected": "usa_s19b",
+          "target": "0x800d3688",
+          "kind": "callback-candidate",
+          "empty_return": false
+        },
+        {
+          "stage": "usa_s10ar",
+          "selected": "usa_s10ar",
+          "target": "0x800d8c80",
+          "kind": "callback-candidate",
+          "empty_return": true
+        }
+      ],
+      "missing_entries_after": [],
+      "affected_overlay_count": 10,
+      "limit": "Only Mantis crash reproduced dynamically; 13 registrations are not 13 independently demonstrated gameplay bugs."
+    },
+    {
+      "kind": "synthetic-entry-precondition",
+      "case": "hind-bridge",
+      "cause": "Tower map f1f2 inherited by synthetic roof entry. Retail s11c/ea54:f9db load uses map7df9.",
+      "resolution": "Extract only unique literal -m operand from exact target load. Original intro still establishes the actor/spawn. Same old runtime passes corrected map entry/terminal-hit route.",
+      "same_runtime_verification": {
+        "path": "data/validation/completion/required-paths-next-20261006/hind-map-aftermath/result.json",
+        "sha256": "80274ba8c709b399d3e881364424eca1bc200bf45a993e77bdad9991c4bde3a5"
+      },
+      "limit": "This is fixture correction, not a demonstrated runtime bug; does not execute every effect of the source entrance procedure."
+    }
+  ],
+  "static_audits": [
+    {
+      "path": "data/validation/completion/required-paths-next-20261006/overlay-audit-before.json",
+      "sha256": "c52c200511e0a979b90e988ea20ef6b74edc6ceedaffbf55a12959db7af27efd"
+    },
+    {
+      "path": "data/validation/completion/required-paths-next-20261006/overlay-audit-after.json",
+      "sha256": "4a4ba7797967ca6b100f98f99a61fe52bc59e414c9ee6d50081078a211a27d36"
+    },
+    {
+      "path": "data/validation/completion/required-paths-next-20261006/static-entries-after.json",
+      "sha256": "acbc27b0e0f3a0cff96b88c7fec3b9c6b2c599e28bfb070e21ffa976ecc258dd"
+    }
+  ],
+  "build_logs": [
+    {
+      "path": "data/validation/completion/required-paths-next-20261006/prepare-native.log",
+      "sha256": "2fa272abd67bef7cc330ba86a3d13c0003564ce377c4d1236bd8672705a66c83"
+    },
+    {
+      "path": "data/validation/completion/required-paths-next-20261006/recompile.log",
+      "sha256": "d0e01ae1e93280ea28f50dea72778309fc735a2845b7f4138001723025ef3942"
+    },
+    {
+      "path": "data/validation/completion/required-paths-next-20261006/install-bridges.log",
+      "sha256": "c5da4b7ed32871023d454fc333c001dc4872614318fc7b69c23e53fe23cebdac"
+    },
+    {
+      "path": "data/validation/completion/required-paths-next-20261006/build.log",
+      "sha256": "4aefada4ae6f717ba4522759c61fac394badad5a82019fbe64452f37470a6208"
+    }
+  ],
+  "source_snapshots": [
+    {
+      "path": "data/validation/completion/disc1-scripts.json",
+      "sha256": "87cbc4cfaa4dd47727ca694c2815755e46a9d71baca03c43d86a98600829d749"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/chara/psyco/padmng.c",
+      "sha256": "672aaf9596f056fce55be4502eaf743ab4ab7f2876c3506857f6ba9a30f0f0e8"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/chara/torture/johnny.c",
+      "sha256": "a6a2adddba5cc7c963d14e17b6744f2f9f9deaff55fbdac3163994546620ea6c"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/okajima/d_blood.c",
+      "sha256": "c598f8e8071417cf38b133e1e693f9812864147d4d4e5fbbf52c1b9d96dda5c6"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/okajima/d_bloodr.c",
+      "sha256": "2d29b74c992e0b5b1fe3af572e79079bc6b8f5f187eb4b25cc19637792f35f6c"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/libhzd/bind.c",
+      "sha256": "fce8a1ae842693838cd8424d3b70ee276ef322051e3480b439834b05ccb71b81"
+    },
+    {
+      "path": ".local/effects-research/mgs-upstream/source/game/script.c",
+      "sha256": "9869f1691fbaa816ab9796bb0ef222b4db9666d3dff5a4cebab7753413c5d06f"
+    }
+  ],
+  "harness_sources": [
+    {
+      "path": "scripts/mgs_required_paths.py",
+      "sha256": "e48ca602968d9605595d6c9c0acde85edf1cb9466b69c674b55bd76ee11bcaf9"
+    },
+    {
+      "path": "scripts/mgs_overlay_catalog.py",
+      "sha256": "f5a91319ed78ef771967dbcc29c804b3c3f60acdcb2232b6f443fbcdcdeedff8"
+    },
+    {
+      "path": "scripts/prepare_native.py",
+      "sha256": "7f7a342a5de7def9ceebb08487cbeb433acf0e52cf60bb9f944680c1e1c2982b"
+    },
+    {
+      "path": "scripts/mgs_situations.py",
+      "sha256": "5e26c281854741e39245b4061abb1ce7bf7abeecbcaabc19f30515166fa2ed67"
+    },
+    {
+      "path": "scripts/mgs_fixture.py",
+      "sha256": "5cfb3c776d2867dd4838b8bf7ed4345d31f8933a25f7085108a7b001371d8c42"
+    },
+    {
+      "path": "scripts/mgs_completion.py",
+      "sha256": "000193d7cc333b6400cf6f8595e02839bd9864c3d26146fb46349b877d6f99d9"
+    }
+  ],
+  "recipes": [
+    {
+      "path": "scripts/fixtures/completion/prison-ketchup-use.json",
+      "sha256": "3911cba64738abf0c6925a068838130738cc18c41027a2d650edf6d223304744"
+    },
+    {
+      "path": "scripts/fixtures/completion/prison-guard-ketchup.json",
+      "sha256": "dafe653bc6cdaeced595232828988c24f85ff3d8ba1c360570e5f306526b1c69"
+    },
+    {
+      "path": "scripts/fixtures/completion/prison-guard-knockout.json",
+      "sha256": "552af0c29e8c7a30adc23d9ee51803fad5721bf6216a9042f7e8b0efcf060bbb"
+    },
+    {
+      "path": "scripts/fixtures/completion/prison-equipment-recovery.json",
+      "sha256": "c2b95c36439fcfe36afcdede03f15dc7e9179d344bfc94446ebeb563c721823e"
+    },
+    {
+      "path": "scripts/fixtures/completion/prison-exit.json",
+      "sha256": "049d0004f4d565538db6a787bb2693c71eeb8e31d6be14f4ed312eb4af614a72"
+    },
+    {
+      "path": "scripts/fixtures/completion/mantis-meryl-ready.json",
+      "sha256": "dece08522c3e67b2e8ae128730efb253d3dac1908641e841984c19818a9a811a"
+    },
+    {
+      "path": "scripts/fixtures/completion/mantis-first-meryl.json",
+      "sha256": "c86ccf5662fbf36bbe4bfbf277ced4428584c97ea7915fa9dd943f84492c9331"
+    },
+    {
+      "path": "scripts/fixtures/completion/hind-terminal-hit-unskipped.json",
+      "sha256": "9540b126a75e7cf12c6a6f0eae6d0489a7d3481b729edc26f196848c13460464"
+    },
+    {
+      "path": "scripts/fixtures/completion/hind-roof-exit.json",
+      "sha256": "f7b7b6ac72002cfa65505ab13df7e3e86b951805521d673d02e6b465671063a1"
+    }
+  ],
+  "test_validation": {
+    "python_tests_passed": 151,
+    "python_log": {
+      "path": "data/validation/completion/required-paths-next-20261006/python-tests.log",
+      "sha256": "0e0b840b2961d41da399c16f5e9aa354aca1e96cb1569f13cfe052ab82914419"
+    },
+    "runtime_tests_passed": 1325,
+    "runtime_tests_skipped": 31,
+    "runtime_result": {
+      "path": "data/validation/completion/required-paths-next-20261006/runtime-tests.json",
+      "sha256": "7a51d4fd05d759358d17ff728e94cd344c9c99656de8e46c523c8bfa1cb8bacb"
+    },
+    "runtime_binary": {
+      "path": "build/ps1Test/ps1Runtime_tests",
+      "sha256": "5629e01b0a503b3527045fb9dfca8baf0c2993f78c50587245b2769f8a89a1c9"
+    },
+    "note": "Existing runtime unit executable rerun; runtime library unchanged in this iteration. No renewed sanitizer run or GPU tests. Generator tests include legal useful and illegal control-transfer delay slots."
+  },
+  "personal_files": {
+    "status": "unchanged",
+    "original_fingerprints": {
+      "path": ".local/tas-protected.sha256",
+      "sha256": "5414ea1b5bfa9556900c4c540bb0392f2dfe435caf980612e0f22a2f7ddfda8e"
+    },
+    "verification": {
+      "path": "data/validation/completion/required-paths-next-20261006/protected-files.log",
+      "sha256": "47928750547a87d628691b664cbc1aa2c409fafc917061523b7125a2d0cba221"
+    }
+  },
+  "open_findings": [
+    {
+      "id": "hind-roof-exit-inherited-entry-guard",
+      "status": "unresolved_fixture",
+      "observation": "Both stair-exit attempts remain on s11h. Initial and final global02e7 bit2 is already set by inherited tower save; retail ntrap2bfd/eec7 requires it clear. Circle and direction are also required. Recipe now rejects this seed up front. No global flag has been cleared to force the exit.",
+      "evidence": [
+        {
+          "path": "data/validation/completion/required-paths-next-20261006/hind-roof-exit/result.json",
+          "sha256": "195e618054ea2dfc0b0bacfcb8e89067d3171ba2c674f31c1b18eed3876e4a3b"
+        },
+        {
+          "path": "data/validation/completion/required-paths-next-20261006/hind-roof-exit-button/result.json",
+          "sha256": "d3567844ac8d1cec84f0ec7a0a3b9e301573df81137d9298562d6ccfe38f5955"
+        }
+      ],
+      "next_check": "Derive a valid original entrance history for the roof, including transient stair/crawl guards; then run door, interaction, original load and control contract.",
+      "preflight_rejection": {
+        "path": "data/validation/completion/required-paths-next-20261006/hind-roof-prerequisite-rejection/result.json",
+        "sha256": "c24369bbade9de514683f934a2fa7e36b3394d0bd4e2985bf85d0922aa757adc"
+      },
+      "initial_guard_bit_observed": {
+        "native": 1,
+        "donor": 1
+      }
+    }
+  ],
+  "next_required_gates": [
+    "Mantis full phases, second Meryl protection, controller/statue paths, victory and passage",
+    "Hind Stinger acquisition/combat and roof/tower/bridge route",
+    "Prison alternatives and resist-torture branch; continuous reachability of isolated entries"
+  ]
+}

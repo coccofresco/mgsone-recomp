@@ -11,7 +11,7 @@ protected:
   std::string tmpPath;
 
   void SetUp() override {
-    tmpPath = std::filesystem::temp_directory_path() / "ps1_test_config.toml";
+    tmpPath = (std::filesystem::temp_directory_path() / "ps1_test_config.toml").string();
   }
   void TearDown() override { std::remove(tmpPath.c_str()); }
 };
@@ -20,6 +20,8 @@ TEST_F(ConfigTest, DefaultValues) {
   ConfigReader reader;
   EXPECT_TRUE(reader.config().game.profile.empty());
   EXPECT_FALSE(reader.config().game.widescreen16x9);
+  EXPECT_TRUE(reader.config().game.fastLoading);
+  EXPECT_EQ(reader.config().game.presentationHeight, 2160);
   EXPECT_FALSE(reader.config().game.presentationDepthCorrections);
   EXPECT_EQ(reader.config().game.sceneryCullGuardPixels, 0u);
   EXPECT_EQ(reader.config().video.backend, "vulkan");
@@ -57,6 +59,21 @@ TEST_F(ConfigTest, CreateDefault) {
   EXPECT_EQ(reader.config().input.keyMap["right_shift"], "select");
 }
 
+TEST_F(ConfigTest, MgsPresentationResolutionRoundTripsWithoutChangingNativeRaster) {
+  for (const int height : {720, 1080, 1440, 2160}) {
+    ConfigReader written;
+    written.config().game.profile = "mgs_usa_v1_0";
+    written.config().game.presentationHeight = height;
+    written.config().game.ambientOcclusion = height != 720;
+    ASSERT_TRUE(written.save(tmpPath));
+    ConfigReader loaded;
+    ASSERT_TRUE(loaded.load(tmpPath));
+    EXPECT_EQ(loaded.config().game.presentationHeight, height);
+    EXPECT_EQ(loaded.config().game.ambientOcclusion, height != 720);
+    EXPECT_EQ(loaded.config().video.internalResScale, 1);
+  }
+}
+
 TEST_F(ConfigTest, LoadAndParse) {
   // Write a test config
   {
@@ -65,6 +82,7 @@ TEST_F(ConfigTest, LoadAndParse) {
     f << "[game]\n";
     f << "profile = \"crash3_sces_01420\"\n";
     f << "widescreen_16_9 = true\n";
+    f << "fast_loading = false\n";
     f << "presentation_depth_corrections = true\n\n";
     f << "scenery_cull_guard_pixels = 192\n\n";
     f << "[video]\n";
@@ -101,6 +119,7 @@ TEST_F(ConfigTest, LoadAndParse) {
 
   EXPECT_EQ(reader.config().game.profile, "crash3_sces_01420");
   EXPECT_TRUE(reader.config().game.widescreen16x9);
+  EXPECT_FALSE(reader.config().game.fastLoading);
   EXPECT_TRUE(reader.config().game.presentationDepthCorrections);
   EXPECT_EQ(reader.config().game.sceneryCullGuardPixels, 192u);
   EXPECT_EQ(reader.config().video.windowWidth, 1280);
@@ -132,6 +151,7 @@ TEST_F(ConfigTest, SaveAndReload) {
   ConfigReader writer;
   writer.config().game.profile = "crash3_sces_01420";
   writer.config().game.widescreen16x9 = true;
+  writer.config().game.fastLoading = false;
   writer.config().game.presentationDepthCorrections = true;
   writer.config().game.sceneryCullGuardPixels = 256;
   writer.config().video.windowWidth = 1920;
@@ -156,6 +176,7 @@ TEST_F(ConfigTest, SaveAndReload) {
   ConfigReader reader;
   ASSERT_TRUE(reader.load(tmpPath));
   EXPECT_EQ(reader.config().game.profile, "crash3_sces_01420");
+  EXPECT_FALSE(reader.config().game.fastLoading);
   EXPECT_TRUE(reader.config().game.widescreen16x9);
   EXPECT_TRUE(reader.config().game.presentationDepthCorrections);
   EXPECT_EQ(reader.config().game.sceneryCullGuardPixels, 256u);

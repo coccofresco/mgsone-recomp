@@ -1,0 +1,47 @@
+name: Source and runtime tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++ libsdl2-dev libvulkan-dev glslc python3
+      - name: Python checks without retail assets
+        run: python3 -m unittest discover -s scripts/tests
+      - name: Configure a source-only build
+        run: >-
+          cmake -S engine -B build-ci -G Ninja -DCMAKE_BUILD_TYPE=Release
+          -DPS1RECOMP_USE_STUB=ON -DPS1RECOMP_DIAGNOSTIC_FAST_COMPILE=ON
+      - name: Build tests and shaders
+        run: cmake --build build-ci --target mgsFrontend mgsController_tests ps1Analyzer_tests ps1Recomp_tests ps1Runtime_tests ps1Runtime_e2e_tests --parallel 4
+      - name: Run tests
+        run: ctest --test-dir build-ci --output-on-failure --output-junit test-results.xml
+      - name: Keep test results only
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-test-results
+          path: build-ci/test-results.xml
+          if-no-files-found: ignore
+          retention-days: 14
+
+# Public jobs never import discs or publish a generated game binary. Native
+# release builds require private retail inputs and a separate reviewed package.

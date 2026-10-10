@@ -1,0 +1,122 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-original-post-boss-passage",
+  "source": "USA GCL5cb4/ea54 story133->135->137, original film callbacks16358/4360. Cross uses original gamed.c STATE_DEMO/Codec skip and returns control to port1. Test callback/skip path, not full speech playback. Codec inherits the real second-port selection; first answer/skip uses port2, then the original port1 prompt is handled on port1. Original victory raises max life448->512; assert reward instead of preserving the pre-boss cap.",
+  "requires": {
+    "current_stage": "s07b",
+    "story": 133,
+    "gcl_12000046": 4,
+    "life": {
+      "min": 1
+    }
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "current_stage",
+    "story",
+    "disc",
+    "difficulty",
+    "game_over_timer",
+    "gcl_12000046",
+    "max_life"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "answer-original-post-boss-codec-port2",
+        "until": {
+          "pause_level": {
+            "mask": 1,
+            "eq": 1
+          }
+        },
+        "action": {
+          "sampled_game_runs": [
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              15,
+              0,
+              0
+            ]
+          ]
+        },
+        "attempts": 50,
+        "max_frames": 1800,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "original-codec-and-film-callbacks-port2",
+        "until": {
+          "story": 137,
+          "actor_loader_count": 0,
+          "load_request": 0,
+          "game_status": {
+            "mask": 2147483648,
+            "eq": 0
+          }
+        },
+        "action": {
+          "sampled_game_runs": [
+            [
+              2,
+              0,
+              16384
+            ],
+            [
+              6,
+              0,
+              0
+            ]
+          ]
+        },
+        "attempts": 1500,
+        "max_frames": 24000,
+        "abort_when": {
+          "life": 0
+        }
+      },
+      {
+        "name": "return-original-control-to-port1",
+        "until": {
+          "current_stage": "s07b",
+          "story": 137,
+          "actor_loader_count": 0,
+          "load_request": 0,
+          "pause_level": 0,
+          "game_status": {
+            "mask": 2147483648,
+            "eq": 0
+          },
+          "player_status": {
+            "mask": 536870912,
+            "eq": 0
+          },
+          "life": 512,
+          "max_life": 512
+        },
+        "action": {
+          "sequence": "cross:3,wait:12"
+        },
+        "attempts": 200,
+        "max_frames": 3000,
+        "abort_when": {
+          "life": 0
+        },
+        "stable_frames": 10
+      }
+    ]
+  }
+}

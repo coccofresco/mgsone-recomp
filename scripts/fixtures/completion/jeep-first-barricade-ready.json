@@ -1,0 +1,46 @@
+{
+  "format": "mgs-situation-1",
+  "name": "jeep-original-first-barricade-spawn",
+  "source": "USA s19b GCL50d9: two original jdrums at (-3500,500,4000),(3700,500,2000). jeep_sne original gun yaw+08ce (relative+08d6) and pad handler fromdecomp. Input-only aim/fire, wait for first enemy/drum actors before aiming.",
+  "requires": {
+    "current_stage": "s19b",
+    "life": {
+      "min": 1
+    }
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life"
+  ],
+  "compare": [
+    "current_stage",
+    "story",
+    "disc",
+    "difficulty",
+    "game_over_timer",
+    "actor_jeep_emy_count"
+  ],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "wait-first-barricade",
+        "until": {
+          "actor_jdrum_count": 2,
+          "actor_jeep_emy_count": 2,
+          "actor_jeep_sne_count": 1
+        },
+        "action": {
+          "sequence": "square+triangle:30"
+        },
+        "attempts": 100,
+        "max_frames": 3000,
+        "abort_when": {
+          "life": 0
+        },
+        "stable_frames": 20
+      }
+    ]
+  }
+}

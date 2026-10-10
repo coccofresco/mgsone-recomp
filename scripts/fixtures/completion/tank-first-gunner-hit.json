@@ -1,0 +1,75 @@
+{
+  "format": "mgs-situation-1",
+  "name": "tank-first-gunner-lethal-damage",
+  "requires": {
+    "stage": "s05a",
+    "story": 66,
+    "actor_m1e1sold_count": 1,
+    "life": {
+      "min": 1
+    }
+  },
+  "preserve": [
+    "difficulty",
+    "disc",
+    "max_life"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "difficulty",
+    "disc",
+    "max_life",
+    "game_over_timer",
+    "actor_m1e1sold_count"
+  ],
+  "fixture": {
+    "scope": "Synthetic grenade-sized lethal damage event (640) at the original gunner TARGET; original health/death/second-gunner logic executes. No preceding minefield or player throw proof.",
+    "patches": [
+      {
+        "actor": "m1e1sold.c",
+        "act": "0x800e0fe8",
+        "offset": "0x1c0",
+        "indirect_offset": 6,
+        "width": 2,
+        "expect": 0,
+        "value": 640,
+        "reason": "Supply terminal damage to original gunner damage handler",
+        "source": "USA s05a m1e1sold.c act800e0fe8, target pointer+1c0, TARGET.damaged+6; source m1e1sold.c lines383-448, tank E0C=640 F5C=0"
+      }
+    ]
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-first-gunner-death",
+        "until": {
+          "actor_m1e1sold_count": 0,
+          "life": {
+            "min": 1
+          },
+          "story": 66
+        },
+        "abort_when": {
+          "life": 0
+        },
+        "max_frames": 1200
+      },
+      {
+        "name": "original-second-gunner-spawn",
+        "until": {
+          "actor_m1e1sold_count": 1,
+          "life": {
+            "min": 1
+          },
+          "story": 66
+        },
+        "abort_when": {
+          "life": 0
+        },
+        "max_frames": 1200
+      }
+    ]
+  }
+}

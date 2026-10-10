@@ -68,6 +68,24 @@ TEST_F(HeapTest, AllocationSizeRejectsFreedAndInteriorPointers) {
   EXPECT_EQ(heap->allocationSize(ptr), 0u);
 }
 
+TEST_F(HeapTest, OversizedRequestsDoNotWrapAlignmentOrDamageLiveAllocations) {
+  constexpr uint32_t base = 0x80100000, capacity = 0x1000;
+  heap->initHeap(base, capacity);
+  const auto live = heap->malloc(32);
+  mem.write32(live, 0x12345678);
+  const std::vector<uint8_t> before(mem.ramPtr(), mem.ramPtr() + Memory::RAM_SIZE);
+  for (const uint32_t size : {capacity, 0x7fffffffu, 0xfffffff0u,
+                            0xfffffffcu, 0xfffffffdu, 0xfffffffeu, 0xffffffffu}) {
+    SCOPED_TRACE(size);
+    EXPECT_EQ(heap->malloc(size), 0u);
+    EXPECT_TRUE(std::equal(before.begin(), before.end(), mem.ramPtr()));
+  }
+  EXPECT_EQ(mem.read32(live), 0x12345678u);
+  EXPECT_EQ(heap->allocationSize(live), 32u);
+  heap->free(live);
+  EXPECT_EQ(heap->malloc(capacity - 12), base + 12);
+}
+
 TEST_F(HeapTest, FreeMergesBlocksCorrectly) {
   uint32_t heapBase = 0x80100000;
   uint32_t heapSize = 0x10000;

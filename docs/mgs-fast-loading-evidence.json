@@ -1,0 +1,2328 @@
+{
+  "format": "mgs-fast-loading-evidence-1",
+  "date": "2026-10-06",
+  "status": "complete",
+  "scope": "USA v1.0, native data loading. VBlank-resolution loader measurements in accelerated headless runs, not monitor/4K latency or full campaign certification.",
+  "runtime": {
+    "path": "build/ps1Runtime/ps1Runtime",
+    "sha256": "d38c509e2c6328259e24b427ff826f2b6ef7856a1829012570def64a2f89476d"
+  },
+  "sources": [
+    {
+      "path": "engine/ps1Runtime/include/runtime/config.h",
+      "sha256": "33cd907f261e6e2c4c55811377e9dbc6de2ed835b9eb460eaf345a3069daacc8"
+    },
+    {
+      "path": "engine/ps1Runtime/src/config.cpp",
+      "sha256": "415b6b9a8147c4fe8ca91f88718ce2bcf1c6eabddf5b3b99fdc2c36dde31c16b"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/cdrom/virtual_fs.h",
+      "sha256": "fd72a6adbfd91bbec6648b2535c74b65c3fe864d0d6280836233cd5029335607"
+    },
+    {
+      "path": "engine/ps1Runtime/src/cdrom/virtual_fs.cpp",
+      "sha256": "3d702c052e96ae1e7774b1829e3c817a827ba8e8abd440d2f92f9195a0b27d2b"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/cdrom/cdrom_controller.h",
+      "sha256": "af04b9dbb97858563a291069cd5dd5b6bb08d876961230e880cbb524fa9c613e"
+    },
+    {
+      "path": "engine/ps1Runtime/src/cdrom/cdrom_controller.cpp",
+      "sha256": "e1c951f99332e5479be69ab22c02810a18eb6b2a7fd082a2582e87543598456d"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/bios/bios.h",
+      "sha256": "6e3f41bebbc1f80f43a76e7b0ed242d5ccdd9d7c435d3e490a55bdba6b6be41f"
+    },
+    {
+      "path": "engine/ps1Runtime/src/bios/bios.cpp",
+      "sha256": "ee9e0d9f2f10e43fcbc6b12e7922daa21ee6b63f680c38ab221c51f4251d8a3e"
+    },
+    {
+      "path": "engine/ps1Runtime/include/runtime/games/mgs_profile.h",
+      "sha256": "d1580f13ea6c8a986d6f1df40632c2baa7a5b46fce2048fc1375e8717ab58202"
+    },
+    {
+      "path": "engine/ps1Runtime/src/games/mgs_profile.cpp",
+      "sha256": "c9f21477df7d8b0808184b5ff7ff2d9caf09271ad8f0465fc561063dc33ad263"
+    },
+    {
+      "path": "engine/ps1Runtime/src/main_host.cpp",
+      "sha256": "5ebf2cd85d23b751bf481d970a4870a55f7b66e6219bdec61cb15b4f04caa193"
+    },
+    {
+      "path": "engine/ps1Runtime/src/input/tas_route.cpp",
+      "sha256": "b797514833c58a2b0aa300358b7e27b3f8904e3982134caba891d37d330259f4"
+    },
+    {
+      "path": "scripts/install_decomp_bridges.py",
+      "sha256": "6df68dd774e50564acb10e5b21948456fb15a867f9688c36e1c3c9eeea8b10fb"
+    },
+    {
+      "path": "scripts/prepare_native.py",
+      "sha256": "041c1a69e07eaabe4a52d8c588a44f6c5b4314b62022198080c53d0928992e9c"
+    },
+    {
+      "path": "scripts/mgs_scenarios.py",
+      "sha256": "bd3fe28a94fa75bddced2b8988c549317186c7b257a3ae1f77fd79defd0bb5c2"
+    },
+    {
+      "path": "scripts/mgs_tas.py",
+      "sha256": "728a773b0cb7b31fc74da1b245550c7f49eeba5b1e11650c33fb7975dd3f7375"
+    },
+    {
+      "path": "scripts/mgs_loading_check.py",
+      "sha256": "9b529907bf36e577fe581e85dbd2617246060aacc7587f8630bfc28f79b0b716"
+    }
+  ],
+  "default": {
+    "option": "game.fast_loading",
+    "enabled": true
+  },
+  "reference": {
+    "decomp_commit": "217509eae471629b1a53633b816c61adfef9ed5c",
+    "executable": {
+      "path": "data/assets/usa/disc1/SLUS_005.94",
+      "sha256": "3342f75717c5134aec832547691c2354e67a253abfcfa9e0e823e2133bb1fc32"
+    }
+  },
+  "summary": {
+    "retail_saves": 24,
+    "distinct_gameplay_stages": 20,
+    "loader_intervals": 96,
+    "paired_scenarios": 8,
+    "paired_loader_intervals": 32,
+    "fast_vblank_range": [
+      4,
+      7
+    ],
+    "nominal_seconds_at_60hz": [
+      0.06666666666666667,
+      0.11666666666666667
+    ]
+  },
+  "scenarios": [
+    {
+      "case": "d1-01-s01a-18-fast",
+      "stage": "s01a",
+      "story": 18,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-01-s01a-18-fast/result.json",
+        "sha256": "5ef6ffc666a5aa270793f250110f81f1be3ddb1660e1968096c99d03fa8bc7d5"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d1-01-s01a-18-fast/session/result.json",
+        "sha256": "32bc391f75d7c42661fdbee12e47b34865679c0de6eca8b66fa47138e494ec52"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d1-01-s01a-18-fast/session/loading.jsonl",
+        "sha256": "03b58df407aa2c8e095b12f9de256c5ffad1a502fc7d5e6b838ab6c93d8da483"
+      },
+      "loads": [
+        {
+          "begin": 83,
+          "end": 89,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 99,
+          "end": 103,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 415,
+          "end": 419,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1529,
+          "end": 1533,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "s01a"
+          ],
+          "sectors": [
+            546
+          ]
+        }
+      ],
+      "unpaced_sectors": 1088
+    },
+    {
+      "case": "d1-02-s03a-18-fast",
+      "stage": "s03a",
+      "story": 18,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-02-s03a-18-fast/result.json",
+        "sha256": "31925abe0064ec322efc8f3115799f6f009896d4d124016abfdfeb19d6657024"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d1-02-s03a-18-fast/session/result.json",
+        "sha256": "1330fb00dc14bc1e7d86a94a7f41ece3de44c2520d43e2619792ffb09db64506"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d1-02-s03a-18-fast/session/loading.jsonl",
+        "sha256": "effc79f4e9514946488e580db77bbe45fc45cbd3eaf184ef2916ead437bdaba6"
+      },
+      "loads": [
+        {
+          "begin": 84,
+          "end": 88,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 98,
+          "end": 102,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 414,
+          "end": 418,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1528,
+          "end": 1534,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "s03a"
+          ],
+          "sectors": [
+            516
+          ]
+        }
+      ],
+      "unpaced_sectors": 1058
+    },
+    {
+      "case": "d1-05-s08c-111-fast",
+      "stage": "s08c",
+      "story": 111,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-05-s08c-111-fast/result.json",
+        "sha256": "12b86e8d9446fc5a3de2331d82a7d5fd9b54a5642cee5a35d78b9748859809d0"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d1-05-s08c-111-fast/session/result.json",
+        "sha256": "e9a8cf2fe3b61808a5fd44186173206285efa3d8e6fa7bc72711149ef91ab2a0"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d1-05-s08c-111-fast/session/loading.jsonl",
+        "sha256": "334a419bc317f93e495a6f7fb4cbe34bfeb94c7ebf8ecc87c2c9e303229e4dac"
+      },
+      "loads": [
+        {
+          "begin": 84,
+          "end": 88,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 98,
+          "end": 102,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 414,
+          "end": 418,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1527,
+          "end": 1531,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "s08c"
+          ],
+          "sectors": [
+            347
+          ]
+        }
+      ],
+      "unpaced_sectors": 889
+    },
+    {
+      "case": "d1-06-s07c-119-fast",
+      "stage": "s07c",
+      "story": 119,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-06-s07c-119-fast/result.json",
+        "sha256": "e008268368d48d3fa8b533a710f3d2359583e2ad59eb93a72d4b978586ffb8a0"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d1-06-s07c-119-fast/session/result.json",
+        "sha256": "aed2ce567f11429b3022fbb8bfca1e1e7565cd4212bd95505e803872dd9f835e"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d1-06-s07c-119-fast/session/loading.jsonl",
+        "sha256": "d9802bbdccd6a1743552ff08bb78b88a3cfb278a46be1acd5394b964b81b0ed8"
+      },
+      "loads": [
+        {
+          "begin": 84,
+          "end": 89,
+          "vblanks": 5,
+          "seconds_at_60hz": 0.08333333333333333,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 99,
+          "end": 103,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 415,
+          "end": 419,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1528,
+          "end": 1532,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "s07c"
+          ],
+          "sectors": [
+            510
+          ]
+        }
+      ],
+      "unpaced_sectors": 1052
+    },
+    {
+      "case": "d1-07-s09a-137-fast",
+      "stage": "s09a",
+      "story": 137,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-07-s09a-137-fast/result.json",
+        "sha256": "805d1ff3ebc6e7fa9219229ec34ccc2c9149f56278b5166ffef86c68a39b53b6"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d1-07-s09a-137-fast/session/result.json",
+        "sha256": "2f2f02adcfe234db98ef898cf3ca327fa5e1d269e12d0a5879d2ad9cda77ce9c"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d1-07-s09a-137-fast/session/loading.jsonl",
+        "sha256": "72e51b97e4d5d690c898a2c8d65f775a7b3b09d3538b1ae1778af267f3aea028"
+      },
+      "loads": [
+        {
+          "begin": 83,
+          "end": 89,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 99,
+          "end": 103,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 415,
+          "end": 419,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1528,
+          "end": 1532,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "s09a"
+          ],
+          "sectors": [
+            513
+          ]
+        }
+      ],
+      "unpaced_sectors": 1055
+    },
+    {
+      "case": "d1-08-s09a-149-fast",
+      "stage": "s09a",
+      "story": 149,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-08-s09a-149-fast/result.json",
+        "sha256": "912e1b390a2b53ff49d8a3129334ce5d83fa9e99c243ce3d72bcd4f6e1f42961"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d1-08-s09a-149-fast/session/result.json",
+        "sha256": "3dfe6d86eac89acfb3e3b6d8ed947668c098d9cbca82c151944add3ca636ce62"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d1-08-s09a-149-fast/session/loading.jsonl",
+        "sha256": "ee6524895f00fdf920a0d8d1343f8afccac848283542e3cf86a479dd9fc08d9f"
+      },
+      "loads": [
+        {
+          "begin": 84,
+          "end": 88,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 98,
+          "end": 102,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 414,
+          "end": 418,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1528,
+          "end": 1534,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "s09a"
+          ],
+          "sectors": [
+            513
+          ]
+        }
+      ],
+      "unpaced_sectors": 1055
+    },
+    {
+      "case": "d1-09-s06a-150-fast",
+      "stage": "s06a",
+      "story": 150,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-09-s06a-150-fast/result.json",
+        "sha256": "f0e078a2ebba2b98fe40d77aa0ee76336e8d29fa9b3bb98d8f83ce5d68f09229"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d1-09-s06a-150-fast/session/result.json",
+        "sha256": "40f118aedb6375bc52fb265481093c34ab185d741fa2d251cc82cc76ef90573e"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d1-09-s06a-150-fast/session/loading.jsonl",
+        "sha256": "5c3e4db6a190c1eec5c15dff35ad98873c1a84682b52eaef95c9c71d243ccd0a"
+      },
+      "loads": [
+        {
+          "begin": 85,
+          "end": 90,
+          "vblanks": 5,
+          "seconds_at_60hz": 0.08333333333333333,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 100,
+          "end": 104,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 416,
+          "end": 420,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1530,
+          "end": 1536,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "s06a"
+          ],
+          "sectors": [
+            471
+          ]
+        }
+      ],
+      "unpaced_sectors": 1013
+    },
+    {
+      "case": "d1-10-s10a-151-fast",
+      "stage": "s10a",
+      "story": 151,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-10-s10a-151-fast/result.json",
+        "sha256": "264a0c782ca3a0bc3516d18827afefca9a35c756076ad646d9ded8b7b1b8577e"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d1-10-s10a-151-fast/session/result.json",
+        "sha256": "0160d40d4be3dec1217e18b936d1cf82da4e278ddf02f668e893231af88ccb33"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d1-10-s10a-151-fast/session/loading.jsonl",
+        "sha256": "f61d23ee04a8a486b0d36e3f15ec5d544f9e8d1dc7860f00b75d4e03564ca9ff"
+      },
+      "loads": [
+        {
+          "begin": 84,
+          "end": 89,
+          "vblanks": 5,
+          "seconds_at_60hz": 0.08333333333333333,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 99,
+          "end": 103,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 415,
+          "end": 419,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1529,
+          "end": 1533,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "s10a"
+          ],
+          "sectors": [
+            532
+          ]
+        }
+      ],
+      "unpaced_sectors": 1074
+    },
+    {
+      "case": "d1-11-s11b-173-fast",
+      "stage": "s11b",
+      "story": 173,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-11-s11b-173-fast/result.json",
+        "sha256": "cba72f4042245f8c88b06c8fc55b44aa8025d09d5f40ec21db931eef119aea9e"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d1-11-s11b-173-fast/session/result.json",
+        "sha256": "fbf2e2516997321d9521fe7cc6061b0fe8e6b79b1b06acceb4b6e3ed38dd4d44"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d1-11-s11b-173-fast/session/loading.jsonl",
+        "sha256": "1a808617e1277d7a1b75dda4a9948627e457199fab7d5a5bb83c47be96b9ce38"
+      },
+      "loads": [
+        {
+          "begin": 84,
+          "end": 88,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 98,
+          "end": 102,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 414,
+          "end": 418,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1527,
+          "end": 1531,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "s11b"
+          ],
+          "sectors": [
+            418
+          ]
+        }
+      ],
+      "unpaced_sectors": 960
+    },
+    {
+      "case": "d1-12-s11c-190-fast",
+      "stage": "s11c",
+      "story": 190,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-12-s11c-190-fast/result.json",
+        "sha256": "d868548fa7c2c4a354ace3793c7098b2c171caa5095a56ab19bca5013d992d30"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d1-12-s11c-190-fast/session/result.json",
+        "sha256": "b6bfe1d93de6ea090e627b4ba9f18357cd361e4139dbd46d500f9634f0e5c5a5"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d1-12-s11c-190-fast/session/loading.jsonl",
+        "sha256": "5878ade7643cbdd30328e50022185fc6e98022d00981f782ccd9002efe1784c1"
+      },
+      "loads": [
+        {
+          "begin": 84,
+          "end": 90,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 100,
+          "end": 104,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 416,
+          "end": 420,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1529,
+          "end": 1534,
+          "vblanks": 5,
+          "seconds_at_60hz": 0.08333333333333333,
+          "stages": [
+            "s11c"
+          ],
+          "sectors": [
+            527
+          ]
+        }
+      ],
+      "unpaced_sectors": 1069
+    },
+    {
+      "case": "d1-13-s12b-204-fast",
+      "stage": "s12b",
+      "story": 204,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-13-s12b-204-fast/result.json",
+        "sha256": "106cc44306fbacef3a49b99924928dd5c568c41c2ae16d075ecb8aa5f3b3162f"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d1-13-s12b-204-fast/session/result.json",
+        "sha256": "ea042c5479ea8cb6100cb5aac7dc8414c71848ed1b0c4dbb6d6a947eeeaab34b"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d1-13-s12b-204-fast/session/loading.jsonl",
+        "sha256": "5384fc35cabd2f1bec52e06f9c96938edfc7fe3d47a6e76ba66041d748533a39"
+      },
+      "loads": [
+        {
+          "begin": 83,
+          "end": 87,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 97,
+          "end": 101,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 413,
+          "end": 417,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1527,
+          "end": 1531,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "s12b"
+          ],
+          "sectors": [
+            441
+          ]
+        }
+      ],
+      "unpaced_sectors": 983
+    },
+    {
+      "case": "d2-01-s13a-204-fast",
+      "stage": "s13a",
+      "story": 204,
+      "disc": 2,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-01-s13a-204-fast/result.json",
+        "sha256": "ff1894ec48a98a95397e922a58bd504842f8708204ad7ec5de228964c2475dbb"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d2-01-s13a-204-fast/session/result.json",
+        "sha256": "27a415801d8519185c727d5a8ebba2aa12efac7434b33782f69115b5a533f463"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d2-01-s13a-204-fast/session/loading.jsonl",
+        "sha256": "d4d12020418bfaf759d1dd317aa872d49fc7aba48f6fac14fa10568ddee8e9b3"
+      },
+      "loads": [
+        {
+          "begin": 81,
+          "end": 87,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 97,
+          "end": 101,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 413,
+          "end": 417,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1527,
+          "end": 1533,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "s13a"
+          ],
+          "sectors": [
+            513
+          ]
+        }
+      ],
+      "unpaced_sectors": 1055
+    },
+    {
+      "case": "d2-02-s14e-204-fast",
+      "stage": "s14e",
+      "story": 204,
+      "disc": 2,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-02-s14e-204-fast/result.json",
+        "sha256": "c3e5b3ebe421cf48c5836ddce6b28ed4da117186f221384a51bc311f473a208b"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d2-02-s14e-204-fast/session/result.json",
+        "sha256": "7ec31bd9a8b2d77aa46c72533434ad0fb2c37cd8d293c22b52af6e022bd97116"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d2-02-s14e-204-fast/session/loading.jsonl",
+        "sha256": "d9a005883c38971fd7246ffbc01ceed085b6fd19cdcfc2921fb12b5020e01042"
+      },
+      "loads": [
+        {
+          "begin": 81,
+          "end": 87,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 97,
+          "end": 101,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 413,
+          "end": 417,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1525,
+          "end": 1531,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "s14e"
+          ],
+          "sectors": [
+            525
+          ]
+        }
+      ],
+      "unpaced_sectors": 1067
+    },
+    {
+      "case": "d2-03-s15a-219-fast",
+      "stage": "s15a",
+      "story": 219,
+      "disc": 2,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-03-s15a-219-fast/result.json",
+        "sha256": "b5f7252ce63c706926a7c3d6042f1a67d6f8ca9a3dbad9ac7a60acff3000e185"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d2-03-s15a-219-fast/session/result.json",
+        "sha256": "223c41f827290a95897fbe1f064b017ac469f920e31053889fefafd48e6e1dae"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d2-03-s15a-219-fast/session/loading.jsonl",
+        "sha256": "5ce39148e5389a4419ff731741ba9888bb0419e788ba5e244e2bd51c379ef383"
+      },
+      "loads": [
+        {
+          "begin": 82,
+          "end": 88,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 98,
+          "end": 102,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 414,
+          "end": 418,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1528,
+          "end": 1534,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "s15a"
+          ],
+          "sectors": [
+            344
+          ]
+        }
+      ],
+      "unpaced_sectors": 886
+    },
+    {
+      "case": "d2-04-s16a-237-fast",
+      "stage": "s16a",
+      "story": 237,
+      "disc": 2,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-04-s16a-237-fast/result.json",
+        "sha256": "f681a3ee417ba34c4a016aee721589b21c6dc833ca2efd716fd2653bc6d24778"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d2-04-s16a-237-fast/session/result.json",
+        "sha256": "94f21e227c5a060b8b1103392e88c6e9c311e492bbe90cc40e6de2ec4d6c43b5"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d2-04-s16a-237-fast/session/loading.jsonl",
+        "sha256": "724d8d5bb8e399916fa2e18515af101c94b2a3c1fe7c6a8e5a34bfe64904cb26"
+      },
+      "loads": [
+        {
+          "begin": 81,
+          "end": 86,
+          "vblanks": 5,
+          "seconds_at_60hz": 0.08333333333333333,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 96,
+          "end": 100,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 412,
+          "end": 416,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1526,
+          "end": 1530,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "s16a"
+          ],
+          "sectors": [
+            466
+          ]
+        }
+      ],
+      "unpaced_sectors": 1008
+    },
+    {
+      "case": "d2-05-s16d-240-fast",
+      "stage": "s16d",
+      "story": 240,
+      "disc": 2,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-05-s16d-240-fast/result.json",
+        "sha256": "178ec3b556b76088b7f29c5a7d5b2aed54ce077768824472bbc7c58224842e32"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d2-05-s16d-240-fast/session/result.json",
+        "sha256": "eea788dccf3e154ac498d1abb2e289eaaae8a20cb0ba5e7ab822efc8296b4f01"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d2-05-s16d-240-fast/session/loading.jsonl",
+        "sha256": "7ed49db1c1c4b78e0294a827193de7d274d15ae67693090e15f8acd462892c13"
+      },
+      "loads": [
+        {
+          "begin": 80,
+          "end": 85,
+          "vblanks": 5,
+          "seconds_at_60hz": 0.08333333333333333,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 95,
+          "end": 99,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 411,
+          "end": 415,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1524,
+          "end": 1530,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "s16d"
+          ],
+          "sectors": [
+            553
+          ]
+        }
+      ],
+      "unpaced_sectors": 1095
+    },
+    {
+      "case": "d2-06-s16d-246-fast",
+      "stage": "s16d",
+      "story": 246,
+      "disc": 2,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-06-s16d-246-fast/result.json",
+        "sha256": "31551970185d39f0444d29e8ac34f6243d862ba8caaa55c49a17744554e840b3"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d2-06-s16d-246-fast/session/result.json",
+        "sha256": "d2f12f95b33551d304bea040fb25afe92a8b97c1e16cacb1981cfa2c200832bc"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d2-06-s16d-246-fast/session/loading.jsonl",
+        "sha256": "87a7523f88e326794abc24fda77a84954d80d242c1987aee71e41af733e7dd48"
+      },
+      "loads": [
+        {
+          "begin": 80,
+          "end": 84,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 94,
+          "end": 98,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 410,
+          "end": 414,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1523,
+          "end": 1529,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "s16d"
+          ],
+          "sectors": [
+            553
+          ]
+        }
+      ],
+      "unpaced_sectors": 1095
+    },
+    {
+      "case": "d2-07-s16d-246-fast",
+      "stage": "s16d",
+      "story": 246,
+      "disc": 2,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-07-s16d-246-fast/result.json",
+        "sha256": "0aceb424827a1d2cebd636a96c3c053ff71e9d5e5f5015135ab932a33e9835ac"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d2-07-s16d-246-fast/session/result.json",
+        "sha256": "25a94f7fd6407cf5f5dde98284fab1e29cca433a1082e8e0261f689f360fe0dc"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d2-07-s16d-246-fast/session/loading.jsonl",
+        "sha256": "25d070d9ccbea136d75d6c8f55c93141f14ecb283d6fc2c168a669ba52af238b"
+      },
+      "loads": [
+        {
+          "begin": 80,
+          "end": 86,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 96,
+          "end": 100,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 412,
+          "end": 416,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1524,
+          "end": 1529,
+          "vblanks": 5,
+          "seconds_at_60hz": 0.08333333333333333,
+          "stages": [
+            "s16d"
+          ],
+          "sectors": [
+            553
+          ]
+        }
+      ],
+      "unpaced_sectors": 1095
+    },
+    {
+      "case": "d2-08-s17a-253-fast",
+      "stage": "s17a",
+      "story": 253,
+      "disc": 2,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-08-s17a-253-fast/result.json",
+        "sha256": "0ce043e25a2bdd14a9b47f8c5512d3796ffe177d18b489a08db119057575f6b7"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d2-08-s17a-253-fast/session/result.json",
+        "sha256": "9c0ed0c8a78ba9f2a162e20ebc689c119db86aeb8534786c63d26d2a0d5b9915"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d2-08-s17a-253-fast/session/loading.jsonl",
+        "sha256": "fadf301582e11229a8908e3b7f67beb040c3b3566e14ad5a05b0ce8822634632"
+      },
+      "loads": [
+        {
+          "begin": 80,
+          "end": 85,
+          "vblanks": 5,
+          "seconds_at_60hz": 0.08333333333333333,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 95,
+          "end": 99,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 411,
+          "end": 415,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1524,
+          "end": 1531,
+          "vblanks": 7,
+          "seconds_at_60hz": 0.11666666666666667,
+          "stages": [
+            "s17a"
+          ],
+          "sectors": [
+            573
+          ]
+        }
+      ],
+      "unpaced_sectors": 1115
+    },
+    {
+      "case": "d2-09-s18a-277-fast",
+      "stage": "s18a",
+      "story": 277,
+      "disc": 2,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-09-s18a-277-fast/result.json",
+        "sha256": "6730497cf864e9638ca97eabf310481a820d9f68572a0d48011a0391f56cf78d"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d2-09-s18a-277-fast/session/result.json",
+        "sha256": "38185b0ada3dbaa2213925c1bf65788a1813a7c7adea9f671cfd9a39ab598b0b"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d2-09-s18a-277-fast/session/loading.jsonl",
+        "sha256": "660c04ab0ac79a0a4d215c7da097c8eda37e1aaa9d626a842688775c4409bcfd"
+      },
+      "loads": [
+        {
+          "begin": 80,
+          "end": 86,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 96,
+          "end": 100,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 412,
+          "end": 416,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1525,
+          "end": 1531,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "s18a"
+          ],
+          "sectors": [
+            547
+          ]
+        }
+      ],
+      "unpaced_sectors": 1089
+    },
+    {
+      "case": "d2-10-s19a-283-fast",
+      "stage": "s19a",
+      "story": 283,
+      "disc": 2,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-10-s19a-283-fast/result.json",
+        "sha256": "e06f709cc7c84e5b941dfeac14f31e8ac7cc2036aeaeee64349c2c0e39e95894"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/d2-10-s19a-283-fast/session/result.json",
+        "sha256": "07136ce47da7474b5555dea78906da7ffcc02969f7b12c881b6f0aa3d1418e16"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/d2-10-s19a-283-fast/session/loading.jsonl",
+        "sha256": "c2484dbae37da3c85994029825f54b564e7128887057cec1e94f606e9288c63f"
+      },
+      "loads": [
+        {
+          "begin": 80,
+          "end": 86,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 96,
+          "end": 100,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 412,
+          "end": 416,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1526,
+          "end": 1532,
+          "vblanks": 6,
+          "seconds_at_60hz": 0.1,
+          "stages": [
+            "s19a"
+          ],
+          "sectors": [
+            469
+          ]
+        }
+      ],
+      "unpaced_sectors": 1011
+    },
+    {
+      "case": "ocelot-fast",
+      "stage": "s04b",
+      "story": 36,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/ocelot-fast/result.json",
+        "sha256": "51318ce554a448a290d690ef30a4e3ddcb435b98a4205e9d0908d8ee9bf6cbe8"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/ocelot-fast/session/result.json",
+        "sha256": "31a5f50cadfae45bf9846388c61777f1d1d671d6b2d5650b3ac1506419f03d4f"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/ocelot-fast/session/loading.jsonl",
+        "sha256": "3e053ed5a81c3f2a1834c966d7059ae0b63ae62109c817eafda1cf298d682d35"
+      },
+      "loads": [
+        {
+          "begin": 84,
+          "end": 88,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 98,
+          "end": 102,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 414,
+          "end": 418,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1527,
+          "end": 1531,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "s04b"
+          ],
+          "sectors": [
+            496
+          ]
+        }
+      ],
+      "unpaced_sectors": 1038
+    },
+    {
+      "case": "ninja-fast",
+      "stage": "s08c",
+      "story": 75,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/ninja-fast/result.json",
+        "sha256": "0dde6e41507bc8f80ca9667c53511781f702cfceaf0b9caa7b9b38e1c9c701f6"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/ninja-fast/session/result.json",
+        "sha256": "c233a758bb872735a9dc933ffd9f3ca7f79bad4cab70bc46657f83cc25f5ec52"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/ninja-fast/session/loading.jsonl",
+        "sha256": "0b973d52578165815ae27ec77d5eb7ef9eda726eee4e0fa0f7fcdcf9b002acb6"
+      },
+      "loads": [
+        {
+          "begin": 85,
+          "end": 89,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 99,
+          "end": 103,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 415,
+          "end": 419,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1529,
+          "end": 1533,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "s08c"
+          ],
+          "sectors": [
+            347
+          ]
+        }
+      ],
+      "unpaced_sectors": 889
+    },
+    {
+      "case": "warehouse-fast",
+      "stage": "s12c",
+      "story": 204,
+      "disc": 1,
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/warehouse-fast/result.json",
+        "sha256": "69b8ff7dc39690d225c0a4e3dafcea28879b9cdd7bb056480bbb4b8d6704a6a7"
+      },
+      "session": {
+        "path": "data/scenarios/fast-loading-20261006/warehouse-fast/session/result.json",
+        "sha256": "28a1ba828c80062a5d2c1b14d21724986281dbb30ab49a7c2935c0cf0e32dcb6"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/warehouse-fast/session/loading.jsonl",
+        "sha256": "327a1805b10575e1e5fefdf86b1baaa0fadb243210ff0e3fcb148e97bb80bf87"
+      },
+      "loads": [
+        {
+          "begin": 84,
+          "end": 89,
+          "vblanks": 5,
+          "seconds_at_60hz": 0.08333333333333333,
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ]
+        },
+        {
+          "begin": 99,
+          "end": 103,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ]
+        },
+        {
+          "begin": 415,
+          "end": 419,
+          "vblanks": 4,
+          "seconds_at_60hz": 0.06666666666666667,
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ]
+        },
+        {
+          "begin": 1527,
+          "end": 1534,
+          "vblanks": 7,
+          "seconds_at_60hz": 0.11666666666666667,
+          "stages": [
+            "s12c"
+          ],
+          "sectors": [
+            430
+          ]
+        }
+      ],
+      "unpaced_sectors": 972
+    }
+  ],
+  "comparisons": [
+    {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-01-s01a-18-audit.json",
+        "sha256": "80ebe6fbf657c91ef53cdec37a5479b18a9e042ffcdc6ffe7ff5af0303bcf49e"
+      },
+      "comparisons": [
+        {
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ],
+          "slow_vblanks": 137,
+          "fast_vblanks": 6,
+          "reduction_percent": 95.62043795620438
+        },
+        {
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ],
+          "slow_vblanks": 94,
+          "fast_vblanks": 4,
+          "reduction_percent": 95.74468085106383
+        },
+        {
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ],
+          "slow_vblanks": 56,
+          "fast_vblanks": 4,
+          "reduction_percent": 92.85714285714286
+        },
+        {
+          "stages": [
+            "s01a"
+          ],
+          "sectors": [
+            546
+          ],
+          "slow_vblanks": 246,
+          "fast_vblanks": 4,
+          "reduction_percent": 98.3739837398374
+        }
+      ]
+    },
+    {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-05-s08c-111-audit.json",
+        "sha256": "3693e486ac6e357a8a13bbdb0c0d249b5d79599092b6313e3d402229bb5c5587"
+      },
+      "comparisons": [
+        {
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ],
+          "slow_vblanks": 136,
+          "fast_vblanks": 4,
+          "reduction_percent": 97.05882352941177
+        },
+        {
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ],
+          "slow_vblanks": 94,
+          "fast_vblanks": 4,
+          "reduction_percent": 95.74468085106383
+        },
+        {
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ],
+          "slow_vblanks": 56,
+          "fast_vblanks": 4,
+          "reduction_percent": 92.85714285714286
+        },
+        {
+          "stages": [
+            "s08c"
+          ],
+          "sectors": [
+            347
+          ],
+          "slow_vblanks": 165,
+          "fast_vblanks": 4,
+          "reduction_percent": 97.57575757575758
+        }
+      ]
+    },
+    {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d1-13-s12b-204-audit.json",
+        "sha256": "cb566408e4c017ac586c91569ddb3fa23e739da093fcd8c06b31dcfc2fb44beb"
+      },
+      "comparisons": [
+        {
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ],
+          "slow_vblanks": 137,
+          "fast_vblanks": 4,
+          "reduction_percent": 97.08029197080292
+        },
+        {
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ],
+          "slow_vblanks": 94,
+          "fast_vblanks": 4,
+          "reduction_percent": 95.74468085106383
+        },
+        {
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ],
+          "slow_vblanks": 56,
+          "fast_vblanks": 4,
+          "reduction_percent": 92.85714285714286
+        },
+        {
+          "stages": [
+            "s12b"
+          ],
+          "sectors": [
+            441
+          ],
+          "slow_vblanks": 205,
+          "fast_vblanks": 4,
+          "reduction_percent": 98.04878048780488
+        }
+      ]
+    },
+    {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-01-s13a-204-audit.json",
+        "sha256": "d117541ce236b936630968368005ad368025531047b3678df2a86cf83d98493d"
+      },
+      "comparisons": [
+        {
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ],
+          "slow_vblanks": 137,
+          "fast_vblanks": 6,
+          "reduction_percent": 95.62043795620438
+        },
+        {
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ],
+          "slow_vblanks": 94,
+          "fast_vblanks": 4,
+          "reduction_percent": 95.74468085106383
+        },
+        {
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ],
+          "slow_vblanks": 55,
+          "fast_vblanks": 4,
+          "reduction_percent": 92.72727272727272
+        },
+        {
+          "stages": [
+            "s13a"
+          ],
+          "sectors": [
+            513
+          ],
+          "slow_vblanks": 232,
+          "fast_vblanks": 6,
+          "reduction_percent": 97.41379310344827
+        }
+      ]
+    },
+    {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-03-s15a-219-audit.json",
+        "sha256": "efa3dfeced29eda56b02e38f33c82ac87ecbda56a3ec63625296513ef814ff8f"
+      },
+      "comparisons": [
+        {
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ],
+          "slow_vblanks": 137,
+          "fast_vblanks": 6,
+          "reduction_percent": 95.62043795620438
+        },
+        {
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ],
+          "slow_vblanks": 94,
+          "fast_vblanks": 4,
+          "reduction_percent": 95.74468085106383
+        },
+        {
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ],
+          "slow_vblanks": 55,
+          "fast_vblanks": 4,
+          "reduction_percent": 92.72727272727272
+        },
+        {
+          "stages": [
+            "s15a"
+          ],
+          "sectors": [
+            344
+          ],
+          "slow_vblanks": 162,
+          "fast_vblanks": 6,
+          "reduction_percent": 96.2962962962963
+        }
+      ]
+    },
+    {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-05-s16d-240-audit.json",
+        "sha256": "1742a05bdf37fd75b4865b12203038f3c90446f70d98058f41961b846d30bccc"
+      },
+      "comparisons": [
+        {
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ],
+          "slow_vblanks": 136,
+          "fast_vblanks": 5,
+          "reduction_percent": 96.32352941176471
+        },
+        {
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ],
+          "slow_vblanks": 94,
+          "fast_vblanks": 4,
+          "reduction_percent": 95.74468085106383
+        },
+        {
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ],
+          "slow_vblanks": 55,
+          "fast_vblanks": 4,
+          "reduction_percent": 92.72727272727272
+        },
+        {
+          "stages": [
+            "s16d"
+          ],
+          "sectors": [
+            553
+          ],
+          "slow_vblanks": 246,
+          "fast_vblanks": 6,
+          "reduction_percent": 97.5609756097561
+        }
+      ]
+    },
+    {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/d2-09-s18a-277-audit.json",
+        "sha256": "9b0db3957952219bf91bd7d84fa5badb61721b3d5a4bd0356a426e1dbf3384db"
+      },
+      "comparisons": [
+        {
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ],
+          "slow_vblanks": 136,
+          "fast_vblanks": 6,
+          "reduction_percent": 95.58823529411765
+        },
+        {
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ],
+          "slow_vblanks": 94,
+          "fast_vblanks": 4,
+          "reduction_percent": 95.74468085106383
+        },
+        {
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ],
+          "slow_vblanks": 55,
+          "fast_vblanks": 4,
+          "reduction_percent": 92.72727272727272
+        },
+        {
+          "stages": [
+            "s18a"
+          ],
+          "sectors": [
+            547
+          ],
+          "slow_vblanks": 243,
+          "fast_vblanks": 6,
+          "reduction_percent": 97.53086419753086
+        }
+      ]
+    },
+    {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/ocelot-audit.json",
+        "sha256": "07cb46a4fcc33e69440856eebc079b45cddbe1e22d60ca06af4fc05c5775a2fb"
+      },
+      "comparisons": [
+        {
+          "stages": [
+            "init"
+          ],
+          "sectors": [
+            275
+          ],
+          "slow_vblanks": 136,
+          "fast_vblanks": 4,
+          "reduction_percent": 97.05882352941177
+        },
+        {
+          "stages": [
+            "title"
+          ],
+          "sectors": [
+            191
+          ],
+          "slow_vblanks": 94,
+          "fast_vblanks": 4,
+          "reduction_percent": 95.74468085106383
+        },
+        {
+          "stages": [
+            "abst"
+          ],
+          "sectors": [
+            76
+          ],
+          "slow_vblanks": 56,
+          "fast_vblanks": 4,
+          "reduction_percent": 92.85714285714286
+        },
+        {
+          "stages": [
+            "s04b"
+          ],
+          "sectors": [
+            496
+          ],
+          "slow_vblanks": 224,
+          "fast_vblanks": 4,
+          "reduction_percent": 98.21428571428571
+        }
+      ]
+    }
+  ],
+  "unit_tests": [
+    {
+      "name": "runtime-tests",
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/runtime-tests.json",
+        "sha256": "6656c4e6bdfc41cbbdf058b713e797105043dffeca06959af2ffd2d22986240f"
+      },
+      "passed": 1304,
+      "skipped": 31
+    },
+    {
+      "name": "asan-tests",
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/asan-tests.json",
+        "sha256": "2a59aa0fedfd43de8a33ac65bf87fbd9a65337441ada8da90123df8fbf780da3"
+      },
+      "passed": 1304,
+      "skipped": 31
+    }
+  ],
+  "python_tests": {
+    "passed": 141,
+    "log": {
+      "path": "data/scenarios/fast-loading-20261006/python-tests.log",
+      "sha256": "2a36703ebd0bf2c88e5d644f3fb30f655e83965d413b639fc6309744c86d7e95"
+    },
+    "audit_recheck": {
+      "path": "data/scenarios/fast-loading-20261006/loading-audit-tests.log",
+      "sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4"
+    }
+  },
+  "regressions": {
+    "disc_change": {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/disc-change/evidence.json",
+        "sha256": "6f4505a4d12415e8625cae24195bb8d6e7504a35ea9b6e26aa57c5bd1e5a162b"
+      },
+      "frames": 504,
+      "replay": {
+        "path": "data/scenarios/fast-loading-20261006/disc-change/replay/result.json",
+        "sha256": "e027124ebea0252a151a3dcf43ad657d40f78921652af8fae5c3a47d06fa7f67"
+      }
+    },
+    "codec": {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/codec/result.json",
+        "sha256": "614883d6aa0dfc537dc7be42785e3a950a3a54fec4b1182026d8f2905e1e28d2"
+      },
+      "scope": "Open/close and exact replay; this menu probe alone reads no portrait archive."
+    },
+    "clear_reload": {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/clear-reload/result.json",
+        "sha256": "b08aed68af8c8e6ae33faf245a8bc609b7e08beba019db824457ebdd97ca23b7"
+      },
+      "trace": {
+        "path": "data/scenarios/fast-loading-20261006/clear-reload/session/loading.jsonl",
+        "sha256": "0b3dd3d56006ec8c3f88880ad1913880f23ba53f67a4e18ff5a82b310f72df5d"
+      },
+      "unpaced_sectors_by_archive": {
+        "/MGS/STAGE.DIR": 1476,
+        "/MGS/RADIO.DAT": 1,
+        "/MGS/FACE.DAT": 75
+      },
+      "scope": "Original completed-game save, opening skip and mandatory Codec; includes actual RADIO/FACE reads."
+    },
+    "movie_entry": {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/movie-entry-check.json",
+        "sha256": "361957bc2344455c455efc086f7433dcc6060a20fdc0fef3ac022a1704fb2e31"
+      },
+      "scope": "Synthetic source-derived s08b/6137 entry, full movie decode/mix counts compared with retail source and historical donor endpoint."
+    },
+    "legacy_movie_replay": {
+      "result": {
+        "path": "data/scenarios/fast-loading-20261006/movie-replay/result.json",
+        "sha256": "ad56cf8efaeb8fd92590b5a31b7bea7ad02f6820aa4a2391fbd1e106f95d8978"
+      },
+      "frames": 1460
+    }
+  },
+  "protected_user_files": [
+    {
+      "path": "savestates/quick_slot_0.ps1s",
+      "sha256": "e970fa55b427011823abdb47681fc4808f0f19a9c987c0bb6b9ef45873e89953"
+    },
+    {
+      "path": "data/memory_cards/card1.mcd",
+      "sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+    },
+    {
+      "path": "data/memory_cards/card2.mcd",
+      "sha256": "690f435db81f5a8225de6c3cb045cac7f7352c699ae031ae9f4f7e208c4f7ca0"
+    }
+  ],
+  "failed_prototype": {
+    "result": {
+      "path": "data/scenarios/fast-loading-20261006/ocelot-debug/result.json",
+      "sha256": "ef8d97e93ee625b7a14b5d4b7eb2efc57b3631aff2054ab724725dd0fdfa27b5"
+    },
+    "cause": "Unrestricted sector burst outran LoadStageFiles and reused scratch before consumption; replaced with bounded interleaving inside original FS_LoadStageSync."
+  },
+  "limits": [
+    "Original BIOS/ISO discovery, single-sector stage directory initialization and command-completion latency remain timed.",
+    "BRF/DEMO/VOX/ZMOVIE are never unpaced. XA-mode reads retain the original clock even in allowlisted files.",
+    "Scripted fades, mission-log confirmation and cutscenes are outside loader timing.",
+    "No fresh Vulkan execution or audiovisual certification. Existing renderer and modern presentation are unchanged.",
+    "ASan/UBSan cover the test runtime, not every generated game function. LeakSanitizer disabled under ptrace; makecontext/swapcontext limitations apply.",
+    "Faster loading changes frame-indexed TAS movies crossing loads; re-record or explicitly select fast_loading=false for historical timing."
+  ],
+  "test_binaries": [
+    {
+      "path": "build/ps1Test/ps1Runtime_tests",
+      "sha256": "5e98bb5d0a3d0fed1aa249c284275c48d23bc39da8663cb7800af8c91a2662f1"
+    },
+    {
+      "path": "build-sanitize/ps1Test/ps1Runtime_tests",
+      "sha256": "1c13706ea8e04b698a5197c28df886003ded5d0e89a9bdbb81378dc405e44370"
+    }
+  ],
+  "test_sources": [
+    {
+      "path": "engine/ps1Test/runtime/test_cdrom_controller.cpp",
+      "sha256": "b1775484959402e7948efc0f35b4b5eab6ebc7ed813df09a71714d5b3ea8ade0"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_virtual_fs.cpp",
+      "sha256": "9105e52c3ebd50aa272fd311c81c8c9c97add5f4a8020e74019599117194d25a"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_config.cpp",
+      "sha256": "876bbd871d14d7730b210df0f223427b773af57e15435a2a5866faca039bf721"
+    },
+    {
+      "path": "engine/ps1Test/runtime/test_mgs_profile.cpp",
+      "sha256": "4f3d0238d544f72fee6453fb76e8e70aae78477e195ea3a230a984b854af0f89"
+    },
+    {
+      "path": "scripts/tests/test_install_decomp_bridges.py",
+      "sha256": "c9bae9e04cd74d093fdddafadbea2b8db8ec72b4f9f28a29b44fceb965dbf15b"
+    },
+    {
+      "path": "scripts/tests/test_mgs_loading_check.py",
+      "sha256": "465d59fa32540d92d60b9f5f8d42d2b77ff75756445a3e06adc6424896050645"
+    }
+  ]
+}

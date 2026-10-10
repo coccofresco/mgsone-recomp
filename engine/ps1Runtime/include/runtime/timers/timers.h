@@ -58,6 +58,7 @@ public:
   // Register I/O (per-timer)
   uint16_t readCounter() const { return counter_; }
   uint16_t readMode() const;
+  uint16_t peekMode() const;
   uint16_t readTarget() const { return target_; }
   void writeCounter(uint16_t val);
   void writeMode(uint16_t val);
@@ -71,6 +72,16 @@ public:
 
   // Configuration
   void setTimerIndex(uint8_t idx) { timerIndex_ = idx; }
+  bool countingEnabled() const {
+    return !(timerIndex_ == 2 && syncEnable() && (syncMode() == 0 || syncMode() == 3));
+  }
+
+  struct Snapshot {
+    uint16_t mode = 0x400, target = 0, counter = 0;
+    uint8_t irqFired = 0;
+  };
+  Snapshot snapshot() const;
+  void restore(const Snapshot &state);
 
 private:
   uint8_t timerIndex_ = 0; // 0, 1, or 2
@@ -78,8 +89,8 @@ private:
   uint16_t target_ = 0;
   uint16_t mode_ = 0;
 
-  bool reachedTarget_ = false;
-  bool reachedOverflow_ = false;
+  mutable bool reachedTarget_ = false;
+  mutable bool reachedOverflow_ = false;
   bool irqFired_ = false;
 
   // Mode register bits
@@ -109,6 +120,14 @@ public:
   uint32_t tick(uint32_t sysCycles, bool isHblank = false,
                 bool isDotclock = false);
 
+  struct Snapshot {
+    std::array<Timer::Snapshot, 3> timers{};
+    uint8_t sysclkDiv8Carry = 0;
+  };
+  Snapshot snapshot() const;
+  static bool validSnapshot(const Snapshot &state);
+  bool restore(const Snapshot &state);
+
   // IRQ edge count produced by the most recent tick() call for timer 0..2.
   uint32_t lastIrqCount(std::size_t timer) const {
     return timer < lastIrqCounts_.size() ? lastIrqCounts_[timer] : 0;
@@ -117,6 +136,7 @@ public:
 private:
   Timer timers_[3];
   std::array<uint32_t, 3> lastIrqCounts_{};
+  uint8_t sysclkDiv8Carry_ = 0;
 };
 
 } // namespace ps1

@@ -1,0 +1,1100 @@
+{
+  "format": "mgs-ambient-occlusion-evidence-1",
+  "date": "2026-10-08",
+  "status": "passed",
+  "upstream": {
+    "path": "engine/third_party/godot_ssao/provenance.json",
+    "sha256": "877421e6eff840f97fae8838f0a06f532a280657b75d32f4f6c311ca08ae9b52"
+  },
+  "device": "NVIDIA GeForce RTX 4060, 610.57.04, Vulkan 1.4.341",
+  "matrix": {
+    "path": "data/validation/presentation/ssao-20261008-final/report.json",
+    "sha256": "309ae59fc5c399bbdebcfd4ca91241d1cf1243a250f3732bef517f27564d56e1"
+  },
+  "scenes": [
+    {
+      "label": "Molo / 4K",
+      "audit": {
+        "path": "data/validation/presentation/ssao-20261008-final/01-dock-final-4k-audit.json",
+        "sha256": "3c78382fc6ab036638986069989679d5d486edd1306b30dbaa782749b66f2c17"
+      },
+      "frames": 180,
+      "ssao_resolves": 177,
+      "gpu_mean_ms": {
+        "mgs_ssao": 3.3604,
+        "present": 0.0374,
+        "replay_tail": 14.0147,
+        "resolve": 1.1548,
+        "setup": 0.1088,
+        "total": 18.5838
+      },
+      "comparisons": [
+        {
+          "frame": 97320,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/01-dock-final-4k/gpu/frame-97320-present-1-ordinary-scanout.ppm",
+            "sha256": "37e94bc90ffccecce67a88c666724ef983c8a14026d6c1dde7c4644db2c88f3a"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/native/frame-97320.ppm",
+              "sha256": "2a6399cd553ff8858fa57abbbe7e43ea44167975150e1d33bf944e16eec7db24"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/01-dock-final-4k/native/frame-97320.ppm",
+              "sha256": "2a6399cd553ff8858fa57abbbe7e43ea44167975150e1d33bf944e16eec7db24"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/gpu/frame-97320.ppm",
+              "sha256": "e01175eb87373b1b893e82f180cfd6426eec20efcf05cc6185056b65c99ad55c"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/01-dock-final-4k/gpu/frame-97320.ppm",
+              "sha256": "e01175eb87373b1b893e82f180cfd6426eec20efcf05cc6185056b65c99ad55c"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/gpu/frame-97320-present-1-ordinary-scanout.ppm",
+            "sha256": "7dc05a3f87389e32de95752767d469e6f9b6fefb158a7fb7d03e2b2550087917"
+          }
+        },
+        {
+          "frame": 97380,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/01-dock-final-4k/gpu/frame-97380-present-2-ordinary-scanout.ppm",
+            "sha256": "5be8bdcc229b2437a6838e62338bfc2b9cdb0e60b5919280d0e3865f52ec2878"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/native/frame-97380.ppm",
+              "sha256": "8fb03d141f5a12d993a98b6ab2fb05b0665946a12f1eeffe472fdbed0437a45e"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/01-dock-final-4k/native/frame-97380.ppm",
+              "sha256": "8fb03d141f5a12d993a98b6ab2fb05b0665946a12f1eeffe472fdbed0437a45e"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/gpu/frame-97380.ppm",
+              "sha256": "0fc8bf3f9a7a03959a530ad9d7210217c0987d893f73b57c5d2ef67d49c518b9"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/01-dock-final-4k/gpu/frame-97380.ppm",
+              "sha256": "0fc8bf3f9a7a03959a530ad9d7210217c0987d893f73b57c5d2ef67d49c518b9"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/gpu/frame-97380-present-2-ordinary-scanout.ppm",
+            "sha256": "e6eb45e01cb2ba45150fdc6cece451becfb3e9b9deb1943d8283c06a9605094d"
+          }
+        },
+        {
+          "frame": 97440,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/01-dock-final-4k/gpu/frame-97440-present-3-ordinary-scanout.ppm",
+            "sha256": "f0631543fdd6ca8f1c2bff872f1eb09a644c1aae1ffce2883974699c8228d7f5"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/native/frame-97440.ppm",
+              "sha256": "f0372a0b01b73b023116dfa0ccc9a7b03c8eccae058ddd548708f4dad442d7f0"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/01-dock-final-4k/native/frame-97440.ppm",
+              "sha256": "f0372a0b01b73b023116dfa0ccc9a7b03c8eccae058ddd548708f4dad442d7f0"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/gpu/frame-97440.ppm",
+              "sha256": "a494a0928857abc3d006905b041cb1f32998801705d4f23a4d0b5f9e2fa83097"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/01-dock-final-4k/gpu/frame-97440.ppm",
+              "sha256": "a494a0928857abc3d006905b041cb1f32998801705d4f23a4d0b5f9e2fa83097"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/01-dock-final-4k/gpu/frame-97440-present-3-ordinary-scanout.ppm",
+            "sha256": "798d239fa8d680e7baa5dbb1a56b6bd97a456f377d80f054daa50ed2b7a85170"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Intro, video verde/subacqueo",
+      "audit": {
+        "path": "data/validation/presentation/ssao-20261008-final/02-water-fixed-audit.json",
+        "sha256": "d87a47d2ffd1f543d47c7f2e5e087975cda980251e79d0550057e611c3280391"
+      },
+      "frames": 180,
+      "ssao_resolves": 175,
+      "gpu_mean_ms": {
+        "mgs_ssao": 0.1757,
+        "present": 0.0443,
+        "replay_tail": 12.4875,
+        "resolve": 0.6744,
+        "setup": 0.1094,
+        "total": 13.4845
+      },
+      "comparisons": [
+        {
+          "frame": 9240,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/02-water-fixed/gpu/frame-9240-present-1-ordinary-scanout.ppm",
+            "sha256": "54ab4dd8b6738c04fdb18a414489b747d1cadb2664f0b5d8be6eb0932619e23c"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/02-water-fixed/native/frame-9240.ppm",
+              "sha256": "2c3f4195f3c585484eb0bba5a5388af7ad43869f72c9fc0861a1354af7f47c5a"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/02-water-fixed/native/frame-9240.ppm",
+              "sha256": "2c3f4195f3c585484eb0bba5a5388af7ad43869f72c9fc0861a1354af7f47c5a"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/02-water-fixed/gpu/frame-9240.ppm",
+              "sha256": "0a85d4090b653da7aab0b00a163646b010a3a735862fc287f4767d695bddcbe1"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/02-water-fixed/gpu/frame-9240.ppm",
+              "sha256": "0a85d4090b653da7aab0b00a163646b010a3a735862fc287f4767d695bddcbe1"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/02-water-fixed/gpu/frame-9240-present-1-ordinary-scanout.ppm",
+            "sha256": "54ab4dd8b6738c04fdb18a414489b747d1cadb2664f0b5d8be6eb0932619e23c"
+          }
+        },
+        {
+          "frame": 9300,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/02-water-fixed/gpu/frame-9300-present-2-ordinary-scanout.ppm",
+            "sha256": "da2c0597831d5c29dfda6bdaee91d50a921980376db8fa8fc118dc590902a9b1"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/02-water-fixed/native/frame-9300.ppm",
+              "sha256": "82f7e1db17a7d775fe28ae81462a9d7f2662e1679084a7ff184c8451d9e30345"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/02-water-fixed/native/frame-9300.ppm",
+              "sha256": "82f7e1db17a7d775fe28ae81462a9d7f2662e1679084a7ff184c8451d9e30345"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/02-water-fixed/gpu/frame-9300.ppm",
+              "sha256": "617a74456b615443e123fb52a76d37558f9f572bd5f3883d674fcbddafd60a95"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/02-water-fixed/gpu/frame-9300.ppm",
+              "sha256": "617a74456b615443e123fb52a76d37558f9f572bd5f3883d674fcbddafd60a95"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/02-water-fixed/gpu/frame-9300-present-2-ordinary-scanout.ppm",
+            "sha256": "da2c0597831d5c29dfda6bdaee91d50a921980376db8fa8fc118dc590902a9b1"
+          }
+        },
+        {
+          "frame": 9360,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/02-water-fixed/gpu/frame-9360-present-3-ordinary-scanout.ppm",
+            "sha256": "8a1fcdc5c2103a4f16fa42c10917d2645954274da30f8a1e6224c432f78ab237"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/02-water-fixed/native/frame-9360.ppm",
+              "sha256": "b59fcbbe3798cf040f065a53281bc8ee2861050f113c54375a6dd06333406006"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/02-water-fixed/native/frame-9360.ppm",
+              "sha256": "b59fcbbe3798cf040f065a53281bc8ee2861050f113c54375a6dd06333406006"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/02-water-fixed/gpu/frame-9360.ppm",
+              "sha256": "abb9293d31ae2472c2ca8b5f82619f906f68d4c046e1f584b9d3d6ab1d474b1e"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/02-water-fixed/gpu/frame-9360.ppm",
+              "sha256": "abb9293d31ae2472c2ca8b5f82619f906f68d4c046e1f584b9d3d6ab1d474b1e"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/02-water-fixed/gpu/frame-9360-present-3-ordinary-scanout.ppm",
+            "sha256": "8a1fcdc5c2103a4f16fa42c10917d2645954274da30f8a1e6224c432f78ab237"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Ingresso tetto s11h",
+      "audit": {
+        "path": "data/validation/presentation/ssao-20261008-final/03-hind-final-audit.json",
+        "sha256": "8feee9f8c5192208fcf579f71e40a0ba40564c2e5d76f0ba80546190642de5fb"
+      },
+      "frames": 180,
+      "ssao_resolves": 175,
+      "gpu_mean_ms": {
+        "mgs_ssao": 3.148,
+        "present": 0.035,
+        "replay_tail": 4.2131,
+        "resolve": 1.0981,
+        "setup": 0.1094,
+        "total": 8.4825
+      },
+      "comparisons": [
+        {
+          "frame": 3000,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/03-hind-final/gpu/frame-3000-present-1-ordinary-scanout.ppm",
+            "sha256": "a6dfb1e1fb31a6db82a5ec9c9d98ba51319a2a31f20bb33ebe678a1fa6d3b28f"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/03-hind-final/native/frame-3000.ppm",
+              "sha256": "50bf608603bf260c2e8b96de8feb853844b8806d53a92f8f56b38c48e563e335"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/03-hind-final/native/frame-3000.ppm",
+              "sha256": "50bf608603bf260c2e8b96de8feb853844b8806d53a92f8f56b38c48e563e335"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/03-hind-final/gpu/frame-3000.ppm",
+              "sha256": "d96e3a98ac17957fae821eb0612f890a51d854d9ef2472359c34b621c2822c16"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/03-hind-final/gpu/frame-3000.ppm",
+              "sha256": "d96e3a98ac17957fae821eb0612f890a51d854d9ef2472359c34b621c2822c16"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/03-hind-final/gpu/frame-3000-present-1-ordinary-scanout.ppm",
+            "sha256": "4d32c2c1596c88eb743f072efb6665207b635b51a4992921928de59ca35161c6"
+          }
+        },
+        {
+          "frame": 3060,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/03-hind-final/gpu/frame-3060-present-2-ordinary-scanout.ppm",
+            "sha256": "7d287673692dcf43df3441576973396e409ce5d0f760097ae773193e00f6312e"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/03-hind-final/native/frame-3060.ppm",
+              "sha256": "6b37f47d8ccf8d487f080c86dbb20577070b81e6682bbfe020b966733a77c979"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/03-hind-final/native/frame-3060.ppm",
+              "sha256": "6b37f47d8ccf8d487f080c86dbb20577070b81e6682bbfe020b966733a77c979"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/03-hind-final/gpu/frame-3060.ppm",
+              "sha256": "535b71dec15a2a6dad896c1d3c285c7717a5853e158e60c647f31388d0f5dac1"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/03-hind-final/gpu/frame-3060.ppm",
+              "sha256": "535b71dec15a2a6dad896c1d3c285c7717a5853e158e60c647f31388d0f5dac1"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/03-hind-final/gpu/frame-3060-present-2-ordinary-scanout.ppm",
+            "sha256": "ed70abb0bb75df3bf89fdb08f4f07688f89721193596553121c3b73e61af684e"
+          }
+        },
+        {
+          "frame": 3120,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/03-hind-final/gpu/frame-3120-present-3-ordinary-scanout.ppm",
+            "sha256": "f1b19d06a37f9bc853d7e9508c67f4c71227cbc5617c09dea025b72a09a82ef8"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/03-hind-final/native/frame-3120.ppm",
+              "sha256": "d70286d124eeba128009ead3bdae46a4946deafeb96e3c0c557cfecb685e84ff"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/03-hind-final/native/frame-3120.ppm",
+              "sha256": "d70286d124eeba128009ead3bdae46a4946deafeb96e3c0c557cfecb685e84ff"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/03-hind-final/gpu/frame-3120.ppm",
+              "sha256": "8a82ddff06f0d3ea798d2696d68a2e6b0d1d5780233b1b3f44763618c1216ad1"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/03-hind-final/gpu/frame-3120.ppm",
+              "sha256": "8a82ddff06f0d3ea798d2696d68a2e6b0d1d5780233b1b3f44763618c1216ad1"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/03-hind-final/gpu/frame-3120-present-3-ordinary-scanout.ppm",
+            "sha256": "2fbcceb570a1e5dd1757f96ef51653153ddeb46aed0b0f7e4818e7fad6c090b4"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Anticamera Mantis / Meryl",
+      "audit": {
+        "path": "data/validation/presentation/ssao-20261008-final/04-mantis-battle-vulkan-audit.json",
+        "sha256": "e61135ac173078ac6e06fc248d785bdf93ba234f56c0864f7a58be0f5c25c102"
+      },
+      "frames": 180,
+      "ssao_resolves": 174,
+      "gpu_mean_ms": {
+        "mgs_ssao": 2.8513,
+        "present": 0.0368,
+        "replay_tail": 5.4133,
+        "resolve": 1.2124,
+        "setup": 0.1089,
+        "total": 9.4974
+      },
+      "comparisons": [
+        {
+          "frame": 4260,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/04-mantis-battle-vulkan/gpu/frame-4260-present-1-ordinary-scanout.ppm",
+            "sha256": "f49224de9fd1de50cbc4d905c41e25c86eeb0727ba050c1fdbd5d22ebc556591"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/native/frame-4260.ppm",
+              "sha256": "def3f4e3e6b517636586a5893f1aae2ea3c948c730ba96c3c249c597767ca653"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/04-mantis-battle-vulkan/native/frame-4260.ppm",
+              "sha256": "def3f4e3e6b517636586a5893f1aae2ea3c948c730ba96c3c249c597767ca653"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/gpu/frame-4260.ppm",
+              "sha256": "2f2d460f5f5b14a71c79ff8e1535b42632135a186a58d138b8249b4308270790"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/04-mantis-battle-vulkan/gpu/frame-4260.ppm",
+              "sha256": "2f2d460f5f5b14a71c79ff8e1535b42632135a186a58d138b8249b4308270790"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/gpu/frame-4260-present-1-ordinary-scanout.ppm",
+            "sha256": "c5f19d3563b3186031de9dc1c918ad681d1d155f08f8b5ca69f12b2189da2eb2"
+          }
+        },
+        {
+          "frame": 4320,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/04-mantis-battle-vulkan/gpu/frame-4320-present-2-ordinary-scanout.ppm",
+            "sha256": "f84f5a3740cfc16288054bb114bd76822865b257f6a424fa5d8df594c42e361a"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/native/frame-4320.ppm",
+              "sha256": "58bda139a99a6181369cfef8a803a1e4794bdf8350c41a51eb172b61b5e703d5"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/04-mantis-battle-vulkan/native/frame-4320.ppm",
+              "sha256": "58bda139a99a6181369cfef8a803a1e4794bdf8350c41a51eb172b61b5e703d5"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/gpu/frame-4320.ppm",
+              "sha256": "118cab623467585df9ea8cc0b875c2b3c5ba7137e87219087f87749b7b87ad23"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/04-mantis-battle-vulkan/gpu/frame-4320.ppm",
+              "sha256": "118cab623467585df9ea8cc0b875c2b3c5ba7137e87219087f87749b7b87ad23"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/gpu/frame-4320-present-2-ordinary-scanout.ppm",
+            "sha256": "3f6154fe754c4d6bc2d64baad0cd3800dff8156e99697abeaea3621df8eee5ee"
+          }
+        },
+        {
+          "frame": 4380,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/04-mantis-battle-vulkan/gpu/frame-4380-present-3-ordinary-scanout.ppm",
+            "sha256": "44fb6fd05e23c66b4f1a2d27637ad97713fc0755e50e1388645f4797d3792f97"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/native/frame-4380.ppm",
+              "sha256": "90e643763c82389c1de33ef20c745276bb0a551bc72159e6bb0000612886266b"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/04-mantis-battle-vulkan/native/frame-4380.ppm",
+              "sha256": "90e643763c82389c1de33ef20c745276bb0a551bc72159e6bb0000612886266b"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/gpu/frame-4380.ppm",
+              "sha256": "114bcecf3fa08e2c173ef62fcf5b23337218593c932ee6b990b85529cffbcf51"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/04-mantis-battle-vulkan/gpu/frame-4380.ppm",
+              "sha256": "114bcecf3fa08e2c173ef62fcf5b23337218593c932ee6b990b85529cffbcf51"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/04-mantis-battle-vulkan/gpu/frame-4380-present-3-ordinary-scanout.ppm",
+            "sha256": "cc0c4ce2ded703d3b522e32b8a62647473b4cc0cea98625a50089c7833a9e6ea"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Jeep, primo sbarramento",
+      "audit": {
+        "path": "data/validation/presentation/ssao-20261008-final/05-jeep-final-vulkan-audit.json",
+        "sha256": "77ab9b817b8e0ae44e13028d846117d61d7caac45a91ee807cb0d91daf53cdac"
+      },
+      "frames": 180,
+      "ssao_resolves": 174,
+      "gpu_mean_ms": {
+        "mgs_ssao": 3.3274,
+        "present": 0.0459,
+        "replay_tail": 12.5526,
+        "resolve": 1.0931,
+        "setup": 0.1092,
+        "total": 16.982
+      },
+      "comparisons": [
+        {
+          "frame": 4680,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/05-jeep-final-vulkan/gpu/frame-4680-present-1-ordinary-scanout.ppm",
+            "sha256": "065f8be9ac488c17b18dadc762a897006955f1cb362f755235bfd505d9927997"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/native/frame-4680.ppm",
+              "sha256": "fb6aebaf97b205a007df00cb254fc9915e8ca58efae0a65c605760da4874ff5a"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/05-jeep-final-vulkan/native/frame-4680.ppm",
+              "sha256": "fb6aebaf97b205a007df00cb254fc9915e8ca58efae0a65c605760da4874ff5a"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/gpu/frame-4680.ppm",
+              "sha256": "63d37ab00d7c05f60649204a3180a2dde0de956066ffe3e61f73dc889db898aa"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/05-jeep-final-vulkan/gpu/frame-4680.ppm",
+              "sha256": "63d37ab00d7c05f60649204a3180a2dde0de956066ffe3e61f73dc889db898aa"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/gpu/frame-4680-present-1-ordinary-scanout.ppm",
+            "sha256": "065f8be9ac488c17b18dadc762a897006955f1cb362f755235bfd505d9927997"
+          }
+        },
+        {
+          "frame": 4740,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/05-jeep-final-vulkan/gpu/frame-4740-present-2-ordinary-scanout.ppm",
+            "sha256": "7efbce2a12d98c9871e0922598ee74fb8eba425fa2468a68cfccf07ebca92597"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/native/frame-4740.ppm",
+              "sha256": "76392c68d190ef6350a7260217017cad41575600109829e4419a1d79589ecee3"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/05-jeep-final-vulkan/native/frame-4740.ppm",
+              "sha256": "76392c68d190ef6350a7260217017cad41575600109829e4419a1d79589ecee3"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/gpu/frame-4740.ppm",
+              "sha256": "60c3795270ec947c227eac457f291a6e9c56beb8ce9f36059197b7c4a1e716f0"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/05-jeep-final-vulkan/gpu/frame-4740.ppm",
+              "sha256": "60c3795270ec947c227eac457f291a6e9c56beb8ce9f36059197b7c4a1e716f0"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/gpu/frame-4740-present-2-ordinary-scanout.ppm",
+            "sha256": "f6de2dff778dd7b7124437b3c15c8587dee9086a65afe7b8d73771c406596b84"
+          }
+        },
+        {
+          "frame": 4800,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/05-jeep-final-vulkan/gpu/frame-4800-present-3-ordinary-scanout.ppm",
+            "sha256": "90a1d490070aa37ad92f48e03cf00ac64cb38b5b79be640e969a14b252b5ed99"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/native/frame-4800.ppm",
+              "sha256": "7dba7bdb9197093de5bd81edf24591a2dfbc745be7ee1b96aa72b604e3089535"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/05-jeep-final-vulkan/native/frame-4800.ppm",
+              "sha256": "7dba7bdb9197093de5bd81edf24591a2dfbc745be7ee1b96aa72b604e3089535"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/gpu/frame-4800.ppm",
+              "sha256": "3f7172d45c770392eb8fa10511a964491128397f317c209b277131d9e7cc7248"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/05-jeep-final-vulkan/gpu/frame-4800.ppm",
+              "sha256": "3f7172d45c770392eb8fa10511a964491128397f317c209b277131d9e7cc7248"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/05-jeep-final-vulkan/gpu/frame-4800-present-3-ordinary-scanout.ppm",
+            "sha256": "174e8247e078eedd060e1d1c5e0b7c47a075bea5859d1af7b57d1811264e4ff0"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Neve",
+      "audit": {
+        "path": "data/validation/presentation/ssao-20261008-final/06-snow-fixed-audit.json",
+        "sha256": "187fc950e74fa6bea9ea11e46d6ef31430915d5917d98f65ec78c88e4b0292c4"
+      },
+      "frames": 180,
+      "ssao_resolves": 175,
+      "gpu_mean_ms": {
+        "mgs_ssao": 3.4669,
+        "present": 0.0431,
+        "replay_tail": 23.965,
+        "resolve": 1.1799,
+        "setup": 0.1095,
+        "total": 28.6311
+      },
+      "comparisons": [
+        {
+          "frame": 2100,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/06-snow-fixed/gpu/frame-2100-present-1-ordinary-scanout.ppm",
+            "sha256": "0f4c86fdb114a059741cdb9734fa0181f11919065ac6a992731c7684e4bcc05c"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/06-snow-fixed/native/frame-2100.ppm",
+              "sha256": "1cfe7ebf8c6fec55e15ba6f5fcb168587d4efd725eb038fecf62527b16ddd6fe"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/06-snow-fixed/native/frame-2100.ppm",
+              "sha256": "1cfe7ebf8c6fec55e15ba6f5fcb168587d4efd725eb038fecf62527b16ddd6fe"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/06-snow-fixed/gpu/frame-2100.ppm",
+              "sha256": "a2039573c9153b657a655937b01d754406fef42bb6bf6eec8d395384efcbd671"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/06-snow-fixed/gpu/frame-2100.ppm",
+              "sha256": "a2039573c9153b657a655937b01d754406fef42bb6bf6eec8d395384efcbd671"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/06-snow-fixed/gpu/frame-2100-present-1-ordinary-scanout.ppm",
+            "sha256": "1cf7d995d56d7c6f3c16c1531f17df8308fbb2adbee152535958b8d984a8896b"
+          }
+        },
+        {
+          "frame": 2160,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/06-snow-fixed/gpu/frame-2160-present-2-ordinary-scanout.ppm",
+            "sha256": "27eb670038fc5053f8b0d4d85ce8e73c84db07cb354a1f94dc64d9b17c8ed5e9"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/06-snow-fixed/native/frame-2160.ppm",
+              "sha256": "d9adabacc483d3cde036913c935d3bdc99ae2dd41e5033044e2d7ee90c5b000b"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/06-snow-fixed/native/frame-2160.ppm",
+              "sha256": "d9adabacc483d3cde036913c935d3bdc99ae2dd41e5033044e2d7ee90c5b000b"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/06-snow-fixed/gpu/frame-2160.ppm",
+              "sha256": "d56e3701a700a2e85e648e34d7a8b91ebb6f92a5db785032e52aada0db5cac65"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/06-snow-fixed/gpu/frame-2160.ppm",
+              "sha256": "d56e3701a700a2e85e648e34d7a8b91ebb6f92a5db785032e52aada0db5cac65"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/06-snow-fixed/gpu/frame-2160-present-2-ordinary-scanout.ppm",
+            "sha256": "49c313763ae1adc026fc1cc6e38085880a54409af5622be4880b7d6b7d73419d"
+          }
+        },
+        {
+          "frame": 2220,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/06-snow-fixed/gpu/frame-2220-present-3-ordinary-scanout.ppm",
+            "sha256": "8f1a35fd89924fe83fb3539f906e35967e34b7754945a5b65a477ac73f6e9714"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/06-snow-fixed/native/frame-2220.ppm",
+              "sha256": "2a703dcd196709f70d6493301194015514e308815826bdc29fcca827d98589e1"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/06-snow-fixed/native/frame-2220.ppm",
+              "sha256": "2a703dcd196709f70d6493301194015514e308815826bdc29fcca827d98589e1"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/06-snow-fixed/gpu/frame-2220.ppm",
+              "sha256": "4c0c8f1f846c240e97683a2b0e202a54d3b259828edd25468c0a5f93870e1d48"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/06-snow-fixed/gpu/frame-2220.ppm",
+              "sha256": "4c0c8f1f846c240e97683a2b0e202a54d3b259828edd25468c0a5f93870e1d48"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/06-snow-fixed/gpu/frame-2220-present-3-ordinary-scanout.ppm",
+            "sha256": "f54f9f12f8d0e15b0b2eda29f3d62867121805bfe6d8209b3c9751eb424a626f"
+          }
+        }
+      ]
+    },
+    {
+      "label": "s17a",
+      "audit": {
+        "path": "data/validation/presentation/ssao-20261008-final/07-rex-fixed-audit.json",
+        "sha256": "bf8c58c08266da8b30e42b55bf9c5f240f832576bb719fbb03f4b751d2cb70c6"
+      },
+      "frames": 180,
+      "ssao_resolves": 175,
+      "gpu_mean_ms": {
+        "mgs_ssao": 2.4984,
+        "present": 0.0703,
+        "replay_tail": 16.2806,
+        "resolve": 1.364,
+        "setup": 0.1093,
+        "total": 20.2266
+      },
+      "comparisons": [
+        {
+          "frame": 4920,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/07-rex-fixed/gpu/frame-4920-present-1-ordinary-scanout.ppm",
+            "sha256": "0cd7bd3840cfc4ff73180e71e2509dd7d5e91a7585c2d7547230d7640d62827c"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/07-rex-fixed/native/frame-4920.ppm",
+              "sha256": "ebb5f89bd27f029a9722c87db1b51fc629289aa9876ab30275cd56fb1ebce607"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/07-rex-fixed/native/frame-4920.ppm",
+              "sha256": "ebb5f89bd27f029a9722c87db1b51fc629289aa9876ab30275cd56fb1ebce607"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/07-rex-fixed/gpu/frame-4920.ppm",
+              "sha256": "aab40cf51b68b71c99299dd782189c2e284e285db07eb02f01cf7dadae52fb72"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/07-rex-fixed/gpu/frame-4920.ppm",
+              "sha256": "aab40cf51b68b71c99299dd782189c2e284e285db07eb02f01cf7dadae52fb72"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/07-rex-fixed/gpu/frame-4920-present-1-ordinary-scanout.ppm",
+            "sha256": "911bd413b6f039c09e6fa27da1ee4d56068c60b1f16a7030fb6f414433d1dd1d"
+          }
+        },
+        {
+          "frame": 4980,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/07-rex-fixed/gpu/frame-4980-present-2-ordinary-scanout.ppm",
+            "sha256": "b4c12bc5cba148ccfc73ac550e499dd42ca009a848360cca68c6fd343702ddfe"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/07-rex-fixed/native/frame-4980.ppm",
+              "sha256": "b3a1b5d363bbd726ed1d7b9ef95356302d9eb970b1bbd7a47db5a31525e42328"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/07-rex-fixed/native/frame-4980.ppm",
+              "sha256": "b3a1b5d363bbd726ed1d7b9ef95356302d9eb970b1bbd7a47db5a31525e42328"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/07-rex-fixed/gpu/frame-4980.ppm",
+              "sha256": "9534d8d9af84f6227a316d650b70a38f2eee7561811ab408688efd08a052755f"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/07-rex-fixed/gpu/frame-4980.ppm",
+              "sha256": "9534d8d9af84f6227a316d650b70a38f2eee7561811ab408688efd08a052755f"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/07-rex-fixed/gpu/frame-4980-present-2-ordinary-scanout.ppm",
+            "sha256": "a93ea3e7dbad3a931edb637988895fe14d884ad9c13771c0421f3723a87c6cd1"
+          }
+        },
+        {
+          "frame": 5040,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/07-rex-fixed/gpu/frame-5040-present-3-ordinary-scanout.ppm",
+            "sha256": "bdd35b1ee3ce1dacfcb411a45c0a5d1c34fd6c0b32c2d47c07b324b0e282f2a7"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/07-rex-fixed/native/frame-5040.ppm",
+              "sha256": "64acaf8a360dbabe6ea31ca811e3f395150ef22b282ead95eb35cb029dc2ebec"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/07-rex-fixed/native/frame-5040.ppm",
+              "sha256": "64acaf8a360dbabe6ea31ca811e3f395150ef22b282ead95eb35cb029dc2ebec"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/07-rex-fixed/gpu/frame-5040.ppm",
+              "sha256": "300e74380338ec1ea9a8246693ac7145df3604ac3a8c7fbfce7e1f001d1a66c5"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/07-rex-fixed/gpu/frame-5040.ppm",
+              "sha256": "300e74380338ec1ea9a8246693ac7145df3604ac3a8c7fbfce7e1f001d1a66c5"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/07-rex-fixed/gpu/frame-5040-present-3-ordinary-scanout.ppm",
+            "sha256": "1a9c3f93b573688358f11800d0a76c4bfc4adb93f320c6a52bf9852da17be3f5"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Fornace s13a",
+      "audit": {
+        "path": "data/validation/presentation/ssao-20261008-final/08-furnace-fixed-audit.json",
+        "sha256": "962c4c49d624d7ad191dbc3796fb46f2bbc02671a65ef21a5de00adcd3a1dcd7"
+      },
+      "frames": 180,
+      "ssao_resolves": 175,
+      "gpu_mean_ms": {
+        "mgs_ssao": 3.1525,
+        "present": 0.0224,
+        "replay_tail": 2.0511,
+        "resolve": 1.0792,
+        "setup": 0.1103,
+        "total": 6.2941
+      },
+      "comparisons": [
+        {
+          "frame": 2160,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/08-furnace-fixed/gpu/frame-2160-present-1-ordinary-scanout.ppm",
+            "sha256": "53766c53ce4754a9c21d8c32d423e52460fc668d3722c5891a4e1c6ec3296687"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/native/frame-2160.ppm",
+              "sha256": "e197923f479e92b8308da325ecae2e32587f1c9042522ac2b1ff1b90b89aa3e8"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/08-furnace-fixed/native/frame-2160.ppm",
+              "sha256": "e197923f479e92b8308da325ecae2e32587f1c9042522ac2b1ff1b90b89aa3e8"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/gpu/frame-2160.ppm",
+              "sha256": "fbc6ef7ff40f6d2688adffdf7dc9b16f3bf870ad5e2c70e570f48603f692c50f"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/08-furnace-fixed/gpu/frame-2160.ppm",
+              "sha256": "fbc6ef7ff40f6d2688adffdf7dc9b16f3bf870ad5e2c70e570f48603f692c50f"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/gpu/frame-2160-present-1-ordinary-scanout.ppm",
+            "sha256": "2d36321dce000e95a59bdbb8036b83941bb47cc9efa1aaeb9ba71470a0250b8f"
+          }
+        },
+        {
+          "frame": 2220,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/08-furnace-fixed/gpu/frame-2220-present-2-ordinary-scanout.ppm",
+            "sha256": "a3d05c7075a4b49e24065616c64ca2c3d5fad4046ffc587c6de233b15002ca6c"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/native/frame-2220.ppm",
+              "sha256": "9238dad987aad76288269ecf02f84b3cfa9d519e3f801d66f8581feff9570fdb"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/08-furnace-fixed/native/frame-2220.ppm",
+              "sha256": "9238dad987aad76288269ecf02f84b3cfa9d519e3f801d66f8581feff9570fdb"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/gpu/frame-2220.ppm",
+              "sha256": "86c3fab71711531efc7c9bd1c8c30c93367ccdfd8bfec6507a0f2e5256c043c0"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/08-furnace-fixed/gpu/frame-2220.ppm",
+              "sha256": "86c3fab71711531efc7c9bd1c8c30c93367ccdfd8bfec6507a0f2e5256c043c0"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/gpu/frame-2220-present-2-ordinary-scanout.ppm",
+            "sha256": "6c25a7e3cf7aefcc926bfd7c220dc0f0deb55f99dccb9a1fe57233705e0756bd"
+          }
+        },
+        {
+          "frame": 2280,
+          "ao_capture": {
+            "path": "data/validation/presentation/ssao-20261008-final/08-furnace-fixed/gpu/frame-2280-present-3-ordinary-scanout.ppm",
+            "sha256": "53766c53ce4754a9c21d8c32d423e52460fc668d3722c5891a4e1c6ec3296687"
+          },
+          "native": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/native/frame-2280.ppm",
+              "sha256": "e197923f479e92b8308da325ecae2e32587f1c9042522ac2b1ff1b90b89aa3e8"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/08-furnace-fixed/native/frame-2280.ppm",
+              "sha256": "e197923f479e92b8308da325ecae2e32587f1c9042522ac2b1ff1b90b89aa3e8"
+            },
+            "byte_identical": true
+          },
+          "gpu": {
+            "before": {
+              "path": "data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/gpu/frame-2280.ppm",
+              "sha256": "fbc6ef7ff40f6d2688adffdf7dc9b16f3bf870ad5e2c70e570f48603f692c50f"
+            },
+            "after": {
+              "path": "data/validation/presentation/ssao-20261008-final/08-furnace-fixed/gpu/frame-2280.ppm",
+              "sha256": "fbc6ef7ff40f6d2688adffdf7dc9b16f3bf870ad5e2c70e570f48603f692c50f"
+            },
+            "byte_identical": true
+          },
+          "no_ao_capture": {
+            "path": "data/validation/presentation/physical-gpu-20261008/08-furnace-fixed/gpu/frame-2280-present-3-ordinary-scanout.ppm",
+            "sha256": "2d36321dce000e95a59bdbb8036b83941bb47cc9efa1aaeb9ba71470a0250b8f"
+          }
+        }
+      ]
+    }
+  ],
+  "gpu_tests": {
+    "report": {
+      "path": "data/validation/presentation/ssao-20261008-final/gpu-tests.json",
+      "sha256": "0bc9024c5860d6119f17ae3eb4b56295aa03a921478f232f2583b8d83b977260"
+    },
+    "binary": {
+      "path": "build/ps1Test/ps1Runtime_tests",
+      "sha256": "0286c405c63c9e6ed028ea22b788c69d4f3f8dbaba97e1c17aba4321174b0ff1"
+    },
+    "passed": 140,
+    "skipped": [
+      "MgsSurfaceEffectsSnapshotTest.OptInRetailFogFollowsRelocatedCodeAndZoomParameters",
+      "MgsSurfaceEffectsSnapshotTest.OptInRetailRamProvesAnimationLayout"
+    ],
+    "gpu_opt_in_passed": [
+      "MgsSourceMeshTest.OptInGpuLightingIsPerPixelAndNativeRasterUnchanged",
+      "MgsSourceMeshTest.OptInGpuSsaoContactsRespectDistanceHudAndNativeRaster",
+      "MgsScreenEffectsTest.OptInGpuClippedScreenCopyPreservesSubpixelScene",
+      "MgsScreenEffectsTest.OptInGpuScreenTexturePreservesSubpixelSceneAndRgb8",
+      "MgsScreenEffectsTest.OptInUnderwaterFogUsesSceneDepthAndExcludesFurnace",
+      "MgsScreenEffectsTest.OptInGpuVisorRetainsSubpixelEdgesAndNativeVram",
+      "MgsScreenEffectsTest.OptInGpuFadeEndpointsAndEnvelopeUseTrueColor",
+      "GpuModernReplayVulkanCopyTest.OptInGpuDepthPresentationReconstructsPreAndSplitViews",
+      "GpuModernReplayVulkanCopyTest.OptInGpuReadbackProvesTrueColorMaskOverlapAndDepthPlanes",
+      "GpuModernReplayVulkanDepthTest.OptInGpuPerspectiveDepthIsIndependentOfPlanarQuadDiagonal",
+      "GpuModernReplayVulkanDepthTest.OptInGpuPainterWriteKeepsOtLaterOpaqueVisibleAcrossRejectedHole",
+      "GpuModernReplayVulkanDepthTest.OptInGpuCrashSemiTransparencyWritesPresentedSurfaceOnlyWhereAccepted",
+      "GpuModernReplayVulkanDepthTest.OptInGpuFragmentStackOverflowReportsRequiredRecordsAndFailsClosed",
+      "GpuModernReplayVulkanDepthTest.OptInGpuPainterWriteCoversTexturedDiscardAndMaskFeedback",
+      "GpuModernReplayVulkanDepthTest.OptInGpuPaintRunsPreserveOpaqueBlendedPixelsAndHoles",
+      "GpuModernReplayVulkanDepthTest.OptInMgsOriginalPcxMatchesGpuAndTracksRuntimePalette",
+      "GpuModernReplayVulkanDepthTest.OptInMgsOriginal8BitPcxKeepsIndicesAndTracksRuntimePalette",
+      "GpuModernReplayVulkanDepthTest.OptInUhdRasterHasTwelveSubpixelsAndNativeOracle",
+      "MgsSurfaceEffectsGpuTest.OptInGpuContinuousGlowAccumulatesAndLeavesNativeVramUnchanged",
+      "MgsSurfaceEffectsGpuTest.OptInBubbleDepthOffsetKeepsAuthoredPlumeVisible",
+      "MgsSurfaceEffectsGpuTest.OptInExplosionVolumeOccludesAgainstGeometryWithoutOrderingBypass",
+      "MgsSurfaceEffectsGpuTest.OptInPhotoCapturesModernScanoutWithoutDiagnosticMode"
+    ],
+    "validation_errors": 0
+  },
+  "synchronization_test": {
+    "report": {
+      "path": "data/validation/presentation/ssao-20261008-final/ssao-sync.json",
+      "sha256": "2bd50735d272c34f2422aa45609867d3619755e7ab1965047ee817b2f547f892"
+    },
+    "log": {
+      "path": "data/validation/presentation/ssao-20261008-final/ssao-sync.log",
+      "sha256": "6d12cf85aaf1565fab5e56b327ad6d5f92d3b6cca7d674c4f7c37270c11e1244"
+    },
+    "environment": {
+      "VK_VALIDATION_VALIDATE_SYNC": "1"
+    },
+    "passed": true
+  },
+  "soak": {
+    "path": "data/validation/presentation/ssao-20261008-final/soak/report.json",
+    "sha256": "a443134e43132207c4d66321dad4eb1b7a6ef841b4fd683b016fd9f4eee77675"
+  },
+  "comparison": {
+    "path": "data/validation/presentation/ssao-20261008-final/ao-comparison.png",
+    "sha256": "c8f38bcd7171e953d4ef8c76d5dc48759c3313c3ffa92c36901cc8c339e29237"
+  },
+  "full_resolution_capture": {
+    "path": "data/validation/presentation/ssao-20261008-final/meryl-ao-3840x2160.png",
+    "sha256": "11748c2b07941d48cfb56521af0dc36158483a8e01e7e6c7df3d95eb70143f35"
+  },
+  "native_framebuffer_comparisons": 24,
+  "unchanged_pre_ao_atlas_comparisons": 24,
+  "python_tests_passed": 197,
+  "protected_saves_unchanged": true,
+  "limits": [
+    "Adapted fixed-cost ASSAO kernel, not the complete Godot Forward+ implementation.",
+    "Final-surface compositing affects already-lit color; no separate ambient light term.",
+    "Screen effects that invalidate geometric depth are preserved, not occluded.",
+    "Eight short checkpoint windows, not whole-game visual certification.",
+    "GPU timings include instrumentation; not a production FPS benchmark.",
+    "Whole final RAM is identical in seven scenes; the intro differs in 15 bytes, with equal endpoint gameplay fields, game-tick counts and all sampled native/atlas images. This is not a whole-RAM determinism claim."
+  ],
+  "python_tests_log": {
+    "path": "data/validation/presentation/ssao-20261008-final/python-tests.log",
+    "sha256": "55b610db32a63c6bdd6dd3211c28ca369781b058bb915c48cd13cc7cb027c35e"
+  },
+  "additional_endpoint_ram_comparison": [
+    {
+      "scene": "01-dock-final-4k-audit",
+      "identical": true,
+      "different_bytes": 0,
+      "game_state_identical": true,
+      "game_ticks_identical": true
+    },
+    {
+      "scene": "02-water-fixed-audit",
+      "identical": false,
+      "different_bytes": 15,
+      "game_state_identical": true,
+      "game_ticks_identical": true
+    },
+    {
+      "scene": "03-hind-final-audit",
+      "identical": true,
+      "different_bytes": 0,
+      "game_state_identical": true,
+      "game_ticks_identical": true
+    },
+    {
+      "scene": "04-mantis-battle-vulkan-audit",
+      "identical": true,
+      "different_bytes": 0,
+      "game_state_identical": true,
+      "game_ticks_identical": true
+    },
+    {
+      "scene": "05-jeep-final-vulkan-audit",
+      "identical": true,
+      "different_bytes": 0,
+      "game_state_identical": true,
+      "game_ticks_identical": true
+    },
+    {
+      "scene": "06-snow-fixed-audit",
+      "identical": true,
+      "different_bytes": 0,
+      "game_state_identical": true,
+      "game_ticks_identical": true
+    },
+    {
+      "scene": "07-rex-fixed-audit",
+      "identical": true,
+      "different_bytes": 0,
+      "game_state_identical": true,
+      "game_ticks_identical": true
+    },
+    {
+      "scene": "08-furnace-fixed-audit",
+      "identical": true,
+      "different_bytes": 0,
+      "game_state_identical": true,
+      "game_ticks_identical": true
+    }
+  ]
+}

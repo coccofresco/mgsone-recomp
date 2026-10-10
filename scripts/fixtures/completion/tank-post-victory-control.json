@@ -1,0 +1,24 @@
+{
+  "format": "mgs-situation-1",
+  "name": "tank-post-victory-nuclear-building-control",
+  "source": "USA s06a/ea54 entry after s05a victory; procedure 8a53 @5383 assigns linked0018 (max life) = 384. game/g_define.h STATE_PADRELEASE and libgv pause flags: a nonzero CONTROL during the entry animation does not establish playable control.",
+  "requires": {"stage": "s06a", "story": 69, "gcl_1180006c": 3, "life": {"min": 1}},
+  "preserve": ["disc", "difficulty", "gcl_1180006c"],
+  "compare": ["stage", "story", "disc", "difficulty", "max_life", "pause_level", "game_over_timer", "gcl_1180006c"],
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [{
+      "name": "original-entry-animation-and-codec-to-control",
+      "until": {
+        "stage": "s06a", "story": 69, "control": {"ne": 0}, "life": 384, "max_life": 384,
+        "pause_level": 0, "game_over_timer": 0, "load_request": 0, "actor_loader_count": 0,
+        "game_status": {"mask": 3691511808, "eq": 0},
+        "player_status": {"mask": 536870912, "eq": 0}, "gcl_1180006c": 3
+      },
+      "when": {"pause_level": {"mask": 1, "eq": 1}},
+      "action": {"sequence": "cross:3,wait:12"},
+      "attempts": 1000, "max_frames": 12000, "stable_frames": 30,
+      "abort_when": {"life": 0}
+    }]
+  }
+}

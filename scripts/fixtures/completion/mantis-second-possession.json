@@ -1,0 +1,114 @@
+{
+  "format": "mgs-situation-1",
+  "name": "mantis-first-health-gate",
+  "source": "USA original actor psyco.c act800D3ACC, TARGET pointer+7e0 life+26; phase callback800D32C8 compares target life against retail table800C5AEA=480. Fixture supplies only post-damage life; original actor and GCL 0b90->9ae1 must advance.",
+  "requires": {
+    "stage": "s07b",
+    "story": 125,
+    "actor_psyco_count": 1,
+    "gcl_12000046": 2
+  },
+  "preserve": [
+    "disc",
+    "difficulty",
+    "max_life",
+    "weapons",
+    "items"
+  ],
+  "compare": [
+    "stage",
+    "story",
+    "disc",
+    "difficulty",
+    "max_life",
+    "game_over_timer",
+    "gcl_12000046"
+  ],
+  "fixture": {
+    "scope": "Synthetic post-damage boundaries: nonlethal Meryl stun plus Mantis life at first phase threshold. Original hit reactions, Meryl fall, boss state progression and film/callbacks must execute. Does not certify player aim/punches or controller/statue mechanics.",
+    "patches": [
+      {
+        "actor": "psyco.c",
+        "act": "0x800d3acc",
+        "offset": "0x7e0",
+        "indirect_offset": 38,
+        "width": 2,
+        "expect": 1080,
+        "value": 480,
+        "source": "USA s07b original TARGET life; threshold table800C5AEA and comparison800D3304",
+        "reason": "Damage boundary at first original phase threshold"
+      },
+      {
+        "actor": "meryl07b.c",
+        "act": "0x800cc660",
+        "offset": "0x7dc",
+        "indirect_offset": 6,
+        "width": 2,
+        "expect": 0,
+        "value": 4,
+        "signed": false,
+        "source": "USA meryl07b.c act800CC660: TARGET pointer+7dc; 800C7B8C checks damaged&4, 800C7BB4 compares attack mode3 (punch); 800C7BF0 tests nonlethal stun<=0 and chooses800C879C; 800C8DB0 publishes down flag0x1000 consumed by psyco state0.",
+        "reason": "Nonlethal post-punch stun boundary; original hit reaction/down animation must execute"
+      },
+      {
+        "actor": "meryl07b.c",
+        "act": "0x800cc660",
+        "offset": "0x7dc",
+        "indirect_offset": 42,
+        "width": 2,
+        "expect": 20,
+        "value": 0,
+        "signed": false,
+        "source": "USA meryl07b.c act800CC660: TARGET pointer+7dc; 800C7B8C checks damaged&4, 800C7BB4 compares attack mode3 (punch); 800C7BF0 tests nonlethal stun<=0 and chooses800C879C; 800C8DB0 publishes down flag0x1000 consumed by psyco state0.",
+        "reason": "Nonlethal post-punch stun boundary; original hit reaction/down animation must execute"
+      },
+      {
+        "actor": "meryl07b.c",
+        "act": "0x800cc660",
+        "offset": "0x7dc",
+        "indirect_offset": 62,
+        "width": 2,
+        "expect": -1,
+        "value": 3,
+        "signed": true,
+        "source": "USA meryl07b.c act800CC660: TARGET pointer+7dc; 800C7B8C checks damaged&4, 800C7BB4 compares attack mode3 (punch); 800C7BF0 tests nonlethal stun<=0 and chooses800C879C; 800C8DB0 publishes down flag0x1000 consumed by psyco state0.",
+        "reason": "Nonlethal post-punch stun boundary; original hit reaction/down animation must execute"
+      }
+    ]
+  },
+  "route": {
+    "format": "mgs-tas-route-1",
+    "steps": [
+      {
+        "name": "original-second-meryl-possession",
+        "until": {
+          "stage": "s07b",
+          "story": 129,
+          "gcl_12000046": 3,
+          "actor_meryl07b_count": 1,
+          "actor_loader_count": 0,
+          "load_request": 0,
+          "pause_level": 0,
+          "life": {
+            "min": 1
+          }
+        },
+        "when": {
+          "pause_level": {
+            "mask": 1,
+            "eq": 1
+          }
+        },
+        "action": {
+          "sequence": "cross:3,wait:12"
+        },
+        "attempts": 1000,
+        "stable_frames": 10,
+        "max_frames": 9000,
+        "abort_when": {
+          "life": 0
+        }
+      }
+    ]
+  }
+}

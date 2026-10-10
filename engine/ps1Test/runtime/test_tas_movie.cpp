@@ -77,6 +77,44 @@ TEST_F(TasMovieTest, ReplaysExactSamplesAndTerminalWitnessAtNativeBoundaries) {
   EXPECT_FALSE(replay.failed()) << replay.error();
 }
 
+TEST_F(TasMovieTest, ResourceProbeReleasesGateBeforeReplacingTimeline) {
+  TasMovie probe;
+  probe.openProbe();
+  InputController input;
+  for (uint64_t start : {100u, 700u, 30u}) {
+    probe.start(start);
+    probe.requestTick();
+    std::atomic<bool> returned{false};
+    std::thread guest([&] { probe.checkpoint(0x80010000); returned=true; });
+    EXPECT_TRUE(waitForGate(probe));
+    EXPECT_FALSE(returned);
+    // Probe mode records no RAM hash/movie, but still enforces every clock edge.
+    EXPECT_TRUE(probe.frame(start+1,nullptr,0,input));
+    EXPECT_EQ(probe.frameCount(),1u);
+    probe.suspendProbe();
+    guest.join();
+    EXPECT_TRUE(returned);
+    EXPECT_FALSE(probe.active());
+  }
+  EXPECT_FALSE(probe.failed()) << probe.error();
+  probe.finish();
+}
+
+TEST_F(TasMovieTest, ProbeRejectsSkippedClockAndCannotSuspendOrdinaryMovie) {
+  TasMovie probe;
+  probe.openProbe(); probe.start(100); probe.requestTick();
+  InputController input;
+  std::thread guest([&] { probe.checkpoint(0x80010000); });
+  EXPECT_TRUE(waitForGate(probe));
+  EXPECT_FALSE(probe.frame(102,nullptr,0,input));
+  EXPECT_TRUE(probe.failed());
+  probe.finish(); guest.join();
+  TasMovie ordinary; std::string error;
+  ASSERT_TRUE(ordinary.open(path,false,error));
+  ordinary.suspendProbe();
+  EXPECT_TRUE(ordinary.failed());
+}
+
 TEST_F(TasMovieTest, RejectsTruncationAndMalformedTimelines) {
   const std::string frame = "F 1 101 10 2147549184 65535 128 128 128 128 65 "
                             "65535 128 128 128 128 65\n";

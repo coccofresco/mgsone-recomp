@@ -1245,6 +1245,11 @@ VulkanReplayBakedDraw bakeDraw(const DrawPacket &packet, uint32_t internalScale,
                                uint32_t firstVertex,
                                uint32_t firstVisibilityOwnerToken) noexcept {
   VulkanReplayBakedDraw baked;
+  if (packet.originalMesh) {
+    baked.mgsTemporalIdentity = packet.originalMesh->temporalIdentity;
+    baked.mgsTemporalCamera = packet.originalMesh->temporalCamera;
+    baked.mgsTemporalFrame = packet.originalMesh->temporalFrame;
+  }
   baked.firstVertex = firstVertex;
   baked.vertexCount = packet.indexCount;
   baked.scissor = scaledDrawArea(packet.state.drawArea, internalScale);
