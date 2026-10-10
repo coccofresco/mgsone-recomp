@@ -17,7 +17,8 @@ No original disc images, extracted game assets, BIOS or user saves are bundled.
 | `mgsone-recomp-alpha.1-linux-x86_64.AppImage` | Linux / SteamOS portable application |
 | `mgsone-recomp-alpha.1-linux-x86_64.flatpak` | Linux / SteamOS Flatpak bundle |
 | `mgsone-recomp-alpha.1-windows-x86_64.zip` | Windows x64 application and dependencies |
-| `mgsone-recomp-alpha.1-source.tar.gz` | Matching source snapshot; regenerate game translations from your own discs |
+| `mgs-recomp-0.1.0-alpha.1-source.tar.gz` | Source snapshot accompanying the Linux packages |
+| `mgs-recomp-0.1.0-alpha.1-windows-x86_64-source.tar.gz` | Source snapshot accompanying the Windows package; same source commit |
 | `SHA256SUMS` | SHA-256 checksums for the attached packages |
 | `release-manifest.json` | Exact commit, package identities and scope of packaging checks |
 
@@ -91,7 +92,8 @@ with `alpha.1`, OS, GPU/driver, settings, disc, difficulty, location and steps.
 Inspect diagnostic exports before sharing them. Do not attach discs, extracted
 assets or full memory savestates to public issues.
 
-The matching source archive includes the build and import scripts, notices
-and dependency provenance. Third-party license scopes remain as documented in
+The matching source archives include the build and import scripts, notices
+and dependency provenance; regenerate game translations from your own discs.
+Third-party license scopes remain as documented in
 [THIRD_PARTY_NOTICES](https://github.com/coccofresco/mgsone-recomp/blob/alpha.1/packaging/THIRD_PARTY_NOTICES.md).
 This is an independent, unofficial project.

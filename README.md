@@ -89,7 +89,7 @@ Choose your package from the
 
 In the launcher, import both original USA v1.0 discs and choose **PLAY**.
 No compiler or separate Python installation is needed for these packages.
-The release includes **SHA256SUMS** and the matching source archive. GitHub's
+The release includes **SHA256SUMS** and matching source archives. GitHub's
 automatically generated source archives are not playable packages.
 
 On SteamOS, install in Desktop Mode, add the application as a non-Steam game
