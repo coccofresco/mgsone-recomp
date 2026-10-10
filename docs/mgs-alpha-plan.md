@@ -1,5 +1,21 @@
 # First GitHub alpha: release plan and X360 references
 
+## Public alpha.1 decision — 2026-10-10
+
+The project is now public at https://github.com/coccofresco/mgsone-recomp.
+The publisher explicitly chose to release Linux AppImage/Flatpak and Windows
+ZIP as **alpha.1 — UNTESTED**, before full platform/gameplay qualification.
+The requirements below remain the qualification backlog, not an assertion
+that the public alpha satisfies them. Source-only CI has passed on GitHub;
+package identity/inventory checks do not change the UNTESTED label.
+
+`packaging/alpha.json` records public distribution readiness separately from
+`validation_status: untested`. See the current
+[release notes](../packaging/RELEASE_NOTES.md). The preparation notes below
+describe the earlier internal candidates and are retained as history.
+
+## Original preparation plan
+
 Prepared 2026-10-06. Target: SteamOS desktop and Big Picture, in **AppImage and Flatpak**, followed
 by a public GitHub prerelease after the gates below. The current branch is
 `presentation/source-meshes`; no GitHub remote is configured. Preparation does

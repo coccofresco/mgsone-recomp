@@ -80,10 +80,12 @@ def copy_linux_metadata(prefix):
         shutil.copy2(ROOT/'packaging/linux'/(APP_ID+'.'+suffix),dest)
 
 
-def finish_report(out, artifact, root, kind, extra):
+def finish_report(out, artifact, root, kind, extra, release):
     files={p.relative_to(root).as_posix():digest(p) for p in sorted(root.rglob('*')) if p.is_file()}
     report=dict(schema=1,format=kind,artifact=artifact.name,sha256=digest(artifact),
-                public_release_ready=False,game_data_included=False,files=files,**extra)
+                public_release_ready=release['public_release_ready'],
+                validation_status=release.get('validation_status','unqualified'),
+                game_data_included=False,files=files,**extra)
     atomic_json(out/(kind+'-report.json'),report)
     (out/(artifact.name+'.sha256')).write_text(digest(artifact)+'  '+artifact.name+'\n')
     print(json.dumps({k:v for k,v in report.items() if k!='files'},indent=2))
@@ -120,7 +122,8 @@ def appimage(package, out, sdk, appimagetool, runtime):
     env=dict(os.environ,ARCH='x86_64',APPIMAGE_EXTRACT_AND_RUN='1')
     subprocess.run([str(appimagetool.resolve()),'--runtime-file',str(runtime.resolve()),str(appdir),str(artifact)],env=env,check=True)
     finish_report(out,artifact,appdir,'appimage',dict(glibc_ceiling='2.39',dependency_packages=notices,
-        checked_elf_files=len(abi),tool_sha256=digest(appimagetool),appimage_runtime_sha256=digest(runtime)))
+        checked_elf_files=len(abi),tool_sha256=digest(appimagetool),appimage_runtime_sha256=digest(runtime)),
+        json.loads((package/'build-info.json').read_text()))
 
 
 def flatpak(package,out,stage_only=False):
@@ -162,7 +165,8 @@ def flatpak(package,out,stage_only=False):
     subprocess.run(['flatpak','build-bundle','--arch=x86_64','--runtime-repo=https://flathub.org/repo/flathub.flatpakrepo',
                     str(repo),str(artifact),APP_ID,'alpha'],check=True)
     finish_report(out,artifact,directory,'flatpak',dict(runtime=spec['runtime']+'/'+spec['runtime-version'],
-                  app_id=APP_ID,permissions=spec['finish-args']))
+                  app_id=APP_ID,permissions=spec['finish-args']),
+                  json.loads((package/'build-info.json').read_text()))
 
 
 def main():

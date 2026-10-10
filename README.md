@@ -35,10 +35,11 @@ And, of course, **Konami and the original Metal Gear Solid team**, who made
 the game worth doing all this for.
 [Credits, provenance and license scope](packaging/THIRD_PARTY_NOTICES.md).
 
-> **Experimental alpha source, not a certified complete port.**
-> Linux and Windows candidates exist, but this publication does not include
-> a ready-to-play binary release. A continuous completed campaign, every boss
-> fight and physical Steam Deck compatibility have not been certified.
+> **[alpha.1 — UNTESTED](https://github.com/coccofresco/mgsone-recomp/releases/tag/alpha.1)**
+> Experimental Linux and Windows builds, published for early testing.
+> These release packages are not gameplay- or platform-qualified. A continuous
+> completed campaign, every boss fight and physical Steam Deck compatibility
+> have not been certified. Keep backups and ordinary in-game Codec saves.
 
 ## About
 
@@ -74,6 +75,27 @@ single-track MODE2/2352 CUE/BIN pairs. Other regions, Integral and modified
 images are not currently supported by the native game build. No BIOS download
 is required. Discs, extracted assets and generated game translations are
 prepared locally and are excluded from this repository.
+
+### Download alpha.1 — UNTESTED
+
+Choose your package from the
+**[alpha.1 prerelease](https://github.com/coccofresco/mgsone-recomp/releases/tag/alpha.1)**:
+
+| Platform | Download | Start |
+| --- | --- | --- |
+| Linux / SteamOS x86_64 | [AppImage](https://github.com/coccofresco/mgsone-recomp/releases/download/alpha.1/mgsone-recomp-alpha.1-linux-x86_64.AppImage) | Make executable, then open it |
+| Linux / SteamOS x86_64 | [Flatpak](https://github.com/coccofresco/mgsone-recomp/releases/download/alpha.1/mgsone-recomp-alpha.1-linux-x86_64.flatpak) | Install the bundle, then open MGS Recomp |
+| Windows x64 | [ZIP](https://github.com/coccofresco/mgsone-recomp/releases/download/alpha.1/mgsone-recomp-alpha.1-windows-x86_64.zip) | Extract the entire ZIP, then run MGSRecomp.exe |
+
+In the launcher, import both original USA v1.0 discs and choose **PLAY**.
+No compiler or separate Python installation is needed for these packages.
+The release includes **SHA256SUMS** and the matching source archive. GitHub's
+automatically generated source archives are not playable packages.
+
+On SteamOS, install in Desktop Mode, add the application as a non-Steam game
+and use Steam Input's **Gamepad** layout with launch option `--big-picture`.
+These are experimental packages, not a Deck Verified claim. See the
+[installation guide](docs/mgs-alpha-install.md) for requirements and data paths.
 
 ### Linux development build
 
@@ -112,7 +134,8 @@ remain on the acceptance list. See
 [installation and settings](docs/mgs-alpha-install.md),
 [SteamOS packaging](docs/mgs-steamos.md) and
 [controller compatibility](docs/mgs-controllers.md).
-These pages describe development candidates, not downloadable public releases.
+The downloadable alpha.1 packages retain the **UNTESTED** qualification;
+earlier development checks do not certify these release artifacts.
 
 Keep ordinary **in-game Codec saves** as well as quick states. Alpha savestate
 compatibility can change between builds. The launcher separates application

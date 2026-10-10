@@ -1,4 +1,10 @@
-# Windows alpha
+# Windows alpha.1 — UNTESTED
+
+Download the Windows x64 ZIP from the
+[alpha.1 prerelease](https://github.com/coccofresco/mgsone-recomp/releases/tag/alpha.1).
+These release packages are **UNTESTED**: existing development evidence and
+package integrity checks are not final-package gameplay or native Windows
+qualification. Keep ordinary in-game Codec saves and backups.
 
 Extract the entire ZIP and start **MGSRecomp.exe**. The native frontend supports
 keyboard, mouse and SDL controllers. Import both original **USA v1.0** BIN/CUE

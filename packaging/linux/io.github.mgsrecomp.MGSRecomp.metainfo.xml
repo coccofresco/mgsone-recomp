@@ -5,11 +5,18 @@
   <summary>Native MGS runtime with modern Vulkan graphics</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
+  <url type="homepage">https://github.com/coccofresco/mgsone-recomp</url>
   <description>
     <p>An experimental native runtime for the original USA v1.0 game, with a modern Vulkan presentation and controller-accessible launcher.</p>
     <p>Import both original discs locally. Game data is not included. Continuous campaign completion is not yet certified.</p>
+    <p>alpha.1 is an UNTESTED experimental prerelease. Gameplay and platform compatibility of these packages are not certified.</p>
   </description>
   <launchable type="desktop-id">io.github.mgsrecomp.MGSRecomp.desktop</launchable>
   <supports><control>gamepad</control><control>keyboard</control><control>pointing</control></supports>
   <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0-alpha.1" date="2026-10-10" type="development">
+      <description><p>First public alpha.1 packages for early testing. UNTESTED.</p></description>
+    </release>
+  </releases>
 </component>

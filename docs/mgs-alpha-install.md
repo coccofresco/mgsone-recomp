@@ -1,8 +1,11 @@
-# MGS Recomp — alpha candidate
+# MGSOne alpha.1 — UNTESTED
 
-This is a local preparation build, not yet a public release. Continuous
-campaign completion is not certified. Use the in-game Codec save as well
-as quick states; save-state compatibility can change between alpha builds.
+Download the public **alpha.1 — UNTESTED** prerelease from
+https://github.com/coccofresco/mgsone-recomp/releases/tag/alpha.1.
+Package integrity checks and source CI do not qualify these binaries for
+gameplay or platform compatibility. Continuous campaign completion is not
+certified. Use the in-game Codec save as well as quick states and keep backups;
+save-state compatibility can change between alpha builds.
 
 ## Requirements
 

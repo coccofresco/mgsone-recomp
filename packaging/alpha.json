@@ -1,20 +1,24 @@
 {
   "schema": 1,
-  "version": "0.1.0-alpha.1-dev.4",
-  "channel": "internal-alpha-candidate",
+  "version": "0.1.0-alpha.1",
+  "release_tag": "alpha.1",
+  "channel": "public-untested-alpha",
+  "validation_status": "untested",
+  "prerelease": true,
   "platform": "linux-x86_64",
   "target_system": "SteamOS desktop and Steam Big Picture / Gaming Mode",
   "required_distribution_formats": ["AppImage", "Flatpak"],
   "supported_game": "Metal Gear Solid USA v1.0, both discs",
-  "public_release_ready": false,
+  "public_release_ready": true,
   "minimum_python": "3.11",
   "default_presentation_height": 2160,
   "aspect_ratio": "16:9",
   "simulation_timing": "original NTSC 30/20 fps divisors",
   "known_limits": [
+    "UNTESTED release: package integrity checks and source CI do not qualify these binaries for gameplay or platform compatibility.",
     "Continuous completion and full boss fights are not certified.",
     "Native launcher, host pause/save menu and controller routing require physical controller and Vulkan acceptance on SteamOS.",
-    "Build on a supported Linux baseline before publishing; local development ABI is not a portable minimum requirement.",
-    "Vulkan visual and performance acceptance on physical hardware remains required."
+    "AppImage ELF dependencies are audited against a glibc 2.39 ceiling; that is not physical SteamOS certification.",
+    "Final-package Vulkan visual and performance acceptance remains required."
   ]
 }

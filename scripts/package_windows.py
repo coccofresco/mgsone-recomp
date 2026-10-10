@@ -21,6 +21,7 @@ def build(output, build_dir, sdk):
     release.update(platform='windows-x86_64', target_system='Windows 10 1903+ / Windows 11 x64; Steam desktop and Big Picture',
                    required_distribution_formats=['ZIP'], minimum_python='bundled 3.14.8')
     release['known_limits'] = [
+        'UNTESTED release: package integrity checks and source CI do not qualify these binaries for gameplay or platform compatibility.',
         'Continuous completion and full boss fights are not certified.',
         'Windows binaries are exercised on physical Vulkan hardware through Wine/Proton; native Windows acceptance remains required.',
         'Physical controller hotplug, Steam Input and audio-device acceptance on Windows remains required.',
@@ -109,7 +110,9 @@ def build(output, build_dir, sdk):
         for path in sorted(folder.rglob('*')):
             if path.is_file(): out.write(path, name+'/'+path.relative_to(folder).as_posix())
     (output/'SHA256SUMS').write_text(''.join(f'{digest(p)}  {p.name}\n' for p in (archive,source_archive)))
-    atomic_json(output/'package-report.json', dict(schema=1, status='candidate-assembled', public_release_ready=False,
+    atomic_json(output/'package-report.json', dict(schema=1, status='candidate-assembled',
+        public_release_ready=release['public_release_ready'],
+        validation_status=release.get('validation_status','unqualified'),
         archive=archive.name, source_archive=source_archive.name, files=len(files), shaders=len(shaders),
         runtime_sha256=release['runtime_sha256']))
     print(folder)

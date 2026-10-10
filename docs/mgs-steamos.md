@@ -1,5 +1,10 @@
 # SteamOS: desktop, Big Picture, AppImage and Flatpak
 
+**alpha.1 — UNTESTED** packages are published at
+https://github.com/coccofresco/mgsone-recomp/releases/tag/alpha.1.
+AppImage and Flatpak availability does not certify physical SteamOS, Gaming
+Mode, controller transport or complete gameplay on these release artifacts.
+
 The final release targets **both AppImage and Flatpak**, with one native SDL
 launcher navigable by keyboard, mouse or controller. `--big-picture` opens the
 launcher and game fullscreen without changing the saved desktop preference.
@@ -33,8 +38,8 @@ actual AppImage selects adjacent `mgs-recomp-userdata/`; nothing is written to
 its transient read-only mount. Flatpak uses its own XDG profile under
 `~/.var/app/io.github.mgsrecomp.MGSRecomp/`. The two formats deliberately use
 separate profiles; existing data is not silently migrated or overwritten.
-The application ID is the local candidate's identity and must be confirmed
-alongside the eventual GitHub destination before public release.
+The existing application ID is retained for alpha.1 so that previously created
+Flatpak profiles remain accessible; the public project is mgsone-recomp.
 
 See [controller compatibility and Steam Input](mgs-controllers.md) for the
 shared controller path, device selection, tested mappings and physical test matrix.

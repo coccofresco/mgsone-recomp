@@ -42,7 +42,7 @@ def source_files():
     output=subprocess.check_output(['git','ls-files','-c','-o','--exclude-standard','-z'],cwd=ROOT)
     for name in sorted(set(output.decode().split('\0'))- {''}):
         p=Path(name)
-        if p.parts[0] not in SOURCE_ROOTS and name not in ('README.md','LICENSE','.gitignore'):
+        if p.parts[0] not in SOURCE_ROOTS and name not in ('README.md','LICENSE','.gitignore','.gitattributes'):
             continue
         path=ROOT/p
         if not path.is_file():continue
@@ -135,7 +135,8 @@ def build(output, build_dir=None):
     with tarfile.open(archive,'w:gz') as out:out.add(folder,arcname=name)
     (output/'SHA256SUMS').write_text(''.join(f'{digest(p)}  {p.name}\n' for p in (archive,source_archive)))
     atomic_json(output/'package-report.json',dict(schema=1,status='candidate-assembled',
-      public_release_ready=release['public_release_ready'],archive=archive.name,
+      public_release_ready=release['public_release_ready'],
+      validation_status=release.get('validation_status','unqualified'),archive=archive.name,
       source_archive=source_archive.name,files=len(files),shaders=len(shader_files),
       source_files=len(sources),abi_requirements=release['abi_requirements'],
       input_runtime_sha256=release['input_runtime_sha256'],runtime_sha256=release['runtime_sha256']))
